@@ -300,14 +300,22 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             // Set uploaded logo or visual graphic URL inside form state
             const extension = file.name.split('.').pop() || 'png';
             const mockUrl = `https://supabase-storage.cdn.1stcars.com/media/${activeModule}/${Date.now()}.${extension}`;
-            setFormData((prevForm: any) => ({
-              ...prevForm,
-              image_url: mockUrl,
-              logo_url: mockUrl,
-              logo: mockUrl,
-              photo: "👤 Uploaded"
-            }));
-            toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-${activeModule}`);
+            if (activeModule === "settings") {
+              setWebsiteSettings((prev: any) => ({
+                ...prev,
+                logoUrl: mockUrl
+              }));
+              toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-settings`);
+            } else {
+              setFormData((prevForm: any) => ({
+                ...prevForm,
+                image_url: mockUrl,
+                logo_url: mockUrl,
+                logo: mockUrl,
+                photo: "👤 Uploaded"
+              }));
+              toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-${activeModule}`);
+            }
           }, 300);
           return 100;
         }
@@ -1414,9 +1422,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                 
                 {/* Simulated Header */}
                 <div className="p-3 bg-white rounded-2xl flex justify-between items-center text-slate-900 border border-slate-100 text-[11px] font-bold shadow-xs">
-                  <span className="font-black text-sm text-[#2E7D32] tracking-tighter" style={{ color: websiteSettings.primaryColor }}>
-                    {websiteSettings.logoUrl}
-                  </span>
+                  {websiteSettings.logoUrl && (websiteSettings.logoUrl.startsWith("http://") || websiteSettings.logoUrl.startsWith("https://") || websiteSettings.logoUrl.startsWith("/") || websiteSettings.logoUrl.includes("supabase-storage") || websiteSettings.logoUrl.match(/\.(jpeg|jpg|gif|png|svg|webp)/i) !== null) ? (
+                    <img 
+                      src={websiteSettings.logoUrl} 
+                      alt="Logo" 
+                      style={{ width: `${Math.min(websiteSettings.logoSize / 2, 80)}px` }} 
+                      className="object-contain max-h-5"
+                    />
+                  ) : (
+                    <span className="font-black text-sm text-[#2E7D32] tracking-tighter" style={{ color: websiteSettings.primaryColor }}>
+                      {websiteSettings.logoUrl}
+                    </span>
+                  )}
                   <div className="flex gap-2">
                     <span className="text-slate-400 hover:text-[#2E7D32]">Buy</span>
                     <span className="text-slate-400">Sell</span>

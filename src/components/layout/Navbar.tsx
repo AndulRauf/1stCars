@@ -32,8 +32,14 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [settings, setSettings] = React.useState({
     logoUrl: "🏎️ 1stCars",
+    logoSize: 150,
     brandSlogan: "Premium Selection"
   });
+
+  const isImageUrl = (url: string) => {
+    if (!url) return false;
+    return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") || url.includes("supabase-storage") || url.match(/\.(jpeg|jpg|gif|png|svg|webp)/i) !== null;
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -134,17 +140,29 @@ export function Navbar({
               }}
               className="flex items-center space-x-3 group"
             >
-              <div className="w-8 h-8 bg-[#2E7D32] rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:rotate-45 shadow-lg shadow-[#2E7D32]/20">
-                <div className="w-4 h-4 border-2 border-white rotate-45"></div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center">
-                  {settings.logoUrl || "1stCars"}
-                </span>
-                <span className="text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-1.5">
-                  {settings.brandSlogan || "Premium Selection"}
-                </span>
-              </div>
+              {isImageUrl(settings.logoUrl) ? (
+                <img 
+                  src={settings.logoUrl} 
+                  alt={settings.brandSlogan || "Logo"} 
+                  style={{ width: `${settings.logoSize || 150}px` }} 
+                  className="object-contain h-10 select-none pointer-events-none"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <>
+                  <div className="w-8 h-8 bg-[#2E7D32] rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:rotate-45 shadow-lg shadow-[#2E7D32]/20">
+                    <div className="w-4 h-4 border-2 border-white rotate-45"></div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center">
+                      {settings.logoUrl || "1stCars"}
+                    </span>
+                    <span className="text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-1.5">
+                      {settings.brandSlogan || "Premium Selection"}
+                    </span>
+                  </div>
+                </>
+              )}
             </a>
 
             {/* Desktop Navigation */}
@@ -301,10 +319,22 @@ export function Navbar({
         <div>
           <div className="flex items-center justify-between mb-8">
             <a href="/" className="flex items-center space-x-2.5">
-              <div className="w-6 h-6 bg-[#2E7D32] rounded flex items-center justify-center shadow-md shadow-[#2E7D32]/20">
-                <div className="w-3 h-3 border-2 border-white rotate-45"></div>
-              </div>
-              <span className="text-xl font-black tracking-tighter text-[#2E7D32]">{settings.logoUrl || "1stCars"}</span>
+              {isImageUrl(settings.logoUrl) ? (
+                <img 
+                  src={settings.logoUrl} 
+                  alt={settings.brandSlogan || "Logo"} 
+                  style={{ width: `${Math.min(settings.logoSize || 150, 120)}px` }} 
+                  className="object-contain h-8 select-none pointer-events-none"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <>
+                  <div className="w-6 h-6 bg-[#2E7D32] rounded flex items-center justify-center shadow-md shadow-[#2E7D32]/20">
+                    <div className="w-3 h-3 border-2 border-white rotate-45"></div>
+                  </div>
+                  <span className="text-xl font-black tracking-tighter text-[#2E7D32]">{settings.logoUrl || "1stCars"}</span>
+                </>
+              )}
             </a>
             <button
               onClick={() => setIsOpen(false)}
