@@ -66,15 +66,15 @@ export function CarCard({
     setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length);
   };
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
+  const formattedPrice = new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     maximumFractionDigits: 0,
   }).format(car.price);
 
-  const formattedEmi = new Intl.NumberFormat("en-US", {
+  const formattedEmi = new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     maximumFractionDigits: 0,
   }).format(car.emi);
 

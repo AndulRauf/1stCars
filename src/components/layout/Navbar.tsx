@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Menu, X, Car, Heart, Search, ChevronRight, User } from "lucide-react";
+import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 
@@ -12,6 +12,8 @@ interface NavbarProps {
   onViewChange?: (view: any, carId?: string) => void;
   currentUser?: any;
   onLogout?: () => void;
+  selectedCity?: string;
+  onCityChange?: (city: string) => void;
 }
 
 export function Navbar({
@@ -23,6 +25,8 @@ export function Navbar({
   onViewChange,
   currentUser,
   onLogout,
+  selectedCity,
+  onCityChange,
 }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -35,12 +39,15 @@ export function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  const navLinks: {
+    label: string;
+    view: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards";
+    href: string;
+    isSpecial?: boolean;
+    requiresAuth?: boolean;
+  }[] = [
     { label: "Buy Cars", view: "buy_cars" as const, href: "#buy-cars" },
     { label: "Sell Car", view: "sell_car" as const, href: "#sell-car" },
-    { label: "Dashboard", view: "role_dashboards" as const, href: "#dashboard", isSpecial: true, requiresAuth: true },
-    { label: "Dealers", view: "home" as const, href: "#dealers-section" },
-    { label: "Sales Portal", view: "sales_dashboard" as const, href: "#sales-portal", isSpecial: true },
   ];
 
   const handleLinkClick = (e: React.MouseEvent, view: any, href: string) => {
@@ -150,6 +157,34 @@ export function Navbar({
                   </span>
                 )}
               </button>
+
+              <div className="h-6 w-px bg-slate-200 mx-1" />
+
+              {/* City Filter Menu on Header */}
+              <div className="relative flex items-center">
+                <MapPin className="h-4 w-4 text-[#2E7D32] absolute left-3 pointer-events-none" />
+                <select
+                  value={selectedCity || "All Cities"}
+                  onChange={(e) => {
+                    onCityChange?.(e.target.value);
+                    if (onViewChange && currentView !== "buy_cars" && currentView !== "car_details") {
+                      onViewChange("buy_cars");
+                    }
+                  }}
+                  className="bg-[#2E7D32]/5 border border-[#2E7D32]/10 rounded-xl text-xs font-black text-[#2E7D32] uppercase tracking-wider pl-9 pr-8 py-2.5 outline-none cursor-pointer hover:bg-[#2E7D32]/10 transition-all appearance-none"
+                >
+                  <option value="All Cities">📍 All Gujarat</option>
+                  <option value="Surat">Surat</option>
+                  <option value="Bharuch">Bharuch</option>
+                  <option value="Vadodara">Vadodara</option>
+                  <option value="Vapi">Vapi</option>
+                </select>
+                <div className="pointer-events-none absolute right-3 flex items-center text-[#2E7D32]">
+                  <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
+              </div>
 
               <div className="h-6 w-px bg-slate-200 mx-1" />
 
@@ -272,6 +307,38 @@ export function Navbar({
 
         {/* Mobile Quick Action Buttons footer */}
         <div className="border-t border-slate-100 pt-6 flex flex-col space-y-4">
+          {/* Mobile City Selector */}
+          <div className="px-4 mb-2">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+              Operational Region (Gujarat Only)
+            </label>
+            <div className="relative flex items-center w-full">
+              <MapPin className="h-4 w-4 text-[#2E7D32] absolute left-3 pointer-events-none" />
+              <select
+                value={selectedCity || "All Cities"}
+                onChange={(e) => {
+                  onCityChange?.(e.target.value);
+                  setIsOpen(false);
+                  if (onViewChange && currentView !== "buy_cars" && currentView !== "car_details") {
+                    onViewChange("buy_cars");
+                  }
+                }}
+                className="w-full bg-[#2E7D32]/5 border border-[#2E7D32]/10 rounded-xl text-xs font-black text-[#2E7D32] uppercase tracking-wider pl-9 pr-8 py-3 outline-none cursor-pointer appearance-none"
+              >
+                <option value="All Cities">📍 All Gujarat</option>
+                <option value="Surat">Surat</option>
+                <option value="Bharuch">Bharuch</option>
+                <option value="Vadodara">Vadodara</option>
+                <option value="Vapi">Vapi</option>
+              </select>
+              <div className="pointer-events-none absolute right-3 flex items-center text-[#2E7D32]">
+                <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between px-4">
             <button
               onClick={() => {

@@ -9,7 +9,7 @@ export interface Car {
   fuel: "Petrol" | "Diesel" | "Electric" | "Hybrid";
   transmission: "Automatic" | "Manual" | "AWD" | "DCT";
   mileage: number; // in miles/km
-  bodyType: "SUV" | "Sedan" | "Coupe" | "Convertible";
+  bodyType: "SUV" | "Sedan" | "Coupe" | "Convertible" | "Hatchback" | "EV";
   certified: boolean;
   imageBg: string; // Tailwind color or representation
   imageUrl?: string;

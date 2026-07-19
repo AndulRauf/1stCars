@@ -61,6 +61,7 @@ export default function App() {
   const [activeCarId, setActiveCarId] = React.useState<string>("car-1");
   const [savedCars, setSavedCars] = React.useState<string[]>(["car-1", "car-3"]); // pre-saved for delightful onboarding
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
+  const [selectedCity, setSelectedCity] = React.useState<string>("All Cities");
 
   React.useEffect(() => {
     // Listen to Supabase auth events (works with both mock and live Supabase clients)
@@ -358,6 +359,8 @@ export default function App() {
           setCurrentView("home");
           triggerToast("Logged out successfully");
         }}
+        selectedCity={selectedCity}
+        onCityChange={setSelectedCity}
       />
 
       {currentView === "buy_cars" ? (
@@ -369,6 +372,8 @@ export default function App() {
           }}
           savedCars={savedCars}
           onSaveToggle={toggleSaveCar}
+          selectedCity={selectedCity}
+          onCityChange={setSelectedCity}
         />
       ) : currentView === "car_details" ? (
         <CarDetailsView
@@ -550,8 +555,8 @@ export default function App() {
                     <span className="text-lg font-black text-slate-900 tracking-tight">DB11 V8 Spec</span>
                   </div>
                   <div className="flex flex-col items-end text-right">
-                    <span className="text-xs text-[#2E7D32] font-black tracking-tight">Est: $1,420/mo</span>
-                    <span className="text-sm font-black text-slate-800">$128,400</span>
+                    <span className="text-xs text-[#2E7D32] font-black tracking-tight">Est: ₹1,42,000/mo</span>
+                    <span className="text-sm font-black text-slate-800">₹1,28,40,000</span>
                   </div>
                 </div>
               </div>
@@ -633,10 +638,10 @@ export default function App() {
                     className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold h-11 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32] transition-all cursor-pointer"
                   >
                     <option value={0}>Any Price Point</option>
-                    <option value={60000}>Under $60,000</option>
-                    <option value={100000}>Under $100,000</option>
-                    <option value={130000}>Under $130,000</option>
-                    <option value={160000}>Under $160,000</option>
+                    <option value={1500000}>Under ₹15 Lakhs</option>
+                    <option value={3000000}>Under ₹30 Lakhs</option>
+                    <option value={5000000}>Under ₹50 Lakhs</option>
+                    <option value={10000000}>Under ₹1 Crore</option>
                   </select>
                 </div>
 
@@ -779,11 +784,11 @@ export default function App() {
                       <div className="flex justify-between items-end pt-2">
                         <div className="flex flex-col">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">EMI Starts From</span>
-                          <span className="text-base font-black text-[#2E7D32] tracking-tight">${car.emi.toLocaleString()}/mo</span>
+                          <span className="text-base font-black text-[#2E7D32] tracking-tight">₹{car.emi.toLocaleString("en-IN")}/mo</span>
                         </div>
                         <div className="text-right">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Fixed Price</span>
-                          <h4 className="text-2xl font-black text-slate-900 tracking-tight">${car.price.toLocaleString()}</h4>
+                          <h4 className="text-2xl font-black text-slate-900 tracking-tight">₹{car.price.toLocaleString("en-IN")}</h4>
                         </div>
                       </div>
                     </CardHeader>
@@ -1023,7 +1028,7 @@ export default function App() {
                 {calcEstimatedValue !== null && (
                   <div className="mt-6 bg-[#2E7D32]/5 border border-[#2E7D32]/15 p-5 rounded-3xl text-center space-y-2 animate-in slide-in-from-bottom-3 duration-300">
                     <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#2E7D32]">Estimated Instant Offer Value</span>
-                    <h4 className="text-3xl font-black text-[#2E7D32] tracking-tighter">${calcEstimatedValue.toLocaleString()}</h4>
+                    <h4 className="text-3xl font-black text-[#2E7D32] tracking-tighter">₹{calcEstimatedValue.toLocaleString("en-IN")}</h4>
                     <p className="text-[10px] font-medium text-slate-500 max-w-xs mx-auto leading-relaxed">
                       This represents a high-grade trade-in estimate. Book your doorstep inspection today to lock in your live offer!
                     </p>
@@ -1381,7 +1386,10 @@ export default function App() {
       )}
 
       {/* 9. PREMIUM FOOTER */}
-      <Footer />
+      <Footer onViewChange={(view) => {
+        setCurrentView(view);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }} />
 
     </div>
   );

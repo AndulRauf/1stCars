@@ -11,6 +11,8 @@ interface BuyCarsViewProps {
   onViewDetails: (id: string) => void;
   savedCars: string[];
   onSaveToggle: (id: string, model: string) => void;
+  selectedCity?: string;
+  onCityChange?: (city: string) => void;
 }
 
 const ITEMS_PER_PAGE = 3;
@@ -19,6 +21,8 @@ export function BuyCarsView({
   onViewDetails,
   savedCars,
   onSaveToggle,
+  selectedCity,
+  onCityChange,
 }: BuyCarsViewProps) {
   // Filter States
   const [filters, setFilters] = React.useState<FilterState>({
@@ -39,6 +43,13 @@ export function BuyCarsView({
   const [currentPage, setCurrentPage] = React.useState(1);
   const [showFiltersMobile, setShowFiltersMobile] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+
+  // Sync prop city to local filter state
+  React.useEffect(() => {
+    if (selectedCity) {
+      setFilters((prev) => ({ ...prev, city: selectedCity }));
+    }
+  }, [selectedCity]);
 
   // Trigger loading skeleton on filter and sort change
   React.useEffect(() => {
@@ -64,6 +75,7 @@ export function BuyCarsView({
     });
     setSortBy("featured");
     setCurrentPage(1);
+    onCityChange?.("All Cities");
   };
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
@@ -72,6 +84,9 @@ export function BuyCarsView({
       [key]: value,
     }));
     setCurrentPage(1); // Reset page on filter alteration
+    if (key === "city") {
+      onCityChange?.(value);
+    }
   };
 
   const handleBudgetRangeChange = (label: string) => {

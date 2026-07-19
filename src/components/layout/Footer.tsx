@@ -3,7 +3,11 @@ import { Mail, Phone, MapPin, ArrowUpRight, Github, Heart, Shield, Award, Sparkl
 import { Input } from "@/src/components/ui/Input";
 import { Button } from "@/src/components/ui/Button";
 
-export function Footer() {
+interface FooterProps {
+  onViewChange?: (view: any) => void;
+}
+
+export function Footer({ onViewChange }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -117,6 +121,19 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              <li className="pt-2 border-t border-[#2E7D32]/10 mt-2">
+                <button
+                  type="button"
+                  onClick={() => onViewChange?.("role_dashboards")}
+                  className="hover:text-primary transition-colors flex items-center group font-black text-xs text-[#2E7D32] uppercase tracking-wider cursor-pointer text-left"
+                >
+                  <span>🔑 Portal Gateway</span>
+                  <ArrowUpRight className="h-3 w-3 ml-1 shrink-0" />
+                </button>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-none font-semibold">
+                  (Dashboard, Dealer & Sales Portals)
+                </p>
+              </li>
             </ul>
           </div>
 

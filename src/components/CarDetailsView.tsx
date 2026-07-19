@@ -55,7 +55,7 @@ export function CarDetailsView({
       "offers": {
         "@type": "Offer",
         "price": car.price.toString(),
-        "priceCurrency": "USD",
+        "priceCurrency": "INR",
         "itemCondition": "https://schema.org/UsedCondition",
         "availability": "https://schema.org/InStock"
       }
@@ -202,9 +202,9 @@ export function CarDetailsView({
 
   // Format currency
   const formatMoney = (val: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       maximumFractionDigits: 0,
     }).format(val);
   };
