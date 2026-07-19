@@ -141,13 +141,22 @@ export function Navbar({
               className="flex items-center space-x-3 group"
             >
               {isImageUrl(settings.logoUrl) ? (
-                <img 
-                  src={settings.logoUrl} 
-                  alt={settings.brandSlogan || "Logo"} 
-                  style={{ width: `${settings.logoSize || 150}px` }} 
-                  className="object-contain h-10 select-none pointer-events-none"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="flex items-center space-x-3">
+                  <img 
+                    src={settings.logoUrl} 
+                    alt={settings.brandSlogan || "Logo"} 
+                    className="object-contain h-10 w-10 rounded-lg select-none pointer-events-none border border-slate-100 bg-white shadow-xs"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center">
+                      1stCars
+                    </span>
+                    <span className="text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-1.5">
+                      {settings.brandSlogan || "Premium Selection"}
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="w-8 h-8 bg-[#2E7D32] rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:rotate-45 shadow-lg shadow-[#2E7D32]/20">
@@ -320,13 +329,22 @@ export function Navbar({
           <div className="flex items-center justify-between mb-8">
             <a href="/" className="flex items-center space-x-2.5">
               {isImageUrl(settings.logoUrl) ? (
-                <img 
-                  src={settings.logoUrl} 
-                  alt={settings.brandSlogan || "Logo"} 
-                  style={{ width: `${Math.min(settings.logoSize || 150, 120)}px` }} 
-                  className="object-contain h-8 select-none pointer-events-none"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="flex items-center space-x-2.5">
+                  <img 
+                    src={settings.logoUrl} 
+                    alt={settings.brandSlogan || "Logo"} 
+                    className="object-contain h-8 w-8 rounded-lg select-none pointer-events-none border border-slate-100 bg-white shadow-xs"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-lg font-black tracking-tighter text-[#2E7D32] leading-none">
+                      1stCars
+                    </span>
+                    <span className="text-[8px] font-bold tracking-widest text-[#2E7D32]/60 uppercase">
+                      {settings.brandSlogan || "Premium Selection"}
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="w-6 h-6 bg-[#2E7D32] rounded flex items-center justify-center shadow-md shadow-[#2E7D32]/20">

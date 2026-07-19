@@ -1513,12 +1513,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                 {/* Simulated Header */}
                 <div className="p-3 bg-white rounded-2xl flex justify-between items-center text-slate-900 border border-slate-100 text-[11px] font-bold shadow-xs">
                   {websiteSettings.logoUrl && (websiteSettings.logoUrl.startsWith("data:image/") || websiteSettings.logoUrl.startsWith("http://") || websiteSettings.logoUrl.startsWith("https://") || websiteSettings.logoUrl.startsWith("/") || websiteSettings.logoUrl.includes("supabase-storage") || websiteSettings.logoUrl.match(/\.(jpeg|jpg|gif|png|svg|webp)/i) !== null) ? (
-                    <img 
-                      src={websiteSettings.logoUrl} 
-                      alt="Logo" 
-                      style={{ width: `${Math.min(websiteSettings.logoSize / 2, 80)}px` }} 
-                      className="object-contain max-h-5"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <img 
+                        src={websiteSettings.logoUrl} 
+                        alt="Logo" 
+                        className="object-contain h-5 w-5 rounded-md border border-slate-100 bg-white"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex flex-col text-left">
+                        <span className="text-[10px] font-black tracking-tighter text-[#2E7D32] leading-none" style={{ color: websiteSettings.primaryColor }}>1stCars</span>
+                        <span className="text-[5px] font-bold tracking-widest text-slate-400 uppercase leading-none">{websiteSettings.brandSlogan || "Premium Selection"}</span>
+                      </div>
+                    </div>
                   ) : (
                     <span className="font-black text-sm text-[#2E7D32] tracking-tighter" style={{ color: websiteSettings.primaryColor }}>
                       {websiteSettings.logoUrl}
