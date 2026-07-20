@@ -561,7 +561,7 @@ export default function App() {
       ) : (
         <>
           {/* 2. HERO SECTION */}
-      <Section bg="cream" className="relative py-12 md:py-20 lg:py-28 overflow-hidden">
+      <Section bg="cream" className="relative py-8 md:py-12 lg:py-16 overflow-hidden">
         {/* Background elegance accents */}
         <div className="absolute top-1/4 left-10 w-96 h-96 bg-[#2E7D32]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-3xl pointer-events-none" />
@@ -789,8 +789,8 @@ export default function App() {
       </Section>
 
       {/* 3. FEATURED CARS */}
-      <Section ref={featuredCarsRef} bg="white" id="featured-cars" padding="xl" className="border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
+      <Section ref={featuredCarsRef} bg="white" id="featured-cars" padding="lg" className="border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="premium">PREMIUM LIVE INVENTORY</Badge>
@@ -954,10 +954,10 @@ export default function App() {
       </Section>
 
       {/* 4. SELL IN 3 EASY STEPS */}
-      <Section ref={sellStepsRef} id="sell-steps" bg="muted" padding="xl" className="border-y border-slate-100">
+      <Section ref={sellStepsRef} id="sell-steps" bg="muted" padding="lg" className="border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center space-y-4 max-w-2xl mx-auto mb-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto mb-10">
             <Badge variant="secondary">SELL YOUR VEHICLE</Badge>
             <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
               Sell or Trade-In In 3 Simple Steps
@@ -967,10 +967,10 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Steps & Direct Lead Form */}
-            <div className="lg:col-span-7 space-y-8 text-left">
+            <div className="lg:col-span-7 space-y-6 text-left">
               
               {/* Step 1 Item */}
               <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
@@ -1167,8 +1167,8 @@ export default function App() {
       </Section>
 
       {/* 5. WHY CHOOSE 1STMARK CERTIFIED */}
-      <Section id="certified-benefits" bg="white" padding="xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
+      <Section id="certified-benefits" bg="white" padding="lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="premium">THE TRUST BLUEPRINT</Badge>
@@ -1306,8 +1306,8 @@ export default function App() {
       </Section>
 
       {/* 6. TESTIMONIALS */}
-      <Section bg="muted" padding="xl" className="border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
+      <Section bg="muted" padding="lg" className="border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="secondary">VIP CLUB FEEDBACK</Badge>
@@ -1348,9 +1348,9 @@ export default function App() {
       </Section>
 
       {/* 7. FAQ */}
-      <Section id="about-section" bg="white" padding="xl">
+      <Section id="about-section" bg="white" padding="lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* FAQ Left Column */}
             <div className="lg:col-span-4 text-left space-y-4">
@@ -1408,11 +1408,11 @@ export default function App() {
       </Section>
 
       {/* 8. CTA SECTION */}
-      <Section id="contact-section" bg="dark" className="relative py-16 md:py-24 bg-linear-to-b from-slate-900 to-slate-950 overflow-hidden">
+      <Section id="contact-section" bg="dark" className="relative py-10 md:py-16 bg-linear-to-b from-slate-900 to-slate-950 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="premium" className="bg-[#2E7D32] text-white border-none shadow-md shadow-[#2E7D32]/25">

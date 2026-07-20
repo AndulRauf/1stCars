@@ -35,10 +35,10 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
 
     const paddingStyles = {
       none: "py-0",
-      sm: "py-8 md:py-12",
-      md: "py-12 md:py-16",
-      lg: "py-16 md:py-24",
-      xl: "py-20 md:py-32",
+      sm: "py-4 md:py-6",
+      md: "py-8 md:py-10",
+      lg: "py-10 md:py-14",
+      xl: "py-12 md:py-18",
     };
 
     const alignmentClasses = {
@@ -55,7 +55,7 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
       >
         <div className={cn("max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col w-full", containerClassName)}>
           {(title || subtitle) && (
-            <div className={cn("flex flex-col mb-12 max-w-3xl", alignmentClasses[headerAlign], headerAlign === "center" && "mx-auto")}>
+            <div className={cn("flex flex-col mb-8 max-w-3xl", alignmentClasses[headerAlign], headerAlign === "center" && "mx-auto")}>
               {subtitle && (
                 <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2">
                   {subtitle}

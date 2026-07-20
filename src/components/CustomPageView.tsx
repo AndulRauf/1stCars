@@ -47,7 +47,7 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-slate-50/50 py-24">
+      <div className="min-h-[50vh] flex flex-col items-center justify-center bg-slate-50/50 py-16">
         <div className="h-12 w-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm font-black text-slate-500 uppercase tracking-widest mt-6 animate-pulse">
           Retrieving Vetted CMS Page...
@@ -58,7 +58,7 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
 
   if (error || !page) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-slate-50/50 py-24 px-4 text-center">
+      <div className="min-h-[50vh] flex flex-col items-center justify-center bg-slate-50/50 py-16 px-4 text-center">
         <div className="h-16 w-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6 border border-red-100">
           <FileText className="h-8 w-8" />
         </div>
@@ -74,24 +74,24 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] pt-28 pb-20">
+    <div className="min-h-screen bg-[#F8F6F0] pt-20 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Back Link */}
         <button
           onClick={onBackToHome}
-          className="inline-flex items-center text-xs font-black uppercase tracking-widest text-emerald-800 hover:text-emerald-950 transition-colors mb-8 cursor-pointer group"
+          className="inline-flex items-center text-xs font-black uppercase tracking-widest text-emerald-800 hover:text-emerald-950 transition-colors mb-6 cursor-pointer group"
         >
           <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
           Back to Marketplace
         </button>
 
         {/* Hero Section Container */}
-        <div className="bg-white border border-slate-100 rounded-[32px] p-8 md:p-12 shadow-xl shadow-slate-200/50 relative overflow-hidden mb-10">
+        <div className="bg-white border border-slate-100 rounded-[32px] p-6 md:p-10 shadow-xl shadow-slate-200/50 relative overflow-hidden mb-8">
           <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 space-y-6">
+          <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-600/10 text-emerald-800">
                 ⭐ Verified CMS Page
@@ -114,7 +114,7 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
         </div>
 
         {/* Dynamic Rich Text Body */}
-        <div className="bg-white border border-slate-100 rounded-[32px] p-8 md:p-12 shadow-lg shadow-slate-200/30">
+        <div className="bg-white border border-slate-100 rounded-[32px] p-6 md:p-10 shadow-lg shadow-slate-200/30">
           <div className="prose max-w-none text-slate-700 leading-relaxed font-semibold text-sm space-y-6">
             <Markdown>{page.content}</Markdown>
           </div>

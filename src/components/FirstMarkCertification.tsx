@@ -178,7 +178,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
     <div className="bg-[#F8F6F0] min-h-screen text-slate-900 pb-20">
       
       {/* Dynamic Header Hero Section */}
-      <div className="bg-linear-to-b from-slate-900 to-slate-950 text-white relative py-16 md:py-24 overflow-hidden border-b border-[#2E7D32]/20">
+      <div className="bg-linear-to-b from-slate-900 to-slate-950 text-white relative py-10 md:py-16 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl" />
