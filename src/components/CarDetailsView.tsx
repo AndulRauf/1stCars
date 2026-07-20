@@ -44,7 +44,7 @@ export function CarDetailsView({
       },
       "model": car.model,
       "modelDate": car.year.toString(),
-      "vehicleConfiguration": car.variant || "Standard Premium Edition",
+      "vehicleConfiguration": (car as any).variant || "Standard Premium Edition",
       "mileageFromOdometer": {
         "@type": "QuantitativeValue",
         "value": car.mileage || 0,

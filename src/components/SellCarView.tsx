@@ -586,7 +586,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
                         return (
                           <button
                             key={y}
-                            type="button;}"
+                            type="button"
                             onClick={() => {
                               setSelectedYear(y);
                               setWizardStep(4);

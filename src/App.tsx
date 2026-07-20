@@ -54,11 +54,13 @@ import { SellCarView } from "@/src/components/SellCarView";
 import { RoleDashboards } from "@/src/components/RoleDashboards";
 import { Error404Page, Error500Page } from "@/src/components/ErrorPages";
 import { FirstMarkCertification } from "@/src/components/FirstMarkCertification";
+import { CustomPageView } from "@/src/components/CustomPageView";
 import { supabase } from "@/src/lib/supabaseClient";
 
 export default function App() {
   // Navigation & interaction states
-  const [currentView, setCurrentView] = React.useState<"home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "error_404" | "error_500">("home");
+  const [currentView, setCurrentView] = React.useState<"home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "error_404" | "error_500" | "firstmark_certification" | "custom_page">("home");
+  const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
   const [activeCarId, setActiveCarId] = React.useState<string>("car-1");
   const [savedCars, setSavedCars] = React.useState<string[]>(["car-1", "car-3"]); // pre-saved for delightful onboarding
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
@@ -121,7 +123,16 @@ export default function App() {
     highlight3Desc: "Enjoy home test drives and direct delivery with our fully closed premium transports.",
     seoTitle: "1stCars - Certified Luxury Car Marketplace",
     seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 150-Point Certificate.",
-    googleAnalyticsId: "G-1STCARS2026"
+    googleAnalyticsId: "G-1STCARS2026",
+    buyButtonText: "Buy Certified Cars",
+    sellButtonText: "Sell Your Car",
+    filterHeadingText: "Refine Selection",
+    searchButtonText: "Search Fleet",
+    buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
+    buyCarsSubheadingText: "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, standard buyback guarantee, and instant deliveries.",
+    detailsButtonText: "Details & Booking",
+    inspectionButtonText: "Book Showroom Inspection",
+    valuationButtonText: "Calculate Valuation"
   });
 
   const [faqs, setFaqs] = React.useState<any[]>([]);
@@ -420,8 +431,11 @@ export default function App() {
         }}
         onAuthClick={(mode) => setAuthModal({ isOpen: true, mode })}
         currentView={currentView}
-        onViewChange={(view) => {
+        onViewChange={(view, pageId) => {
           setCurrentView(view);
+          if (view === "custom_page" && pageId) {
+            setSelectedPageId(pageId);
+          }
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         currentUser={currentUser}
@@ -526,6 +540,14 @@ export default function App() {
           }}
           onNavigateToInventory={() => {
             setCurrentView("buy_cars");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
+      ) : currentView === "custom_page" ? (
+        <CustomPageView
+          pageId={selectedPageId}
+          onBackToHome={() => {
+            setCurrentView("home");
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />

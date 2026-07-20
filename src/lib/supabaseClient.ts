@@ -277,6 +277,23 @@ class SupabaseMockClient {
             notes: "Arranging elite financing checks with HDFC partner"
           }
         ];
+      case "pages":
+        return [
+          {
+            id: "p-about",
+            title: "About Us",
+            slug: "about-us",
+            content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **150-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n- **6-Month Premium Warranty**: Covers engine, gearbox & dual-clutch assemblies.\n\n### Contact Details\n- **Email**: contact@1stcars.com\n- **Mobile**: +91 99999 99999\n- **Office**: Surat Dynamic Business Plaza, Gujarat`,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: "p-faq",
+            title: "FAQs",
+            slug: "faqs",
+            content: `# Frequently Asked Questions\n\nHere are the answers to the most common queries about our premium inspection services.\n\n### 1. What does the 150-Point check cover?\nIt covers a detailed scan of the underbody, frame, engine pressure, dual-clutch transmission latency, hybrid battery health, and electronic modules via OBD-II.\n\n### 2. Can I get a doorstep check done in Vadodara?\nAbsolutely. We send fully equipped team vans to any address across Surat, Vadodara, Bharuch, and Vapi regions within 24 hours.\n\n### 3. How does the 6-month warranty work?\nIt is an optional upgrade. If selected, it covers cashless repairs for all engine and drivetrain components at our authorized service networks.`,
+            created_at: new Date().toISOString()
+          }
+        ];
       default:
         return [];
     }

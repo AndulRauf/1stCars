@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/src/lib/utils";
 
-export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
+export interface SectionProps extends Omit<React.HTMLAttributes<HTMLElement>, "title"> {
   bg?: "cream" | "dark" | "white" | "muted" | "primary";
   padding?: "none" | "sm" | "md" | "lg" | "xl";
   title?: React.ReactNode;

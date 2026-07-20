@@ -26,7 +26,7 @@ type CMSModule =
   | "dashboard" | "cars" | "users" | "staff" | "dealers" | "inspectors" | "sales"
   | "inspections" | "auctions" | "park_sell" | "brands" | "models" | "cities"
   | "faqs" | "testimonials" | "finance" | "warranty" | "notifications" | "expenses"
-  | "reports" | "settings";
+  | "reports" | "pages" | "settings";
 
 export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSProps) {
   // Active sub-module within Admin CMS
@@ -39,6 +39,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [auctions, setAuctions] = React.useState<any[]>([]);
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [brands, setBrands] = React.useState<any[]>([]);
+  const [pages, setPages] = React.useState<any[]>([]);
   
   // Custom mock/localStorage tables for the other modules requested
   const [dealers, setDealers] = React.useState<any[]>([]);
@@ -146,6 +147,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       const { data: aData } = await supabase.from("auctions").select();
       const { data: nData } = await supabase.from("notifications").select();
       const { data: bData } = await supabase.from("brands").select();
+      const { data: pData } = await supabase.from("pages").select();
 
       if (cData) setCars(cData);
       if (uData) setUsers(uData);
@@ -153,6 +155,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (aData) setAuctions(aData);
       if (nData) setNotifications(nData);
       if (bData) setBrands(bData);
+      if (pData) setPages(pData);
 
       // Load local-storage metadata schemas for extra requested modules
       const getStored = (key: string, def: any[]) => {
@@ -276,6 +279,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       notifications: { recipient_id: "all", title: "", message: "", type: "info" },
       expenses: { title: "", category: "Operations", amount: 5000, date: new Date().toISOString().split("T")[0], logged_by: "u-admin" },
       reports: {},
+      pages: { title: "", slug: "", content: "# Page Title\n\nPage text goes here." },
       settings: {}
     };
 
@@ -474,6 +478,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         } else {
           await supabase.from("notifications").update(currentRecord).eq("id", editingId);
         }
+      } else if (activeModule === "pages") {
+        if (formMode === "add") {
+          await supabase.from("pages").insert([currentRecord]);
+        } else {
+          await supabase.from("pages").update(currentRecord).eq("id", editingId);
+        }
       } else {
         // Handle mock schema arrays
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
@@ -504,6 +514,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
       toast.success(`${activeModule.toUpperCase()} item saved successfully.`);
       setIsFormOpen(false);
+      window.dispatchEvent(new Event("1stcars_settings_updated"));
       loadCMSData();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -531,6 +542,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         await supabase.from("brands").delete().eq("id", id);
       } else if (activeModule === "notifications") {
         await supabase.from("notifications").delete().eq("id", id);
+      } else if (activeModule === "pages") {
+        await supabase.from("pages").delete().eq("id", id);
       } else {
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
           staff: [getStoredMockList("staff"), (d) => persistMockTable("staff", d)],
@@ -555,6 +568,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       }
 
       toast.success("Record removed successfully.");
+      window.dispatchEvent(new Event("1stcars_settings_updated"));
       loadCMSData();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -764,6 +778,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "finance": return financePartners;
       case "warranty": return warrantyPlans;
       case "expenses": return expenses;
+      case "pages": return pages;
       default: return [];
     }
   };
@@ -844,6 +859,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             { id: "notifications", label: "Alerts Core", icon: Bell },
             { id: "expenses", label: "Ledger", icon: FileText },
             { id: "reports", label: "Reports", icon: TrendingUp },
+            { id: "pages", label: "Custom Pages", icon: BookOpen },
             { id: "settings", label: "Theme Design", icon: Palette }
           ].map((item) => (
             <button
@@ -1143,8 +1159,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Logged: {item.date} by {item.logged_by}</p>
                         </div>
                       )}
+                      {activeModule === "pages" && (
+                        <div className="max-w-md">
+                          <p className="font-black text-slate-800">{item.title}</p>
+                          <p className="text-[10px] text-indigo-600 font-bold mt-0.5">Slug: /{item.slug}</p>
+                          <p className="text-[10px] text-slate-400 truncate max-w-xs mt-1">{item.content}</p>
+                        </div>
+                      )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses"].includes(activeModule) && (
+                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages"].includes(activeModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -1182,8 +1205,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Duration: {item.duration_months} mos</p>
                         </div>
                       )}
+                      {activeModule === "pages" && (
+                        <div>
+                          <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
+                        </div>
+                      )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "warranty"].includes(activeModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages"].includes(activeModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
@@ -1920,9 +1948,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   
                   const value = formData[key];
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                  const isMultiline = key === "content" || key === "answer" || key === "notes";
                   
                   return (
-                    <div key={key} className="space-y-1">
+                    <div key={key} className={`space-y-1 ${isMultiline ? "sm:col-span-2" : ""}`}>
                       <label className="block text-[10px] font-black uppercase text-slate-400">{label}</label>
                       {typeof value === "boolean" ? (
                         <select
@@ -1939,6 +1968,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           value={formData[key] || 0}
                           onChange={(e) => setFormData({ ...formData, [key]: Number(e.target.value) })}
                           className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2.5 outline-none"
+                          required
+                        />
+                      ) : isMultiline ? (
+                        <textarea
+                          value={formData[key] || ""}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-full min-h-36 bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none font-mono text-xs"
                           required
                         />
                       ) : (

@@ -2,13 +2,14 @@ import * as React from "react";
 import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
+import { supabase } from "@/src/lib/supabaseClient";
 
 interface NavbarProps {
   savedCount?: number;
   onSavedClick?: () => void;
   onAuthClick?: (mode: "login" | "register") => void;
   onSearchClick?: () => void;
-  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification";
+  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "custom_page" | "error_404" | "error_500";
   onViewChange?: (view: any, carId?: string) => void;
   currentUser?: any;
   onLogout?: () => void;
@@ -36,6 +37,8 @@ export function Navbar({
     brandSlogan: "Premium Selection"
   });
 
+  const [customPages, setCustomPages] = React.useState<any[]>([]);
+
   const isImageUrl = (url: string) => {
     if (!url) return false;
     return url.startsWith("data:image/") || url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") || url.includes("supabase-storage") || url.match(/\.(jpeg|jpg|gif|png|svg|webp)/i) !== null;
@@ -46,6 +49,14 @@ export function Navbar({
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
+
+    const loadCustomPages = async () => {
+      const { data } = await supabase.from("pages").select();
+      if (data) {
+        setCustomPages(data);
+      }
+    };
+    loadCustomPages();
 
     // Load dynamic brand settings
     if (typeof window !== "undefined") {
@@ -69,6 +80,7 @@ export function Navbar({
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {}
       }
+      loadCustomPages();
     };
     window.addEventListener("1stcars_settings_updated", handleReloadSettings);
 
@@ -192,6 +204,22 @@ export function Navbar({
                   )}
                 >
                   {link.label}
+                </a>
+              ))}
+              {customPages.map((page) => (
+                <a
+                  key={page.id}
+                  href={`#page-${page.slug}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onViewChange?.("custom_page", page.id);
+                  }}
+                  className={cn(
+                    "text-[13px] font-bold uppercase tracking-widest transition-colors duration-200 relative py-1 text-[#2E7D32]/75 hover:text-[#2E7D32] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#2E7D32] after:transition-all after:duration-300 hover:after:w-full",
+                    currentView === "custom_page" && "text-[#2E7D32] after:w-full"
+                  )}
+                >
+                  {page.title}
                 </a>
               ))}
             </div>
@@ -384,6 +412,26 @@ export function Navbar({
                 <ChevronRight className={cn("h-4 w-4", currentView === link.view ? "text-white" : "text-slate-400")} />
               </a>
             ))}
+            {customPages.map((page) => (
+              <a
+                key={page.id}
+                href={`#page-${page.slug}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  onViewChange?.("custom_page", page.id);
+                }}
+                className={cn(
+                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl transition-colors",
+                  currentView === "custom_page"
+                    ? "bg-[#2E7D32] text-white"
+                    : "hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
+                )}
+              >
+                {page.title}
+                <ChevronRight className={cn("h-4 w-4", currentView === "custom_page" ? "text-white" : "text-slate-400")} />
+              </a>
+            ))}
           </div>
         </div>
 
@@ -438,27 +486,29 @@ export function Navbar({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsOpen(false);
-                onAuthClick?.("login");
-              }}
-              className="w-full text-xs font-bold uppercase tracking-wider"
-            >
-              Login
-            </Button>
-            <Button
-              onClick={() => {
-                setIsOpen(false);
-                onAuthClick?.("register");
-              }}
-              className="w-full bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#2E7D32]/20 hover:bg-[#25632a]"
-            >
-              Register
-            </Button>
-          </div>
+          {currentUser && (
+            <div className="grid grid-cols-2 gap-3 px-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsOpen(false);
+                  onViewChange?.("role_dashboards");
+                }}
+                className="w-full text-[10px] font-black uppercase tracking-wider h-10 rounded-xl"
+              >
+                Dashboard
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsOpen(false);
+                  onLogout?.();
+                }}
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider h-10 rounded-xl shadow-xs"
+              >
+                Logout
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </>
