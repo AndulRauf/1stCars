@@ -284,42 +284,48 @@ class SupabaseMockClient {
             title: "About Us",
             slug: "about-us",
             content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **150-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n- **6-Month Premium Warranty**: Covers engine, gearbox & dual-clutch assemblies.\n\n### Contact Details\n- **Email**: contact@1stcars.com\n- **Mobile**: +91 99999 99999\n- **Office**: Surat Dynamic Business Plaza, Gujarat`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: false
           },
           {
             id: "p-faq",
             title: "FAQs",
             slug: "faqs",
             content: `# Frequently Asked Questions\n\nHere are the answers to the most common queries about our premium inspection services.\n\n### 1. What does the 150-Point check cover?\nIt covers a detailed scan of the underbody, frame, engine pressure, dual-clutch transmission latency, hybrid battery health, and electronic modules via OBD-II.\n\n### 2. Can I get a doorstep check done in Vadodara?\nAbsolutely. We send fully equipped team vans to any address across Surat, Vadodara, Bharuch, and Vapi regions within 24 hours.\n\n### 3. How does the 6-month warranty work?\nIt is an optional upgrade. If selected, it covers cashless repairs for all engine and drivetrain components at our authorized service networks.`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: false
           },
           {
             id: "p-warranty",
             title: "Warranty Terms",
             slug: "warranty-terms",
             content: `# 6-Month Premium Warranty Policy\n\nAt **1stCars**, every certified pre-owned vehicle qualifies for our complimentary **6-Month / 10,000 km Premium Warranty** to guarantee peace of mind.\n\n### What is Covered\nOur premium warranty covers 100% of parts and labor costs for major mechanical assemblies:\n\n1. **Engine Assembly**: Cylinder block, pistons, crankshaft, camshafts, valvetrain, turbocharger/supercharger systems, and oil pump.\n2. **Gearbox & Transmission**: Torque converter, dual-clutch transmission (DCT/DSG) modules, manual gear sets, and transfer case.\n3. **Electrical Modules**: ECU, alternator, starter motor, and hybrid battery management controller.\n4. **Cooling System**: Radiator, water pump, and thermostat housing.\n\n### What is Not Covered\n- Normal wear and tear items (brake pads, clutch plates, tires, wiper blades, suspension bushings).\n- Modifications or tuning after delivery.\n- Accidental damage or driving through flooded streets.\n\n### Claim Process\nShould you encounter any issue, simply contact our dedicated claims team at **support@1stcars.com** or call **+91 99999 99999**. We will arrange a flatbed tow to our authorized service hub and provide cashless repairs.`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: true
           },
           {
             id: "p-certificate",
             title: "150-Point Certificate",
             slug: "150-point-certificate",
             content: `# 150-Point Structural & Technical Inspection\n\nBefore any premium car makes it to the **1stCars** inventory, it undergoes a meticulous **150-point check** executed by our certified structural engineers.\n\n### Core Inspection Categories\n\n#### 1. Frame & Chassis Integrity (35 Points)\n- Structural chassis rail scan to detect past impact damage.\n- Roof pillar thickness gauge measurement (paint depth analysis).\n- Subframe alignment verification using precision laser tools.\n\n#### 2. Powertrain & OBD Diagnostics (45 Points)\n- Cylinder compression test and spark plug inspection.\n- OBD-II electronic scan for historical fault codes.\n- Exhaust smoke color and emission levels check.\n- Transmission shift latency and clutch pressure test.\n\n#### 3. Suspension, Brakes & Underbody (40 Points)\n- Shock absorber damping rates and fluid leakage check.\n- Brake disc thickness and pad wear percentage.\n- Steering rack play and boot integrity.\n- Fuel tank and line safety check.\n\n#### 4. Interior, Electricals & Comfort (30 Points)\n- Infotainment system, GPS, and speakers.\n- Multi-zone climate control cooling and heating test.\n- Airbag modules and sensor validation.\n\nEvery vehicle that passes is issued our exclusive **1stMark Gold Certificate**, signed off by a Master Engineer.`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: true
           },
           {
             id: "p-terms",
             title: "Terms & Conditions",
             slug: "terms-and-conditions",
             content: `# Terms & Conditions of Business\n\nWelcome to **1stCars**. By browsing our marketplace or using our vehicle procurement, trade-in, or certified showroom inspection services, you agree to comply with the following terms.\n\n### 1. Booking & Delivery\n- To reserve a luxury vehicle from our handpicked fleet, a refundable holding deposit of ₹50,000 is required.\n- Full payment must be settled via certified bank transfer, RTGS, or approved showroom partner financing before delivery.\n\n### 2. Odometer and Title Integrity\n- We pledge an absolute **Zero-Tolerance Policy** for tampered odometers.\n- If any vehicle is found to have a non-genuine odometer read-out or a hidden past salvage title, we will issue a **100% Instant Refund**.\n\n### 3. Customer Sell-Your-Car & Appraisals\n- Valuations provided online are estimated guides.\n- Final purchase offers are subject to an on-site physical evaluation.\n\nFor legal or contract queries, please write to us at **legal@1stcars.com**.`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: true
           },
           {
             id: "p-showrooms",
             title: "Our Showrooms",
             slug: "our-showrooms",
             content: `# 1stCars Flagship Showrooms\n\nExperience the finest luxury pre-owned shopping experience in Gujarat. Visit one of our multi-brand flagship stores to view, inspect, and test drive our fleet.\n\n### 1. Surat Experience Center (Main Hub)\n- **Address**: Floors 1-3, Dynamic Business Plaza, Ring Road, Surat, Gujarat - 395002\n- **Timings**: Monday - Sunday, 09:30 AM to 08:30 PM\n- **Phone**: +91 99999 99999\n\n### 2. Vadodara Luxury Outlet\n- **Address**: Grand Central Galleria, Alkapuri, Vadodara, Gujarat - 390007\n- **Timings**: Monday - Saturday, 10:00 AM to 08:00 PM\n- **Phone**: +91 98888 88888\n\n### 3. Bharuch Express Depot\n- **Address**: Highway Landmark Arcade, NH-48, Bharuch, Gujarat - 392001\n- **Timings**: Monday - Saturday, 10:00 AM to 07:00 PM\n- **Phone**: +91 97777 77777\n\n### 4. Vapi Collection Center\n- **Address**: Premium Hub Plaza, Char Rasta, Vapi, Gujarat - 396191\n- **Timings**: Monday - Saturday, 10:00 AM to 07:30 PM\n- **Phone**: +91 96666 66666`,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            is_footer: true
           }
         ];
       default:
@@ -418,11 +424,27 @@ class SupabaseMockClient {
     let items = this.getStorage<any>(storageKey, initialData);
 
     // Auto-sync new fallback items if the database representation has been expanded
-    if (table === "pages" && items.length < initialData.length) {
-      const existingIds = new Set(items.map((it: any) => it.id));
-      const missing = initialData.filter((it: any) => !existingIds.has(it.id));
-      if (missing.length > 0) {
-        items = [...items, ...missing];
+    if (table === "pages") {
+      let changed = false;
+      items = items.map((it: any) => {
+        if (["p-warranty", "p-certificate", "p-terms", "p-showrooms"].includes(it.id) && it.is_footer !== true) {
+          it.is_footer = true;
+          changed = true;
+        } else if (["p-about", "p-faq"].includes(it.id) && it.is_footer !== false) {
+          it.is_footer = false;
+          changed = true;
+        }
+        return it;
+      });
+      if (items.length < initialData.length) {
+        const existingIds = new Set(items.map((it: any) => it.id));
+        const missing = initialData.filter((it: any) => !existingIds.has(it.id));
+        if (missing.length > 0) {
+          items = [...items, ...missing];
+          changed = true;
+        }
+      }
+      if (changed) {
         this.setStorage(storageKey, items);
       }
     }

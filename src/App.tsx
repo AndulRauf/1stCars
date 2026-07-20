@@ -1468,8 +1468,11 @@ export default function App() {
       )}
 
       {/* 9. PREMIUM FOOTER */}
-      <Footer onViewChange={(view) => {
+      <Footer onViewChange={(view, pageId) => {
         setCurrentView(view);
+        if (view === "custom_page" && pageId) {
+          setSelectedPageId(pageId);
+        }
         window.scrollTo({ top: 0, behavior: "smooth" });
       }} />
 

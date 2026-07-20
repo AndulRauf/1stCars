@@ -2,13 +2,15 @@ import * as React from "react";
 import { Mail, Phone, MapPin, ArrowUpRight, Github, Heart, Shield, Award, Sparkles } from "lucide-react";
 import { Input } from "@/src/components/ui/Input";
 import { Button } from "@/src/components/ui/Button";
+import { supabase } from "@/src/lib/supabaseClient";
 
 interface FooterProps {
-  onViewChange?: (view: any) => void;
+  onViewChange?: (view: any, pageId?: string) => void;
 }
 
 export function Footer({ onViewChange }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const [footerPages, setFooterPages] = React.useState<any[]>([]);
 
   const [settings, setSettings] = React.useState({
     supportEmail: "concierge@1stcars.com",
@@ -37,6 +39,22 @@ export function Footer({ onViewChange }: FooterProps) {
         }
       }
     }
+
+    const loadFooterPages = async () => {
+      const { data } = await supabase.from("pages").select();
+      if (data) {
+        setFooterPages(data.filter((p: any) => p.is_footer));
+      }
+    };
+    loadFooterPages();
+
+    const handleUpdate = () => {
+      loadFooterPages();
+    };
+    window.addEventListener("1stcars_settings_updated", handleUpdate);
+    return () => {
+      window.removeEventListener("1stcars_settings_updated", handleUpdate);
+    };
   }, []);
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -88,7 +106,7 @@ export function Footer({ onViewChange }: FooterProps) {
         </div>
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 pb-12">
           
           {/* Brand Col */}
           <div className="lg:col-span-2 flex flex-col space-y-5">
@@ -163,6 +181,27 @@ export function Footer({ onViewChange }: FooterProps) {
                   (Dashboard, Dealer & Sales Portals)
                 </p>
               </li>
+            </ul>
+          </div>
+
+          {/* Quick Links Column 3: Trust & Policies (Dynamic Footer Pages) */}
+          <div>
+            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
+              Warranty & Trust
+            </h5>
+            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
+              {footerPages.map((page) => (
+                <li key={page.id}>
+                  <button
+                    type="button"
+                    onClick={() => onViewChange?.("custom_page", page.id)}
+                    className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+                  >
+                    <span>{page.title}</span>
+                    <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 

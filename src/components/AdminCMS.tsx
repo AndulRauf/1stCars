@@ -8,7 +8,7 @@ import {
   Activity, Shield, Hammer, MapPin, Calendar, Heart, 
   MessageSquare, ClipboardList, BookOpen, UserCheck, Eye, 
   Upload, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle2, ArrowDownToLine, ArrowUpFromLine,
-  Car
+  Car, Link
 } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
@@ -26,7 +26,7 @@ type CMSModule =
   | "dashboard" | "cars" | "users" | "staff" | "dealers" | "inspectors" | "sales"
   | "inspections" | "auctions" | "park_sell" | "brands" | "models" | "cities"
   | "faqs" | "testimonials" | "finance" | "warranty" | "notifications" | "expenses"
-  | "reports" | "pages" | "settings";
+  | "reports" | "pages" | "footer_links" | "settings";
 
 export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSProps) {
   // Active sub-module within Admin CMS
@@ -279,7 +279,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       notifications: { recipient_id: "all", title: "", message: "", type: "info" },
       expenses: { title: "", category: "Operations", amount: 5000, date: new Date().toISOString().split("T")[0], logged_by: "u-admin" },
       reports: {},
-      pages: { title: "", slug: "", content: "# Page Title\n\nPage text goes here." },
+      pages: { title: "", slug: "", content: "# Page Title\n\nPage text goes here.", is_footer: false },
+      footer_links: { title: "", slug: "", content: "# Footer Page Title\n\nFooter page text goes here.", is_footer: true },
       settings: {}
     };
 
@@ -478,11 +479,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         } else {
           await supabase.from("notifications").update(currentRecord).eq("id", editingId);
         }
-      } else if (activeModule === "pages") {
+      } else if (activeModule === "pages" || activeModule === "footer_links") {
+        const recordToSave = {
+          ...currentRecord,
+          is_footer: activeModule === "footer_links" ? true : (currentRecord.is_footer || false)
+        };
         if (formMode === "add") {
-          await supabase.from("pages").insert([currentRecord]);
+          await supabase.from("pages").insert([recordToSave]);
         } else {
-          await supabase.from("pages").update(currentRecord).eq("id", editingId);
+          await supabase.from("pages").update(recordToSave).eq("id", editingId);
         }
       } else {
         // Handle mock schema arrays
@@ -542,7 +547,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         await supabase.from("brands").delete().eq("id", id);
       } else if (activeModule === "notifications") {
         await supabase.from("notifications").delete().eq("id", id);
-      } else if (activeModule === "pages") {
+      } else if (activeModule === "pages" || activeModule === "footer_links") {
         await supabase.from("pages").delete().eq("id", id);
       } else {
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
@@ -778,7 +783,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "finance": return financePartners;
       case "warranty": return warrantyPlans;
       case "expenses": return expenses;
-      case "pages": return pages;
+      case "pages": return pages.filter(p => !p.is_footer);
+      case "footer_links": return pages.filter(p => p.is_footer);
       default: return [];
     }
   };
@@ -860,6 +866,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             { id: "expenses", label: "Ledger", icon: FileText },
             { id: "reports", label: "Reports", icon: TrendingUp },
             { id: "pages", label: "Custom Pages", icon: BookOpen },
+            { id: "footer_links", label: "Footer Links", icon: Link },
             { id: "settings", label: "Theme Design", icon: Palette }
           ].map((item) => (
             <button
@@ -1159,7 +1166,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Logged: {item.date} by {item.logged_by}</p>
                         </div>
                       )}
-                      {activeModule === "pages" && (
+                      {(activeModule === "pages" || activeModule === "footer_links") && (
                         <div className="max-w-md">
                           <p className="font-black text-slate-800">{item.title}</p>
                           <p className="text-[10px] text-indigo-600 font-bold mt-0.5">Slug: /{item.slug}</p>
@@ -1167,7 +1174,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         </div>
                       )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages"].includes(activeModule) && (
+                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links"].includes(activeModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -1205,13 +1212,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Duration: {item.duration_months} mos</p>
                         </div>
                       )}
-                      {activeModule === "pages" && (
+                      {(activeModule === "pages" || activeModule === "footer_links") && (
                         <div>
                           <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
                         </div>
                       )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages"].includes(activeModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages", "footer_links"].includes(activeModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>

@@ -206,7 +206,7 @@ export function Navbar({
                   {link.label}
                 </a>
               ))}
-              {customPages.map((page) => (
+              {customPages.filter((page) => !page.is_footer).map((page) => (
                 <a
                   key={page.id}
                   href={`#page-${page.slug}`}
@@ -412,7 +412,7 @@ export function Navbar({
                 <ChevronRight className={cn("h-4 w-4", currentView === link.view ? "text-white" : "text-slate-400")} />
               </a>
             ))}
-            {customPages.map((page) => (
+            {customPages.filter((page) => !page.is_footer).map((page) => (
               <a
                 key={page.id}
                 href={`#page-${page.slug}`}
