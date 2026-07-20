@@ -428,6 +428,8 @@ class SupabaseMockClient {
     }
 
     const queryState = {
+      operation: "select" as "select" | "insert" | "update" | "delete" | "upsert",
+      payload: null as any,
       filters: [] as Array<(item: any) => boolean>,
       orderField: null as string | null,
       orderAsc: true,
@@ -436,7 +438,7 @@ class SupabaseMockClient {
 
     const chain = {
       select: (columns: string = "*") => {
-        // Just returns the builder so we can chain other operators
+        queryState.operation = "select";
         return chain;
       },
 
@@ -477,6 +479,77 @@ class SupabaseMockClient {
       },
 
       execute: async () => {
+        if (queryState.operation === "insert") {
+          const records = queryState.payload;
+          const toInsert = Array.isArray(records) ? records : [records];
+          const inserted = toInsert.map((rec) => ({
+            id: rec.id || `${table.substring(0, 3)}-${Math.random().toString(36).substr(2, 9)}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...rec
+          }));
+
+          const updatedTable = [...inserted, ...items];
+          this.setStorage(storageKey, updatedTable);
+          return { data: Array.isArray(records) ? inserted : inserted[0], error: null };
+        }
+
+        if (queryState.operation === "update") {
+          const changes = queryState.payload;
+          let matchedCount = 0;
+          const updatedTable = items.map((item) => {
+            const matches = queryState.filters.every((filterFn) => filterFn(item));
+            if (matches) {
+              matchedCount++;
+              return { ...item, ...changes, updated_at: new Date().toISOString() };
+            }
+            return item;
+          });
+
+          this.setStorage(storageKey, updatedTable);
+          const updatedRecords = updatedTable.filter((item) =>
+            queryState.filters.every((filterFn) => filterFn(item))
+          );
+
+          return { data: updatedRecords, error: null, count: matchedCount };
+        }
+
+        if (queryState.operation === "delete") {
+          const beforeCount = items.length;
+          const updatedTable = items.filter((item) =>
+            !queryState.filters.every((filterFn) => filterFn(item))
+          );
+
+          this.setStorage(storageKey, updatedTable);
+          return { data: true, error: null, count: beforeCount - updatedTable.length };
+        }
+
+        if (queryState.operation === "upsert") {
+          const records = queryState.payload;
+          const toUpsert = Array.isArray(records) ? records : [records];
+          let updatedTable = [...items];
+
+          const processed = toUpsert.map((rec) => {
+            const existingIndex = updatedTable.findIndex((item) => item.id === rec.id);
+            const itemPayload = {
+              created_at: new Date().toISOString(),
+              ...rec,
+              updated_at: new Date().toISOString()
+            };
+
+            if (existingIndex !== -1) {
+              updatedTable[existingIndex] = { ...updatedTable[existingIndex], ...itemPayload };
+            } else {
+              updatedTable.push(itemPayload);
+            }
+            return itemPayload;
+          });
+
+          this.setStorage(storageKey, updatedTable);
+          return { data: Array.isArray(records) ? processed : processed[0], error: null };
+        }
+
+        // Default operation: "select"
         let result = [...items];
         
         // Apply filters
@@ -509,72 +582,27 @@ class SupabaseMockClient {
         return { data: data[0] || null, error: null };
       },
 
-      insert: async (records: any | any[]) => {
-        const toInsert = Array.isArray(records) ? records : [records];
-        const inserted = toInsert.map((rec) => ({
-          id: rec.id || `${table.substring(0, 3)}-${Math.random().toString(36).substr(2, 9)}`,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          ...rec
-        }));
-
-        const updatedTable = [...inserted, ...items];
-        this.setStorage(storageKey, updatedTable);
-        return { data: Array.isArray(records) ? inserted : inserted[0], error: null };
+      insert: (records: any | any[]) => {
+        queryState.operation = "insert";
+        queryState.payload = records;
+        return chain;
       },
 
-      update: async (changes: any) => {
-        // Find items that match the filters
-        let matchedCount = 0;
-        const updatedTable = items.map((item) => {
-          const matches = queryState.filters.every((filterFn) => filterFn(item));
-          if (matches) {
-            matchedCount++;
-            return { ...item, ...changes, updated_at: new Date().toISOString() };
-          }
-          return item;
-        });
-
-        this.setStorage(storageKey, updatedTable);
-        const updatedRecords = updatedTable.filter((item) =>
-          queryState.filters.every((filterFn) => filterFn(item))
-        );
-
-        return { data: updatedRecords, error: null, count: matchedCount };
+      update: (changes: any) => {
+        queryState.operation = "update";
+        queryState.payload = changes;
+        return chain;
       },
 
-      delete: async () => {
-        const beforeCount = items.length;
-        const updatedTable = items.filter((item) =>
-          !queryState.filters.every((filterFn) => filterFn(item))
-        );
-
-        this.setStorage(storageKey, updatedTable);
-        return { data: true, error: null, count: beforeCount - updatedTable.length };
+      delete: () => {
+        queryState.operation = "delete";
+        return chain;
       },
 
-      upsert: async (records: any | any[]) => {
-        const toUpsert = Array.isArray(records) ? records : [records];
-        let updatedTable = [...items];
-
-        const processed = toUpsert.map((rec) => {
-          const existingIndex = updatedTable.findIndex((item) => item.id === rec.id);
-          const itemPayload = {
-            created_at: new Date().toISOString(),
-            ...rec,
-            updated_at: new Date().toISOString()
-          };
-
-          if (existingIndex !== -1) {
-            updatedTable[existingIndex] = { ...updatedTable[existingIndex], ...itemPayload };
-          } else {
-            updatedTable.push(itemPayload);
-          }
-          return itemPayload;
-        });
-
-        this.setStorage(storageKey, updatedTable);
-        return { data: Array.isArray(records) ? processed : processed[0], error: null };
+      upsert: (records: any | any[]) => {
+        queryState.operation = "upsert";
+        queryState.payload = records;
+        return chain;
       }
     };
 
