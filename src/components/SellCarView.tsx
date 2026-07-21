@@ -16,6 +16,43 @@ interface SellCarViewProps {
   onBackToHome: () => void;
 }
 
+// Extensive brand logos lookup
+const BRAND_LOGOS: { [brand: string]: string } = {
+  "Maruti Suzuki": "https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg",
+  "Hyundai": "https://upload.wikimedia.org/wikipedia/commons/4/44/Hyundai_Motor_Company_logo.svg",
+  "Tata": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Tata_logo.svg",
+  "Mahindra": "https://upload.wikimedia.org/wikipedia/commons/2/29/Mahindra_Auto_logo.svg",
+  "Honda": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg",
+  "Toyota": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Toyota_EU.svg",
+  "Kia": "https://upload.wikimedia.org/wikipedia/commons/4/47/Kia_logo_2021.svg",
+  "Renault": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Renault_2021_Logo.svg",
+  "Volkswagen": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Volkswagen_Logo_2019.svg",
+  "Skoda": "https://upload.wikimedia.org/wikipedia/commons/1/18/Skoda_logo_2022.svg",
+  "Ford": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Ford_Motor_Company_Logo.svg",
+  "MG": "https://upload.wikimedia.org/wikipedia/commons/e/e9/MG_Motor_logo.svg",
+  "Force": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Force_Motors_logo.svg",
+  "ICML": "https://upload.wikimedia.org/wikipedia/commons/1/16/ICML_logo.png",
+  "San Motors": "https://i.postimg.cc/NjWk9C1V/san-motors-logo.png",
+  "DC Design": "https://upload.wikimedia.org/wikipedia/commons/c/cf/DC_Design_Logo.svg",
+  "Reva": "https://upload.wikimedia.org/wikipedia/commons/5/52/Mahindra_Reva_Logo.png",
+  "Nissan": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Nissan_2020_logo.svg",
+  "Fiat": "https://upload.wikimedia.org/wikipedia/commons/1/12/Fiat_Automobiles_logo.svg",
+  "Chevrolet": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Chevrolet-logo.png",
+  "BMW": "https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg",
+  "Audi": "https://upload.wikimedia.org/wikipedia/commons/9/92/Audi-Logo_2016.svg",
+  "Mercedes-Benz": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Benz_logo.svg",
+  "Porsche": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Porsche-logo.png",
+  "Bentley": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Bentley_Motors_logo.svg",
+  "Jaguar": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Jaguar_2012_logo.svg",
+  "Land Rover": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Land_Rover_logo_2020.svg",
+  "Volvo": "https://upload.wikimedia.org/wikipedia/commons/2/29/Volvo-Iron-Mark-Logo.svg",
+  "Mini Cooper": "https://upload.wikimedia.org/wikipedia/commons/e/e4/MINI_logo_2018.svg",
+  "Jeep": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Jeep_logo.svg",
+  "Tesla": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Tesla_T_symbol.svg",
+  "Aston Martin": "https://upload.wikimedia.org/wikipedia/commons/d/df/Aston_Martin_logo.svg",
+  "Ferrari": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Ferrari-Logo.svg"
+};
+
 // Extensive brand model database for interactive auto-suggestions
 const brandData: {
   [brand: string]: {
@@ -28,63 +65,183 @@ const brandData: {
     }[];
   };
 } = {
-  "Hyundai": {
-    models: [
-      { name: "Getz", category: "Hatchback", years: "2004 - 2010", image: "🚗", variants: ["GL", "GLE", "GLS", "Sportz"] },
-      { name: "Creta", category: "SUV", years: "2015 - Now", image: "🚗", variants: ["E", "EX", "S", "SX", "SX(O)"] },
-      { name: "i20", category: "Hatchback", years: "2008 - Now", image: "🚗", variants: ["Magna", "Sportz", "Asta", "Asta (O)"] },
-      { name: "i10", category: "Hatchback", years: "2007 - 2016", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-      { name: "Santro", category: "Hatchback", years: "1998 - 2014", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-      { name: "Verna", category: "Sedan", years: "2006 - Now", image: "🚗", variants: ["EX", "S", "SX", "SX(O)"] },
-      { name: "Accent", category: "Sedan", years: "1999 - 2013", image: "🚗", variants: ["Executive", "GLE", "GVS"] },
-      { name: "Sonata", category: "Sedan", years: "2001 - 2014", image: "🚗", variants: ["2.4 GDI", "2.0 CRDi"] },
-      { name: "Venue", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["E", "S", "SX", "SX(O)"] }
-    ]
-  },
   "Maruti Suzuki": {
     models: [
       { name: "Swift", category: "Hatchback", years: "2005 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
       { name: "Baleno", category: "Hatchback", years: "2015 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
       { name: "Wagon R", category: "Hatchback", years: "1999 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Alto 800", category: "Hatchback", years: "2012 - 2023", image: "🚗", variants: ["Std", "LXI", "VXI", "VXI+"] },
       { name: "Brezza", category: "SUV", years: "2016 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
       { name: "Ertiga", category: "MUV", years: "2012 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Dzire", category: "Sedan", years: "2008 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] }
+      { name: "Dzire", category: "Sedan", years: "2008 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Alto K10", category: "Hatchback", years: "2010 - Now", image: "🚗", variants: ["Std", "LXI", "VXI", "VXI+"] },
+      { name: "Grand Vitara", category: "SUV", years: "2022 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha", "Zeta+ Hybrid", "Alpha+ Hybrid"] },
+      { name: "Fronx", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
+      { name: "Celerio", category: "Hatchback", years: "2014 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Ignis", category: "Hatchback", years: "2017 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
+      { name: "S-Presso", category: "Hatchback", years: "2019 - Now", image: "🚗", variants: ["Std", "LXI", "VXI", "VXI+"] }
+    ]
+  },
+  "Hyundai": {
+    models: [
+      { name: "Creta", category: "SUV", years: "2015 - Now", image: "🚗", variants: ["E", "EX", "S", "SX", "SX(O)"] },
+      { name: "i20", category: "Hatchback", years: "2008 - Now", image: "🚗", variants: ["Magna", "Sportz", "Asta", "Asta (O)"] },
+      { name: "i10", category: "Hatchback", years: "2007 - 2016", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Grand i10", category: "Hatchback", years: "2013 - 2020", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Santro", category: "Hatchback", years: "1998 - 2022", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Verna", category: "Sedan", years: "2006 - Now", image: "🚗", variants: ["EX", "S", "SX", "SX(O)"] },
+      { name: "Accent", category: "Sedan", years: "1999 - 2013", image: "🚗", variants: ["Executive", "GLE", "GVS"] },
+      { name: "Venue", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["E", "S", "SX", "SX(O)"] },
+      { name: "Exter", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["EX", "S", "SX", "SX(O)"] },
+      { name: "Alcazar", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Prestige", "Platinum", "Signature"] },
+      { name: "Getz", category: "Hatchback", years: "2004 - 2010", image: "🚗", variants: ["GL", "GLE", "GLS", "Sportz"] },
+      { name: "Sonata", category: "Sedan", years: "2001 - 2015", image: "🚗", variants: ["2.4 GDI", "2.0 CRDi", "Gold"] }
     ]
   },
   "Tata": {
     models: [
-      { name: "Nexon", category: "SUV", years: "2017 - Now", image: "🚗", variants: ["XE", "XM", "XZ", "XZ+", "Fearless"] },
+      { name: "Nexon", category: "SUV", years: "2017 - Now", image: "🚗", variants: ["XE", "XM", "XZ", "XZ+", "Creative", "Fearless"] },
       { name: "Punch", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Pure", "Adventure", "Accomplished", "Creative"] },
       { name: "Altroz", category: "Hatchback", years: "2020 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Harrier", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Safari", category: "SUV", years: "1998 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Tiago", category: "Hatchback", years: "2016 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] }
+      { name: "Harrier", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Fearless"] },
+      { name: "Safari", category: "SUV", years: "1998 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Accomplished"] },
+      { name: "Tiago", category: "Hatchback", years: "2016 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
+      { name: "Tigor", category: "Sedan", years: "2017 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
+      { name: "Indica", category: "Hatchback", years: "1998 - 2018", image: "🚗", variants: ["DLS", "DLX", "LS", "LX"] },
+      { name: "Nano", category: "Hatchback", years: "2008 - 2018", image: "🚗", variants: ["CX", "LX", "Twist", "GenX"] },
+      { name: "Bolt", category: "Hatchback", years: "2015 - 2019", image: "🚗", variants: ["XE", "XM", "XT"] },
+      { name: "Zest", category: "Sedan", years: "2014 - 2019", image: "🚗", variants: ["XE", "XM", "XT"] },
+      { name: "Hexa", category: "SUV", years: "2017 - 2020", image: "🚗", variants: ["XE", "XM", "XT"] }
     ]
   },
   "Mahindra": {
     models: [
-      { name: "Thar", category: "SUV", years: "2010 - Now", image: "🚗", variants: ["AX", "AX Opt", "LX"] },
+      { name: "Thar", category: "SUV", years: "2010 - Now", image: "🚗", variants: ["AX", "AX Opt", "LX", "Earth Edition"] },
       { name: "XUV700", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["MX", "AX3", "AX5", "AX7", "AX7 L"] },
       { name: "Scorpio Classic", category: "SUV", years: "2002 - Now", image: "🚗", variants: ["S", "S11"] },
       { name: "Scorpio-N", category: "SUV", years: "2022 - Now", image: "🚗", variants: ["Z2", "Z4", "Z6", "Z8", "Z8 L"] },
-      { name: "Bolero", category: "SUV", years: "2000 - Now", image: "🚗", variants: ["B4", "B6", "B6 Opt"] }
+      { name: "Bolero", category: "SUV", years: "2000 - Now", image: "🚗", variants: ["B4", "B6", "B6 Opt"] },
+      { name: "Bolero Neo", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["N4", "N8", "N10"] },
+      { name: "XUV300", category: "SUV", years: "2019 - 2024", image: "🚗", variants: ["W4", "W6", "W8", "W8(O)"] },
+      { name: "XUV500", category: "SUV", years: "2011 - 2021", image: "🚗", variants: ["W4", "W6", "W8", "W10", "W11"] },
+      { name: "TUV300", category: "SUV", years: "2015 - 2020", image: "🚗", variants: ["T4", "T6", "T8", "T10"] },
+      { name: "Marazzo", category: "MUV", years: "2018 - Now", image: "🚗", variants: ["M2", "M4+", "M6+"] },
+      { name: "KUV100", category: "Hatchback", years: "2016 - 2023", image: "🚗", variants: ["K2", "K4+", "K6+", "K8"] }
+    ]
+  },
+  "Force": {
+    models: [
+      { name: "Gurkha", category: "SUV", years: "2013 - Now", image: "🚗", variants: ["3-Door", "5-Door", "Extreme"] },
+      { name: "Trax Cruiser", category: "MUV", years: "2000 - Now", image: "🚗", variants: ["Classic", "Deluxe", "Cruiser"] }
+    ]
+  },
+  "ICML": {
+    models: [
+      { name: "Rhino Rx", category: "SUV", years: "2006 - 2015", image: "🚗", variants: ["S2", "DLX", "Winner", "Grand"] }
+    ]
+  },
+  "San Motors": {
+    models: [
+      { name: "San Storm", category: "Convertible", years: "2001 - 2013", image: "🚗", variants: ["Standard 1.2"] }
+    ]
+  },
+  "DC Design": {
+    models: [
+      { name: "DC Avanti", category: "Sports Car", years: "2015 - 2019", image: "🚗", variants: ["Standard 2.0"] }
+    ]
+  },
+  "Reva": {
+    models: [
+      { name: "Reva i", category: "Electric Microcar", years: "2001 - 2012", image: "⚡", variants: ["Standard", "Classique", "Li-ion"] }
     ]
   },
   "Honda": {
     models: [
-      { name: "City", category: "Sedan", years: "1998 - Now", image: "🚗", variants: ["V", "VX", "ZX"] },
+      { name: "City", category: "Sedan", years: "1998 - Now", image: "🚗", variants: ["V", "VX", "ZX", "V MT", "VX CVT"] },
       { name: "Amaze", category: "Sedan", years: "2013 - Now", image: "🚗", variants: ["E", "S", "VX"] },
       { name: "Civic", category: "Sedan", years: "2006 - 2021", image: "🚗", variants: ["V", "VX", "ZX"] },
-      { name: "Jazz", category: "Hatchback", years: "2009 - 2022", image: "🚗", variants: ["V", "VX", "ZX"] }
+      { name: "Jazz", category: "Hatchback", years: "2009 - 2022", image: "🚗", variants: ["V", "VX", "ZX", "S"] },
+      { name: "Brio", category: "Hatchback", years: "2011 - 2019", image: "🚗", variants: ["E", "S", "V", "VX"] },
+      { name: "WR-V", category: "SUV", years: "2017 - 2023", image: "🚗", variants: ["S", "V", "VX"] },
+      { name: "Elevate", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["SV", "V", "VX", "ZX"] }
     ]
   },
   "Toyota": {
     models: [
       { name: "Fortuner", category: "SUV", years: "2009 - Now", image: "🚗", variants: ["Standard", "Legender", "GR Sport"] },
       { name: "Innova Crysta", category: "MUV", years: "2005 - Now", image: "🚗", variants: ["G", "GX", "VX", "ZX"] },
+      { name: "Innova Hycross", category: "MUV", years: "2022 - Now", image: "🚗", variants: ["GX", "VX Hybrid", "ZX Hybrid"] },
       { name: "Glanza", category: "Hatchback", years: "2019 - Now", image: "🚗", variants: ["E", "S", "G", "V"] },
-      { name: "Urban Cruiser", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["Mid", "High", "Premium"] }
+      { name: "Urban Cruiser", category: "SUV", years: "2020 - 2022", image: "🚗", variants: ["Mid", "High", "Premium"] },
+      { name: "Etios", category: "Sedan", years: "2010 - 2020", image: "🚗", variants: ["G", "GD", "V", "VD", "VX"] },
+      { name: "Liva", category: "Hatchback", years: "2011 - 2020", image: "🚗", variants: ["G", "GD", "V", "VD"] }
+    ]
+  },
+  "Kia": {
+    models: [
+      { name: "Seltos", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
+      { name: "Sonet", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
+      { name: "Carens", category: "MUV", years: "2022 - Now", image: "🚗", variants: ["Premium", "Prestige", "Luxury", "Luxury+"] },
+      { name: "Carnival", category: "Luxury MUV", years: "1998 - Now", image: "🚙", variants: ["Prestige", "Limousine", "Limousine Plus"] }
+    ]
+  },
+  "MG": {
+    models: [
+      { name: "Hector", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["Style", "Shine", "Smart", "Sharp", "Savvy"] },
+      { name: "Astor", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Style", "Super", "Smart", "Sharp", "Savvy"] },
+      { name: "ZS EV", category: "Electric", years: "2020 - Now", image: "⚡", variants: ["Executive", "Excite", "Exclusive", "Exclusive Pro"] },
+      { name: "Comet EV", category: "Electric", years: "2023 - Now", image: "⚡", variants: ["Pace", "Play", "Plush"] }
+    ]
+  },
+  "Renault": {
+    models: [
+      { name: "Kwid", category: "Hatchback", years: "2015 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "Climber"] },
+      { name: "Triber", category: "MUV", years: "2019 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "RXZ"] },
+      { name: "Kiger", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "RXZ"] },
+      { name: "Duster", category: "SUV", years: "2012 - 2022", image: "🚗", variants: ["RxE", "RxL", "RxS", "RxZ"] }
+    ]
+  },
+  "Volkswagen": {
+    models: [
+      { name: "Taigun", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
+      { name: "Virtus", category: "Sedan", years: "2022 - Now", image: "🚗", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
+      { name: "Polo", category: "Hatchback", years: "2010 - 2022", image: "🚗", variants: ["Trendline", "Comfortline", "Highline", "GT TSI"] },
+      { name: "Vento", category: "Sedan", years: "2010 - 2022", image: "🚗", variants: ["Trendline", "Comfortline", "Highline"] }
+    ]
+  },
+  "Skoda": {
+    models: [
+      { name: "Kushaq", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Active", "Ambition", "Style", "Monte Carlo"] },
+      { name: "Slavia", category: "Sedan", years: "2022 - Now", image: "🚗", variants: ["Active", "Ambition", "Style"] },
+      { name: "Rapid", category: "Sedan", years: "2011 - 2021", image: "🚗", variants: ["Active", "Ambition", "Style", "Rider Plus"] },
+      { name: "Octavia", category: "Sedan", years: "2001 - 2023", image: "🚗", variants: ["Ambition", "Style", "L&K"] }
+    ]
+  },
+  "Ford": {
+    models: [
+      { name: "Figo", category: "Hatchback", years: "2010 - 2021", image: "🚗", variants: ["LXI", "VXI", "ZXI", "Titanium"] },
+      { name: "EcoSport", category: "SUV", years: "2013 - 2021", image: "🚗", variants: ["Ambiente", "Trend", "Titanium", "Sports"] },
+      { name: "Endeavour", category: "SUV", years: "2003 - 2021", image: "🚙", variants: ["Trend", "Titanium", "Titanium Plus"] },
+      { name: "Aspire", category: "Sedan", years: "2015 - 2021", image: "🚗", variants: ["Ambiente", "Trend", "Titanium", "Titanium Plus"] }
+    ]
+  },
+  "Nissan": {
+    models: [
+      { name: "Magnite", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["XE", "XL", "XV", "XV Premium"] },
+      { name: "Sunny", category: "Sedan", years: "2011 - 2020", image: "🚗", variants: ["XE", "XL", "XV"] },
+      { name: "Micra", category: "Hatchback", years: "2010 - 2020", image: "🚗", variants: ["XE", "XL", "XV"] }
+    ]
+  },
+  "Fiat": {
+    models: [
+      { name: "Punto", category: "Hatchback", years: "2009 - 2020", image: "🚗", variants: ["Active", "Dynamic", "Emotion", "Abarth"] },
+      { name: "Linea", category: "Sedan", years: "2009 - 2020", image: "🚗", variants: ["Active", "Dynamic", "Emotion"] }
+    ]
+  },
+  "Chevrolet": {
+    models: [
+      { name: "Beat", category: "Hatchback", years: "2010 - 2017", image: "🚗", variants: ["PS", "LS", "LT", "LTZ"] },
+      { name: "Cruze", category: "Sedan", years: "2009 - 2017", image: "🚗", variants: ["LT", "LTZ"] },
+      { name: "Tavera", category: "MUV", years: "2004 - 2017", image: "🚗", variants: ["LS", "LT", "Neo 3"] }
     ]
   },
   "Porsche": {
@@ -128,21 +285,6 @@ const brandData: {
       { name: "Continental GT", category: "Luxury Coupe", years: "2003 - Now", image: "🏎️", variants: ["V8", "W12", "Mulliner", "Speed"] },
       { name: "Flying Spur", category: "Luxury Sedan", years: "2005 - Now", image: "🚗", variants: ["V8", "W12", "Hybrid"] },
       { name: "Bentayga", category: "Luxury SUV", years: "2015 - Now", image: "🚙", variants: ["V8", "W12 Speed", "E-Hybrid"] }
-    ]
-  },
-  "Kia": {
-    models: [
-      { name: "Seltos", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
-      { name: "Sonet", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
-      { name: "Carens", category: "MUV", years: "2022 - Now", image: "🚗", variants: ["Premium", "Prestige", "Prestige+", "Luxury", "Luxury+"] },
-      { name: "Carnival", category: "Luxury MUV", years: "1998 - Now", image: "🚙", variants: ["Prestige", "Limousine", "Limousine Plus"] }
-    ]
-  },
-  "MG": {
-    models: [
-      { name: "Hector", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["Style", "Shine", "Smart", "Sharp", "Savvy"] },
-      { name: "Astor", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Style", "Super", "Smart", "Sharp", "Savvy"] },
-      { name: "ZS EV", category: "Electric", years: "2020 - Now", image: "⚡", variants: ["Executive", "Excite", "Exclusive", "Exclusive Pro"] }
     ]
   }
 };
@@ -304,9 +446,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
     }, 1000);
   };
 
-  // Popular and luxury brands
-  const popularBrandsList = ["Hyundai", "Maruti Suzuki", "Tata", "Mahindra", "Honda", "Toyota", "Kia", "Renault", "Volkswagen", "Skoda", "Ford", "MG"];
-  const luxuryBrandsList = ["BMW", "Audi", "Mercedes-Benz", "Jaguar", "Land Rover", "Volvo", "Mini Cooper", "Jeep", "Nissan"];
+  // Popular, Indian, and luxury brands from 2000 onwards
+  const popularBrandsList = [
+    "Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota", 
+    "Kia", "Renault", "Volkswagen", "Skoda", "Ford", "MG", 
+    "Force", "ICML", "San Motors", "DC Design", "Reva",
+    "Nissan", "Fiat", "Chevrolet"
+  ];
+  const luxuryBrandsList = [
+    "BMW", "Audi", "Mercedes-Benz", "Jaguar", "Land Rover", "Volvo", 
+    "Mini Cooper", "Jeep", "Tesla", "Porsche", "Bentley", "Aston Martin", "Ferrari"
+  ];
   
   const [dbBrands, setDbBrands] = React.useState<any[]>([]);
 
@@ -362,7 +512,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
 
   // Available Years
   const yearsList: number[] = [];
-  for (let y = 2025; y >= 2005; y--) {
+  for (let y = 2025; y >= 2000; y--) {
     yearsList.push(y);
   }
 
@@ -577,7 +727,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
                       {(showAllBrands ? filteredBrands : filteredBrands.slice(0, 12)).map((b) => {
                         const isSelected = selectedBrand === b;
                         const matchingDbBrand = dbBrands.find(brand => brand.name === b);
-                        const logoUrl = matchingDbBrand?.logo_url || matchingDbBrand?.logo;
+                        const logoUrl = BRAND_LOGOS[b] || matchingDbBrand?.logo_url || matchingDbBrand?.logo;
                         const isImgValid = logoUrl && logoUrl !== "⭐" && (
                           logoUrl.startsWith("http") || 
                           logoUrl.startsWith("/") || 
