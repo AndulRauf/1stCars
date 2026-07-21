@@ -1351,196 +1351,63 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Steps & Direct Lead Form */}
-            <div className="lg:col-span-7 space-y-6 text-left">
-              {/* Step 1 Item */}
-              <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-                <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
-                  01
-                </div>
-                <div className="space-y-3 flex-grow">
-                  <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Book Free Online or Doorstep Inspection</h3>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Fill out our micro evaluation form. Select your preferred date, time slot, and location (home, office, or our luxury inspection center).
-                  </p>
-
-                  {/* Inline Book Form */}
-                  {bookSuccess ? (
-                    <div className="bg-[#2E7D32]/5 border border-[#2E7D32]/15 p-4 rounded-2xl flex items-center space-x-3 text-[#2E7D32] animate-fade-in">
-                      <CheckCircle2 className="h-5 w-5 shrink-0" />
-                      <span className="text-xs font-bold">Successfully Scheduled! A concierge specialist will call you in 15 minutes.</span>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleBookInspection} className="bg-[#FAF9F6] p-4 rounded-2xl border border-slate-100 space-y-3 pt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input 
-                          type="text" 
-                          placeholder="Your Full Name" 
-                          value={bookName}
-                          onChange={(e) => setBookName(e.target.value)}
-                          className="bg-white border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-2.5 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                          required
-                        />
-                        <input 
-                          type="tel" 
-                          placeholder="Mobile Phone Number" 
-                          value={bookPhone}
-                          onChange={(e) => setBookPhone(e.target.value)}
-                          className="bg-white border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-2.5 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                          required
-                        />
-                        <input 
-                          type="date" 
-                          value={bookDate}
-                          onChange={(e) => setBookDate(e.target.value)}
-                          className="bg-white border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-2.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                          required
-                        />
-                      </div>
-                      <Button type="submit" className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-widest py-2.5 rounded-xl shadow-md shadow-[#2E7D32]/10 cursor-pointer">
-                        Book Showroom Inspection
-                      </Button>
-                    </form>
-                  )}
-                </div>
+          <div className="max-w-4xl mx-auto space-y-6 text-left">
+            {/* Step 1 Item */}
+            <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
+              <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
+                01
               </div>
-
-              {/* Step 2 Item */}
-              <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-                <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
-                  02
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Choose Your Sale Program</h3>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Select your preferred way to sell:
-                  </p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-bold">
-                    <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
-                      <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 1</span>
-                      <span className="text-slate-800 block">Instant Offer</span>
-                      <span className="text-[10px] font-semibold text-slate-500 mt-1">Direct cash purchase by 1stCars.</span>
-                    </li>
-                    <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
-                      <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 2</span>
-                      <span className="text-slate-800 block">Dealer Auction</span>
-                      <span className="text-[10px] font-semibold text-slate-500 mt-1">1,000+ premium dealers bid live.</span>
-                    </li>
-                    <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
-                      <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 3</span>
-                      <span className="text-slate-800 block">Park & Sell</span>
-                      <span className="text-[10px] font-semibold text-slate-500 mt-1">Consign securely in showroom.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Step 3 Item */}
-              <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-                <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
-                  03
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Get Paid Instantly & Same-Day</h3>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Once evaluation checks complete, you receive instant bank transfer, full loan settlement service, and zero liability transfer. We handle all complex DMV transfer paperwork free of charge!
-                  </p>
-                </div>
+              <div className="space-y-3 flex-grow">
+                <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Book Free Online or Doorstep Inspection</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  Fill out our micro evaluation form. Select your preferred date, time slot, and location (home, office, or our luxury inspection center).
+                </p>
               </div>
             </div>
 
-            {/* Instant Valuation Calculator Widget */}
-            <div className="lg:col-span-5 w-full">
-              <div className="bg-white border border-[#2E7D32]/10 shadow-2xl shadow-slate-200/50 p-6 md:p-8 rounded-[36px] text-left relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#2E7D32]/5 rounded-full blur-2xl" />
-                
-                <div className="space-y-4 mb-6">
-                  <span className="inline-block bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-                    VIP VALUATION LOGIC
-                  </span>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Instant Car Value Estimator</h3>
-                  <p className="text-xs text-slate-500 font-semibold">
-                    Input your vehicle specification below to calculate our estimated initial trade-in value based on global live market auctions.
-                  </p>
-                </div>
+            {/* Step 2 Item */}
+            <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
+              <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
+                02
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Choose Your Sale Program</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  Select your preferred way to sell:
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-bold">
+                  <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 1</span>
+                    <span className="text-slate-800 block">Instant Offer</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-1">Direct cash purchase by 1stCars.</span>
+                  </li>
+                  <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 2</span>
+                    <span className="text-slate-800 block">Dealer Auction</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-1">1,000+ premium dealers bid live.</span>
+                  </li>
+                  <li className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 3</span>
+                    <span className="text-slate-800 block">Park & Sell</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-1">Consign securely in showroom.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
 
-                {calcError && (
-                  <div className="bg-red-50 text-red-700 text-xs font-bold p-3.5 rounded-xl border border-red-100 mb-4">
-                    ✕ {calcError}
-                  </div>
-                )}
-
-                <form onSubmit={handleCalculateValuation} className="space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Vehicle Brand / Model</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. Porsche 911, Audi Q8" 
-                        value={calcBrand}
-                        onChange={(e) => setCalcBrand(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-2.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Model Year</label>
-                        <select 
-                          value={calcYear}
-                          onChange={(e) => setCalcYear(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold h-10 px-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 cursor-pointer"
-                        >
-                          {["2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018"].map(yr => (
-                            <option key={yr} value={yr}>{yr}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">KM / Miles Driven</label>
-                        <input 
-                          type="number" 
-                          placeholder="e.g. 15000" 
-                          value={calcMileage}
-                          onChange={(e) => setCalcMileage(e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold px-3 h-10 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#2E7D32]/20 focus:border-[#2E7D32]"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs tracking-wider uppercase py-3.5 rounded-xl shadow-lg shadow-[#2E7D32]/10 cursor-pointer">
-                    Get Instant Valuation
-                  </Button>
-                </form>
-
-                {calcEstimatedValue !== null && (
-                  <div className="mt-6 bg-[#2E7D32]/5 border border-[#2E7D32]/15 p-5 rounded-3xl text-center space-y-2 animate-in slide-in-from-bottom-3 duration-300">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#2E7D32]">Estimated Instant Offer Value</span>
-                    <h4 className="text-3xl font-black text-[#2E7D32] tracking-tighter">₹{calcEstimatedValue.toLocaleString("en-IN")}</h4>
-                    <p className="text-[10px] font-semibold text-slate-500 max-w-xs mx-auto leading-relaxed">
-                      This represents a high-grade trade-in estimate. Book your doorstep inspection today to lock in your live offer!
-                    </p>
-                    <div className="pt-2">
-                      <Button 
-                        onClick={() => {
-                          setBookName(calcBrand ? `Owner of ${calcBrand}` : "");
-                          toast.success("Book inspection form pre-filled!");
-                        }}
-                        size="sm" 
-                        className="bg-[#2E7D32] text-white text-[10px] font-black px-4 py-2 cursor-pointer"
-                      >
-                        Lock In This Offer
-                      </Button>
-                    </div>
-                  </div>
-                )}
+            {/* Step 3 Item */}
+            <div className="flex items-start space-x-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
+              <div className="h-12 w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-lg shrink-0">
+                03
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">Get Paid Instantly & Same-Day</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  Once evaluation checks complete, you receive instant bank transfer, full loan settlement service, and zero liability transfer. We handle all complex DMV transfer paperwork free of charge!
+                </p>
               </div>
             </div>
           </div>
