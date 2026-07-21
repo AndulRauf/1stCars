@@ -106,7 +106,7 @@ export function Footer({ onViewChange }: FooterProps) {
         </div>
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-12">
           
           {/* Brand Col */}
           <div className="lg:col-span-2 flex flex-col space-y-5">
@@ -137,54 +137,7 @@ export function Footer({ onViewChange }: FooterProps) {
             </div>
           </div>
 
-          {/* Quick Links Column 1: Inventory */}
-          <div>
-            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
-              Inventory
-            </h5>
-            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
-              {["Hypercars & Exotic", "Grand Tourers", "Premium Luxury SUVs", "Electric & Hybrids", "Vintage Classics"].map((item) => (
-                <li key={item}>
-                  <a href={`#${item.toLowerCase().replace(/\s+/g, "-")}`} className="hover:text-primary transition-colors flex items-center group">
-                    <span>{item}</span>
-                    <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Quick Links Column 2: Services */}
-          <div>
-            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
-              Premium Services
-            </h5>
-            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
-              {["Bespoke Finder", "Pre-Purchase Evaluation", "Private Trade-in Concierge", "Elite Finance Programs", "Corporate Fleet Hub"].map((item) => (
-                <li key={item}>
-                  <a href={`#${item.toLowerCase().replace(/\s+/g, "-")}`} className="hover:text-primary transition-colors flex items-center group">
-                    <span>{item}</span>
-                    <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
-                  </a>
-                </li>
-              ))}
-              <li className="pt-2 border-t border-[#2E7D32]/10 mt-2">
-                <button
-                  type="button"
-                  onClick={() => onViewChange?.("role_dashboards")}
-                  className="hover:text-primary transition-colors flex items-center group font-black text-xs text-[#2E7D32] uppercase tracking-wider cursor-pointer text-left"
-                >
-                  <span>🔑 Portal Gateway</span>
-                  <ArrowUpRight className="h-3 w-3 ml-1 shrink-0" />
-                </button>
-                <p className="text-[10px] text-slate-400 mt-0.5 leading-none font-semibold">
-                  (Dashboard, Dealer & Sales Portals)
-                </p>
-              </li>
-            </ul>
-          </div>
-
-          {/* Quick Links Column 3: Trust & Policies (Dynamic Footer Pages) */}
+          {/* Quick Links Column 1: Trust & Policies (Dynamic Footer Pages) */}
           <div>
             <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
               Warranty & Trust
@@ -203,6 +156,26 @@ export function Footer({ onViewChange }: FooterProps) {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Quick Links Column 2: Portal Access */}
+          <div>
+            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
+              Portal Access
+            </h5>
+            <div className="space-y-3.5">
+              <button
+                type="button"
+                onClick={() => onViewChange?.("role_dashboards")}
+                className="hover:text-primary transition-colors flex items-center group font-black text-sm text-[#2E7D32] uppercase tracking-wider cursor-pointer text-left"
+              >
+                <span>🔑 Portal Gateway</span>
+                <ArrowUpRight className="h-3 w-3 ml-1 shrink-0" />
+              </button>
+              <p className="text-xs text-slate-400 leading-normal font-semibold">
+                Access your dealer dashboard, manager workspace, and sales representative portals.
+              </p>
+            </div>
           </div>
 
           {/* Column 3: Premium Club Newsletter */}
