@@ -35,6 +35,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
+  // Mobile OTP vs Email/Password login mode
+  const [loginMethod, setLoginMethod] = React.useState<"otp" | "email">("otp");
+
+  // Simulated SMS Notification banner state
+  const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
+
   // @ts-ignore
   const hasSupabaseKeys = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
   const [isUsingMock, setIsUsingMock] = React.useState(() => {
@@ -94,9 +100,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     };
   }, []);
 
-  // Mobile OTP vs Email/Password login mode
-  const [loginMethod, setLoginMethod] = React.useState<"otp" | "email">("otp");
-
   React.useEffect(() => {
     setMode(initialMode);
     setError("");
@@ -118,8 +121,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setEnteredOtp("");
     setCountdown(0);
   }, [mode, loginMethod]);
-
-  if (!isOpen) return null;
 
   // Demo account click logs in instantly
   const handleDemoLogin = async (demoEmail: string) => {
@@ -231,9 +232,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       setLoading(false);
     }
   };
-
-  // Simulated SMS Notification banner state
-  const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
 
   const sendOtpCode = async (mobile: string, code: string) => {
     // If we are in mock mode, always simulate
@@ -696,6 +694,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     { label: "Sales Assoc.", email: "sales@1stcars.com", name: "Sneha" },
     { label: "Admin", email: "admin@1stcars.com", name: "Super Admin" }
   ];
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
