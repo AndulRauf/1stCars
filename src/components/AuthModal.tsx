@@ -1104,37 +1104,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           </div>
         </form>
 
-        {/* Quick 1-Click Demo Accounts Section */}
-        {mode === "login" && (
-          <div className="border-t border-slate-100 pt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                ⚡ Quick 1-Click Demo Sign-In
-              </span>
-              <span className="text-[9px] font-bold text-[#2E7D32] bg-[#2E7D32]/10 px-2 py-0.5 rounded-full">
-                Instant Role Access
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {demoAccounts.map((account) => (
-                <button
-                  key={account.email}
-                  type="button"
-                  onClick={() => handleDemoLogin(account.email)}
-                  disabled={loading}
-                  className="px-2 py-2 bg-slate-50 hover:bg-[#2E7D32]/10 border border-slate-200/80 hover:border-[#2E7D32]/40 rounded-xl text-left transition-all group cursor-pointer"
-                >
-                  <p className="text-[10px] font-black text-slate-800 group-hover:text-[#2E7D32] truncate">
-                    {account.label}
-                  </p>
-                  <p className="text-[8px] font-semibold text-slate-400 truncate">
-                    {account.name}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Footer toggle switcher */}
         <div className="text-center pt-2 text-xs font-semibold text-slate-400">
