@@ -284,7 +284,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       reports: {},
       pages: { title: "", slug: "", content: "# Page Title\n\nPage text goes here.", is_footer: false },
       footer_links: { title: "", slug: "", content: "# Footer Page Title\n\nFooter page text goes here.", is_footer: true },
-      settings: {}
+      settings: {},
+      text_editor: {}
     };
 
     setFormData(defaultTemplates[activeModule] || {});
@@ -1154,8 +1155,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </div>
       )}
 
-      {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports) */}
-      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && (
+      {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor) */}
+      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
