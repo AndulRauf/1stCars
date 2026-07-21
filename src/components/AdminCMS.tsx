@@ -24,7 +24,7 @@ interface AdminCMSProps {
 
 type CMSModule = 
   | "dashboard" | "cars" | "users" | "staff" | "dealers" | "inspectors" | "sales"
-  | "inspections" | "auctions" | "park_sell" | "brands" | "models" | "cities"
+  | "inspections" | "auctions" | "park_sell" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "warranty" | "notifications" | "expenses"
   | "reports" | "pages" | "footer_links" | "settings";
 
@@ -269,8 +269,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Mumbai", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
       auctions: { car_title: "", base_price: 1500000, current_bid: 1500000, time_remaining: "24 Hours", total_bids: 0, status: "active" },
       park_sell: { slot: "Slot D-01", vehicle: "", price_per_day: 3500, status: "available", seller_name: "", duration_days: 0 },
-      brands: { name: "", logo_url: "⭐", is_popular: true },
-      models: { brand: "BMW", name: "", category: "SUV", engine: "", power: "" },
+      brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
       cities: { name: "", state: "", branch_manager: "", support_number: "" },
       faqs: { category: "General", question: "", answer: "" },
       testimonials: { name: "", role: "Private Buyer", rating: 5, content: "", photo: "👤" },
@@ -468,10 +467,61 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           await supabase.from("auctions").update(currentRecord).eq("id", editingId);
         }
       } else if (activeModule === "brands") {
-        if (formMode === "add") {
-          await supabase.from("brands").insert([currentRecord]);
+        // 1. Save or update the Brand record in Supabase
+        const brandRecord = {
+          name: currentRecord.brand_name || currentRecord.name || "Unknown Brand",
+          logo_url: currentRecord.logo_url || "⭐",
+          is_popular: currentRecord.is_popular === true
+        };
+
+        let brandId = currentRecord.brand_id || "";
+        
+        // Check if the brand already exists in Supabase
+        const { data: existingBrand } = await supabase
+          .from("brands")
+          .select("id")
+          .eq("name", brandRecord.name)
+          .maybeSingle();
+
+        if (existingBrand) {
+          brandId = existingBrand.id;
+          await supabase.from("brands").update(brandRecord).eq("id", brandId);
         } else {
-          await supabase.from("brands").update(currentRecord).eq("id", editingId);
+          const { data: insertedBrand, error: insErr } = await supabase
+            .from("brands")
+            .insert([brandRecord])
+            .select()
+            .single();
+          if (insertedBrand) {
+            brandId = insertedBrand.id;
+          } else if (insErr) {
+            console.error("Error inserting brand:", insErr);
+          }
+        }
+
+        // 2. Save the model to local models list if model_name is provided and not a brand placeholder
+        if (currentRecord.model_name && !currentRecord.model_name.startsWith("—")) {
+          const modelRecord = {
+            id: currentRecord.id && currentRecord.id.startsWith("m-") ? currentRecord.id : `m-${Math.random().toString(36).substr(2, 9)}`,
+            brand_id: brandId || undefined,
+            brand: brandRecord.name,
+            name: currentRecord.model_name,
+            category: currentRecord.category || "Luxury Car",
+            engine: currentRecord.engine || "Standard Engine",
+            power: currentRecord.power || "N/A",
+            audience: currentRecord.audience || "Buyer & Seller",
+            status: currentRecord.status || "Active"
+          };
+
+          const nextModels = [...models];
+          const existingModelIdx = nextModels.findIndex(m => m.id === editingId || m.id === modelRecord.id || (m.name?.toLowerCase() === modelRecord.name?.toLowerCase() && m.brand?.toLowerCase() === modelRecord.brand?.toLowerCase()));
+          if (existingModelIdx > -1) {
+            nextModels[existingModelIdx] = { ...nextModels[existingModelIdx], ...modelRecord };
+          } else {
+            nextModels.push(modelRecord);
+          }
+          setModels(nextModels);
+          localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
         }
       } else if (activeModule === "notifications") {
         if (formMode === "add") {
@@ -544,7 +594,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       } else if (activeModule === "auctions") {
         await supabase.from("auctions").delete().eq("id", id);
       } else if (activeModule === "brands") {
-        await supabase.from("brands").delete().eq("id", id);
+        // If it's a model in our local list, delete from models
+        const isModel = models.some(m => m.id === id);
+        if (isModel) {
+          const nextModels = models.filter(m => m.id !== id);
+          setModels(nextModels);
+          localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
+        } else {
+          // It's a brand in Supabase
+          await supabase.from("brands").delete().eq("id", id);
+        }
       } else if (activeModule === "notifications") {
         await supabase.from("notifications").delete().eq("id", id);
       } else if (activeModule === "pages" || activeModule === "footer_links") {
@@ -604,9 +663,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       rows = cars;
       filename = "1stcars-stock-catalog.xls";
     } else {
-      headers = ["name", "logo_url", "rating", "active"];
-      rows = brands;
-      filename = "1stcars-brands-catalog.xls";
+      headers = ["brand_name", "model_name", "category", "engine", "power", "logo_url", "is_popular", "audience", "status"];
+      rows = getCombinedBrandsModels();
+      filename = "1stcars-brands-models-catalog.xls";
     }
 
     // Generate CSV contents with standard double quote wrap escaping
@@ -706,12 +765,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             importedRecords.push(finalRecord);
           } else {
             const finalRecord = {
-              name: rowData.name || "",
+              brand_name: rowData.brand_name || rowData.brand || rowData.name || "BMW",
+              model_name: rowData.model_name || rowData.name || "X5",
+              category: rowData.category || "SUV",
+              engine: rowData.engine || "Standard Engine",
+              power: rowData.power || "N/A",
               logo_url: rowData.logo_url || "⭐",
-              rating: Number(rowData.rating) || 4.8,
-              active: rowData.active === "false" || rowData.active === "0" ? false : true
+              is_popular: rowData.is_popular === "true" || rowData.is_popular === "1",
+              audience: rowData.audience || "Buyer & Seller",
+              status: rowData.status || "Active"
             };
-            if (finalRecord.name) {
+            if (finalRecord.brand_name) {
               importedRecords.push(finalRecord);
             }
           }
@@ -723,14 +787,68 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         }
 
         setIsLoading(true);
-        const targetTable = type === "cars" ? "cars" : "brands";
-        const { error } = await supabase.from(targetTable).insert(importedRecords);
+        if (type === "cars") {
+          const { error } = await supabase.from("cars").insert(importedRecords);
+          if (error) throw error;
+        } else {
+          // Combined import for Brands and Models!
+          for (const rec of importedRecords) {
+            // Upsert brand in Supabase
+            const brandRecord = {
+              name: rec.brand_name,
+              logo_url: rec.logo_url,
+              is_popular: rec.is_popular
+            };
 
-        if (error) {
-          throw error;
+            let brandId = "";
+            const { data: existingBrand } = await supabase
+              .from("brands")
+              .select("id")
+              .eq("name", rec.brand_name)
+              .maybeSingle();
+
+            if (existingBrand) {
+              brandId = existingBrand.id;
+              await supabase.from("brands").update(brandRecord).eq("id", brandId);
+            } else {
+              const { data: insertedBrand } = await supabase
+                .from("brands")
+                .insert([brandRecord])
+                .select()
+                .single();
+              if (insertedBrand) {
+                brandId = insertedBrand.id;
+              }
+            }
+
+            // Save model in local storage models list
+            if (rec.model_name && !rec.model_name.startsWith("—")) {
+              const modelRecord = {
+                id: `m-${Math.random().toString(36).substr(2, 9)}`,
+                brand_id: brandId || undefined,
+                brand: rec.brand_name,
+                name: rec.model_name,
+                category: rec.category,
+                engine: rec.engine,
+                power: rec.power,
+                audience: rec.audience,
+                status: rec.status
+              };
+
+              const nextModels = [...models];
+              const existingIdx = nextModels.findIndex(m => m.brand?.toLowerCase() === modelRecord.brand.toLowerCase() && m.name?.toLowerCase() === modelRecord.name.toLowerCase());
+              if (existingIdx > -1) {
+                nextModels[existingIdx] = { ...nextModels[existingIdx], ...modelRecord };
+              } else {
+                nextModels.push(modelRecord);
+              }
+              setModels(nextModels);
+              localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
+            }
+          }
         }
 
-        toast.success(`Superbly uploaded and bulk inserted ${importedRecords.length} records into ${targetTable}!`);
+        toast.success(`Spreadsheet imported & catalog updated successfully!`);
         loadCMSData();
         if (onReloadAllData) onReloadAllData();
       } catch (err: any) {
@@ -762,6 +880,51 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     toast.success("Prismatically updated Website Theme, branding parameters, SEO tags, and analytics successfully.");
   };
 
+  const getCombinedBrandsModels = () => {
+    const list: any[] = [];
+    // Pair each model with its parent brand
+    models.forEach((m: any) => {
+      const matchingBrand = brands.find((b: any) => b.name?.toLowerCase() === m.brand?.toLowerCase()) || 
+                            brands.find((b: any) => b.id === m.brand_id);
+      list.push({
+        id: m.id || `m-${Math.random()}`,
+        brand_id: matchingBrand?.id || m.brand_id || "",
+        brand_name: m.brand || matchingBrand?.name || "Generic",
+        model_name: m.name || "Unknown Model",
+        category: m.category || m.body_type || "Luxury Car",
+        engine: m.engine || "Standard Powertrain",
+        power: m.power || "N/A",
+        logo_url: matchingBrand?.logo_url || "⭐",
+        is_popular: matchingBrand?.is_popular !== false,
+        audience: m.audience || "Buyer & Seller",
+        type: "model",
+        status: m.status || "Active"
+      });
+    });
+    
+    // Also add any brands that don't have models in our list as brand-only rows
+    brands.forEach((b: any) => {
+      const hasModel = models.some((m: any) => m.brand?.toLowerCase() === b.name?.toLowerCase() || m.brand_id === b.id);
+      if (!hasModel) {
+        list.push({
+          id: b.id || `b-${Math.random()}`,
+          brand_id: b.id,
+          brand_name: b.name,
+          model_name: "— (All Models Approved)",
+          category: "All Segments",
+          engine: "—",
+          power: "—",
+          logo_url: b.logo_url || "⭐",
+          is_popular: b.is_popular !== false,
+          audience: b.audience || "Buyer & Seller",
+          type: "brand",
+          status: b.status || "Active"
+        });
+      }
+    });
+    return list;
+  };
+
   // Generic data mapping per active CMS view
   const getActiveModuleData = (): any[] => {
     switch (activeModule) {
@@ -769,14 +932,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "users": return users;
       case "inspections": return inspections;
       case "auctions": return auctions;
-      case "brands": return brands;
+      case "brands": return getCombinedBrandsModels();
       case "notifications": return notifications;
       case "staff": return getStoredMockList("staff");
       case "dealers": return dealers;
       case "inspectors": return inspectors;
       case "sales": return salesAssociates;
       case "park_sell": return parkSell;
-      case "models": return models;
       case "cities": return cities;
       case "faqs": return faqs;
       case "testimonials": return testimonials;
@@ -842,7 +1004,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           </Button>
         </div>
 
-        {/* 21 Tab Grid Selector */}
+        {/* 20 Tab Grid Selector */}
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5 max-h-48 overflow-y-auto pr-1">
           {[
             { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -855,8 +1017,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             { id: "inspections", label: "Inspections", icon: ClipboardList },
             { id: "auctions", label: "Auctions", icon: Hammer },
             { id: "park_sell", label: "Park & Sell", icon: Layers },
-            { id: "brands", label: "Brands", icon: Play },
-            { id: "models", label: "Models", icon: Layers },
+            { id: "brands", label: "Brands & Models", icon: Play },
             { id: "cities", label: "Cities", icon: MapPin },
             { id: "faqs", label: "FAQs", icon: HelpCircle },
             { id: "testimonials", label: "Reviews", icon: Star },
@@ -1173,8 +1334,14 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 truncate max-w-xs mt-1">{item.content}</p>
                         </div>
                       )}
+                      {activeModule === "brands" && (
+                        <div>
+                          <p className="font-black text-slate-800">{item.brand_name}</p>
+                          <p className="text-[10px] text-[#2E7D32] font-black uppercase tracking-wider mt-0.5">Model: {item.model_name}</p>
+                        </div>
+                      )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links"].includes(activeModule) && (
+                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands"].includes(activeModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -1217,23 +1384,42 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
                         </div>
                       )}
+                      {activeModule === "brands" && (
+                        <div>
+                          <p className="font-black text-slate-900">{item.category}</p>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Specs: {item.engine} ({item.power})</p>
+                        </div>
+                      )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages", "footer_links"].includes(activeModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages", "footer_links", "brands"].includes(activeModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
                       )}
                     </td>
                     <td className="p-4">
-                      <span className={`text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full ${
-                        String(item.status || item.role || "active").toLowerCase() === "available" || String(item.status || item.role || "active").toLowerCase() === "completed" || String(item.status || item.role || "active").toLowerCase() === "approved" || String(item.status || item.role || "active").toLowerCase() === "admin"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : String(item.status || item.role || "active").toLowerCase() === "pending" || String(item.status || item.role || "active").toLowerCase() === "assigned"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-indigo-100 text-indigo-700"
-                      }`}>
-                        {item.status || item.role || "Active"}
-                      </span>
+                      {activeModule === "brands" ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 w-max">
+                            👥 {item.audience}
+                          </span>
+                          {item.is_popular && (
+                            <span className="text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 w-max">
+                              ⭐ Popular
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className={`text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full ${
+                          String(item.status || item.role || "active").toLowerCase() === "available" || String(item.status || item.role || "active").toLowerCase() === "completed" || String(item.status || item.role || "active").toLowerCase() === "approved" || String(item.status || item.role || "active").toLowerCase() === "admin"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : String(item.status || item.role || "active").toLowerCase() === "pending" || String(item.status || item.role || "active").toLowerCase() === "assigned"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-indigo-100 text-indigo-700"
+                        }`}>
+                          {item.status || item.role || "Active"}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -1960,7 +2146,26 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   return (
                     <div key={key} className={`space-y-1 ${isMultiline ? "sm:col-span-2" : ""}`}>
                       <label className="block text-[10px] font-black uppercase text-slate-400">{label}</label>
-                      {typeof value === "boolean" ? (
+                      {key === "audience" ? (
+                        <select
+                          value={formData[key] || "Buyer & Seller"}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
+                        >
+                          <option value="Buyer">Buyer Only</option>
+                          <option value="Seller">Seller Only</option>
+                          <option value="Buyer & Seller">Buyer & Seller</option>
+                        </select>
+                      ) : key === "status" ? (
+                        <select
+                          value={formData[key] || "Active"}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : typeof value === "boolean" ? (
                         <select
                           value={String(formData[key])}
                           onChange={(e) => setFormData({ ...formData, [key]: e.target.value === "true" })}
