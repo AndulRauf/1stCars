@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { CARS_DATA } from "@/src/data/cars";
 import { supabase } from "@/src/lib/supabaseClient";
@@ -245,14 +245,60 @@ export function CarDetailsView({
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Back navigation button */}
-        <button
-          onClick={onBack}
-          className="inline-flex items-center space-x-2 text-xs font-bold text-[#2E7D32] hover:text-[#25632a] uppercase tracking-widest mb-8 cursor-pointer group"
-        >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to Browse Collection</span>
-        </button>
+        {/* Top navigation & Action bar */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center space-x-2 text-xs font-bold text-[#2E7D32] hover:text-[#25632a] uppercase tracking-widest cursor-pointer group"
+          >
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Browse Collection</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const isSaved = savedCars.includes(car.id);
+                onSaveToggle(car.id, `${car.brand} ${car.model}`);
+              }}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer",
+                savedCars.includes(car.id)
+                  ? "bg-rose-50 text-rose-600 border-rose-200"
+                  : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+              )}
+            >
+              <Heart className={cn("h-3.5 w-3.5", savedCars.includes(car.id) && "fill-current text-rose-500")} />
+              <span>{savedCars.includes(car.id) ? "Saved in Shortlist" : "Save Car"}</span>
+            </button>
+
+            <button
+              onClick={async () => {
+                const shareUrl = `${window.location.origin}/cars/${car.id}`;
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      title: `${car.year} ${car.brand} ${car.model} | 1stCars Certified`,
+                      text: `Check out this certified ${car.year} ${car.brand} ${car.model} (${car.fuel}, ${car.transmission}) on 1stCars!`,
+                      url: shareUrl,
+                    });
+                    return;
+                  } catch (e) {}
+                }
+                try {
+                  await navigator.clipboard.writeText(shareUrl);
+                  toast.success("Car link copied to clipboard! Share it with anyone.");
+                } catch (err) {
+                  toast.info(`Direct link: ${shareUrl}`);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-[#2E7D32]/20 cursor-pointer"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              <span>Share Particular Car Page</span>
+            </button>
+          </div>
+        </div>
 
         {/* Primary Page Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">

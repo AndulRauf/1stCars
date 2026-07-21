@@ -97,9 +97,9 @@ export function Navbar({
     isSpecial?: boolean;
     requiresAuth?: boolean;
   }[] = [
-    { label: "Buy Cars", view: "buy_cars" as const, href: "#buy-cars" },
-    { label: "Sell Car", view: "sell_car" as const, href: "#sell-car" },
-    { label: "1stMark Certification", view: "firstmark_certification" as const, href: "#firstmark-certification" },
+    { label: "Buy Cars", view: "buy_cars" as const, href: "/buy-cars" },
+    { label: "Sell Car", view: "sell_car" as const, href: "/sell-car" },
+    { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification" },
   ];
 
   const handleLinkClick = (e: React.MouseEvent, view: any, href: string) => {

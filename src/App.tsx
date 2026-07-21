@@ -56,15 +56,62 @@ import { Error404Page, Error500Page } from "@/src/components/ErrorPages";
 import { FirstMarkCertification } from "@/src/components/FirstMarkCertification";
 import { CustomPageView } from "@/src/components/CustomPageView";
 import { supabase } from "@/src/lib/supabaseClient";
+import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
 
 export default function App() {
   // Navigation & interaction states
-  const [currentView, setCurrentView] = React.useState<"home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "error_404" | "error_500" | "firstmark_certification" | "custom_page">("home");
+  const [currentView, setCurrentView] = React.useState<ViewType>("home");
   const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
   const [activeCarId, setActiveCarId] = React.useState<string>("car-1");
+  const [selectedBrand, setSelectedBrand] = React.useState<string>("");
+  const [selectedModel, setSelectedModel] = React.useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = React.useState<string | undefined>(undefined);
   const [savedCars, setSavedCars] = React.useState<string[]>(["car-1", "car-3"]); // pre-saved for delightful onboarding
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
   const [selectedCity, setSelectedCity] = React.useState<string>("All Cities");
+
+  // Central Navigation handler that keeps URL in sync
+  const handleNavigate = React.useCallback((
+    view: ViewType,
+    params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string },
+    options?: { replace?: boolean }
+  ) => {
+    setCurrentView(view);
+    if (params?.carId) setActiveCarId(params.carId);
+    if (params?.pageId) setSelectedPageId(params.pageId);
+    if (params?.brand !== undefined) setSelectedBrand(params.brand);
+    if (params?.model !== undefined) setSelectedModel(params.model);
+    if (params?.search !== undefined) setSearchQuery(params.search);
+
+    navigateTo(view, params, options);
+
+    const car = CARS_DATA.find(c => c.id === (params?.carId || activeCarId));
+    const carName = car ? `${car.year} ${car.brand} ${car.model}` : undefined;
+    document.title = getPageTitle(view, carName);
+  }, [activeCarId]);
+
+  // Sync route on mount and browser back/forward (popstate)
+  React.useEffect(() => {
+    const syncRouteFromUrl = () => {
+      const route = parseCurrentUrl();
+      setCurrentView(route.view);
+      if (route.carId) setActiveCarId(route.carId);
+      if (route.pageId) setSelectedPageId(route.pageId);
+      if (route.brand) setSelectedBrand(route.brand);
+      if (route.model) setSelectedModel(route.model);
+      if (route.search) setSearchQuery(route.search);
+
+      const car = CARS_DATA.find(c => c.id === (route.carId || activeCarId));
+      const carName = car ? `${car.year} ${car.brand} ${car.model}` : undefined;
+      document.title = getPageTitle(route.view, carName);
+    };
+
+    syncRouteFromUrl();
+    window.addEventListener("popstate", syncRouteFromUrl);
+    return () => {
+      window.removeEventListener("popstate", syncRouteFromUrl);
+    };
+  }, []);
 
   React.useEffect(() => {
     // Listen to Supabase auth events (works with both mock and live Supabase clients)
@@ -213,7 +260,6 @@ export default function App() {
     };
   }, [loadSettingsAndCMSData]);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedBrand, setSelectedBrand] = React.useState("");
   const [selectedBudget, setSelectedBudget] = React.useState(0);
   const [selectedBodyType, setSelectedBodyType] = React.useState<string>("All");
 
@@ -314,8 +360,7 @@ export default function App() {
   };
 
   const scrollToSell = () => {
-    setCurrentView("sell_car");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    handleNavigate("sell_car");
   };
 
   const focusSearchInput = () => {
@@ -495,29 +540,25 @@ export default function App() {
         savedCount={savedCars.length} 
         onSavedClick={() => {
           if (currentView !== "home") {
-            setCurrentView("home");
+            handleNavigate("home");
             setTimeout(scrollToInventory, 150);
           } else {
             scrollToInventory();
           }
         }}
         onSearchClick={() => {
-          setCurrentView("buy_cars");
+          handleNavigate("buy_cars");
         }}
         onAuthClick={(mode) => setAuthModal({ isOpen: true, mode })}
         currentView={currentView}
         onViewChange={(view, pageId) => {
-          setCurrentView(view);
-          if (view === "custom_page" && pageId) {
-            setSelectedPageId(pageId);
-          }
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          handleNavigate(view, { pageId });
         }}
         currentUser={currentUser}
         onLogout={async () => {
           await supabase.auth.signOut();
           setCurrentUser(null);
-          setCurrentView("home");
+          handleNavigate("home");
           triggerToast("Logged out successfully");
         }}
         selectedCity={selectedCity}
@@ -527,53 +568,48 @@ export default function App() {
       {currentView === "buy_cars" ? (
         <BuyCarsView
           onViewDetails={(id) => {
-            setActiveCarId(id);
-            setCurrentView("car_details");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("car_details", { carId: id });
           }}
           savedCars={savedCars}
           onSaveToggle={toggleSaveCar}
           selectedCity={selectedCity}
           onCityChange={setSelectedCity}
+          initialBrand={selectedBrand}
+          initialModel={selectedModel}
+          initialSearch={searchQuery}
         />
       ) : currentView === "car_details" ? (
         <CarDetailsView
           carId={activeCarId}
           onBack={() => {
-            setCurrentView("buy_cars");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("buy_cars");
           }}
           onViewCar={(id) => {
-            setActiveCarId(id);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("car_details", { carId: id });
           }}
           savedCars={savedCars}
           onSaveToggle={toggleSaveCar}
           onNavigateToSalesPortal={() => {
-            setCurrentView("sales_dashboard");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("sales_dashboard");
           }}
         />
       ) : currentView === "sales_dashboard" ? (
         <SalesDashboardView
           onBackToInventory={() => {
-            setCurrentView("buy_cars");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("buy_cars");
           }}
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
           onNavigateToDashboard={() => {
             if (currentUser) {
-              setCurrentView("role_dashboards");
+              handleNavigate("role_dashboards");
             } else {
               setAuthModal({ isOpen: true, mode: "login" });
             }
-            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           onBackToHome={() => {
-            setCurrentView("buy_cars");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("buy_cars");
           }}
         />
       ) : currentView === "role_dashboards" ? (
@@ -583,12 +619,11 @@ export default function App() {
             onLogout={async () => {
               await supabase.auth.signOut();
               setCurrentUser(null);
-              setCurrentView("home");
+              handleNavigate("home");
               triggerToast("Logged out successfully");
             }}
             onNavigateToInventory={() => {
-              setCurrentView("buy_cars");
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              handleNavigate("buy_cars");
             }}
             onReloadAllData={loadSettingsAndCMSData}
           />
@@ -610,28 +645,25 @@ export default function App() {
       ) : currentView === "firstmark_certification" ? (
         <FirstMarkCertification
           onBackToHome={() => {
-            setCurrentView("home");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("home");
           }}
           onNavigateToInventory={() => {
-            setCurrentView("buy_cars");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("buy_cars");
           }}
         />
       ) : currentView === "custom_page" ? (
         <CustomPageView
           pageId={selectedPageId}
           onBackToHome={() => {
-            setCurrentView("home");
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            handleNavigate("home");
           }}
         />
       ) : currentView === "error_404" ? (
-        <Error404Page onGoHome={() => { setCurrentView("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+        <Error404Page onGoHome={() => handleNavigate("home")} />
       ) : currentView === "error_500" ? (
         <Error500Page 
-          onGoHome={() => { setCurrentView("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }} 
-          onRetry={() => { setCurrentView("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          onGoHome={() => handleNavigate("home")} 
+          onRetry={() => handleNavigate("home")}
         />
       ) : (
         <>
@@ -673,8 +705,7 @@ export default function App() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">
               <Button 
                 onClick={() => {
-                  setCurrentView("buy_cars");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  handleNavigate("buy_cars");
                 }}
                 className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold px-8 py-4 text-xs tracking-wider uppercase shadow-xl shadow-[#2E7D32]/25 group flex items-center justify-center rounded-full w-full sm:w-auto"
               >
@@ -847,9 +878,7 @@ export default function App() {
                     <CardFooter className="p-6 pt-0">
                       <Button 
                         onClick={() => {
-                          setActiveCarId(car.id);
-                          setCurrentView("car_details");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
+                          handleNavigate("car_details", { carId: car.id });
                         }}
                         className="w-full bg-[#2E7D32] text-white hover:bg-[#25632a] font-extrabold text-xs tracking-wider uppercase py-3 rounded-xl flex items-center justify-center shadow-lg shadow-[#2E7D32]/10"
                       >
@@ -911,8 +940,7 @@ export default function App() {
                 <div className="pt-4 mt-2 border-t border-slate-100 flex">
                   <button
                     onClick={() => {
-                      setCurrentView("firstmark_certification");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      handleNavigate("firstmark_certification");
                     }}
                     className="text-[#2E7D32] hover:text-[#25632a] text-xs font-black uppercase tracking-widest flex items-center gap-1 cursor-pointer"
                   >
@@ -1180,11 +1208,7 @@ export default function App() {
 
       {/* 9. PREMIUM FOOTER */}
       <Footer onViewChange={(view, pageId) => {
-        setCurrentView(view);
-        if (view === "custom_page" && pageId) {
-          setSelectedPageId(pageId);
-        }
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        handleNavigate(view, { pageId });
       }} />
 
     </div>

@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronRight, Fuel, ShieldAlert, Check } from "lucide-react";
+import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronRight, Fuel, ShieldAlert, Check, Share2 } from "lucide-react";
 import { Car, FilterState } from "@/src/types";
 import { CARS_DATA, FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
 import { CarCard } from "./CarCard";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { cn } from "@/src/lib/utils";
+import { toast } from "@/src/lib/toast";
 
 interface BuyCarsViewProps {
   onViewDetails: (id: string) => void;
@@ -13,6 +14,9 @@ interface BuyCarsViewProps {
   onSaveToggle: (id: string, model: string) => void;
   selectedCity?: string;
   onCityChange?: (city: string) => void;
+  initialBrand?: string;
+  initialModel?: string;
+  initialSearch?: string;
 }
 
 const ITEMS_PER_PAGE = 3;
@@ -23,6 +27,9 @@ export function BuyCarsView({
   onSaveToggle,
   selectedCity,
   onCityChange,
+  initialBrand,
+  initialModel,
+  initialSearch,
 }: BuyCarsViewProps) {
   const [settings, setSettings] = React.useState({
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
@@ -60,8 +67,8 @@ export function BuyCarsView({
 
   // Filter States
   const [filters, setFilters] = React.useState<FilterState>({
-    search: "",
-    brand: "All",
+    search: initialSearch || "",
+    brand: initialBrand || "All",
     fuel: "All",
     transmission: "All",
     budgetMin: 0,
@@ -70,6 +77,17 @@ export function BuyCarsView({
     yearMax: 2024,
     city: "All Cities",
   });
+
+  // Sync initial parameters when route changes
+  React.useEffect(() => {
+    if (initialBrand || initialSearch) {
+      setFilters(prev => ({
+        ...prev,
+        brand: initialBrand || prev.brand,
+        search: initialSearch || (initialModel ? `${initialBrand || ''} ${initialModel}` : prev.search)
+      }));
+    }
+  }, [initialBrand, initialModel, initialSearch]);
 
   // UI Settings States
   const [isListView, setIsListView] = React.useState(false);

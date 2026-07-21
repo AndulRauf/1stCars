@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, User, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, User, ChevronLeft, ChevronRight, Eye, Share2 } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
+import { toast } from "@/src/lib/toast";
 
 interface CarCardProps {
   key?: string | number;
@@ -139,27 +140,51 @@ export function CarCard({
           } : undefined}
         >
           {/* Top Bar inside Gallery */}
-          <div className="flex items-center justify-between z-10">
-            {car.certified && (
+          <div className="flex items-center justify-between z-10 w-full">
+            {car.certified ? (
               <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-3 py-1 text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1.5 animate-pulse">
                 <ShieldCheck className="h-3.5 w-3.5 fill-white/10" /> 1stMark Certified
               </Badge>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSaveToggle?.(car.id, `${car.brand} ${car.model}`);
-              }}
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer",
-                isSaved 
-                  ? "bg-rose-500 border-rose-400 text-white" 
-                  : "bg-black/20 hover:bg-black/40 border-white/20 text-white"
-              )}
-              aria-label="Add to wishlist"
-            >
-              <Heart className={cn("h-4.5 w-4.5", isSaved && "fill-current")} />
-            </button>
+            ) : <div />}
+            <div className="flex items-center gap-1.5 ml-auto">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const shareUrl = `${window.location.origin}/cars/${car.id}`;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${car.brand} ${car.model} | 1stCars`,
+                      text: `Check out this 1stCars Certified ${car.year} ${car.brand} ${car.model}!`,
+                      url: shareUrl
+                    }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                      toast.success(`Copied share link for ${car.brand} ${car.model}!`);
+                    }).catch(() => {});
+                  }
+                }}
+                className="w-9 h-9 rounded-full flex items-center justify-center bg-black/30 hover:bg-[#2E7D32] border border-white/20 text-white backdrop-blur-md transition-all duration-300 cursor-pointer shadow-md"
+                title="Share Car Page"
+                aria-label="Share Car"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveToggle?.(car.id, `${car.brand} ${car.model}`);
+                }}
+                className={cn(
+                  "w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer shadow-md",
+                  isSaved 
+                    ? "bg-rose-500 border-rose-400 text-white" 
+                    : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
+                )}
+                aria-label="Add to wishlist"
+              >
+                <Heart className={cn("h-4.5 w-4.5", isSaved && "fill-current")} />
+              </button>
+            </div>
           </div>
 
           {/* Aesthetic Mock Vector Vehicle Silhouette Overlay */}
