@@ -35,6 +35,40 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
+  // @ts-ignore
+  const hasSupabaseKeys = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const [isUsingMock, setIsUsingMock] = React.useState(() => {
+    return typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
+  });
+
+  const handleCopySQL = async () => {
+    try {
+      const response = await fetch("/schema.sql");
+      if (!response.ok) throw new Error("Failed to load schema file.");
+      const sql = await response.text();
+      await navigator.clipboard.writeText(sql);
+      toast.success("Database SQL copied to clipboard! Paste it into the Supabase SQL Editor and run it.");
+    } catch (err) {
+      toast.error("Failed to read schema file automatically. Use the download link below!");
+    }
+  };
+
+  const handleMockFallback = () => {
+    localStorage.setItem("1stcars_use_mock_db", "true");
+    toast.success("Switched to Local Mock Database! Reloading app...");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  };
+
+  const handleSwitchToSupabase = () => {
+    localStorage.removeItem("1stcars_use_mock_db");
+    toast.success("Switched back to remote Supabase! Reloading...");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
+
   // OTP Resend Countdown
   React.useEffect(() => {
     let timer: any;
@@ -299,11 +333,92 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         </div>
 
         {/* Error and Success Indicators */}
-        {error && (
-          <div className="p-3 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold rounded-xl">
-            ⚠️ {error}
+        {hasSupabaseKeys && isUsingMock && (
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl font-bold flex flex-col gap-1">
+            <div className="flex justify-between items-center">
+              <span className="flex items-center gap-1">💡 Running in Mock DB mode</span>
+              <button 
+                type="button" 
+                onClick={handleSwitchToSupabase} 
+                className="text-[10px] text-[#2E7D32] hover:underline cursor-pointer"
+              >
+                Reconnect Supabase
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 font-medium">
+              Remote Supabase database is bypassed. You can use the mock accounts shown below to sign in instantly.
+            </p>
           </div>
         )}
+
+        {error && (() => {
+          const isSchemaError = error.includes("profiles") || 
+                               error.includes("schema cache") || 
+                               error.includes("Could not find the table") || 
+                               error.includes("relation") || 
+                               error.includes("does not exist") ||
+                               error.includes("table");
+          
+          if (isSchemaError) {
+            return (
+              <div className="p-4 bg-rose-50 border border-rose-100 text-rose-900 text-xs rounded-xl flex flex-col gap-3">
+                <div className="font-bold flex items-center gap-1 text-rose-700">
+                  ⚠️ Database Schema Incomplete
+                </div>
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  You connected a real Supabase instance, but forgot to run the database setup tables (like <code className="bg-rose-100 px-1 py-0.5 rounded text-rose-800 font-mono">profiles</code>). Let's fix this:
+                </p>
+                
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCopySQL}
+                    className="flex-1 min-w-[140px] px-3 py-2 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all text-center cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <Database className="h-3 w-3" /> Copy Setup SQL
+                  </button>
+                  <a
+                    href="/schema.sql"
+                    download="1stcars_schema.sql"
+                    className="flex-1 min-w-[140px] px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-black text-[10px] uppercase tracking-wider rounded-lg transition-all text-center flex items-center justify-center gap-1 text-[10px] leading-tight font-black"
+                  >
+                    Download SQL File
+                  </a>
+                </div>
+
+                <div className="bg-white/75 rounded-lg p-2.5 border border-rose-100 text-[10px] text-slate-500 space-y-1 font-medium">
+                  <p className="font-bold text-slate-700">How to setup:</p>
+                  <ol className="list-decimal pl-4 space-y-0.5">
+                    <li>Go to your <strong className="text-slate-700">Supabase Dashboard</strong>.</li>
+                    <li>Click <strong className="text-slate-700">SQL Editor</strong> on the left side menu.</li>
+                    <li>Click <strong className="text-slate-700">New Query</strong>, paste the copied SQL code, and click <strong className="text-[#2E7D32]">Run</strong>.</li>
+                    <li>Refresh this app to sign in!</li>
+                  </ol>
+                </div>
+
+                <div className="border-t border-rose-100/70 pt-2 flex flex-col gap-1">
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Or bypass this and use the local high-fidelity preview mode:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleMockFallback}
+                    className="w-full py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                  >
+                    Bypass & Use Local Mock Database
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="p-3 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold rounded-xl">
+              ⚠️ {error}
+            </div>
+          );
+        })()}
+
         {success && (
           <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-1.5">
             <Check className="h-4 w-4 text-emerald-600" /> {success}

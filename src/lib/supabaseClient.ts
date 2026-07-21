@@ -6,7 +6,10 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 // @ts-ignore
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-export const isRealSupabase = Boolean(supabaseUrl && supabaseAnonKey);
+// Check for local storage override to use mock database
+const useMockOverride = typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
+
+export const isRealSupabase = Boolean(supabaseUrl && supabaseAnonKey) && !useMockOverride;
 
 // High-fidelity local database mock for a robust preview experience
 class SupabaseMockClient {
