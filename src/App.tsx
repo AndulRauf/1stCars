@@ -858,18 +858,9 @@ export default function App() {
                       </div>
                     </CardHeader>
 
-                    {/* Features checklist tags */}
-                    <CardContent className="p-6 pt-4 space-y-3 flex-grow">
-                      <div className="flex flex-wrap gap-1.5">
-                        {car.specifications.map((spec, i) => (
-                          <span key={i} className="text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Location indicator */}
-                      <div className="flex items-center text-xs text-slate-500 font-bold pt-2 border-t border-slate-100/80">
+                    {/* Location indicator */}
+                    <CardContent className="p-6 pt-2 flex-grow">
+                      <div className="flex items-center text-xs text-slate-500 font-bold">
                         <MapPin className="h-3.5 w-3.5 mr-2 text-slate-400 shrink-0" />
                         <span>{car.location}</span>
                       </div>
