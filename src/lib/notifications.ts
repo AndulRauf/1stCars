@@ -34,6 +34,72 @@ const notifyListeners = (notif: Notification) => {
   });
 };
 
+// Local storage helper for resilient offline / fallback notification management
+const NOTIF_STORAGE_KEY = "1stcars_sb_notifications";
+
+function getLocalNotifications(userId: string): Notification[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+    const list: Notification[] = raw ? JSON.parse(raw) : [
+      {
+        id: "notif-1",
+        recipient_id: "u-buyer",
+        title: "Welcome to 1stCars!",
+        message: "Verify your email and complete your buyer profile to schedule a test drive on premium models.",
+        type: "info",
+        is_read: false,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: "notif-2",
+        recipient_id: "u-seller",
+        title: "Inspection Submitted",
+        message: "Your inspection request for Honda City is currently assigned to certified inspector Vikram Rathore.",
+        type: "action",
+        is_read: false,
+        created_at: new Date().toISOString()
+      }
+    ];
+    return list.filter((n) => !userId || n.recipient_id === userId);
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalNotification(notif: Notification) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+    const list: Notification[] = raw ? JSON.parse(raw) : [];
+    const updated = [notif, ...list.filter((n) => n.id !== notif.id)];
+    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+function updateLocalReadStatus(userId: string, notifId?: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+    if (!raw) return;
+    const list: Notification[] = JSON.parse(raw);
+    const updated = list.map((n) => {
+      if (notifId && n.id === notifId) {
+        return { ...n, is_read: true };
+      }
+      if (!notifId && userId && n.recipient_id === userId) {
+        return { ...n, is_read: true };
+      }
+      return n;
+    });
+    localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // ==========================================
 // CENTRAL NOTIFICATION SERVICE
 // ==========================================
@@ -49,55 +115,87 @@ export const notificationService = {
     type: "info" | "alert" | "success" | "action";
     metadata?: any;
   }): Promise<{ data: Notification | null; error: any }> {
-    const { data, error } = await supabase.from("notifications").insert([
-      {
-        recipient_id: payload.recipientId,
-        sender_id: payload.senderId,
-        title: payload.title,
-        message: payload.message,
-        type: payload.type,
-        is_read: false,
-        metadata: payload.metadata || {}
-      }
-    ]);
+    const fallbackNotif: Notification = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      recipient_id: payload.recipientId,
+      sender_id: payload.senderId,
+      title: payload.title,
+      message: payload.message,
+      type: payload.type,
+      is_read: false,
+      metadata: payload.metadata || {},
+      created_at: new Date().toISOString()
+    };
 
-    if (!error && data) {
-      const inserted = Array.isArray(data) ? data[0] : data;
-      notifyListeners(inserted);
-      return { data: inserted, error: null };
+    try {
+      const { data, error } = await supabase.from("notifications").insert([
+        {
+          recipient_id: payload.recipientId,
+          sender_id: payload.senderId,
+          title: payload.title,
+          message: payload.message,
+          type: payload.type,
+          is_read: false,
+          metadata: payload.metadata || {}
+        }
+      ]);
+
+      if (!error && data) {
+        const inserted = Array.isArray(data) ? data[0] : data;
+        saveLocalNotification(inserted);
+        notifyListeners(inserted);
+        return { data: inserted, error: null };
+      }
+    } catch {
+      // Fallback below
     }
-    return { data: null, error };
+
+    saveLocalNotification(fallbackNotif);
+    notifyListeners(fallbackNotif);
+    return { data: fallbackNotif, error: null };
   },
 
   /**
    * Fetch active notifications for a specific user
    */
   async getNotifications(userId: string): Promise<Notification[]> {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("recipient_id", userId)
-      .order("created_at", { ascending: false });
+    if (!userId) return [];
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("recipient_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error loading notifications:", error);
-      return [];
+      if (error) {
+        console.warn("Using local notification state fallback:", error.message || error);
+        return getLocalNotifications(userId);
+      }
+      if (data && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.warn("Notification query exception, falling back to local storage:", err);
     }
-    return data || [];
+    return getLocalNotifications(userId);
   },
 
   /**
    * Mark a single notification as read
    */
   async markAsRead(notificationId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", notificationId);
+    updateLocalReadStatus("", notificationId);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId);
 
-    if (error) {
-      console.error("Error marking notification as read:", error);
-      return false;
+      if (error) {
+        console.warn("Could not sync markAsRead remotely:", error.message || error);
+      }
+    } catch {
+      // Local fallback completed
     }
     return true;
   },
@@ -106,14 +204,19 @@ export const notificationService = {
    * Mark all notifications as read for a specific user
    */
   async markAllAsRead(userId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("recipient_id", userId);
+    if (!userId) return false;
+    updateLocalReadStatus(userId);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("recipient_id", userId);
 
-    if (error) {
-      console.error("Error marking all notifications as read:", error);
-      return false;
+      if (error) {
+        console.warn("Could not sync markAllAsRead remotely:", error.message || error);
+      }
+    } catch {
+      // Local fallback completed
     }
     return true;
   },

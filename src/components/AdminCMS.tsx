@@ -493,9 +493,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                     logoUrl: realUrl
                   };
                   localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(updated));
-                  window.dispatchEvent(new Event("1stcars_settings_updated"));
                   return updated;
                 });
+                setTimeout(() => {
+                  window.dispatchEvent(new Event("1stcars_settings_updated"));
+                }, 0);
                 toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-settings`);
               } else {
                 setFormData((prevForm: any) => ({
@@ -738,7 +740,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
       toast.success(`${activeModule.toUpperCase()} item saved successfully.`);
       setIsFormOpen(false);
-      window.dispatchEvent(new Event("1stcars_settings_updated"));
+      setTimeout(() => {
+        window.dispatchEvent(new Event("1stcars_settings_updated"));
+      }, 0);
       loadCMSData();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -801,7 +805,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       }
 
       toast.success("Record removed successfully.");
-      window.dispatchEvent(new Event("1stcars_settings_updated"));
+      setTimeout(() => {
+        window.dispatchEvent(new Event("1stcars_settings_updated"));
+      }, 0);
       loadCMSData();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -1088,7 +1094,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       document.documentElement.style.setProperty("--button-theme-color", websiteSettings.buttonColor);
       
       // Notify other decoupled components like the Navbar
-      window.dispatchEvent(new Event("1stcars_settings_updated"));
+      setTimeout(() => {
+        window.dispatchEvent(new Event("1stcars_settings_updated"));
+      }, 0);
     }
 
     toast.success("Prismatically updated Website Theme, branding parameters, SEO tags, and analytics successfully.");
