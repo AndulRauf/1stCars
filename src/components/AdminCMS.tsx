@@ -478,20 +478,25 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         }
       } else if (activeModule === "brands") {
         // 1. Save or update the Brand record in Supabase
+        const logoUrlToSave = currentRecord.logo_url || currentRecord.logo || currentRecord.image_url || currentRecord.photo || "⭐";
         const brandRecord = {
           name: currentRecord.brand_name || currentRecord.name || "Unknown Brand",
-          logo_url: currentRecord.logo_url || "⭐",
-          is_popular: currentRecord.is_popular === true
+          logo_url: logoUrlToSave,
+          is_popular: currentRecord.is_popular === true || currentRecord.is_popular === "true"
         };
 
-        let brandId = currentRecord.brand_id || "";
-        
-        // Check if the brand already exists in Supabase
-        const { data: existingBrand } = await supabase
-          .from("brands")
-          .select("id")
-          .eq("name", brandRecord.name)
-          .maybeSingle();
+        let brandId = currentRecord.brand_id || (currentRecord.type === "brand" ? currentRecord.id : "");
+
+        // Check if brand exists by ID or by Name
+        let existingBrand: any = null;
+        if (brandId) {
+          const { data } = await supabase.from("brands").select("*").eq("id", brandId).maybeSingle();
+          existingBrand = data;
+        }
+        if (!existingBrand && brandRecord.name) {
+          const { data: allBrands } = await supabase.from("brands").select("*");
+          existingBrand = allBrands?.find((b: any) => b.name?.toLowerCase() === brandRecord.name.toLowerCase()) || null;
+        }
 
         if (existingBrand) {
           brandId = existingBrand.id;
@@ -499,7 +504,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         } else {
           const { data: insertedBrand, error: insErr } = await supabase
             .from("brands")
-            .insert([brandRecord])
+            .insert([{ ...brandRecord, id: brandId || `b-${Math.random().toString(36).substr(2, 9)}` }])
             .select()
             .single();
           if (insertedBrand) {
@@ -507,6 +512,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           } else if (insErr) {
             console.error("Error inserting brand:", insErr);
           }
+        }
+
+        // Fetch fresh brands to ensure local state is updated immediately
+        const { data: freshBrands } = await supabase.from("brands").select("*");
+        if (freshBrands && freshBrands.length > 0) {
+          setBrands(freshBrands);
         }
 
         // 2. Save the model to local models list if model_name is provided and not a brand placeholder
@@ -519,12 +530,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             category: currentRecord.category || "Luxury Car",
             engine: currentRecord.engine || "Standard Engine",
             power: currentRecord.power || "N/A",
+            logo_url: logoUrlToSave,
             audience: currentRecord.audience || "Buyer & Seller",
             status: currentRecord.status || "Active"
           };
 
           const nextModels = [...models];
-          const existingModelIdx = nextModels.findIndex(m => m.id === editingId || m.id === modelRecord.id || (m.name?.toLowerCase() === modelRecord.name?.toLowerCase() && m.brand?.toLowerCase() === modelRecord.brand?.toLowerCase()));
+          const existingModelIdx = nextModels.findIndex(m => 
+            m.id === editingId || 
+            m.id === modelRecord.id || 
+            (m.name?.toLowerCase() === modelRecord.name?.toLowerCase() && m.brand?.toLowerCase() === modelRecord.brand?.toLowerCase())
+          );
           if (existingModelIdx > -1) {
             nextModels[existingModelIdx] = { ...nextModels[existingModelIdx], ...modelRecord };
           } else {
@@ -2838,7 +2854,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               </div>
 
               {/* Dynamic Image Upload for Catalog record / vehicle / testimonial */}
-              {(formData.image_url !== undefined || formData.logo_url !== undefined || formData.photo !== undefined) && (
+              {(formData.image_url !== undefined || formData.logo_url !== undefined || formData.photo !== undefined || activeModule === "brands") && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
                   {activeModule === "cars" ? (
                     // Premium Multi-Photo upload for Cars
@@ -2984,8 +3000,37 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                     </div>
                   ) : (
                     // Default Single image upload
-                    <div className="space-y-2 text-left">
+                    <div className="space-y-3 text-left">
                       <label className="block text-[10px] font-black uppercase text-slate-400">Record Graphic / Image Attachment (Supabase Storage)</label>
+
+                      {/* Active Attachment Preview Badge */}
+                      {(formData.logo_url || formData.image_url || formData.photo || formData.logo) && (
+                        <div className="flex items-center gap-3 p-3 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+                          <div className="h-12 w-12 rounded-xl border border-emerald-300 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                            {(() => {
+                              const img = formData.logo_url || formData.image_url || formData.photo || formData.logo;
+                              const isImgValid = img && (
+                                img.startsWith("http") || 
+                                img.startsWith("/") || 
+                                img.startsWith("data:")
+                              );
+                              if (isImgValid) {
+                                return <img src={img} alt="Attached Logo Preview" className="h-full w-full object-contain p-1" referrerPolicy="no-referrer" />;
+                              }
+                              return <span className="text-xl font-black text-emerald-700">{img || "⭐"}</span>;
+                            })()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-black text-slate-900 truncate">
+                              Brand Logo / Attachment Connected
+                            </p>
+                            <p className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1">
+                              ✓ Ready to save with record
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       <div 
                         onDragOver={handleDragOver}
                         onDrop={handleDropUpload}
