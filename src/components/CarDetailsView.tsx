@@ -444,7 +444,7 @@ export function CarDetailsView({
                   )}
                 >
                   {ang.url ? (
-                    <img src={ang.url} className="w-12 h-10 object-cover rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                    <img src={ang.url} alt={ang.title || `Vehicle Thumbnail #${i+1}`} className="w-12 h-10 object-cover rounded-lg shrink-0" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-12 h-10 bg-slate-950 text-white rounded-lg flex items-center justify-center font-black text-xs shrink-0">🚙</div>
                   )}
