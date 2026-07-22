@@ -295,26 +295,7 @@ export function Navbar({
                     Logout
                   </Button>
                 </div>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onAuthClick?.("login")}
-                    className="hidden xl:inline-flex text-[#2E7D32]/85 hover:bg-[#2E7D32]/5 hover:text-primary font-bold uppercase tracking-wider text-xs"
-                  >
-                    <User className="h-4 w-4 mr-2" /> Login
-                  </Button>
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => onAuthClick?.("register")}
-                    className="bg-primary text-white font-bold shadow-lg shadow-[#2E7D32]/20 hover:bg-[#25632a] uppercase tracking-wider text-xs"
-                  >
-                    Dealer Register
-                  </Button>
-                </>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile Actions Header */}

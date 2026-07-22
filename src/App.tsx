@@ -1209,6 +1209,9 @@ export default function App() {
         onViewChange={(view, pageId) => {
           handleNavigate(view, { pageId });
         }} 
+        onAuthClick={(mode) => {
+          setAuthModal({ isOpen: true, mode });
+        }}
       />
 
     </div>

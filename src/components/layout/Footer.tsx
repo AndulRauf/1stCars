@@ -6,9 +6,10 @@ interface FooterProps {
   onViewChange?: (view: any, pageId?: string) => void;
   currentView?: string;
   hideTrustBadges?: boolean;
+  onAuthClick?: (mode: "login" | "register") => void;
 }
 
-export function Footer({ onViewChange, currentView, hideTrustBadges }: FooterProps) {
+export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const [footerPages, setFooterPages] = React.useState<any[]>([]);
 
@@ -189,20 +190,35 @@ export function Footer({ onViewChange, currentView, hideTrustBadges }: FooterPro
           {/* Quick Links Column 2: Portal Access */}
           <div>
             <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
-              Portal Access
+              Dealer Portal & Registration
             </h5>
-            <div className="space-y-3.5">
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => onAuthClick?.("register")}
+                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-wider py-2.5 px-3.5 rounded-xl flex items-center justify-between shadow-md shadow-[#2E7D32]/20 transition-all cursor-pointer group"
+              >
+                <span className="flex items-center gap-1.5">🤝 Partnered Dealer Register</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-white shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onAuthClick?.("login")}
+                className="w-full bg-white hover:bg-[#2E7D32]/5 text-[#2E7D32] border border-[#2E7D32]/25 font-black text-xs uppercase tracking-wider py-2.5 px-3.5 rounded-xl flex items-center justify-between shadow-2xs hover:border-[#2E7D32] transition-all cursor-pointer group"
+              >
+                <span className="flex items-center gap-1.5">🔑 Dealer Login</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-[#2E7D32] shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => onViewChange?.("role_dashboards")}
-                className="hover:text-primary transition-colors flex items-center group font-black text-sm text-[#2E7D32] uppercase tracking-wider cursor-pointer text-left"
+                className="hover:text-primary transition-colors flex items-center group font-bold text-xs text-slate-500 uppercase tracking-wider cursor-pointer text-left pt-1"
               >
-                <span>🔑 Portal Gateway</span>
+                <span>🛡️ Staff & Inspector Portal</span>
                 <ArrowUpRight className="h-3 w-3 ml-1 shrink-0" />
               </button>
-              <p className="text-xs text-slate-400 leading-normal font-semibold">
-                Access your dealer dashboard, manager workspace, and sales representative portals.
-              </p>
             </div>
           </div>
         </div>
