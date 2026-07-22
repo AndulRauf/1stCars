@@ -33,6 +33,16 @@ export interface Car {
   };
   owners?: number;
   cities?: string[];
+  variant?: string;
+  color?: string;
+  regCity?: string;
+  regYear?: number;
+  rtoCode?: string;
+  insuranceValidity?: string;
+  groundClearance?: string;
+  bootCapacity?: string;
+  fuelTank?: string;
+  keyCount?: number;
 }
 
 export type ViewType = "home" | "buy_cars" | "car_details" | "sales_dashboard";

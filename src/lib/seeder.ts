@@ -39,16 +39,10 @@ export interface DemoCity {
 }
 
 export const SEED_CITIES: DemoCity[] = [
-  { name: "Los Angeles", state: "California", is_active: true },
-  { name: "Beverly Hills", state: "California", is_active: true },
-  { name: "San Francisco", state: "California", is_active: true },
-  { name: "San Jose", state: "California", is_active: true },
-  { name: "Oakland", state: "California", is_active: true },
-  { name: "Mumbai", state: "Maharashtra", is_active: true },
-  { name: "Delhi NCR", state: "Delhi", is_active: true },
-  { name: "Bangalore", state: "Karnataka", is_active: true },
-  { name: "Pune", state: "Maharashtra", is_active: true },
-  { name: "Hyderabad", state: "Telangana", is_active: true }
+  { name: "Surat", state: "Gujarat", is_active: true },
+  { name: "Vadodara", state: "Gujarat", is_active: true },
+  { name: "Bharuch", state: "Gujarat", is_active: true },
+  { name: "Vapi", state: "Gujarat", is_active: true }
 ];
 
 export const SEED_BRANDS: DemoBrand[] = [

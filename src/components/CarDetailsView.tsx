@@ -458,6 +458,77 @@ export function CarDetailsView({
               ))}
             </div>
 
+            {/* COMPLETE VEHICLE OVERVIEW SPECIFICATIONS GRID */}
+            <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Complete Car Overview</span>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters & Heritage</h3>
+                </div>
+                <Badge className="bg-emerald-50 text-[#2E7D32] border border-emerald-200 font-bold text-[10px] uppercase tracking-wider">
+                  Verified Heritage Data
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
+                {/* 1. Reg City & RTO */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reg City & RTO</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.regCity || "Surat"}</p>
+                  <p className="text-[10px] font-bold text-[#2E7D32] mt-0.5">{car.rtoCode || "GJ05-ER-4050"}</p>
+                </div>
+
+                {/* 2. Reg Year & Make */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reg Year</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.regYear || car.year}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">Mfg {car.year}</p>
+                </div>
+
+                {/* 3. Ownership */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-bold">Ownership</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.owners === 1 ? "1st Owner" : `${car.owners || 1} Owners`}</p>
+                  <p className="text-[10px] font-bold text-emerald-600 mt-0.5">Single Handed</p>
+                </div>
+
+                {/* 4. Kilometers Driven */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KM Driven</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.mileage.toLocaleString()} km</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">Genuine Odometer</p>
+                </div>
+
+                {/* 5. Fuel & Transmission */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drivetrain</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.fuel}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">{car.transmission}</p>
+                </div>
+
+                {/* 6. Color */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Color</p>
+                  <p className="text-xs font-black text-slate-900 mt-1 truncate">{car.color || "GT Silver Metallic"}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">Original Factory Paint</p>
+                </div>
+
+                {/* 7. Insurance */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Insurance</p>
+                  <p className="text-xs font-black text-slate-900 mt-1 truncate">{car.insuranceValidity ? "Valid Insurance" : "Comprehensive"}</p>
+                  <p className="text-[10px] font-bold text-emerald-600 mt-0.5 truncate">{car.insuranceValidity || "Valid till March 2027"}</p>
+                </div>
+
+                {/* 8. Ground Clearance & Boot */}
+                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clearance & Boot</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">{car.groundClearance || "185 mm"}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">{car.bootCapacity || "420 Litres"}</p>
+                </div>
+              </div>
+            </div>
+
             {/* TABBED DETAILS NAVIGATION SECTION */}
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-6">
               
@@ -466,7 +537,7 @@ export function CarDetailsView({
                 {[
                   { id: "specs", label: "Specifications", icon: Award },
                   { id: "features", label: "Key Features", icon: Sparkles },
-                  { id: "inspection", label: "150-Point Inspection", icon: ShieldCheck },
+                  { id: "inspection", label: "150-Point Inspection Report", icon: ShieldCheck },
                   { id: "warranty", label: "Warranty Coverage", icon: CheckCircle2 },
                   { id: "finance", label: "Finance Eligibility", icon: Calculator },
                 ].map((tab) => {
@@ -534,33 +605,192 @@ export function CarDetailsView({
                   </div>
                 )}
 
-                {/* 3. Inspection Tab */}
+                {/* 3. 150-Point Detailed Inspection Tab */}
                 {activeTab === "inspection" && (
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                      <div>
-                        <h4 className="font-extrabold text-slate-900 text-sm">Overall 1stMark Inspection Rating</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">Comprehensive structural, computer & fluid tests</p>
+                  <div className="space-y-6">
+                    {/* Top Certificate Header Banner */}
+                    <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-black text-white p-5 rounded-2xl shadow-md border border-emerald-500/20 space-y-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest">
+                              Official Certified Report
+                            </Badge>
+                            <span className="text-xs font-mono text-emerald-400">CERT-GJ-150P-2026</span>
+                          </div>
+                          <h3 className="text-xl font-black text-white tracking-tight pt-1">
+                            150+ Point Detailed Structural & Technical Inspection
+                          </h3>
+                          <p className="text-xs text-slate-300">
+                            Executed at <strong className="text-emerald-300">{car.location}</strong> • Inspector ID: <strong className="text-white">INS-GJ-8842 (Vikram Rathore)</strong>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Score Rating</p>
+                            <p className="text-3xl font-black text-white">{car.inspectionSummary?.overallScore || "9.8"}<span className="text-xs text-slate-400">/10</span></p>
+                          </div>
+                          <div className="w-14 h-14 bg-emerald-500 text-slate-950 font-black rounded-2xl flex flex-col items-center justify-center text-center p-1 leading-none shadow-lg shadow-emerald-500/20">
+                            <span className="text-xs font-black">150/150</span>
+                            <span className="text-[8px] font-bold uppercase tracking-tighter mt-1">PASSED</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-[#2E7D32] text-white font-black text-lg h-12 w-12 rounded-xl flex items-center justify-center shadow-md">
-                        {car.inspectionSummary?.overallScore || "9.6"}
+
+                      <div className="h-px bg-white/10 my-2" />
+
+                      <div className="flex flex-wrap items-center justify-between text-xs gap-3">
+                        <div className="flex items-center space-x-4 text-emerald-200 text-[11px] font-medium">
+                          <span>✓ Zero Accident Frame</span>
+                          <span>✓ Odometer Authentic</span>
+                          <span>✓ Flood Free Guarantee</span>
+                          <span>✓ ECU Sweep Clean</span>
+                        </div>
+                        <button
+                          onClick={() => toast.success("Downloading 150-Point Certified Engineering Inspection PDF Report...")}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>Download PDF Certificate</span>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="space-y-3.5 pt-1">
+                    {/* 150-Point Category Breakdown Modules */}
+                    <div className="space-y-4 pt-1">
                       {[
-                        { label: "Engine & Transmission", value: car.inspectionSummary?.engine || "Pristine drivetrain compression, clean lubricants." },
-                        { label: "Brake Pad & Rotor Health", value: car.inspectionSummary?.brakes || "Braking efficiency checked at 94% pad life." },
-                        { label: "Onboard Computers & Electrics", value: car.inspectionSummary?.electronics || "Diagnostics test run: 100% ECUs error free." },
-                        { label: "Chassis & Paint", value: car.inspectionSummary?.exterior || "Original paint depth verified, ceramic coating is live." },
-                        { label: "Cabin & Ergonomics", value: car.inspectionSummary?.interior || "No signs of leather wear, ventilation verified." },
-                      ].map((insp, i) => (
-                        <div key={i} className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-xl">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]" />
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{insp.label}</span>
+                        {
+                          title: "1. Engine & Powertrain Compression",
+                          points: "35 / 35 Points Passed",
+                          score: "100%",
+                          summary: car.inspectionSummary?.engine || "Pristine drivetrain compression, clean lubricants and zero head gasket leaks.",
+                          items: [
+                            "Cylinder Head Gasket & Compression Ratio Test (100% Equal Pressure)",
+                            "Turbocharger / Supercharger Turbine Latency & Boost Pressure",
+                            "Engine Oil Viscosity & Filter Contamination Test (Fresh Synthetic)",
+                            "Coolant Fluid Quality, Radiator Core Pressure & Hose Elasticity",
+                            "Timing Chain / Belt Tensioner & Accessory Pulley Bearings",
+                            "Fuel Injector Line Pressure & Spray Atomization Balance",
+                            "High Voltage Battery State of Health (SOH 99.1%) / Spark Plugs",
+                            "Engine Mount Hydraulic Dampeners & Torque Arm Isolators",
+                            "Exhaust Manifold Gaskets & Oxygen Sensor Voltage Modulation",
+                            "Alternator Output Voltage (14.2V) & Starter Motor Current Draw"
+                          ]
+                        },
+                        {
+                          title: "2. Structural Frame & Unibody Chassis",
+                          points: "30 / 30 Points Passed",
+                          score: "100%",
+                          summary: car.inspectionSummary?.exterior || "3D Laser chassis scan verified. 100% original factory paint thickness across all pillars.",
+                          items: [
+                            "A, B, C & D Pillar Structural Integrity & Factory Spot Welds",
+                            "3D Laser Frame Alignment & Crossmember Angle Verification",
+                            "Front & Rear Crash Crumple Zone Impact Energy Absorbers",
+                            "Underbody Floor Pan, Floorboards & Seam Seal Integrity",
+                            "Strut Tower Welds & Factory Paint Depth Continuity",
+                            "Zero Past Flood Damage, Waterlines, or Submersion Indicators",
+                            "Impact Bar Absorbers & Radiator Core Support Brackets",
+                            "Door Hinge Pillars, Latch Strike Pins & Weatherstrip Channels",
+                            "Quarter Panel Seams, Trunk Floor & Tailgate Frame Geometry",
+                            "Chassis Rail Anti-Corrosion Coating & Factory Underbody Shield"
+                          ]
+                        },
+                        {
+                          title: "3. Steering, Brakes & Suspension",
+                          points: "25 / 25 Points Passed",
+                          score: "100%",
+                          summary: car.inspectionSummary?.brakes || "92%+ brake pad life remaining. ABS hydraulic pressure & rack play verified.",
+                          items: [
+                            "Front & Rear Brake Pad Wear Thickness (Minimum 8.5mm remaining)",
+                            "Brake Rotor Surface Runout, Lip Wear & Heat Crack Inspection",
+                            "ABS Module Hydraulic Pump Pressure & Solenoid Valve Test",
+                            "Rack & Pinion Steering Play, Inner/Outer Tie Rod Tightness",
+                            "Front MacPherson / Double Wishbone Strut Dampening Rates",
+                            "Rear Multi-Link Suspension Arm Bushings & Ball Joint Play",
+                            "Sway Bar Linkage & Anti-Roll Bar Mounting Bushings",
+                            "Wheel Hub Bearing Noise Audit & Axle CV Rubber Boots",
+                            "Electronic Parking Brake Actuator Lock & Auto-Hold Release",
+                            "Brake Fluid Moisture Content (<1.5%) & Boiling Point Test"
+                          ]
+                        },
+                        {
+                          title: "4. Onboard Computers, Electrics & ADAS",
+                          points: "25 / 25 Points Passed",
+                          score: "100%",
+                          summary: car.inspectionSummary?.electronics || "OBD-II DTC scan error free. ADAS radars, cameras & infotainment fully updated.",
+                          items: [
+                            "OBD-II Full System Diagnostic Scan (0 Active / Stored Fault Codes)",
+                            "SRS Airbag System Crash Sensors & Squib Resistance Calibration",
+                            "ADAS Level 2 Front Radar & Stereo Camera Distance Calibration",
+                            "LED Matrix Headlamp Auto-Leveling & Cornering Light Motors",
+                            "Dual-Zone Automatic Climate Control AC Cooling Temperature Delta",
+                            "Infotainment Touchscreen Digitizer & Speaker Sound Output",
+                            "Power Window Motor Anti-Pinch Protection & Auto Up/Down",
+                            "Keyless Entry Smart Transponder Range & Engine Push Button",
+                            "360-Degree Surround Camera Stitched Video Feed Alignment",
+                            "Blind Spot Radar Sensors & Rear Cross Traffic Alert Beeps"
+                          ]
+                        },
+                        {
+                          title: "5. Exterior Body Panels & Paint Depth Analysis",
+                          points: "20 / 20 Points Passed",
+                          score: "100%",
+                          summary: "Digital ultrasonic paint gauge reading 90-130 microns across all panels. Factory glass codes match.",
+                          items: [
+                            "Bonnet / Hood Ultrasonic Paint Gauge Depth Measurement",
+                            "Roof Panel & Sunroof Glass Waterproofing Drain Channels",
+                            "Front & Rear Bumper Cover Alignment Gaps (<2.0mm Factory Spec)",
+                            "Windshield Optical Glass Code & OEM Logo Stamp Matching",
+                            "Side Mirror Heating Element & Power Folding Actuators",
+                            "Alloy Wheel Rim Radial Runout & Zero Curb Scraping",
+                            "Door Weatherstrip Rubber Elasticity & High-Speed Wind Noise",
+                            "Fuel Filler Flap Electronic Lock & Fuel Cap Seal",
+                            "Headlamp & Taillamp Lens Clarity, Housing Seal & Zero Fogging",
+                            "Underbody Aero Shielding Plates & Engine Splash Guard Bolts"
+                          ]
+                        },
+                        {
+                          title: "6. Interior Ergonomics & High-Speed Road Audit",
+                          points: "15 / 15 Points Passed",
+                          score: "100%",
+                          summary: car.inspectionSummary?.interior || "Upholstery steam-cleaned. NVH decibel test clean at 100 km/h.",
+                          items: [
+                            "Leather Seats Upholstery Condition, Stitching & Side Bolsters",
+                            "Front Seat Heating & Cooling Ventilation Grid Performance",
+                            "Seatbelt Pretensioner Lock Latches & Height Adjusters (5 Seats)",
+                            "Steering Column Power/Manual Height & Reach Lock Mechanism",
+                            "Cabin NVH Decibel Meter Reading at 100 km/h (Quiet Cabin)",
+                            "Braking Distance & Straight-Line Stability Emergency Stop",
+                            "Handbrake Incline Hold Efficiency on 30-Degree Ramp",
+                            "Spare Tire Tread, Jack Assembly, Lug Wrench & Hazard Triangle"
+                          ]
+                        }
+                      ].map((cat, idx) => (
+                        <div key={idx} className="border border-slate-150 rounded-2xl overflow-hidden bg-white shadow-xs">
+                          <div className="bg-[#FAF9F6] p-4 flex items-center justify-between border-b border-slate-100">
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs font-black text-slate-900">{cat.title}</span>
+                                <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border-none text-[9px] font-extrabold uppercase">
+                                  {cat.points}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1 font-medium">{cat.summary}</p>
+                            </div>
+                            <span className="text-xs font-black text-[#2E7D32] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                              {cat.score} PASS
+                            </span>
                           </div>
-                          <p className="text-xs font-bold text-slate-700 pl-3.5">{insp.value}</p>
+
+                          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
+                            {cat.items.map((item, itemIdx) => (
+                              <div key={itemIdx} className="flex items-start space-x-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                                <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />
+                                <span className="text-xs font-bold text-slate-700 leading-tight">{item}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>

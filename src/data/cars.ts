@@ -5,6 +5,7 @@ export const CARS_DATA: Car[] = [
     id: "car-1",
     brand: "Tata",
     model: "Nexon EV Max",
+    variant: "XZ+ Lux Dark Edition 40.5kWh",
     year: 2023,
     price: 1749000,
     emi: 26000,
@@ -16,40 +17,55 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-emerald-950/10",
     featured: true,
+    color: "Midnight Black / Teal Accent",
+    regCity: "Surat",
+    regYear: 2023,
+    rtoCode: "GJ05-ER-4050",
+    insuranceValidity: "Comprehensive (Valid till March 2027)",
+    groundClearance: "205 mm",
+    bootCapacity: "350 Litres",
+    fuelTank: "40.5 kWh Battery Pack",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Battery: 40.5 kWh High Density Li-ion",
-      "Power: 141 hp / 250 Nm Torque",
-      "Range: 437 km Certified",
-      "0-100 km/h: 8.9 seconds"
+      "Battery Pack: 40.5 kWh High Energy Density Li-ion",
+      "Max Power: 141.04 hp @ 4500 rpm",
+      "Peak Torque: 250 Nm Instant Torque",
+      "ARAI Range: 437 km (Real-world 320+ km)",
+      "0-100 km/h: 8.9 seconds",
+      "Fast Charging: 0-80% in 56 minutes (50kW DC Charger)",
+      "Top Speed: 140 km/h Electronic Governor"
     ],
     features: [
-      "Multi-Mode Regenerative Braking",
-      "Pristine Panoramic Sunroof",
-      "Ventilated Front Seats",
-      "Harman Touchscreen with Premium Acoustics",
-      "Smart Air Purifier with PM 2.5 Filter",
-      "Wireless Smartphone Charger"
+      "Multi-Mode Regenerative Braking (4 Levels)",
+      "Pristine Voice-Assisted Electric Sunroof",
+      "Front Seat Cooling & Ventilation",
+      "Harman 7-inch Touchscreen with 8 Speaker Sound",
+      "Smart Air Purifier with PM2.5 Air Quality Display",
+      "Wireless Smartphone Fast Charging Pad",
+      "Electronic Parking Brake with Auto Hold",
+      "i-VBAC Electronic Stability Program"
     ],
     inspectionSummary: {
       overallScore: 9.8,
-      engine: "Battery health state-of-charge SOH verified at 99.1%.",
-      brakes: "95% brake pads remaining with regenerative efficiency confirmed.",
-      electronics: "Smart console firmware updated, dual airbags & ESP tested.",
-      exterior: "100% original factory paint, pristine panel alignments.",
-      interior: "Premium dual-tone leatherette upholstery in pristine state."
+      engine: "Battery State of Health (SOH) tested at 99.1%. High voltage wiring pristine.",
+      brakes: "95% brake pad life remaining. Regenerative brake calibration verified.",
+      electronics: "ZConnect telematics firmware updated. Dual airbags & ESP sensor sweep clean.",
+      exterior: "100% original factory paint depth. Zero structural misalignment.",
+      interior: "Signature dark leatherette upholstery stain-free and sanitized."
     },
     warrantyInfo: {
       months: 36,
       miles: 125000,
-      coverage: "8 Years / 1,60,000 km High Voltage Battery Guarantee"
+      coverage: "8 Years / 1,60,000 km High Voltage Battery & Motor Warranty"
     },
-    owners: 1,
     cities: ["Surat", "Vadodara"]
   },
   {
     id: "car-2",
     brand: "Mahindra",
     model: "XUV700 AX7 Luxury",
+    variant: "AX7 Luxury Pack 2.0 Turbo Petrol AT",
     year: 2022,
     price: 2449000,
     emi: 36000,
@@ -61,40 +77,55 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-blue-950/10",
     featured: true,
+    color: "Midnight Black Metallic",
+    regCity: "Vadodara",
+    regYear: 2022,
+    rtoCode: "GJ06-AB-7007",
+    insuranceValidity: "Zero-Dep Comprehensive (Valid till November 2026)",
+    groundClearance: "200 mm",
+    bootCapacity: "460 Litres (Expandable to 1050L)",
+    fuelTank: "60 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 2.0L mStallion Turbo Petrol",
-      "Power: 197 hp / 380 Nm Torque",
-      "Transmission: 6-Speed Torque Converter",
-      "Drivetrain: Front Wheel Drive"
+      "Engine: 2.0L mStallion TGDi Turbocharged Petrol",
+      "Max Power: 197 hp @ 5000 rpm",
+      "Peak Torque: 380 Nm @ 1750-3000 rpm",
+      "Transmission: 6-Speed Aisin Torque Converter AT",
+      "0-100 km/h: 9.2 seconds",
+      "ARAI Mileage: 13.2 km/l",
+      "Seating Capacity: 7 Passenger Luxury Suite"
     ],
     features: [
-      "Advanced ADAS Level 2 Driving Suite",
-      "Continuous Dual 10.25-inch Screens",
-      "Sony 12-Speaker 3D Surround System",
-      "Panoramic Skyroof (Largest in segment)",
-      "Smart Door Handles & Dynamic Indicators",
-      "Dual Zone Fully Automatic Climate Control"
+      "Advanced ADAS Level 2 Radar & Camera Safety Suite",
+      "Continuous Dual 10.25-inch HD Cockpit Screens",
+      "Sony 3D 12-Speaker Immersive Audio with 360 Spatial Sound",
+      "Panoramic Skyroof (Largest glass roof in segment)",
+      "Smart Flush Door Handles & Dynamic LED Indicators",
+      "Dual Zone Fully Automatic Temperature Control",
+      "Blind View Monitor & 360-degree Surround Camera",
+      "Wireless Apple CarPlay & Android Auto"
     ],
     inspectionSummary: {
       overallScore: 9.6,
-      engine: " mStallion engine in peak response, zero leaks, compression perfect.",
-      brakes: "90% pad life, electronic park brake operates smoothly.",
-      electronics: "All ADAS cameras and radar calibrated and validated.",
-      exterior: "Midnight Black shade pristine, no rock chips or micro-scratches.",
-      interior: "Luxurious white leatherette seats professionally detailed."
+      engine: "mStallion turbo petrol in peak response. Zero fluid leaks, compression test 100%.",
+      brakes: "90% pad life. Electronic park brake and Auto-Hold operate smoothly.",
+      electronics: "All ADAS cameras and front millimeter radar calibrated and error-free.",
+      exterior: "Midnight Black shade pristine. No stone chips or micro-scratches.",
+      interior: "White leatherette 7-seater interior professionally steam detailed."
     },
     warrantyInfo: {
       months: 24,
       miles: 50000,
-      coverage: "Extended Segment-First Bumper-to-Bumper Protection"
+      coverage: "1stMark Extended Segment-First Bumper-to-Bumper Protection"
     },
-    owners: 1,
     cities: ["Vadodara", "Vapi"]
   },
   {
     id: "car-3",
     brand: "Maruti Suzuki",
     model: "Swift ZXI+",
+    variant: "ZXI Plus DualTone 1.2 DualJet",
     year: 2021,
     price: 829000,
     emi: 12000,
@@ -106,40 +137,53 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-rose-950/10",
     featured: true,
+    color: "Solid Fire Red with Pearl Black Roof",
+    regCity: "Bharuch",
+    regYear: 2021,
+    rtoCode: "GJ16-CK-3321",
+    insuranceValidity: "Comprehensive (Valid till July 2026)",
+    groundClearance: "163 mm",
+    bootCapacity: "268 Litres",
+    fuelTank: "37 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 1.2L DualJet Petrol",
-      "Power: 89 hp @ 6000 rpm",
-      "Mileage: 23.2 km/l ARAI Certified",
-      "Transmission: 5-Speed Slick Manual"
+      "Engine: 1.2L K12N DualJet Dual VVT Petrol Engine",
+      "Max Power: 89 hp @ 6000 rpm",
+      "Peak Torque: 113 Nm @ 4400 rpm",
+      "Transmission: 5-Speed Slick Manual Transmission",
+      "ARAI Certified Mileage: 23.2 km/l",
+      "Idle Start-Stop Smart Technology"
     ],
     features: [
-      "Precision Reverse Parking Camera",
-      "Keyless Go & Smart Push Button Start",
-      "7-inch SmartPlay Studio Touchscreen",
-      "Auto LED Projector Headlamps",
-      "Precision-Cut Dual-Tone Alloy Wheels",
-      "Leather-Wrapped Flat Bottom Steering"
+      "Precision Reverse Parking Camera with Dynamic Guidelines",
+      "Keyless Smart Entry & Engine Push Button Start/Stop",
+      "7-inch SmartPlay Studio Touchscreen Infotainment",
+      "Auto LED Projector Headlamps with Signature DRLs",
+      "Precision-Cut 15-inch Dual-Tone Alloy Wheels",
+      "Leather-Wrapped Flat Bottom Multifunction Steering Wheel",
+      "Cruise Control & Auto Folding Side Mirrors"
     ],
     inspectionSummary: {
       overallScore: 9.5,
-      engine: "Ultra-refined DualJet runs clean, fresh synthetic oil flush.",
-      brakes: "88% front brake pad life, rear shoes adjusted.",
-      electronics: "Infotainment fully calibrated, keyless systems functional.",
-      exterior: "Solid Fire Red finish, minor touch-up on rear bumper corner.",
-      interior: "Sporty black fabric interior completely vacuumed and sanitized."
+      engine: "Ultra-refined K12N DualJet engine runs silent. Fresh synthetic oil service.",
+      brakes: "88% front brake pad life. Rear brake shoes fully adjusted and cleaned.",
+      electronics: "SmartPlay Studio head unit calibrated. Keyless transponder tested.",
+      exterior: "Solid Fire Red bodywork intact. Minor micro touch-up on rear bumper corner.",
+      interior: "Sporty black cabin fabric vacuumed, shampooed, and sanitized."
     },
     warrantyInfo: {
       months: 12,
       miles: 20000,
       coverage: "1stMark Certified Gold Powertrain Coverage"
     },
-    owners: 1,
     cities: ["Bharuch", "Surat"]
   },
   {
     id: "car-4",
     brand: "Tata",
     model: "Tigor EV Lux",
+    variant: "XZ+ Lux Ziptron 26kWh",
     year: 2022,
     price: 1249000,
     emi: 18500,
@@ -151,40 +195,52 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-[#2E7D32]/5",
     featured: true,
+    color: "Signature Teal Blue Metallic",
+    regCity: "Vapi",
+    regYear: 2022,
+    rtoCode: "GJ15-EV-1020",
+    insuranceValidity: "Comprehensive (Valid till October 2026)",
+    groundClearance: "172 mm",
+    bootCapacity: "316 Litres",
+    fuelTank: "26 kWh Ziptron Battery",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Battery: 26 kWh Ziptron Tech",
-      "Power: 74 hp / 170 Nm Torque",
-      "Range: 315 km Certified",
-      "IP67 Waterproof Battery Pack"
+      "Motor: Permanent Magnet Synchronous Motor",
+      "Max Power: 74 hp",
+      "Peak Torque: 170 Nm Instant Torque",
+      "ARAI Range: 315 km Certified",
+      "Protection: IP67 Waterproof & Dustproof Battery Pack",
+      "Fast Charge: 10-80% in 59 minutes (25kW DC)"
     ],
     features: [
-      "Signature Teal Blue Accents",
-      "Sleek Projector Headlamps",
+      "Signature EV Teal Blue Exterior & Interior Accents",
+      "Sleek Projector Headlamps with DRL Ring",
       "Automatic Climate Control with Smart Grid",
-      "Harman Infotainment with 8 Speakers",
-      "Instant Cool Cabin Ventilation",
-      "Multi-Drive Modes (Drive / Sport)"
+      "Harman Premium Audio System with 8 Speakers",
+      "Instant Cool Cabin Pre-conditioning via iTPMS",
+      "Multi-Drive Modes (Drive & Sport Response)"
     ],
     inspectionSummary: {
       overallScore: 9.7,
-      engine: "Ziptron permanent magnet motor runs at 100% duty cycle.",
-      brakes: "92% pad life, regenerative braking parameters calibrated.",
-      electronics: "Climate system, digital instruments, and cell SOH fully checked.",
-      exterior: "Sleek dual-tone finish, no panel gaps, factory pristine.",
-      interior: "Premium fabric seats clean, dashboard plastics scratch-free."
+      engine: "Ziptron permanent magnet drive motor operates at 100% efficiency cycle.",
+      brakes: "92% pad life. Regenerative braking control parameters verified.",
+      electronics: "HV climate loop, digital instrument cluster, cell SOH 98.8%.",
+      exterior: "Sleek dual-tone finish. Zero panel gaps, 100% original factory paint.",
+      interior: "Premium fabric seats spotless. Dashboard plastics scratch-free."
     },
     warrantyInfo: {
       months: 24,
       miles: 60000,
       coverage: "8 Years / 1,60,000 km Ziptron Battery & Motor Protection"
     },
-    owners: 1,
     cities: ["Vapi", "Bharuch"]
   },
   {
     id: "car-5",
     brand: "Mahindra",
     model: "Scorpio-N Z8L",
+    variant: "Z8L 4XPLOR Diesel 6AT 7-Seater",
     year: 2023,
     price: 2299000,
     emi: 34000,
@@ -196,40 +252,52 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-slate-900/10",
     featured: true,
+    color: "Deep Forest Metallic Green",
+    regCity: "Surat",
+    regYear: 2023,
+    rtoCode: "GJ05-SN-8800",
+    insuranceValidity: "Zero-Dep Comprehensive (Valid till June 2027)",
+    groundClearance: "187 mm",
+    bootCapacity: "460 Litres",
+    fuelTank: "57 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 2.2L mHawk Diesel",
-      "Power: 172 hp / 400 Nm Torque",
-      "Transmission: 6-Speed Automatic",
-      "Terrain Suite: 4XPLOR Intelligent AWD"
+      "Engine: 2.2L mHawk Common Rail Diesel Engine",
+      "Max Power: 172 hp @ 3500 rpm",
+      "Peak Torque: 400 Nm @ 1750-2750 rpm",
+      "Transmission: 6-Speed Torque Converter Automatic",
+      "Terrain Suite: 4XPLOR Intelligent Terrain Management (Normal, Snow, Mud, Sand)",
+      "0-100 km/h: 9.8 seconds"
     ],
     features: [
-      "AdrenoX Connected Car Tech (Alexa Enabled)",
-      "Premium Coffee Black Rich Leatherette Cabin",
-      "Dual Zone Automatic Air Conditioning",
-      "Electric Sunroof & Wireless Phone Charging",
-      "Sony Immersive 12-Speaker Sound System",
-      "Dual LED Projector Headlamps"
+      "AdrenoX Connected Car Tech with Built-In Alexa Voice Control",
+      "Rich Coffee Black Leatherette 7-Seater Cabin Upholstery",
+      "Dual Zone Automatic Air Conditioning with Rear Vents",
+      "Electric Sunroof & Qi Wireless Smartphone Charger",
+      "Sony Immersive 12-Speaker Sound System with Dual Subwoofer",
+      "Dual LED Projector Headlamps & Sequential Turn Indicators"
     ],
     inspectionSummary: {
       overallScore: 9.9,
-      engine: "mHawk high-torque diesel performs flawlessly, oil clean.",
-      brakes: "94% brake pad life remaining, electronic calipers responsive.",
-      electronics: "AdrenoX connected suite checked, all screens fully updated.",
-      exterior: "Deep Forest shade in absolute showroom state, nano-coated.",
-      interior: "Premium 3-row seating leatherette completely fresh."
+      engine: "mHawk high-torque diesel performs flawlessly. DPF regeneration clean.",
+      brakes: "94% brake pad life remaining. Electronic calipers high response.",
+      electronics: "AdrenoX connected suite checked. All screens fully updated.",
+      exterior: "Deep Forest shade in absolute showroom state. Ceramic paint coated.",
+      interior: "3-row luxury leatherette seating completely fresh."
     },
     warrantyInfo: {
       months: 36,
       miles: 100000,
       coverage: "Manufacturer balance + 12-Month extended 1stMark Premium"
     },
-    owners: 1,
     cities: ["Surat", "Vapi"]
   },
   {
     id: "car-6",
     brand: "Porsche",
     model: "911 Carrera S",
+    variant: "3.0L Twin-Turbo Flat-6 PDK",
     year: 2022,
     price: 14500000,
     emi: 215000,
@@ -241,26 +309,38 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-slate-900/10",
     featured: true,
+    color: "Guards Red / Black Leather",
+    regCity: "Surat",
+    regYear: 2022,
+    rtoCode: "GJ05-PS-0911",
+    insuranceValidity: "Zero-Dep Insurance (Valid till January 2027)",
+    groundClearance: "100 mm",
+    bootCapacity: "132 Litres (Front Luggage Trunk)",
+    fuelTank: "64 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 3.0L Twin-Turbo Flat 6",
-      "Power: 443 hp @ 6500 rpm",
-      "0-100 km/h: 3.5 seconds",
+      "Engine: 3.0L Twin-Turbocharger Boxer 6-Cylinder",
+      "Max Power: 443 hp @ 6500 rpm",
+      "Peak Torque: 530 Nm @ 2300-5000 rpm",
+      "Transmission: 8-Speed Porsche Doppelkupplung (PDK)",
+      "0-100 km/h: 3.5 seconds (Sport Chrono Package)",
       "Top Speed: 308 km/h"
     ],
     features: [
-      "Sport Chrono Package",
-      "BOSE Premium Surround Sound",
-      "20/21-inch Carrera S Alloys",
-      "Porsche Active Suspension (PASM)",
-      "LED Matrix Adaptive Headlights",
-      "Dynamic Chassis Control & Lane Assist"
+      "Sport Chrono Package with Mode Switch Dial on Steering",
+      "BOSE Surround Sound System (12 Speakers, 570W)",
+      "Staggered 20/21-inch Carrera S Forged Alloy Wheels",
+      "Porsche Active Suspension Management (PASM -10mm)",
+      "LED Matrix Main Headlights with Porsche Dynamic Light System Plus (PDLS+)",
+      "Sport Exhaust System with Tailpipes in High-Gloss Black"
     ],
     inspectionSummary: {
       overallScore: 9.8,
-      engine: "Pristine flat-six, zero fluid dampness, outstanding compression.",
-      brakes: "95% brake life, brake pad wear sensors functional.",
-      electronics: "All dynamic dampers and active aero tested.",
-      exterior: "Guards Red finish completely original, paint depth verified.",
+      engine: "Pristine flat-six powertrain. Zero fluid dampness, 100% compression.",
+      brakes: "95% brake life remaining. Ceramic composite sensors fully active.",
+      electronics: "All dynamic PASM dampers and active rear wing aero tested.",
+      exterior: "Guards Red finish completely original. Digital paint depth verified.",
       interior: "Premium Nappa leather interior detailed to perfection."
     },
     warrantyInfo: {
@@ -268,13 +348,13 @@ export const CARS_DATA: Car[] = [
       miles: 40000,
       coverage: "1stMark Exotic Elite Comprehensive Vehicle Coverage"
     },
-    owners: 1,
     cities: ["Surat", "Vadodara"]
   },
   {
     id: "car-7",
     brand: "BMW",
     model: "M3 Competition",
+    variant: "3.0L M TwinPower Turbo xDrive",
     year: 2023,
     price: 11000000,
     emi: 165000,
@@ -286,26 +366,38 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-blue-950/10",
     featured: true,
+    color: "Isle of Man Green Metallic",
+    regCity: "Vadodara",
+    regYear: 2023,
+    rtoCode: "GJ06-M3-0003",
+    insuranceValidity: "Comprehensive (Valid till August 2027)",
+    groundClearance: "120 mm",
+    bootCapacity: "480 Litres",
+    fuelTank: "59 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 3.0L M TwinPower Turbo I6",
-      "Power: 503 hp @ 6250 rpm",
+      "Engine: 3.0L M TwinPower Turbo Inline 6 Cylinder",
+      "Max Power: 503 hp @ 6250 rpm",
+      "Peak Torque: 650 Nm @ 2750-5500 rpm",
+      "Drivetrain: M xDrive All-Wheel Drive with 2WD Drift Mode",
       "0-100 km/h: 3.5 seconds",
-      "Drivetrain: xDrive AWD"
+      "Transmission: 8-Speed M Steptronic with Drivelogic"
     ],
     features: [
-      "Carbon Fiber Roof Panel",
-      "BMW Laserlights with Blue Accents",
-      "M Carbon Bucket Seats",
-      "Harman Kardon Surround Sound",
-      "Heated & Ventilated Front M Seats",
-      "M Adaptive Suspension System"
+      "Lightweight Carbon Fiber Reinforced Plastic Roof Panel",
+      "BMW Laserlight Headlamps with Distinctive Blue Accents",
+      "M Carbon Bucket Racing Seats with Illuminated M3 Badges",
+      "Harman Kardon Surround Sound System",
+      "M Adaptive Suspension with Comfort, Sport, and Sport+ Modes",
+      "M Traction Control with 10-stage Adjustment"
     ],
     inspectionSummary: {
       overallScore: 9.9,
-      engine: "Like-new powertrain state, first service done on schedule by BMW.",
-      brakes: "99% brake pads, absolute high-response rotors.",
-      electronics: "Live Cockpit Professional fully calibrated, no codes.",
-      exterior: "Portimao Blue metallic paint in outstanding showroom state.",
+      engine: "Like-new powertrain state. Break-in service completed on schedule at BMW dealer.",
+      brakes: "99% brake pads. High-response compound rotors in immaculate shape.",
+      electronics: "Live Cockpit Professional Curved Display fully calibrated.",
+      exterior: "Isle of Man Green paint in outstanding showroom state.",
       interior: "Carbon bucket trims and Alcantara steering as brand new."
     },
     warrantyInfo: {
@@ -313,13 +405,13 @@ export const CARS_DATA: Car[] = [
       miles: 60000,
       coverage: "BMW Factory Balance + 1stMark Platinum Warranty"
     },
-    owners: 1,
     cities: ["Vadodara", "Bharuch"]
   },
   {
     id: "car-8",
     brand: "Land Rover",
-    model: "Defender 11 HSE",
+    model: "Defender 110 HSE",
+    variant: "3.0L D300 Ingenium Diesel AWD",
     year: 2022,
     price: 12000000,
     emi: 175000,
@@ -331,34 +423,45 @@ export const CARS_DATA: Car[] = [
     certified: true,
     imageBg: "bg-emerald-950/10",
     featured: true,
+    color: "Carpathian Grey Metallic",
+    regCity: "Vapi",
+    regYear: 2022,
+    rtoCode: "GJ15-DF-0110",
+    insuranceValidity: "Zero-Dep Comprehensive (Valid till April 2026)",
+    groundClearance: "291 mm (Air Suspension Height)",
+    bootCapacity: "857 Litres",
+    fuelTank: "89 Litres",
+    keyCount: 2,
+    owners: 1,
     specifications: [
-      "Engine: 3.0L Ingenium Diesel",
-      "Power: 296 hp / 650 Nm Torque",
-      "AWD with Terrain Response 2",
-      "Wading Depth: 900 mm"
+      "Engine: 3.0L 6-Cylinder MHEV Turbocharged Ingenium Diesel",
+      "Max Power: 296 hp @ 4000 rpm",
+      "Peak Torque: 650 Nm @ 1500-2500 rpm",
+      "Terrain System: AWD with Terrain Response 2 Configurable Modes",
+      "Wading Depth: 900 mm Water Crossing Capability",
+      "Transmission: 8-Speed Automatic with Twin-Speed Transfer Box"
     ],
     features: [
-      "Air Suspension with Height Control",
-      "Sliding Panoramic Sunroof",
-      "Meridian Immersive Sound",
-      "ClearSight Ground View Camera",
-      "Interactive Driver Display",
-      "20-inch Satin Dark Grey Alloys"
+      "Electronic Air Suspension with Automatic Height Control",
+      "Sliding Panoramic Glass Sunroof",
+      "Meridian Surround Sound System (700W 14-Speaker)",
+      "ClearSight Ground View 3D Surround Camera System",
+      "Interactive 12.3-inch Driver Display Cockpit",
+      "20-inch Style 5098 5-Spoke Satin Dark Grey Alloy Wheels"
     ],
     inspectionSummary: {
       overallScore: 9.7,
-      engine: "Refined Ingenium engine, extreme low-end torque validated.",
-      brakes: "92% brake pads, calipers clean, system flushed.",
-      electronics: "Pivi Pro infotainment updated, air suspension verified.",
-      exterior: "Silicon Silver finish in showroom condition, ceramic treated.",
-      interior: "Acorn Windsor leather upholstery immaculate, detailed."
+      engine: "Refined 3.0L Ingenium diesel. Extreme low-end torque validated.",
+      brakes: "92% brake pads. Heavy duty calipers clean, fluid flushed.",
+      electronics: "Pivi Pro infotainment updated. Air suspension system leak-free.",
+      exterior: "Carpathian Grey finish in showroom condition. Ceramic coating live.",
+      interior: "Acorn Windsor leather upholstery immaculate and conditioned."
     },
     warrantyInfo: {
       months: 24,
       miles: 50000,
       coverage: "Comprehensive 1stMark Elite SUV Coverage"
     },
-    owners: 1,
     cities: ["Vapi", "Surat"]
   }
 ];
@@ -382,7 +485,7 @@ export const BUDGET_RANGES = [
 export const CITIES_DATA = [
   "All Cities",
   "Surat",
-  "Bharuch",
   "Vadodara",
+  "Bharuch",
   "Vapi"
 ];

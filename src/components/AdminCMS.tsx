@@ -320,14 +320,47 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     e.preventDefault();
   };
 
+  const compressImageFile = (file: File, maxWidth = 1200, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const rawUrl = event.target?.result as string;
+        if (!file.type.startsWith("image/")) {
+          return resolve(rawUrl);
+        }
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL("image/jpeg", quality);
+            resolve(compressed);
+          } else {
+            resolve(rawUrl);
+          }
+        };
+        img.onerror = () => resolve(rawUrl);
+        img.src = rawUrl;
+      };
+      reader.onerror = () => resolve("🚙");
+      reader.readAsDataURL(file);
+    });
+  };
+
   const simulateImageUpload = (file: File) => {
     setIsUploading(true);
     setUploadProgress(10);
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const realUrl = event.target?.result as string;
-      
+    compressImageFile(file, 1200, 0.8).then((realUrl) => {
       const interval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 100) {
@@ -343,7 +376,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                     logoUrl: realUrl
                   };
                   localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(updated));
-                  // Dispatch custom event to notify parent components of the change
                   window.dispatchEvent(new Event("1stcars_settings_updated"));
                   return updated;
                 });
@@ -364,8 +396,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           return prev + 30;
         });
       }, 150);
-    };
-    reader.readAsDataURL(file);
+    });
   };
 
   const simulateMultipleImageUpload = (files: FileList | File[]) => {
@@ -374,14 +405,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     setUploadProgress(5);
     setMultiUploadStatus(`Preparing ${fileArray.length} photos for dynamic upload...`);
     
-    // Read all files as Data URLs asynchronously
-    const readFilesPromises = fileArray.map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.readAsDataURL(file);
-      });
-    });
+    // Compress and read all files as lightweight Data URLs asynchronously
+    const readFilesPromises = fileArray.map(file => compressImageFile(file, 1200, 0.8));
 
     Promise.all(readFilesPromises).then((urls) => {
       const interval = setInterval(() => {
@@ -416,9 +441,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             setMultiUploadStatus(`Uploading photo ${index + 1} of ${fileArray.length}: ${file.name}`);
           }
           
-          return prev + Math.max(8, Math.floor(100 / (fileArray.length * 1.5)));
+          return prev + Math.max(12, Math.floor(100 / (fileArray.length * 1.2)));
         });
-      }, 120);
+      }, 100);
     });
   };
 
@@ -440,6 +465,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       } else {
         simulateImageUpload(e.target.files[0]);
       }
+      e.target.value = "";
     }
   };
 
