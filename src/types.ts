@@ -58,3 +58,35 @@ export interface FilterState {
   yearMax: number;
   city: string;
 }
+
+export interface Inspection {
+  id: string;
+  created_at?: string;
+  seller_id?: string;
+  seller_name: string;
+  seller_mobile: string;
+  reg_number: string;
+  brand: string;
+  model: string;
+  variant?: string;
+  fuel: string;
+  transmission: string;
+  year: number;
+  km_driven: number;
+  city: string;
+  address: string;
+  preferred_date?: string;
+  preferred_time?: string;
+  status: "pending" | "assigned" | "completed" | "rejected" | "auctioned" | "published";
+  inspector_id?: string;
+  inspector_name?: string;
+  overall_score?: number;
+  report_engine?: string;
+  report_brakes?: string;
+  report_electronics?: string;
+  report_exterior?: string;
+  report_interior?: string;
+  report_150_json?: string; // Serialized Full150PointReport
+  notes?: string;
+  is_certified?: boolean;
+}

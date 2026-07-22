@@ -16,6 +16,9 @@ import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
+import { Inspection150FormModal } from "./Inspection150FormModal";
+import { Full150PointReport } from "@/src/data/inspection150Data";
+import { Gavel, Globe } from "lucide-react";
 
 interface AdminCMSProps {
   onReloadAllData?: () => void;
@@ -118,6 +121,108 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [formMode, setFormMode] = React.useState<"add" | "edit">("add");
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [formData, setFormData] = React.useState<any>({});
+
+  // 150-Point Inspection Modal state
+  const [selected150Inspection, setSelected150Inspection] = React.useState<any | null>(null);
+
+  const handleSave150Report = async (inspectionId: string, reportData: Full150PointReport) => {
+    await supabase.from("inspections").update({
+      overall_score: reportData.overallScore,
+      report_engine: reportData.categories[0]?.summary || "",
+      report_exterior: reportData.categories[1]?.summary || "",
+      report_brakes: reportData.categories[2]?.summary || "",
+      report_electronics: reportData.categories[3]?.summary || "",
+      report_interior: reportData.categories[5]?.summary || "",
+      report_150_json: JSON.stringify(reportData),
+      notes: reportData.notes,
+      is_certified: reportData.isCertified
+    }).eq("id", inspectionId);
+
+    toast.success("150-Point Inspection Report updated and saved by Admin!");
+    setSelected150Inspection(null);
+    loadCMSData();
+    if (onReloadAllData) onReloadAllData();
+  };
+
+  const handleStartAuction = async (inspection: any, reportData: Full150PointReport) => {
+    const auctionRecord = {
+      car_title: `${inspection.brand} ${inspection.model}`,
+      year: inspection.year,
+      km_driven: inspection.km_driven,
+      fuel: inspection.fuel,
+      transmission: inspection.transmission,
+      city: inspection.city,
+      base_price: inspection.year > 2020 ? 800000 : 400000,
+      current_bid: inspection.year > 2020 ? 810000 : 410000,
+      highest_bidder_name: "Starting Bid Base",
+      ends_at: new Date(Date.now() + 3600000 * 24).toISOString(),
+      status: "active"
+    };
+
+    await supabase.from("auctions").insert([auctionRecord]);
+    await supabase.from("inspections").update({ 
+      status: "auctioned",
+      report_150_json: JSON.stringify(reportData)
+    }).eq("id", inspection.id);
+
+    toast.success(`Live B2B Dealer Auction successfully launched for ${inspection.brand} ${inspection.model}!`);
+    setSelected150Inspection(null);
+    loadCMSData();
+    if (onReloadAllData) onReloadAllData();
+  };
+
+  const handlePublishToWebsite = async (inspection: any, reportData: Full150PointReport) => {
+    const carRecord = {
+      id: `car-pub-${Date.now()}`,
+      brand: inspection.brand,
+      model: inspection.model,
+      variant: inspection.variant || "ZX / Lux",
+      year: inspection.year,
+      price: inspection.year > 2020 ? 850000 : 450000,
+      emi: inspection.year > 2020 ? 14200 : 8500,
+      location: inspection.city || "Surat",
+      fuel: inspection.fuel || "Petrol",
+      transmission: inspection.transmission || "Manual",
+      mileage: inspection.km_driven || 35000,
+      bodyType: "Sedan",
+      certified: true,
+      imageBg: "bg-slate-900",
+      imageUrl: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80",
+      featured: true,
+      specifications: [
+        reportData.specs.engine,
+        reportData.specs.maxPower,
+        reportData.specs.peakTorque,
+        reportData.specs.transmission,
+        reportData.specs.araiMileage
+      ],
+      features: reportData.keyFeatures,
+      inspectionSummary: {
+        overallScore: reportData.overallScore,
+        engine: reportData.categories[0]?.summary || "100% Pass",
+        exterior: reportData.categories[1]?.summary || "100% Pass",
+        brakes: reportData.categories[2]?.summary || "100% Pass",
+        electronics: reportData.categories[3]?.summary || "100% Pass",
+        interior: reportData.categories[5]?.summary || "100% Pass"
+      },
+      owners: 1,
+      regCity: inspection.city || "Surat",
+      regYear: inspection.year,
+      rtoCode: inspection.reg_number || "GJ05-ER-4050"
+    };
+
+    await supabase.from("cars").insert([carRecord]);
+    await supabase.from("inspections").update({ 
+      status: "published", 
+      is_certified: true,
+      report_150_json: JSON.stringify(reportData)
+    }).eq("id", inspection.id);
+
+    toast.success(`Vehicle ${inspection.brand} ${inspection.model} uploaded & published to 1stCars website for direct retail buyers!`);
+    setSelected150Inspection(null);
+    loadCMSData();
+    if (onReloadAllData) onReloadAllData();
+  };
 
   // Image Uploading mockup
   const [isUploading, setIsUploading] = React.useState(false);
@@ -1570,7 +1675,35 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                       )}
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {activeModule === "inspections" && (
+                          <>
+                            <button
+                              onClick={() => setSelected150Inspection(item)}
+                              className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-[#2E7D32]/30 text-[#2E7D32] bg-[#2E7D32]/5 hover:bg-[#2E7D32] hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                              title="Review / Edit 150-Point Detailed Checklist"
+                            >
+                              <ClipboardList className="h-3 w-3" />
+                              150-Pt Report
+                            </button>
+                            <button
+                              onClick={() => setSelected150Inspection(item)}
+                              className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                              title="Start B2B Dealer Auction"
+                            >
+                              <Gavel className="h-3 w-3" />
+                              Auction
+                            </button>
+                            <button
+                              onClick={() => setSelected150Inspection(item)}
+                              className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-emerald-200 text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                              title="Publish directly to website for buyers (1stMark Certified)"
+                            >
+                              <Globe className="h-3 w-3" />
+                              Publish
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => openEditModal(item)}
                           className="p-1.5 rounded-lg border border-slate-100 hover:border-[#2E7D32] hover:text-[#2E7D32] text-slate-400 bg-white cursor-pointer"
@@ -3113,6 +3246,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </div>
       )}
 
+      {/* 150-Point Inspection Modal for Admin */}
+      <Inspection150FormModal
+        inspection={selected150Inspection}
+        isOpen={!!selected150Inspection}
+        onClose={() => setSelected150Inspection(null)}
+        onSubmitReport={(id, data) => handleSave150Report(id, data)}
+        onStartAuction={(insp, data) => handleStartAuction(insp, data)}
+        onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
+        userRole="Admin"
+      />
+
     </div>
   );
 }
+

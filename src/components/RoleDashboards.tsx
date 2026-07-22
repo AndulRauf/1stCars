@@ -17,6 +17,8 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { AdminCMS } from "./AdminCMS";
 import { toast } from "@/src/lib/toast";
+import { Inspection150FormModal } from "./Inspection150FormModal";
+import { Full150PointReport } from "@/src/data/inspection150Data";
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -198,50 +200,53 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
   };
 
-  // Handle Inspector: Upload Report Checklist
-  const handleUploadReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedInspection) return;
+  // Handle Inspector: Upload 150-Point Report Checklist
+  const handleUploadReport = async (inspectionId: string, reportData: Full150PointReport) => {
+    const targetInsp = inspections.find(i => i.id === inspectionId) || selectedInspection;
 
-    // 1. Update the inspection item as completed with checklists
+    // 1. Update the inspection item as completed with full 150-point report
     await supabase.from("inspections").update({
       status: "completed",
-      overall_score: Number(reportForm.overallScore),
-      report_engine: reportForm.engine,
-      report_brakes: reportForm.brakes,
-      report_electronics: reportForm.electronics,
-      report_exterior: reportForm.exterior,
-      report_interior: reportForm.interior,
-      notes: reportForm.notes
-    }).eq("id", selectedInspection.id);
+      overall_score: reportData.overallScore,
+      report_engine: reportData.categories[0]?.summary || "",
+      report_exterior: reportData.categories[1]?.summary || "",
+      report_brakes: reportData.categories[2]?.summary || "",
+      report_electronics: reportData.categories[3]?.summary || "",
+      report_interior: reportData.categories[5]?.summary || "",
+      report_150_json: JSON.stringify(reportData),
+      notes: reportData.notes,
+      is_certified: reportData.isCertified
+    }).eq("id", inspectionId);
 
-    // 2. Automagically list this car in the live Dealer Auctions table to simulate full flow
-    const auctionRecord = {
-      car_title: `${selectedInspection.brand} ${selectedInspection.model}`,
-      year: selectedInspection.year,
-      km_driven: selectedInspection.km_driven,
-      fuel: selectedInspection.fuel,
-      transmission: selectedInspection.transmission,
-      city: selectedInspection.city,
-      base_price: selectedInspection.year > 2020 ? 800000 : 400000,
-      current_bid: selectedInspection.year > 2020 ? 810000 : 410000,
-      highest_bidder_name: "Starting Bid Base",
-      ends_at: new Date(Date.now() + 3600000 * 24).toISOString(), // 24 hours
-      status: "active"
-    };
+    // 2. Automagically list this car in live Dealer Auctions table to simulate full flow
+    if (targetInsp) {
+      const auctionRecord = {
+        car_title: `${targetInsp.brand} ${targetInsp.model}`,
+        year: targetInsp.year,
+        km_driven: targetInsp.km_driven,
+        fuel: targetInsp.fuel,
+        transmission: targetInsp.transmission,
+        city: targetInsp.city,
+        base_price: targetInsp.year > 2020 ? 800000 : 400000,
+        current_bid: targetInsp.year > 2020 ? 810000 : 410000,
+        highest_bidder_name: "Starting Bid Base",
+        ends_at: new Date(Date.now() + 3600000 * 24).toISOString(), // 24 hours
+        status: "active"
+      };
 
-    await supabase.from("auctions").insert([auctionRecord]);
+      await supabase.from("auctions").insert([auctionRecord]);
 
-    // Rule 2: Inspector submits report → Notify Admin.
-    await notificationService.triggerReportSubmitted({
-      inspectionId: selectedInspection.id,
-      inspectorName: currentUser.name,
-      brand: selectedInspection.brand,
-      model: selectedInspection.model,
-      score: Number(reportForm.overallScore)
-    });
+      // Notify Admin
+      await notificationService.triggerReportSubmitted({
+        inspectionId: targetInsp.id,
+        inspectorName: currentUser.name,
+        brand: targetInsp.brand,
+        model: targetInsp.model,
+        score: reportData.overallScore
+      });
+    }
 
-    toast.success("Inspection Report uploaded! This vehicle has been launched in the Live Dealer Auctions table and Admins have been notified.");
+    toast.success("150-Point Certified Inspection Report uploaded! Vehicle submitted to Admin review and Live Dealer Auctions.");
     setSelectedInspection(null);
     reloadAllData();
   };
@@ -1006,112 +1011,14 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     </div>
                   )}
 
-                  {/* REPORT UPLOAD MODAL/DRAWER OVERLAY */}
-                  {selectedInspection && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto text-left">
-                      <div className="bg-white w-full max-w-2xl rounded-3xl p-6 md:p-8 border border-[#2E7D32]/10 space-y-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                          <div>
-                            <h3 className="font-black text-lg text-slate-900 tracking-tight">Upload Condition Report</h3>
-                            <p className="text-xs text-slate-400 mt-0.5">Evaluation for {selectedInspection.brand} {selectedInspection.model} ({selectedInspection.reg_number})</p>
-                          </div>
-                          <button 
-                            onClick={() => setSelectedInspection(null)}
-                            className="p-1 border border-slate-100 rounded-lg hover:bg-slate-50 text-slate-400"
-                          >
-                            <X className="h-4.5 w-4.5" />
-                          </button>
-                        </div>
-
-                        <form onSubmit={handleUploadReport} className="space-y-4 text-xs font-semibold">
-                          
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Overall Condition Score (1.0 to 10.0) *</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              min="1"
-                              max="10"
-                              value={reportForm.overallScore}
-                              onChange={(e) => setReportForm(prev => ({ ...prev, overallScore: Number(e.target.value) }))}
-                              required
-                              className="w-full h-11 border border-slate-200 rounded-xl px-3 outline-none font-bold"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Engine & Transmission Checklist *</label>
-                              <Input
-                                value={reportForm.engine}
-                                onChange={(e) => setReportForm(prev => ({ ...prev, engine: e.target.value }))}
-                                required
-                                className="h-11 rounded-xl"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Braking System Checklist *</label>
-                              <Input
-                                value={reportForm.brakes}
-                                onChange={(e) => setReportForm(prev => ({ ...prev, brakes: e.target.value }))}
-                                required
-                                className="h-11 rounded-xl"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Electronics & HVAC *</label>
-                              <Input
-                                value={reportForm.electronics}
-                                onChange={(e) => setReportForm(prev => ({ ...prev, electronics: e.target.value }))}
-                                required
-                                className="h-11 rounded-xl"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exterior Paint & Frame *</label>
-                              <Input
-                                value={reportForm.exterior}
-                                onChange={(e) => setReportForm(prev => ({ ...prev, exterior: e.target.value }))}
-                                required
-                                className="h-11 rounded-xl"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Interior Leather & Cabin *</label>
-                            <Input
-                              value={reportForm.interior}
-                              onChange={(e) => setReportForm(prev => ({ ...prev, interior: e.target.value }))}
-                              required
-                              className="h-11 rounded-xl"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inspector's Final Review Notes *</label>
-                            <textarea
-                              value={reportForm.notes}
-                              onChange={(e) => setReportForm(prev => ({ ...prev, notes: e.target.value }))}
-                              required
-                              rows={3}
-                              className="w-full border border-slate-200 rounded-xl p-3 outline-none bg-white text-xs font-semibold focus:ring-2 focus:ring-[#2E7D32]"
-                            />
-                          </div>
-
-                          <Button
-                            type="submit"
-                            className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white py-3.5 text-xs font-black uppercase tracking-widest rounded-2xl h-12"
-                          >
-                            ✔️ Submit Inspector Evaluation
-                          </Button>
-                        </form>
-                      </div>
-                    </div>
-                  )}
+                  {/* 150-POINT REPORT UPLOAD MODAL */}
+                  <Inspection150FormModal
+                    inspection={selectedInspection}
+                    isOpen={!!selectedInspection}
+                    onClose={() => setSelectedInspection(null)}
+                    onSubmitReport={handleUploadReport}
+                    userRole="Inspector"
+                  />
 
                 </div>
               )}
