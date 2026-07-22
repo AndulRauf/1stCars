@@ -33,7 +33,7 @@ export function BuyCarsView({
 }: BuyCarsViewProps) {
   const [settings, setSettings] = React.useState({
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
-    buyCarsSubheadingText: "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, single-owner status, certified non-accident frames, and instant deliveries."
+    buyCarsSubheadingText: "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification."
   });
 
   React.useEffect(() => {
@@ -250,7 +250,7 @@ export function BuyCarsView({
             {settings.buyCarsHeadingText || "Explore Our Handpicked Certified Fleet"}
           </h1>
           <p className="text-sm text-slate-500 mt-2 max-w-2xl">
-            {settings.buyCarsSubheadingText || "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, single-owner status, certified non-accident frames, and instant deliveries."}
+            {settings.buyCarsSubheadingText || "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification."}
           </p>
         </div>
 
@@ -323,6 +323,14 @@ export function BuyCarsView({
             </div>
           </div>
         </div>
+
+        {/* Mobile Filter Backdrop Overlay */}
+        {showFiltersMobile && (
+          <div 
+            className="fixed inset-0 z-30 bg-black/50 backdrop-blur-xs lg:hidden"
+            onClick={() => setShowFiltersMobile(false)}
+          />
+        )}
 
         {/* Content Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

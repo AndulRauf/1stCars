@@ -84,6 +84,17 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // ESC key listener to close modal
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Listen to global autofill events
   React.useEffect(() => {
     const handleAutofill = (e: Event) => {
@@ -698,7 +709,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+    >
       
       {/* Simulated SMS Notification Banner */}
       {simulatedSms && (
@@ -733,9 +749,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       )}
 
       {/* Modal Box */}
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-[#2E7D32]/15 p-6 md:p-8 flex flex-col justify-between text-left space-y-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 flex flex-col my-auto max-h-[90vh] relative overflow-hidden text-left">
         
-        <div className="flex justify-between items-center">
+        {/* Permanent Sticky Top Header with Always-Visible Close Button */}
+        <div className="sticky top-0 bg-white/95 backdrop-blur-md z-20 px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
           <a href="/" className="flex items-center space-x-2">
             <div className="w-6 h-6 bg-[#2E7D32] rounded flex items-center justify-center shadow-md shadow-[#2E7D32]/20">
               <div className="w-3 h-3 border-2 border-white rotate-45"></div>
@@ -745,24 +762,29 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-50 border border-slate-100 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+            type="button"
+            title="Close window (Esc)"
+            className="p-2 rounded-full bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-600 transition-all cursor-pointer flex items-center justify-center shadow-xs active:scale-95"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4.5 w-4.5 stroke-[2.5]" />
           </button>
         </div>
 
-        <div className="space-y-1">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
-            {mode === "login" ? "Welcome Back" : mode === "register" ? "Create Account" : "Reset Password"}
-          </h2>
-          <p className="text-xs text-slate-400">
-            {mode === "login" 
-              ? "Enter your mobile number to receive a secure OTP code." 
-              : mode === "register" 
-              ? "Join as an Elite customer, dealer, or system representative." 
-              : "Provide your email to receive standard reset parameters."}
-          </p>
-        </div>
+        {/* Scrollable Content Container */}
+        <div className="p-6 overflow-y-auto space-y-5">
+
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
+              {mode === "login" ? "Welcome Back" : mode === "register" ? "Create Account" : "Reset Password"}
+            </h2>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              {mode === "login" 
+                ? "Enter your mobile number to receive a secure OTP code." 
+                : mode === "register" 
+                ? "Join as an Elite customer, dealer, or system representative." 
+                : "Provide your email to receive standard reset parameters."}
+            </p>
+          </div>
 
         {/* Error and Success Indicators */}
         {hasSupabaseKeys && isUsingMock && (
@@ -1131,6 +1153,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           )}
         </div>
 
+        </div>
       </div>
     </div>
   );

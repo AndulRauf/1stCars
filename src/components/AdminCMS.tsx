@@ -75,9 +75,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     instagram: "https://instagram.com/1stcars",
     twitter: "https://twitter.com/1stcars",
     youtube: "https://youtube.com/1stcars",
-    supportEmail: "concierge@1stcars.com",
-    supportPhone: "+91 98765 43210",
-    supportAddress: "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India",
+    supportEmail: "suport@1stcars.in",
+    supportPhone: "+91 8866377722",
+    supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     highlight1Title: "Single Owned",
@@ -97,7 +97,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     inspectionButtonText: "Book Instant Free Inspection",
     filterHeadingText: "Find Your Certified Dream Car",
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
-    buyCarsSubheadingText: "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, single-owner status, certified non-accident frames, and instant deliveries.",
+    buyCarsSubheadingText: "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.",
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
     sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
     sellCarFormHeading: "Get Your Car Valued",
@@ -343,8 +343,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (storedSettings) {
         try {
           const parsed = JSON.parse(storedSettings);
-          if (parsed.supportAddress && (parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722"))) {
-            parsed.supportAddress = "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India";
+          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || (parsed.buyCarsSubheadingText && parsed.buyCarsSubheadingText.includes("owned directly"))) {
+            parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
+            parsed.supportPhone = "+91 8866377722";
+            parsed.supportEmail = "suport@1stcars.in";
+            parsed.buyCarsSubheadingText = "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
           setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
@@ -2930,7 +2933,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
       {/* 5. EDIT/ADD RECORD OVERLAY MODAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsFormOpen(false);
+          }}
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-white border border-slate-100 rounded-[32px] max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto relative text-left">
             <button
               onClick={() => setIsFormOpen(false)}

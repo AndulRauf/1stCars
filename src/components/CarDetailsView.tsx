@@ -132,7 +132,7 @@ export function CarDetailsView({
       await supabase.from("sales_notifications").insert([
         {
           name: "Visitor (Instant Inquirer)",
-          mobile: "+91 98765 43210",
+          mobile: "+91 8866377722",
           city: car.cities?.[0] || car.location || "Surat",
           preferred_date: new Date().toISOString().split("T")[0],
           preferred_time: "Immediate Connection Requested",

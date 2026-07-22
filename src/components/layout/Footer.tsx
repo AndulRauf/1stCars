@@ -13,18 +13,18 @@ export function Footer({ onViewChange, currentView, hideTrustBadges }: FooterPro
   const [footerPages, setFooterPages] = React.useState<any[]>([]);
 
   const [settings, setSettings] = React.useState({
-    supportEmail: "concierge@1stcars.com",
-    supportPhone: "+91 98765 43210",
-    supportAddress: "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India",
+    supportEmail: "suport@1stcars.in",
+    supportPhone: "+91 8866377722",
+    supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     footerText: "© 2026 1stCars Luxury Marketplace. All rights reserved.",
-    highlight1Title: "Single Owned",
-    highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
-    highlight2Title: "Non Accident Trusted",
-    highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
-    highlight3Title: "Genuine KM",
-    highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
+    highlight1Title: "150-Point Certificate",
+    highlight1Desc: "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.",
+    highlight2Title: "Single Owned, Non Accident Trusted*",
+    highlight2Desc: "Verified single owner history with zero chassis frame damage guarantee.",
+    highlight3Title: "Aggregator Marketplace",
+    highlight3Desc: "Connecting verified Car Buyers, Sellers, and Dealers with transparent deal mediation.",
   });
 
   React.useEffect(() => {
@@ -33,8 +33,16 @@ export function Footer({ onViewChange, currentView, hideTrustBadges }: FooterPro
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed.supportAddress && (parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722"))) {
-            parsed.supportAddress = "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India";
+          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || (parsed.highlight2Title && parsed.highlight2Title.includes("Buyback"))) {
+            parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
+            parsed.supportPhone = "+91 8866377722";
+            parsed.supportEmail = "suport@1stcars.in";
+            parsed.highlight1Title = "150-Point Certificate";
+            parsed.highlight1Desc = "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.";
+            parsed.highlight2Title = "Single Owned, Non Accident Trusted*";
+            parsed.highlight2Desc = "Verified single owner history with zero chassis frame damage guarantee.";
+            parsed.highlight3Title = "Aggregator Marketplace";
+            parsed.highlight3Desc = "Connecting verified Car Buyers, Sellers, and Dealers with transparent deal mediation.";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
           setSettings((prev) => ({ ...prev, ...parsed }));
@@ -72,40 +80,54 @@ export function Footer({ onViewChange, currentView, hideTrustBadges }: FooterPro
         
         {/* Top Highlight Section / Trust Badges */}
         {!hideTrustBadges && currentView !== "sell_car" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12 mb-12 border-b border-[#2E7D32]/10">
-            <div className="flex items-start space-x-4">
-              <div className="bg-[#2E7D32]/5 p-3 rounded-2xl text-primary border border-[#2E7D32]/15 shadow-sm">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-bold text-base text-slate-900 tracking-tight">{settings.highlight1Title}</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {settings.highlight1Desc}
-                </p>
-              </div>
+          <div className="pb-12 mb-12 border-b border-[#2E7D32]/10 space-y-6">
+            <div className="text-center sm:text-left">
+              <span className="inline-flex items-center text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 px-3.5 py-1.5 rounded-full shadow-2xs">
+                🏎️ 1STCARS LUXURY PRE-OWNED STANDARDS • VETTED DOCUMENT
+              </span>
             </div>
 
-            <div className="flex items-start space-x-4">
-              <div className="bg-[#2E7D32]/5 p-3 rounded-2xl text-primary border border-[#2E7D32]/15 shadow-sm">
-                <Award className="h-6 w-6 text-primary" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              <div className="bg-white/80 border border-[#2E7D32]/15 rounded-2xl p-4.5 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2E7D32]/30 transition-all flex items-start space-x-4">
+                <div className="bg-[#2E7D32]/10 p-3 rounded-xl text-[#2E7D32] border border-[#2E7D32]/20 shadow-xs shrink-0">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-[#2E7D32]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-snug">
+                    {settings.highlight1Title || "150-Point Certificate"}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    {settings.highlight1Desc || "Every vehicle in our collection undergoes rigorous mechanical & structural inspections."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-base text-slate-900 tracking-tight">{settings.highlight2Title}</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {settings.highlight2Desc}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-start space-x-4">
-              <div className="bg-[#2E7D32]/5 p-3 rounded-2xl text-primary border border-[#2E7D32]/15 shadow-sm">
-                <Sparkles className="h-6 w-6 text-primary" />
+              <div className="bg-white/80 border border-[#2E7D32]/15 rounded-2xl p-4.5 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2E7D32]/30 transition-all flex items-start space-x-4">
+                <div className="bg-[#2E7D32]/10 p-3 rounded-xl text-[#2E7D32] border border-[#2E7D32]/20 shadow-xs shrink-0">
+                  <Award className="h-5 w-5 sm:h-6 sm:w-6 text-[#2E7D32]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-snug">
+                    {settings.highlight2Title || "Single Owned, Non Accident Trusted*"}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    {settings.highlight2Desc || "Verified single owner history with zero chassis frame damage guarantee."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-base text-slate-900 tracking-tight">{settings.highlight3Title}</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {settings.highlight3Desc}
-                </p>
+
+              <div className="bg-white/80 border border-[#2E7D32]/15 rounded-2xl p-4.5 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2E7D32]/30 transition-all flex items-start space-x-4">
+                <div className="bg-[#2E7D32]/10 p-3 rounded-xl text-[#2E7D32] border border-[#2E7D32]/20 shadow-xs shrink-0">
+                  <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-[#2E7D32]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight leading-snug">
+                    {settings.highlight3Title || "Aggregator Marketplace"}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    {settings.highlight3Desc || "Connecting verified Car Buyers, Sellers, and Dealers with transparent deal mediation."}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

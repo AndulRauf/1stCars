@@ -157,9 +157,9 @@ export default function App() {
     facebook: "https://facebook.com/1stcars",
     instagram: "https://instagram.com/1stcars",
     youtube: "https://youtube.com/1stcars",
-    supportEmail: "concierge@1stcars.com",
-    supportPhone: "+91 98765 43210",
-    supportAddress: "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India",
+    supportEmail: "suport@1stcars.in",
+    supportPhone: "+91 8866377722",
+    supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     highlight1Title: "Single Owned",
@@ -176,7 +176,7 @@ export default function App() {
     filterHeadingText: "Refine Selection",
     searchButtonText: "Search Fleet",
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
-    buyCarsSubheadingText: "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, single-owner status, certified non-accident frames, and instant deliveries.",
+    buyCarsSubheadingText: "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.",
     detailsButtonText: "Details & Booking",
     inspectionButtonText: "Book Showroom Inspection",
     valuationButtonText: "Calculate Valuation",
@@ -199,8 +199,10 @@ export default function App() {
       if (storedSettings) {
         try {
           const parsed = JSON.parse(storedSettings);
-          if (parsed.supportAddress && (parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722"))) {
-            parsed.supportAddress = "1stCars Flagship Hub, Ring Road, Bhatar, Surat, Gujarat 395007, India";
+          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar")) {
+            parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
+            parsed.supportPhone = "+91 8866377722";
+            parsed.supportEmail = "suport@1stcars.in";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
           setWebsiteSettings(prev => ({ ...prev, ...parsed }));
