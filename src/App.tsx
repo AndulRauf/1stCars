@@ -443,7 +443,13 @@ export default function App() {
     
     const matchesBodyType = selectedBodyType === "All" || car.bodyType === selectedBodyType;
 
-    return matchesSearch && matchesBrand && matchesBudget && matchesBodyType;
+    const selectedCityLower = selectedCity.toLowerCase();
+    const matchesCity = selectedCity === "All Cities" || 
+      car.cities?.some(c => c.toLowerCase() === selectedCityLower) || 
+      car.regCity?.toLowerCase() === selectedCityLower || 
+      car.location?.toLowerCase().includes(selectedCityLower);
+
+    return matchesSearch && matchesBrand && matchesBudget && matchesBodyType && matchesCity;
   });
 
   const clearFilters = () => {

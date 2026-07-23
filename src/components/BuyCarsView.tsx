@@ -72,10 +72,10 @@ export function BuyCarsView({
     fuel: "All",
     transmission: "All",
     budgetMin: 0,
-    budgetMax: 1000000,
-    yearMin: 2020,
-    yearMax: 2024,
-    city: "All Cities",
+    budgetMax: 50000000,
+    yearMin: 2015,
+    yearMax: 2026,
+    city: selectedCity || "All Cities",
   });
 
   // Sync initial parameters when route changes
@@ -120,9 +120,9 @@ export function BuyCarsView({
       fuel: "All",
       transmission: "All",
       budgetMin: 0,
-      budgetMax: 1000000,
-      yearMin: 2020,
-      yearMax: 2024,
+      budgetMax: 50000000,
+      yearMin: 2015,
+      yearMax: 2026,
       city: "All Cities",
     });
     setSortBy("featured");
@@ -153,7 +153,7 @@ export function BuyCarsView({
       setFilters((prev) => ({
         ...prev,
         budgetMin: 0,
-        budgetMax: 1000000,
+        budgetMax: 50000000,
       }));
     }
     setCurrentPage(1);
@@ -201,7 +201,13 @@ export function BuyCarsView({
 
     // City filter
     if (filters.city !== "All Cities") {
-      result = result.filter((car) => car.cities?.includes(filters.city));
+      const selectedCityLower = filters.city.toLowerCase();
+      result = result.filter(
+        (car) =>
+          car.cities?.some((c) => c.toLowerCase() === selectedCityLower) ||
+          car.regCity?.toLowerCase() === selectedCityLower ||
+          car.location?.toLowerCase().includes(selectedCityLower)
+      );
     }
 
     // Sorting Engine
