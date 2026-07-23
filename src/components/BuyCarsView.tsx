@@ -19,7 +19,7 @@ interface BuyCarsViewProps {
   initialSearch?: string;
 }
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 10;
 
 export function BuyCarsView({
   onViewDetails,
