@@ -192,44 +192,6 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
         
         {/* Left Column: Core Pillars of 1stMark Certification */}
         <div className="lg:col-span-8 space-y-8">
-
-          {/* MARKETPLACE PROCESS PIPELINE */}
-          <div className="bg-slate-900 text-white border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 text-left">
-            <div className="border-b border-slate-800 pb-4">
-              <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Transparent Marketplace Process</span>
-              <h2 className="text-2xl font-black text-white tracking-tight mt-1">From Inspection to Dealer Offer & Seller Payout</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Step 1 */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
-                <div className="w-8 h-8 rounded-full bg-[#2E7D32] text-white font-black flex items-center justify-center text-xs">1</div>
-                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">1. Inspector Inspects</h4>
-                <p className="text-[11px] text-slate-300">Inspector performs the 120-point inspection on site & submits detailed report.</p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-700 text-white font-black flex items-center justify-center text-xs">2</div>
-                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">2. Admin Approves</h4>
-                <p className="text-[11px] text-slate-300">Admin reviews report, validates score/grade, and approves for live auction.</p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
-                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">3</div>
-                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">3. Dealers Offer</h4>
-                <p className="text-[11px] text-slate-300">Verified B2B dealers place competitive bids based on certified report.</p>
-              </div>
-
-              {/* Step 4 */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
-                <div className="w-8 h-8 rounded-full bg-[#2E7D32] text-white font-black flex items-center justify-center text-xs">4</div>
-                <h4 className="font-extrabold text-xs text-white uppercase tracking-wider">4. Offer to Seller</h4>
-                <p className="text-[11px] text-slate-300">Admin presents best price offer to seller for instant payment & handover.</p>
-              </div>
-            </div>
-          </div>
           
           {/* Main 3 Pillars Navigation */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">

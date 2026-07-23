@@ -86,7 +86,8 @@ export interface Inspection {
   report_electronics?: string;
   report_exterior?: string;
   report_interior?: string;
-  report_150_json?: string; // Serialized Full150PointReport
+  report_120_json?: string; // Serialized Full120PointReport
+  report_150_json?: string; // Legacy Serialized Report
   notes?: string;
   is_certified?: boolean;
 }

@@ -15,7 +15,7 @@ import {
 } from "@/src/data/inspection120Data";
 import { toast } from "@/src/lib/toast";
 
-interface Inspection150FormModalProps {
+interface Inspection120FormModalProps {
   inspection: any;
   isOpen: boolean;
   onClose: () => void;
@@ -25,7 +25,7 @@ interface Inspection150FormModalProps {
   userRole?: "Inspector" | "Admin" | string;
 }
 
-export const Inspection150FormModal: React.FC<Inspection150FormModalProps> = ({
+export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
   inspection,
   isOpen,
   onClose,

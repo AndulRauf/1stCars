@@ -219,11 +219,11 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
     case "sell_car":
       return `Sell Your Car Instantly From Home | 1stCars Free Home Inspection`;
     case "buy_cars":
-      return `Buy Certified Used Cars | 1stCars 150-Point Inspected Inventory`;
+      return `Buy Certified Used Cars | 1stCars 120-Point Inspected Inventory`;
     case "car_details":
       return carName ? `${carName} | 1stCars Certified Pre-Owned` : `Certified Vehicle Details | 1stCars`;
     case "firstmark_certification":
-      return `1stMark Certification — 150-Point Inspection Standard | 1stCars`;
+      return `1stMark Certification — 120-Point Inspection Standard | 1stCars`;
     case "role_dashboards":
       return `My Portal & Dashboards | 1stCars`;
     case "sales_dashboard":

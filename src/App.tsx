@@ -148,7 +148,7 @@ export default function App() {
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Certified Cars",
-    heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 150-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+    heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -169,7 +169,7 @@ export default function App() {
     highlight3Title: "Genuine KM",
     highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
     seoTitle: "1stCars - Certified Luxury Car Marketplace",
-    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 150-Point Certificate.",
+    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 120-Point Certificate.",
     googleAnalyticsId: "G-1STCARS2026",
     buyButtonText: "Buy Certified Cars",
     sellButtonText: "Sell Your Car",
@@ -228,7 +228,7 @@ export default function App() {
         }
       } else {
         const defaultFaqs = [
-          { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every 1stCars vehicle undergoes our rigorous 150-Point Certificate inspection. This is conducted by elite technical experts and covers the powertrain, electrical diagnostics, structural chassis analysis, fluid qualities, and a complete road-test performance run. Only vehicles with flawless report cards receive 1stMark certification." },
+          { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every 1stCars vehicle undergoes our rigorous 120-Point Certificate inspection. This is conducted by elite technical experts and covers the powertrain, electrical diagnostics, structural chassis analysis, fluid qualities, and a complete road-test performance run. Only vehicles with flawless report cards receive 1stMark certification." },
           { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." },
           { id: "fq-3", category: "Selling", question: "Can I sell my car instantly without purchasing another one?", answer: "Absolutely! We buy cars directly from collectors and private owners. You can use our online valuation calculator, book a free 30-minute doorstep or showroom inspection, and choose our Instant Offer to get paid on the exact same day. There is zero obligation to trade in or buy from us." },
           { id: "fq-4", category: "Financing", question: "Do you offer financing and home test drives?", answer: "Yes! We work with top-tier financial partners to offer low-interest elite finance programs and customizable EMI tenures. Plus, we provide home test drives and doorstep premium white-glove delivery in our private closed transports. Your security and convenience are our absolute priority." }
@@ -247,7 +247,7 @@ export default function App() {
         }
       } else {
         const defaultTestimonials = [
-          { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche Carrera S from 1stCars was an absolute joy. The 150-point report card was extremely thorough, and they delivered the vehicle in a fully closed transport direct to my estate. Top tier service.", photo: "👤" },
+          { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche Carrera S from 1stCars was an absolute joy. The 120-point report card was extremely thorough, and they delivered the vehicle in a fully closed transport direct to my estate. Top tier service.", photo: "👤" },
           { id: "t-2", name: "Dr. Melissa Duarte", role: "Sold: Mercedes-Benz G 63 AMG", rating: 5, content: "I was initially nervous about trade-ins, but 1stCars calculated an instant offer on my G 63, did the doorstep evaluation check next morning, and transferred funds to my Chase account that exact afternoon. Exceptional speed.", photo: "👤" },
           { id: "t-3", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already. Sourced perfect specifications.", photo: "👤" }
         ];
@@ -706,7 +706,7 @@ export default function App() {
             </h1>
             
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium text-center">
-              {websiteSettings.heroSubtitle || "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 150-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification."}
+              {websiteSettings.heroSubtitle || "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">
@@ -926,7 +926,7 @@ export default function App() {
                 <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
                   <ShieldCheck className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">150+ Point Certificate</h3>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">120+ Point Certificate</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                   Rigorous diagnostic scans, structural integrity checks, road testing, and detail evaluation. If it does not pass flawlessly, we will not list it.
                 </p>

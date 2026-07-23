@@ -20,7 +20,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     footerText: "© 2026 1stCars Luxury Marketplace. All rights reserved.",
-    highlight1Title: "150-Point Certificate",
+    highlight1Title: "120-Point Certificate",
     highlight1Desc: "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.",
     highlight2Title: "Single Owned, Non Accident Trusted*",
     highlight2Desc: "Verified single owner history with zero chassis frame damage guarantee.",
@@ -38,7 +38,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
             parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
             parsed.supportEmail = "suport@1stcars.in";
-            parsed.highlight1Title = "150-Point Certificate";
+            parsed.highlight1Title = "120-Point Certificate";
             parsed.highlight1Desc = "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.";
             parsed.highlight2Title = "Single Owned, Non Accident Trusted*";
             parsed.highlight2Desc = "Verified single owner history with zero chassis frame damage guarantee.";

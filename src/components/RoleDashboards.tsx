@@ -17,8 +17,8 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { AdminCMS } from "./AdminCMS";
 import { toast } from "@/src/lib/toast";
-import { Inspection150FormModal } from "./Inspection150FormModal";
-import { Full150PointReport } from "@/src/data/inspection150Data";
+import { Inspection120FormModal } from "./Inspection120FormModal";
+import { Full120PointReport } from "@/src/data/inspection120Data";
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -200,19 +200,20 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
   };
 
-  // Handle Inspector: Upload 150-Point Report Checklist
-  const handleUploadReport = async (inspectionId: string, reportData: Full150PointReport) => {
+  // Handle Inspector: Upload 120-Point Report Checklist
+  const handleUploadReport = async (inspectionId: string, reportData: Full120PointReport) => {
     const targetInsp = inspections.find(i => i.id === inspectionId) || selectedInspection;
 
-    // 1. Update the inspection item as completed with full 150-point report
+    // 1. Update the inspection item as completed with full 120-point report
     await supabase.from("inspections").update({
       status: "completed",
-      overall_score: reportData.overallScore,
+      overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
       report_engine: reportData.categories[0]?.summary || "",
       report_exterior: reportData.categories[1]?.summary || "",
       report_brakes: reportData.categories[2]?.summary || "",
       report_electronics: reportData.categories[3]?.summary || "",
       report_interior: reportData.categories[5]?.summary || "",
+      report_120_json: JSON.stringify(reportData),
       report_150_json: JSON.stringify(reportData),
       notes: reportData.notes,
       is_certified: reportData.isCertified
@@ -242,11 +243,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         inspectorName: currentUser.name,
         brand: targetInsp.brand,
         model: targetInsp.model,
-        score: reportData.overallScore
+        score: reportData.overallScorePercent
       });
     }
 
-    toast.success("150-Point Certified Inspection Report uploaded! Vehicle submitted to Admin review and Live Dealer Auctions.");
+    toast.success("120-Point Certified Inspection Report uploaded! Vehicle submitted to Admin review and Live Dealer Auctions.");
     setSelectedInspection(null);
     reloadAllData();
   };
@@ -1011,8 +1012,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     </div>
                   )}
 
-                  {/* 150-POINT REPORT UPLOAD MODAL */}
-                  <Inspection150FormModal
+                  {/* 120-POINT REPORT UPLOAD MODAL */}
+                  <Inspection120FormModal
                     inspection={selectedInspection}
                     isOpen={!!selectedInspection}
                     onClose={() => setSelectedInspection(null)}

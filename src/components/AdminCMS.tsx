@@ -16,8 +16,8 @@ import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
-import { Inspection150FormModal } from "./Inspection150FormModal";
-import { Full150PointReport } from "@/src/data/inspection150Data";
+import { Inspection120FormModal } from "./Inspection120FormModal";
+import { Full120PointReport } from "@/src/data/inspection120Data";
 import { Gavel, Globe } from "lucide-react";
 
 interface AdminCMSProps {
@@ -90,7 +90,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     highlight3Title: "Genuine KM",
     highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
     seoTitle: "1stCars - Certified Luxury Car Marketplace",
-    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 150-Point Certificate.",
+    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 120-Point Certificate.",
     googleAnalyticsId: "G-1STCARS2026",
     buyButtonText: "Buy Certified Cars",
     sellButtonText: "Sell Your Car",
@@ -125,29 +125,30 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [formData, setFormData] = React.useState<any>({});
 
-  // 150-Point Inspection Modal state
-  const [selected150Inspection, setSelected150Inspection] = React.useState<any | null>(null);
+  // 120-Point Inspection Modal state
+  const [selected120Inspection, setSelected120Inspection] = React.useState<any | null>(null);
 
-  const handleSave150Report = async (inspectionId: string, reportData: Full150PointReport) => {
+  const handleSave120Report = async (inspectionId: string, reportData: Full120PointReport) => {
     await supabase.from("inspections").update({
-      overall_score: reportData.overallScore,
+      overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
       report_engine: reportData.categories[0]?.summary || "",
       report_exterior: reportData.categories[1]?.summary || "",
       report_brakes: reportData.categories[2]?.summary || "",
       report_electronics: reportData.categories[3]?.summary || "",
       report_interior: reportData.categories[5]?.summary || "",
+      report_120_json: JSON.stringify(reportData),
       report_150_json: JSON.stringify(reportData),
       notes: reportData.notes,
       is_certified: reportData.isCertified
     }).eq("id", inspectionId);
 
-    toast.success("150-Point Inspection Report updated and saved by Admin!");
-    setSelected150Inspection(null);
+    toast.success("120-Point Inspection Report updated and saved by Admin!");
+    setSelected120Inspection(null);
     loadCMSData();
     if (onReloadAllData) onReloadAllData();
   };
 
-  const handleStartAuction = async (inspection: any, reportData: Full150PointReport) => {
+  const handleStartAuction = async (inspection: any, reportData: Full120PointReport) => {
     const auctionRecord = {
       car_title: `${inspection.brand} ${inspection.model}`,
       year: inspection.year,
@@ -165,16 +166,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     await supabase.from("auctions").insert([auctionRecord]);
     await supabase.from("inspections").update({ 
       status: "auctioned",
+      report_120_json: JSON.stringify(reportData),
       report_150_json: JSON.stringify(reportData)
     }).eq("id", inspection.id);
 
     toast.success(`Live B2B Dealer Auction successfully launched for ${inspection.brand} ${inspection.model}!`);
-    setSelected150Inspection(null);
+    setSelected120Inspection(null);
     loadCMSData();
     if (onReloadAllData) onReloadAllData();
   };
 
-  const handlePublishToWebsite = async (inspection: any, reportData: Full150PointReport) => {
+  const handlePublishToWebsite = async (inspection: any, reportData: Full120PointReport) => {
     const carRecord = {
       id: `car-pub-${Date.now()}`,
       brand: inspection.brand,
@@ -201,7 +203,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       ],
       features: reportData.keyFeatures,
       inspectionSummary: {
-        overallScore: reportData.overallScore,
+        overallScore: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
         engine: reportData.categories[0]?.summary || "100% Pass",
         exterior: reportData.categories[1]?.summary || "100% Pass",
         brakes: reportData.categories[2]?.summary || "100% Pass",
@@ -218,11 +220,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     await supabase.from("inspections").update({ 
       status: "published", 
       is_certified: true,
+      report_120_json: JSON.stringify(reportData),
       report_150_json: JSON.stringify(reportData)
     }).eq("id", inspection.id);
 
     toast.success(`Vehicle ${inspection.brand} ${inspection.model} uploaded & published to 1stCars website for direct retail buyers!`);
-    setSelected150Inspection(null);
+    setSelected120Inspection(null);
     loadCMSData();
     if (onReloadAllData) onReloadAllData();
   };
@@ -317,7 +320,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       ]));
 
       setFaqs(getStored("faqs", [
-        { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 150-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
+        { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
         { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." }
       ]));
 
@@ -1342,7 +1345,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             { id: "staff", label: "Staff", icon: UserCheck },
             { id: "inspectors", label: "Inspectors", icon: Award },
             { id: "sales", label: "Sales Assc", icon: ClipboardList },
-            { id: "inspections", label: "150-Pt Inspections", icon: ClipboardList },
+            { id: "inspections", label: "120-Pt Inspections", icon: ClipboardList },
             { id: "auctions", label: "Live Auctions", icon: Hammer },
             { id: "park_sell", label: "Park & Sell", icon: Layers },
             { id: "brands", label: "Brands & Models", icon: Play },
@@ -1831,15 +1834,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         {activeModule === "inspections" && (
                           <>
                             <button
-                              onClick={() => setSelected150Inspection(item)}
+                              onClick={() => setSelected120Inspection(item)}
                               className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-[#2E7D32]/30 text-[#2E7D32] bg-[#2E7D32]/5 hover:bg-[#2E7D32] hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                              title="Review / Edit 150-Point Detailed Checklist"
+                              title="Review / Edit 120-Point Detailed Checklist"
                             >
                               <ClipboardList className="h-3 w-3" />
-                              150-Pt Report
+                              120-Pt Report
                             </button>
                             <button
-                              onClick={() => setSelected150Inspection(item)}
+                              onClick={() => setSelected120Inspection(item)}
                               className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                               title="Start B2B Dealer Auction"
                             >
@@ -1847,7 +1850,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                               Auction
                             </button>
                             <button
-                              onClick={() => setSelected150Inspection(item)}
+                              onClick={() => setSelected120Inspection(item)}
                               className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-emerald-200 text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
                               title="Publish directly to website for buyers (1stMark Certified)"
                             >
@@ -3440,12 +3443,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </div>
       )}
 
-      {/* 150-Point Inspection Modal for Admin */}
-      <Inspection150FormModal
-        inspection={selected150Inspection}
-        isOpen={!!selected150Inspection}
-        onClose={() => setSelected150Inspection(null)}
-        onSubmitReport={(id, data) => handleSave150Report(id, data)}
+      {/* 120-Point Inspection Modal for Admin */}
+      <Inspection120FormModal
+        inspection={selected120Inspection}
+        isOpen={!!selected120Inspection}
+        onClose={() => setSelected120Inspection(null)}
+        onSubmitReport={(id, data) => handleSave120Report(id, data)}
         onStartAuction={(insp, data) => handleStartAuction(insp, data)}
         onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
         userRole="Admin"
