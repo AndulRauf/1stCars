@@ -33,7 +33,7 @@ export function Navbar({
   const [isCityModalOpen, setIsCityModalOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [settings, setSettings] = React.useState({
-    logoUrl: "/logo.png",
+    logoUrl: "/logo.svg",
     logoSize: 150,
     brandSlogan: "Premium Selection"
   });
@@ -66,7 +66,7 @@ export function Navbar({
         try {
           const parsed = JSON.parse(stored);
           if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
-            parsed.logoUrl = "/logo.png";
+            parsed.logoUrl = "/logo.svg";
           }
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {
@@ -82,7 +82,7 @@ export function Navbar({
         try {
           const parsed = JSON.parse(stored);
           if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
-            parsed.logoUrl = "/logo.png";
+            parsed.logoUrl = "/logo.svg";
           }
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {}
@@ -161,32 +161,38 @@ export function Navbar({
               className="flex items-center space-x-3 group"
             >
               {isImageUrl(settings.logoUrl) ? (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2.5 sm:space-x-3">
                   <img 
                     src={settings.logoUrl} 
-                    alt={settings.brandSlogan || "Logo"} 
-                    className="object-contain h-10 w-10 rounded-lg select-none pointer-events-none border border-slate-100 bg-white shadow-xs"
+                    alt={settings.brandSlogan || "1stCars Logo"} 
+                    className="object-contain h-8 sm:h-10 w-8 sm:w-10 rounded-lg select-none pointer-events-none border border-slate-100 bg-white shadow-xs shrink-0"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.src.endsWith("/logo.svg")) {
+                        img.src = "/logo.svg";
+                      }
+                    }}
                   />
                   <div className="flex flex-col">
-                    <span className="text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center">
+                    <span className="text-xl sm:text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center leading-none">
                       1stCars
                     </span>
-                    <span className="text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-1.5">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-0.5 sm:-mt-1">
                       {settings.brandSlogan || "Premium Selection"}
                     </span>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="w-8 h-8 bg-[#2E7D32] rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:rotate-45 shadow-lg shadow-[#2E7D32]/20">
+                  <div className="w-8 h-8 bg-[#2E7D32] rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:rotate-45 shadow-lg shadow-[#2E7D32]/20 shrink-0">
                     <div className="w-4 h-4 border-2 border-white rotate-45"></div>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center">
+                    <span className="text-xl sm:text-2xl font-black tracking-tighter text-[#2E7D32] flex items-center leading-none">
                       {settings.logoUrl || "1stCars"}
                     </span>
-                    <span className="text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-1.5">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-widest text-[#2E7D32]/60 uppercase -mt-0.5 sm:-mt-1">
                       {settings.brandSlogan || "Premium Selection"}
                     </span>
                   </div>
