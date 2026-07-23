@@ -18,11 +18,6 @@ interface FirstMarkCertificationProps {
 export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: FirstMarkCertificationProps) {
   // Navigation tabs or active subsection
   const [activeTab, setActiveTab] = React.useState<"chassis" | "odometer" | "120point" | "warranty" | "workflow">("chassis");
-  
-  // Interactive Certificate Lookup Engine
-  const [certLookupQuery, setCertLookupQuery] = React.useState("");
-  const [searchedCert, setSearchedCert] = React.useState<any | null>(null);
-  const [isSearching, setIsSearching] = React.useState(false);
 
   // Quote / Warranty Calculator states
   const [selectedVehicleType, setSelectedVehicleType] = React.useState<"sedan" | "suv" | "sports" | "supercar">("suv");
@@ -43,73 +38,6 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
     agreeToTerms: true
   });
   const [isBooked, setIsBooked] = React.useState(false);
-
-  // Mock Certificates Database
-  const mockCertificates: Record<string, any> = {
-    "1MC-992-GT3": {
-      id: "1MC-992-GT3",
-      owner: "R. Sterling",
-      vehicle: "Porsche 911 GT3 (992)",
-      kilometers: "8,400 km (Verified Perfect)",
-      chassisStatus: "Original Paint, Zero Structural Weld Spots, 100% Non-Accident Clear",
-      inspectionDate: "2026-05-14",
-      grade: "Grade A+ (99% Score)",
-      score: "119 / 120 Points Passed",
-      certificationResult: "Certified",
-      warrantyCoverage: "Active (12-Month Premium Coverage Included)",
-      inspector: "Lead Master Inspector: Vijay Patel"
-    },
-    "1MC-G63-AMG": {
-      id: "1MC-G63-AMG",
-      owner: "M. Duarte",
-      vehicle: "Mercedes-Benz G63 AMG",
-      kilometers: "18,200 km (Verified Perfect)",
-      chassisStatus: "Original Heavy Frame, 0% Misalignment, 100% Non-Accident Clear",
-      inspectionDate: "2026-06-20",
-      grade: "Grade A (94% Score)",
-      score: "113 / 120 Points Passed",
-      certificationResult: "Certified",
-      warrantyCoverage: "Active (12-Month Premium Coverage Included)",
-      inspector: "Lead Master Inspector: Aarav Mehta"
-    },
-    "1MC-BMW-M5": {
-      id: "1MC-BMW-M5",
-      owner: "K. Singhania",
-      vehicle: "BMW M5 Competition",
-      kilometers: "12,900 km (Verified Perfect)",
-      chassisStatus: "Alloy Subframe Scanned, No Heat Recoil Markers, 100% Non-Accident Clear",
-      inspectionDate: "2026-07-02",
-      grade: "Grade A+ (97% Score)",
-      score: "116 / 120 Points Passed",
-      certificationResult: "Certified",
-      warrantyCoverage: "Eligible for Upgrade (12-Month Warranty Add-on Available)",
-      inspector: "Senior Structural Tech: Ronald D'Souza"
-    }
-  };
-
-  const handleCertificateLookup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!certLookupQuery.trim()) {
-      toast.error("Please enter a Certificate ID");
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchedCert(null);
-
-    setTimeout(() => {
-      const code = certLookupQuery.trim().toUpperCase();
-      const match = mockCertificates[code];
-      
-      if (match) {
-        setSearchedCert(match);
-        toast.success("120-Point Certificate authenticated!");
-      } else {
-        toast.error("No certificate matches that ID. Try '1MC-992-GT3' or '1MC-G63-AMG'");
-      }
-      setIsSearching(false);
-    }, 600);
-  };
 
   const handleBookInspection = (e: React.FormEvent) => {
     e.preventDefault();
@@ -411,124 +339,24 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
         {/* Right Column: Certificate Lookup Engine & Inspection Booking Form */}
         <div className="lg:col-span-4 space-y-6 text-left">
           
-          {/* Certificate Verification Card */}
+          {/* Buy 1stMark Certified Cars Card */}
           <div className="bg-slate-900 text-white border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
               <ShieldCheck className="h-5 w-5 text-[#2E7D32]" />
-              <h3 className="text-sm font-black uppercase tracking-wider text-white">Certificate Authenticator</h3>
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">Buy 1stMark Certified Cars</h3>
             </div>
             <p className="text-xs text-slate-300 font-semibold leading-relaxed">
-              Enter any 1stMark Certificate ID to instantly authenticate inspection scores and structural records.
+              Explore our handpicked inventory of 120-Point Inspected luxury cars with verified mileage, non-accident guarantee, and complete inspection reports.
             </p>
 
-            <form onSubmit={handleCertificateLookup} className="space-y-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={certLookupQuery}
-                  onChange={(e) => setCertLookupQuery(e.target.value)}
-                  placeholder="e.g. 1MC-992-GT3 or 1MC-G63-AMG"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-3 text-xs font-bold text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2E7D32]"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isSearching}
-                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl shadow-md cursor-pointer"
-              >
-                {isSearching ? "Authenticating..." : "Verify Certificate"}
-              </Button>
-            </form>
-
-            {searchedCert && (
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 text-xs animate-in fade-in duration-300">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-emerald-400">{searchedCert.vehicle}</span>
-                  <Badge className="bg-[#2E7D32] text-white text-[9px]">{searchedCert.grade}</Badge>
-                </div>
-                <p className="text-[11px] text-slate-300">Owner: {searchedCert.owner}</p>
-                <p className="text-[11px] text-slate-300">Score: {searchedCert.score}</p>
-                <p className="text-[10px] text-emerald-300 font-mono mt-1">{searchedCert.chassisStatus}</p>
-              </div>
-            )}
+            <Button
+              onClick={onNavigateToInventory}
+              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Buy Now</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
-
-          {/* Book Inspection Form */}
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">Request 120-Point Inspection</h3>
-            <p className="text-xs text-slate-500 font-semibold">
-              Get your vehicle officially inspected and certified by our master technicians.
-            </p>
-
-            {!isBooked ? (
-              <form onSubmit={handleBookInspection} className="space-y-3 text-xs font-semibold">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={bookingForm.name}
-                    onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                    placeholder="Your Full Name"
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-1 focus:ring-[#2E7D32] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Mobile Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={bookingForm.mobile}
-                    onChange={(e) => setBookingForm({ ...bookingForm, mobile: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-1 focus:ring-[#2E7D32] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Vehicle Make & Model *</label>
-                  <input
-                    type="text"
-                    required
-                    value={bookingForm.vehicleModel}
-                    onChange={(e) => setBookingForm({ ...bookingForm, vehicleModel: e.target.value })}
-                    placeholder="e.g. 2022 Honda City ZX"
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-1 focus:ring-[#2E7D32] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">City Location *</label>
-                  <select
-                    value={bookingForm.city}
-                    onChange={(e) => setBookingForm({ ...bookingForm, city: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-1 focus:ring-[#2E7D32] outline-none bg-white"
-                  >
-                    <option value="Surat">Surat (Flagship Hub)</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Mumbai">Mumbai</option>
-                  </select>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl shadow-md cursor-pointer mt-2"
-                >
-                  Schedule Doorstep Inspection
-                </Button>
-              </form>
-            ) : (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="h-8 w-8 text-[#2E7D32] mx-auto" />
-                <h4 className="text-xs font-black text-slate-900 uppercase">Inspection Request Received!</h4>
-                <p className="text-[11px] text-slate-600 font-semibold">Our Surat master inspector will call you shortly to confirm doorstep location & appointment timing.</p>
-              </div>
-            )}
-          </div>
-
         </div>
 
       </div>
