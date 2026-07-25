@@ -109,6 +109,10 @@ export function CarDetailsView({
   const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
   const [bookingModalType, setBookingModalType] = React.useState<"test_drive" | "buy_now">("test_drive");
 
+  // Buy Now / Reserve checkout sheet state
+  const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
+
+
   // Booking form states
   const [bookingForm, setBookingForm] = React.useState({
     name: "",
@@ -129,9 +133,14 @@ export function CarDetailsView({
   const bookingFormRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = (type: "test_drive" | "buy_now") => {
-    setBookingModalType(type);
-    setIsBookingModalOpen(true);
+    if (type === "buy_now") {
+      setIsBuyNowOpen(true);
+    } else {
+      setBookingModalType("test_drive");
+      setIsBookingModalOpen(true);
+    }
   };
+
 
   // WhatsApp / Call Request Handler
   const handleInstantContact = async (contactType: "whatsapp" | "call") => {
@@ -935,6 +944,19 @@ export function CarDetailsView({
         onSaveToggle={onSaveToggle}
         onNavigateToDashboard={onNavigateToDashboard}
       />
+
+      {/* Buy Now / Reserve Checkout Sheet */}
+      <BuyNowCheckout
+        isOpen={isBuyNowOpen}
+        onClose={() => setIsBuyNowOpen(false)}
+        car={car}
+        selectedCity={car.cities?.[0] || car.location || "Surat"}
+        savedCars={savedCars}
+        onSaveToggle={onSaveToggle}
+        onNavigateToDashboard={onNavigateToDashboard}
+      />
     </div>
   );
 }
+
+
