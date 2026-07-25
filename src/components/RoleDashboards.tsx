@@ -308,30 +308,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           </div>
 
           <div className="flex flex-wrap gap-2.5 w-full md:w-auto">
-            {currentUser.role !== "Admin" && (
-              <Button
-                type="button"
-                onClick={() => {
-                  const adminUser = {
-                    id: "demo-admin",
-                    name: "Super Admin",
-                    email: "admin@1stcars.com",
-                    role: "Admin",
-                    city: "Mumbai"
-                  };
-                  toast.success("Switched to Super Admin CMS mode!");
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("1stcars_current_user", JSON.stringify(adminUser));
-                  }
-                  window.location.reload();
-                }}
-                className="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black uppercase tracking-wider text-xs h-11 px-4 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer border border-amber-500"
-                title="Switch to Admin CMS Mode"
-              >
-                <Sparkles className="h-4 w-4 text-amber-900" />
-                <span>👑 Switch to Admin CMS</span>
-              </Button>
-            )}
             <Button
               variant="outline"
               onClick={reloadAllData}

@@ -159,15 +159,6 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
 
               <button
                 type="button"
-                onClick={() => onAuthClick?.("login")}
-                className="w-full bg-white hover:bg-[#2E7D32]/5 text-[#2E7D32] border border-[#2E7D32]/25 font-black text-xs uppercase tracking-wider py-2.5 px-3.5 rounded-xl flex items-center justify-between shadow-2xs hover:border-[#2E7D32] transition-all cursor-pointer group"
-              >
-                <span className="flex items-center gap-1.5">🔑 Dealer Login</span>
-                <ArrowUpRight className="h-3.5 w-3.5 text-[#2E7D32] shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </button>
-
-              <button
-                type="button"
                 onClick={() => onViewChange?.("role_dashboards")}
                 className="hover:text-primary transition-colors flex items-center group font-bold text-xs text-slate-500 uppercase tracking-wider cursor-pointer text-left pt-1"
               >
