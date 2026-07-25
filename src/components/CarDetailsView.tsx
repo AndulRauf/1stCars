@@ -10,6 +10,8 @@ import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
+import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
+
 
 interface CarDetailsViewProps {
   carId: string;
