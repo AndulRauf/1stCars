@@ -242,7 +242,8 @@ export function CarDetailsView({
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-[72px] sm:pt-20 pb-28 lg:pb-24">
+    <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-28 lg:pb-10">
+
 
       {schemaData && (
         <script
