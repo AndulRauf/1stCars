@@ -16,8 +16,9 @@ interface SellCarViewProps {
   onBackToHome: () => void;
 }
 
-// Extensive brand logos lookup
+// Extensive brand logos lookup (Indian market brands, 2000 onwards)
 const BRAND_LOGOS: { [brand: string]: string } = {
+  // Mass-market / Indian brands
   "Maruti Suzuki": "https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg",
   "Hyundai": "https://upload.wikimedia.org/wikipedia/commons/4/44/Hyundai_Motor_Company_logo.svg",
   "Tata": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Tata_logo.svg",
@@ -26,32 +27,49 @@ const BRAND_LOGOS: { [brand: string]: string } = {
   "Toyota": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Toyota_EU.svg",
   "Kia": "https://upload.wikimedia.org/wikipedia/commons/4/47/Kia_logo_2021.svg",
   "Renault": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Renault_2021_Logo.svg",
-  "Volkswagen": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Volkswagen_Logo_2019.svg",
+  "Volkswagen": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg",
   "Skoda": "https://upload.wikimedia.org/wikipedia/commons/1/18/Skoda_logo_2022.svg",
-  "Ford": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Ford_Motor_Company_Logo.svg",
+  "Ford": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ford_logo_flat.svg",
   "MG": "https://upload.wikimedia.org/wikipedia/commons/e/e9/MG_Motor_logo.svg",
   "Force": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Force_Motors_logo.svg",
   "ICML": "https://upload.wikimedia.org/wikipedia/commons/1/16/ICML_logo.png",
   "San Motors": "https://i.postimg.cc/NjWk9C1V/san-motors-logo.png",
   "DC Design": "https://upload.wikimedia.org/wikipedia/commons/c/cf/DC_Design_Logo.svg",
   "Reva": "https://upload.wikimedia.org/wikipedia/commons/5/52/Mahindra_Reva_Logo.png",
-  "Nissan": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Nissan_2020_logo.svg",
-  "Fiat": "https://upload.wikimedia.org/wikipedia/commons/1/12/Fiat_Automobiles_logo.svg",
-  "Chevrolet": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Chevrolet-logo.png",
+  "Nissan": "https://upload.wikimedia.org/wikipedia/commons/2/23/Nissan_2020_logo.svg",
+  "Datsun": "https://upload.wikimedia.org/wikipedia/commons/1/16/Datsun_logo.svg",
+  "Fiat": "https://upload.wikimedia.org/wikipedia/commons/8/85/Fiat_Logo.svg",
+  "Chevrolet": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Chevrolet_logo.svg",
+  "Mitsubishi": "https://upload.wikimedia.org/wikipedia/commons/7/79/Mitsubishi_logo.svg",
+  "Isuzu": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Isuzu_logo.svg",
+  "Opel": "https://upload.wikimedia.org/wikipedia/commons/1/12/Opel-Logo_2009.svg",
+  "Daewoo": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Daewoo_logo.svg",
+  "Hindustan Motors": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Hindustan_Motors_logo.png",
+  "Premier": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Premier_Automobiles_logo.png",
+  "Citroen": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Citroen_2022.svg",
+  "BYD": "https://upload.wikimedia.org/wikipedia/commons/f/f0/BYD_Company_logo.svg",
+  // Luxury brands
   "BMW": "https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg",
   "Audi": "https://upload.wikimedia.org/wikipedia/commons/9/92/Audi-Logo_2016.svg",
   "Mercedes-Benz": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Benz_logo.svg",
-  "Porsche": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Porsche-logo.png",
+  "Porsche": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Porsche_logo.svg",
   "Bentley": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Bentley_Motors_logo.svg",
-  "Jaguar": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Jaguar_2012_logo.svg",
-  "Land Rover": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Land_Rover_logo_2020.svg",
+  "Jaguar": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Jaguar_2012_logo.png",
+  "Land Rover": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Land_Rover_logo_2011.svg",
   "Volvo": "https://upload.wikimedia.org/wikipedia/commons/2/29/Volvo-Iron-Mark-Logo.svg",
-  "Mini Cooper": "https://upload.wikimedia.org/wikipedia/commons/e/e4/MINI_logo_2018.svg",
-  "Jeep": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Jeep_logo.svg",
+  "Mini Cooper": "https://upload.wikimedia.org/wikipedia/commons/8/8e/MINI_logo.svg",
+  "Jeep": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Jeep_wordmark_logo.svg",
   "Tesla": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Tesla_T_symbol.svg",
-  "Aston Martin": "https://upload.wikimedia.org/wikipedia/commons/d/df/Aston_Martin_logo.svg",
-  "Ferrari": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Ferrari-Logo.svg"
+  "Aston Martin": "https://upload.wikimedia.org/wikipedia/commons/5/59/Aston_Martin_Lagonda_brand_logo.svg",
+  "Ferrari": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Ferrari-Logo.svg",
+  "Lamborghini": "https://upload.wikimedia.org/wikipedia/commons/d/df/Lamborghini_Logo.svg",
+  "Maserati": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Maserati_logo.svg",
+  "Rolls-Royce": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Rolls-Royce_Motor_Cars_logo.svg",
+  "Lexus": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Lexus_division_emblem.svg",
+  "Lotus": "https://upload.wikimedia.org/wikipedia/commons/9/98/Lotus_Cars_logo.svg",
+  "Maybach": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Maybach_logo.svg"
 };
+
 
 // Extensive brand model database for interactive auto-suggestions
 const brandData: {
@@ -286,8 +304,102 @@ const brandData: {
       { name: "Flying Spur", category: "Luxury Sedan", years: "2005 - Now", image: "🚗", variants: ["V8", "W12", "Hybrid"] },
       { name: "Bentayga", category: "Luxury SUV", years: "2015 - Now", image: "🚙", variants: ["V8", "W12 Speed", "E-Hybrid"] }
     ]
+  },
+  "Jaguar": {
+    models: [
+      { name: "XF", category: "Luxury Sedan", years: "2008 - Now", image: "🚗", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
+      { name: "XE", category: "Luxury Sedan", years: "2015 - 2024", image: "🚗", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
+      { name: "F-Pace", category: "Luxury SUV", years: "2016 - Now", image: "🚙", variants: ["Prestige", "Portfolio", "R-Dynamic S"] },
+      { name: "F-Type", category: "Sports Car", years: "2013 - Now", image: "🏎️", variants: ["Coupe", "Convertible", "R"] }
+    ]
+  },
+  "Land Rover": {
+    models: [
+      { name: "Range Rover", category: "Luxury SUV", years: "1970 - Now", image: "🚙", variants: ["SE", "HSE", "Autobiography", "SV"] },
+      { name: "Range Rover Sport", category: "Luxury SUV", years: "2005 - Now", image: "🚙", variants: ["SE", "HSE", "Autobiography"] },
+      { name: "Range Rover Evoque", category: "Luxury SUV", years: "2011 - Now", image: "🚙", variants: ["S", "SE", "HSE", "Dynamic"] },
+      { name: "Discovery", category: "Luxury SUV", years: "1989 - Now", image: "🚙", variants: ["S", "SE", "HSE"] },
+      { name: "Discovery Sport", category: "Luxury SUV", years: "2014 - Now", image: "🚙", variants: ["S", "SE", "R-Dynamic"] },
+      { name: "Defender", category: "Luxury SUV", years: "1983 - Now", image: "🚙", variants: ["90", "110", "130", "X"] }
+    ]
+  },
+  "Volvo": {
+    models: [
+      { name: "XC40", category: "Luxury SUV", years: "2017 - Now", image: "🚙", variants: ["Momentum", "Inscription", "R-Design", "Recharge"] },
+      { name: "XC60", category: "Luxury SUV", years: "2008 - Now", image: "🚙", variants: ["Momentum", "Inscription", "R-Design"] },
+      { name: "XC90", category: "Luxury SUV", years: "2002 - Now", image: "🚙", variants: ["Momentum", "Inscription", "Excellence"] },
+      { name: "S90", category: "Luxury Sedan", years: "2016 - Now", image: "🚗", variants: ["Momentum", "Inscription"] },
+      { name: "S60", category: "Luxury Sedan", years: "2000 - Now", image: "🚗", variants: ["Momentum", "Inscription", "R-Design"] }
+    ]
+  },
+  "Mini Cooper": {
+    models: [
+      { name: "Cooper 3-Door", category: "Hatchback", years: "2001 - Now", image: "🚗", variants: ["Cooper", "Cooper S", "JCW"] },
+      { name: "Cooper 5-Door", category: "Hatchback", years: "2014 - Now", image: "🚗", variants: ["Cooper", "Cooper S"] },
+      { name: "Countryman", category: "SUV", years: "2010 - Now", image: "🚙", variants: ["Cooper", "Cooper S", "JCW"] },
+      { name: "Convertible", category: "Convertible", years: "2004 - Now", image: "🚗", variants: ["Cooper", "Cooper S"] }
+    ]
+  },
+  "Jeep": {
+    models: [
+      { name: "Compass", category: "SUV", years: "2017 - Now", image: "🚙", variants: ["Sport", "Longitude", "Limited", "Trailhawk"] },
+      { name: "Meridian", category: "SUV", years: "2022 - Now", image: "🚙", variants: ["Limited", "Limited (O)", "Overland"] },
+      { name: "Wrangler", category: "SUV", years: "1986 - Now", image: "🚙", variants: ["Unlimited", "Rubicon"] },
+      { name: "Grand Cherokee", category: "SUV", years: "1992 - Now", image: "🚙", variants: ["Limited", "Overland", "Summit"] }
+    ]
+  },
+  "Tesla": {
+    models: [
+      { name: "Model 3", category: "Electric Sedan", years: "2017 - Now", image: "⚡", variants: ["Standard Range", "Long Range", "Performance"] },
+      { name: "Model Y", category: "Electric SUV", years: "2020 - Now", image: "⚡", variants: ["Standard Range", "Long Range", "Performance"] },
+      { name: "Model S", category: "Electric Sedan", years: "2012 - Now", image: "⚡", variants: ["Long Range", "Plaid"] },
+      { name: "Model X", category: "Electric SUV", years: "2015 - Now", image: "⚡", variants: ["Long Range", "Plaid"] }
+    ]
+  },
+  "Aston Martin": {
+    models: [
+      { name: "DB11", category: "Grand Tourer", years: "2016 - Now", image: "🏎️", variants: ["V8", "V12", "AMR"] },
+      { name: "Vantage", category: "Sports Car", years: "2005 - Now", image: "🏎️", variants: ["Coupe", "Roadster", "F1 Edition"] },
+      { name: "DBX", category: "Luxury SUV", years: "2020 - Now", image: "🚙", variants: ["Base", "707"] }
+    ]
+  },
+  "Ferrari": {
+    models: [
+      { name: "Roma", category: "Grand Tourer", years: "2020 - Now", image: "🏎️", variants: ["Coupe", "Spider"] },
+      { name: "Portofino", category: "Grand Tourer", years: "2018 - Now", image: "🏎️", variants: ["Base", "M"] },
+      { name: "F8 Tributo", category: "Sports Car", years: "2019 - Now", image: "🏎️", variants: ["Coupe", "Spider"] },
+      { name: "296 GTB", category: "Sports Car", years: "2021 - Now", image: "🏎️", variants: ["GTB", "GTS"] }
+    ]
+  },
+  "Datsun": {
+    models: [
+      { name: "GO", category: "Hatchback", years: "2014 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] },
+      { name: "GO+", category: "MUV", years: "2015 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] },
+      { name: "redi-GO", category: "Hatchback", years: "2016 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] }
+    ]
+  },
+  "Mitsubishi": {
+    models: [
+      { name: "Pajero Sport", category: "SUV", years: "2011 - 2021", image: "🚙", variants: ["Standard", "Select", "Sport"] },
+      { name: "Outlander", category: "SUV", years: "2007 - 2021", image: "🚙", variants: ["Standard", "Chrome"] },
+      { name: "Lancer", category: "Sedan", years: "1998 - 2012", image: "🚗", variants: ["GLX", "SFX", "Cedia"] }
+    ]
+  },
+  "Citroen": {
+    models: [
+      { name: "C3", category: "Hatchback", years: "2022 - Now", image: "🚗", variants: ["Live", "Feel", "Shine"] },
+      { name: "C3 Aircross", category: "SUV", years: "2023 - Now", image: "🚙", variants: ["You", "Plus", "Max"] },
+      { name: "C5 Aircross", category: "SUV", years: "2021 - Now", image: "🚙", variants: ["Feel", "Shine"] }
+    ]
+  },
+  "Isuzu": {
+    models: [
+      { name: "D-Max V-Cross", category: "Pickup", years: "2016 - Now", image: "🛻", variants: ["Standard", "Z", "Z Prestige"] },
+      { name: "MU-X", category: "SUV", years: "2017 - Now", image: "🚙", variants: ["4x2", "4x4"] }
+    ]
   }
 };
+
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
