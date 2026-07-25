@@ -33,7 +33,9 @@ export interface Car {
   };
   owners?: number;
   km_driven?: number;
+  status?: "available" | "reserved" | "sold";
   cities?: string[];
+
 
   variant?: string;
   color?: string;

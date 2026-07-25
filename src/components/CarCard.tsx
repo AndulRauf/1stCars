@@ -141,11 +141,20 @@ export function CarCard({
         >
           {/* Top Bar inside Gallery */}
           <div className="flex items-center justify-between z-10 w-full">
-            {car.certified ? (
+            {car.status === "sold" ? (
+              <Badge className="bg-rose-600 hover:bg-rose-600 text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md flex items-center gap-1">
+                Sold
+              </Badge>
+            ) : car.status === "reserved" ? (
+              <Badge className="bg-amber-500 hover:bg-amber-500 text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md flex items-center gap-1">
+                Reserved
+              </Badge>
+            ) : car.certified ? (
               <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 animate-pulse">
                 <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10" /> 1stMark Certified
               </Badge>
             ) : <div />}
+
             <div className="flex items-center gap-1 ml-auto">
               <button
                 onClick={(e) => {
