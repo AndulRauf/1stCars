@@ -32,7 +32,9 @@ export interface Car {
     coverage: string;
   };
   owners?: number;
+  km_driven?: number;
   cities?: string[];
+
   variant?: string;
   color?: string;
   regCity?: string;

@@ -408,31 +408,12 @@ export function BookingModal({
               </div>
             )}
 
-            {/* Toggle: Test Drive vs Buy Now */}
-            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setBookingType("test_drive")}
-                className={`py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  bookingType === "test_drive"
-                    ? "bg-[#2E7D32] text-white shadow-sm font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Calendar className="h-3.5 w-3.5" /> Book Test Drive
-              </button>
-              <button
-                type="button"
-                onClick={() => setBookingType("buy_now")}
-                className={`py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  bookingType === "buy_now"
-                    ? "bg-[#2E7D32] text-white shadow-sm font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Buy / Reserve Car
-              </button>
+            {/* Header: Test Drive only */}
+            <div className="flex items-center gap-2 bg-[#2E7D32]/10 border border-[#2E7D32]/20 px-4 py-2.5 rounded-2xl">
+              <Calendar className="h-4 w-4 text-[#2E7D32]" />
+              <span className="text-xs font-black text-[#2E7D32] uppercase tracking-wider">Book Priority Test Drive</span>
             </div>
+
 
             {/* Input 1: Buyer Full Name */}
             <div className="space-y-1">

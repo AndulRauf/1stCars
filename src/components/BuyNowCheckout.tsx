@@ -31,13 +31,18 @@ export function BuyNowCheckout({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [leadRefId, setLeadRefId] = React.useState("");
+  const [buyerName, setBuyerName] = React.useState("");
+  const [buyerMobile, setBuyerMobile] = React.useState("");
 
   React.useEffect(() => {
     if (isOpen) {
       setShowPriceSummary(false);
       setIsSubmitted(false);
+      setBuyerName("");
+      setBuyerMobile("");
     }
   }, [isOpen]);
+
 
   if (!isOpen || !car) return null;
 
@@ -67,8 +72,26 @@ export function BuyNowCheckout({
   const ownerLabel = car.owners === 1 ? "1st owner" : `${car.owners || 1} owners`;
   const variant = (car as any).variant || "";
 
+  // EMI fallback: if the car has no emi value, estimate at ~2% of price/month (approx 5yr @ ~10%)
+  const displayEmi = car.emi && car.emi > 0 ? car.emi : Math.round((totalPrice * 0.021) / 100) * 100;
+
+  const buildWhatsAppLink = () => {
+    const phone = "918866377722"; // 1stCars support number
+    const msg = `Hi 1stCars! I'm interested in the ${car.year} ${car.brand} ${car.model}${variant ? " " + variant : ""} (${fmt(car.price)}). Please share more details.`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  };
+
   const handleContinueToPay = async () => {
+    if (!buyerName.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!buyerMobile || buyerMobile.replace(/\D/g, "").length < 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
     setIsSubmitting(true);
+
     const refId = `BUY-${Math.floor(100000 + Math.random() * 900000)}`;
     setLeadRefId(refId);
     const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
@@ -85,7 +108,8 @@ export function BuyNowCheckout({
       const leadRecord = {
         id: refId,
         created_at: new Date().toISOString(),
-        name: "Buyer (Checkout)",
+        name: buyerName.trim(),
+        mobile: buyerMobile.trim(),
         city: selectedCity || car.cities?.[0] || car.location || "Surat",
         vehicle: vehicleTitle,
         car_id: car.id,
@@ -95,6 +119,7 @@ export function BuyNowCheckout({
         type: "Buy Car / Reservation",
         status: "Pending",
         notes: `Booking token ${fmt(BOOKING_TOKEN)} | Total drive-away ${fmt(totalPrice)} | Ref: ${refId}`,
+
       };
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
@@ -233,7 +258,8 @@ export function BuyNowCheckout({
               </div>
               <span className="text-sm font-black text-slate-900">{fmt(BOOKING_TOKEN)}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <button className="text-[#2E7D32] font-bold underline">Know more!</button></p>
+            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
+
           </div>
 
           {/* EMI + Price row */}
@@ -241,7 +267,8 @@ export function BuyNowCheckout({
             <div className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-xs text-slate-500 font-medium">EMI starts at</p>
-                <p className="text-lg font-black text-slate-900">{fmt(car.emi)}<span className="text-sm font-bold text-slate-500">/mo</span></p>
+                <p className="text-lg font-black text-slate-900">{fmt(displayEmi)}<span className="text-sm font-bold text-slate-500">/mo</span></p>
+
               </div>
               <button className="text-sm font-bold text-amber-600 flex items-center gap-1 cursor-pointer">Check eligibility <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
@@ -274,10 +301,32 @@ export function BuyNowCheckout({
             </div>
           </div>
 
+          {/* Buyer details */}
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={buyerName}
+              onChange={(e) => setBuyerName(e.target.value)}
+              placeholder="Your full name *"
+              className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+            />
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-xs font-black text-slate-400">+91</span>
+              <input
+                type="tel"
+                value={buyerMobile}
+                onChange={(e) => setBuyerMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="10-digit mobile number *"
+                className="w-full h-10 border border-slate-200 rounded-xl pl-10 pr-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+              />
+            </div>
+          </div>
+
           <p className="text-center text-xs font-bold text-[#2E7D32]">Your token is 100% refundable</p>
         </div>
 
         {/* Sticky bottom CTA */}
+
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between gap-4 bg-white">
           <div>
             <p className="text-xl font-black text-slate-900">{fmt(BOOKING_TOKEN)}</p>
