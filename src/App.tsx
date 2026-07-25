@@ -660,25 +660,6 @@ export default function App() {
               >
                 Sign In To Continue
               </Button>
-              <Button
-                onClick={() => {
-                  const adminUser: any = {
-                    id: "demo-admin",
-                    name: "Super Admin",
-                    email: "admin@1stcars.com",
-                    role: "Admin",
-                    city: "Mumbai",
-                    mobile: "9876543210",
-                    created_at: new Date().toISOString()
-                  };
-                  setCurrentUser(adminUser);
-                  triggerToast("Logged in as Super Admin! Opening Admin Panel...");
-                }}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs tracking-wider uppercase rounded-xl py-3.5 flex items-center justify-center gap-2 shadow-md cursor-pointer"
-              >
-                <Sparkles className="h-4 w-4 text-amber-400" />
-                <span>👑 Quick Admin CMS Access</span>
-              </Button>
             </div>
           </div>
         )

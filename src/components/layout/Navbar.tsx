@@ -327,26 +327,6 @@ export function Navbar({
                     <User className="h-4 w-4" />
                     <span>{currentUser.name.split(" ")[0]} ({currentUser.role})</span>
                   </button>
-                  {currentUser.role !== "Admin" ? (
-                    <button
-                      onClick={() => {
-                        const adminUser = {
-                          id: "demo-admin",
-                          name: "Super Admin",
-                          email: "admin@1stcars.com",
-                          role: "Admin",
-                          city: "Mumbai"
-                        };
-                        onLoginSuccess?.(adminUser);
-                        onViewChange?.("role_dashboards");
-                      }}
-                      className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-200 hover:bg-amber-300 border border-amber-300 px-3 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-xs"
-                      title="Switch to Admin CMS Panel"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-amber-700" />
-                      <span>Admin CMS</span>
-                    </button>
-                  ) : null}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -356,34 +336,7 @@ export function Navbar({
                     Logout
                   </Button>
                 </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => onAuthClick?.("login")}
-                    className="text-xs font-black uppercase tracking-widest text-[#2E7D32] border border-[#2E7D32]/30 hover:border-[#2E7D32] bg-white px-3.5 py-2 rounded-xl transition-all cursor-pointer"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => {
-                      const adminUser = {
-                        id: "demo-admin",
-                        name: "Super Admin",
-                        email: "admin@1stcars.com",
-                        role: "Admin",
-                        city: "Mumbai"
-                      };
-                      onLoginSuccess?.(adminUser);
-                      onViewChange?.("role_dashboards");
-                    }}
-                    className="text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-300 hover:bg-amber-400 border border-amber-400 px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    title="Open Admin CMS Panel"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-amber-800" />
-                    <span>Admin CMS</span>
-                  </button>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile Actions Header */}
@@ -551,27 +504,6 @@ export function Navbar({
                 {savedCount} {savedCount === 1 ? 'Car' : 'Cars'}
               </span>
             )}
-          </div>
-
-          <div className="px-4 pt-2">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                const adminUser = {
-                  id: "demo-admin",
-                  name: "Super Admin",
-                  email: "admin@1stcars.com",
-                  role: "Admin",
-                  city: "Mumbai"
-                };
-                onLoginSuccess?.(adminUser);
-                onViewChange?.("role_dashboards");
-              }}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-wider h-11 rounded-xl flex items-center justify-center gap-2 shadow-md cursor-pointer"
-            >
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span>👑 Open Admin CMS Panel</span>
-            </button>
           </div>
 
           {currentUser && (
