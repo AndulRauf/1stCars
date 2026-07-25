@@ -242,7 +242,8 @@ export function CarDetailsView({
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24">
+    <div className="bg-[#FAF9F6] min-h-screen pt-[72px] sm:pt-20 pb-28 lg:pb-24">
+
       {schemaData && (
         <script
           type="application/ld+json"
@@ -308,59 +309,21 @@ export function CarDetailsView({
           </div>
         </div>
 
-        {/* Primary Page Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          
-          {/* LEFT PANEL: Gallery & Details tabs (8 columns) */}
-          <div className="lg:col-span-8 space-y-8">
-            
-            {/* Header Title block */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xs font-black tracking-widest text-[#2E7D32] uppercase">
-                    {car.brand} Studio
-                  </span>
-                  {car.certified && (
-                    <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/25 font-bold uppercase tracking-widest text-[9px]">
-                      1stMark Certified
-                    </Badge>
-                  )}
-                </div>
-                <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter">
-                  {car.model}
-                </h1>
-                <div className="flex items-center space-x-3 text-sm font-semibold text-slate-500 mt-2">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4 text-[#2E7D32]" />
-                    <span>Year {car.year}</span>
-                  </div>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-[#2E7D32]" />
-                    <span>{car.location}</span>
-                  </div>
-                </div>
-              </div>
+        {/* HERO: Gallery + Key Info side-by-side */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mb-6">
 
-              <div className="text-left md:text-right">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Buy Now Price</p>
-                <p className="text-4xl font-black text-[#2E7D32] tracking-tight">{formatMoney(car.price)}</p>
-                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">Est. EMI {formatMoney(car.emi)}/mo</p>
-              </div>
-            </div>
+          {/* Gallery column */}
+          <div className="lg:col-span-7 space-y-3">
 
-            {/* Premium Interactive Image Gallery */}
-            <div className="bg-slate-950 rounded-3xl overflow-hidden relative shadow-lg aspect-video flex flex-col justify-between p-6 select-none">
-              
-              {/* Dynamic Gradients based on Active Slider Index */}
-              <div 
+            {/* Main image */}
+            <div className="bg-slate-950 rounded-2xl overflow-hidden relative shadow-md select-none" style={{aspectRatio:"16/10"}}>
+              <div
                 className={cn(
-                  "absolute inset-0 transition-all duration-700 bg-gradient-to-br",
-                  !angles[activeImageIndex].url && activeImageIndex === 0 && "from-slate-900 to-black",
-                  !angles[activeImageIndex].url && activeImageIndex === 1 && "from-zinc-900 to-slate-950",
-                  !angles[activeImageIndex].url && activeImageIndex === 2 && "from-neutral-900 to-stone-950"
-                )} 
+                  "absolute inset-0 transition-all duration-700",
+                  !angles[activeImageIndex].url && activeImageIndex === 0 && "bg-gradient-to-br from-slate-900 to-black",
+                  !angles[activeImageIndex].url && activeImageIndex === 1 && "bg-gradient-to-br from-zinc-900 to-slate-950",
+                  !angles[activeImageIndex].url && activeImageIndex === 2 && "bg-gradient-to-br from-neutral-900 to-stone-950"
+                )}
                 style={angles[activeImageIndex].url ? {
                   backgroundImage: `url(${angles[activeImageIndex].url})`,
                   backgroundSize: "cover",
@@ -368,7 +331,10 @@ export function CarDetailsView({
                 } : undefined}
               />
 
-              {/* Decorative premium watermark */}
+              {/* Bottom gradient overlay — text never sits directly on image */}
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+
+              {/* Watermark for placeholder */}
               {!angles[activeImageIndex].url && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none p-16">
                   <svg viewBox="0 0 100 50" className="w-10/12 text-white fill-current">
@@ -379,92 +345,142 @@ export function CarDetailsView({
                 </div>
               )}
 
-              {/* Top info row */}
-              <div className="z-10 flex items-center justify-between">
-                <Badge className="bg-white/10 text-white border-white/20 px-3.5 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
-                  Studio Angle {activeImageIndex + 1} of {angles.length}
+              {/* Top badge row */}
+              <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between">
+                <Badge className="bg-black/50 text-white border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
+                  {activeImageIndex + 1} / {angles.length}
                 </Badge>
                 <button
                   onClick={() => onSaveToggle(car.id, `${car.brand} ${car.model}`)}
                   className={cn(
-                    "w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
+                    "w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
                     savedCars.includes(car.id)
                       ? "bg-rose-500 border-rose-400 text-white"
-                      : "bg-black/20 hover:bg-black/40 border-white/15 text-white"
+                      : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
                   )}
                 >
-                  <Heart className={cn("h-4.5 w-4.5", savedCars.includes(car.id) && "fill-current")} />
+                  <Heart className={cn("h-4 w-4", savedCars.includes(car.id) && "fill-current")} />
                 </button>
               </div>
 
-              {/* Angle Description text */}
-              <div className="z-10 mt-auto text-left max-w-lg bg-black/35 p-5 rounded-2xl border border-white/10 backdrop-blur-md">
-                <p className="text-emerald-400 text-xs font-black uppercase tracking-widest mb-1">
-                  {angles[activeImageIndex].title}
-                </p>
-                <p className="text-slate-200 text-sm font-medium leading-relaxed">
-                  {angles[activeImageIndex].text}
-                </p>
+              {/* Caption sits on gradient — not on image */}
+              <div className="absolute bottom-0 left-0 right-0 z-10 px-4 pb-3">
+                <p className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">{angles[activeImageIndex].title}</p>
               </div>
 
-              {/* Interactive Slide dots */}
-              <div className="absolute bottom-6 right-8 flex space-x-2 z-10">
-                {angles.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={cn(
-                      "w-2.5 h-2.5 rounded-full transition-all cursor-pointer",
-                      activeImageIndex === idx ? "bg-[#2E7D32] w-6" : "bg-white/30 hover:bg-white/60"
-                    )}
-                  />
-                ))}
-              </div>
-
-              {/* Navigation Arrows */}
+              {/* Nav arrows */}
               <button
                 onClick={() => setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length)}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer"
-                aria-label="Previous Slide"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
+                aria-label="Previous"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setActiveImageIndex((prev) => (prev + 1) % angles.length)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer"
-                aria-label="Next Slide"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
+                aria-label="Next"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Gallery Thumbnail Strip */}
-            <div className="flex gap-3 overflow-x-auto pb-2 pt-1 scrollbar-none scrollbar-thin">
+            {/* Thumbnail strip */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {angles.map((ang, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImageIndex(i)}
                   className={cn(
-                    "p-2.5 rounded-2xl text-left border transition-all cursor-pointer bg-white flex items-center gap-3 shrink-0 min-w-[160px] max-w-[200px]",
-                    activeImageIndex === i
-                      ? "border-[#2E7D32] bg-[#2E7D32]/5 text-[#2E7D32] shadow-xs"
-                      : "border-slate-100 hover:bg-slate-50 text-slate-500"
+                    "rounded-xl border transition-all cursor-pointer shrink-0 overflow-hidden",
+                    activeImageIndex === i ? "border-[#2E7D32] ring-2 ring-[#2E7D32]/30" : "border-slate-200 hover:border-slate-300"
                   )}
+                  style={{width:72, height:52}}
                 >
                   {ang.url ? (
-                    <img src={ang.url} alt={ang.title || `Vehicle Thumbnail #${i+1}`} className="w-12 h-10 object-cover rounded-lg shrink-0" referrerPolicy="no-referrer" />
+                    <img src={ang.url} alt={ang.title || `Angle ${i+1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-12 h-10 bg-slate-950 text-white rounded-lg flex items-center justify-center font-black text-xs shrink-0">🚙</div>
+                    <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white text-xs font-black">
+                      {i === 0 ? "🚗" : i === 1 ? "🔙" : "🪑"}
+                    </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-[#2E7D32]/80 truncate">{ang.title}</p>
-                    <p className="text-[11px] font-bold truncate text-slate-800 mt-0.5">
-                      {ang.url ? `Angle #${i + 1}` : (i === 0 ? "Front Profile" : i === 1 ? "Aggressive Rear" : "Cabin Cockpit")}
-                    </p>
-                  </div>
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Key info column */}
+          <div className="lg:col-span-5 flex flex-col justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[10px] font-black tracking-widest text-[#2E7D32] uppercase">{car.brand}</span>
+                {car.certified && (
+                  <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/25 font-bold uppercase tracking-widest text-[9px]">
+                    1stMark™ Certified
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
+                {car.brand} {car.model}
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500 mt-2">
+                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5 text-[#2E7D32]" />{car.year}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#2E7D32]" />{car.location}</span>
+              </div>
+            </div>
+
+            {/* Quick specs pills */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: car.fuel },
+                { label: car.transmission },
+                { label: `${car.mileage.toLocaleString()} km` },
+                { label: `${car.owners === 1 ? "1st Owner" : `${car.owners || 1} Owners`}` },
+              ].map((s) => (
+                <span key={s.label} className="px-3 py-1.5 bg-[#2E7D32]/8 border border-[#2E7D32]/15 text-[#2E7D32] text-xs font-bold rounded-lg">
+                  {s.label}
+                </span>
+              ))}
+            </div>
+
+            {/* Price block */}
+            <div className="bg-[#2E7D32]/5 border border-[#2E7D32]/15 rounded-2xl p-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Buy Now Price</p>
+              <p className="text-3xl font-black text-[#2E7D32] tracking-tight mt-0.5">{formatMoney(car.price)}</p>
+              <p className="text-xs font-bold text-slate-500 mt-1">Est. EMI <span className="text-[#2E7D32]">{formatMoney(car.emi)}/mo</span></p>
+            </div>
+
+            {/* CTA buttons */}
+            <div className="space-y-2.5">
+              <Button
+                onClick={() => handleScrollToBooking("test_drive")}
+                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                Book Test Drive / Buy Now
+              </Button>
+              <Button
+                onClick={() => handleInstantContact("call")}
+                className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-bold uppercase tracking-wider py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Phone className="h-4 w-4 text-[#2E7D32]" /> Request Callback
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[#2E7D32] shrink-0" />
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SSL Encrypted · 1stCars Verified</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Primary Page Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          
+          {/* LEFT PANEL: Details tabs (8 columns) */}
+          <div className="lg:col-span-8 space-y-8">
+
 
             {/* COMPLETE VEHICLE OVERVIEW SPECIFICATIONS GRID */}
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
@@ -890,8 +906,25 @@ export function CarDetailsView({
 
       </div>
 
+      {/* Mobile sticky CTA bar — hidden on lg */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-slate-200 px-4 py-3 flex gap-3 shadow-lg">
+        <Button
+          onClick={() => handleScrollToBooking("test_drive")}
+          className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-xs rounded-xl h-11 flex items-center justify-center gap-1.5 shadow-md shadow-[#2E7D32]/20"
+        >
+          <Sparkles className="h-4 w-4" /> Book Test Drive
+        </Button>
+        <Button
+          onClick={() => handleInstantContact("call")}
+          className="flex-1 bg-white border border-slate-200 text-slate-800 font-bold uppercase tracking-wider text-xs rounded-xl h-11 flex items-center justify-center gap-1.5"
+        >
+          <Phone className="h-4 w-4 text-[#2E7D32]" /> Call Back
+        </Button>
+      </div>
+
       {/* Booking Modal */}
       <BookingModal
+
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         car={car}
