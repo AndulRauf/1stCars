@@ -44,19 +44,19 @@ export function SidebarSection({
       {!isCollapsed ? (
         <button
           onClick={onToggleExpand}
-          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-200 transition-colors rounded-lg group cursor-pointer"
+          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-[#2E7D32] transition-colors rounded-lg group cursor-pointer"
         >
-          <span className="flex items-center gap-1.5 group-hover:text-[#ffb81e]">
+          <span className="flex items-center gap-1.5 group-hover:text-[#2E7D32]">
             {section.title}
           </span>
           {shouldExpand ? (
-            <ChevronDown className="h-3.5 w-3.5 text-slate-500 group-hover:text-[#ffb81e]" />
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#2E7D32]" />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-[#ffb81e]" />
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#2E7D32]" />
           )}
         </button>
       ) : (
-        <div className="my-1 border-t border-slate-800" />
+        <div className="my-1 border-t border-[#2E7D32]/20" />
       )}
 
       {/* Section Items */}
@@ -71,18 +71,18 @@ export function SidebarSection({
                 key={item.id}
                 onClick={() => onSelectModule(item.id)}
                 title={isCollapsed ? item.label : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${
                   isCollapsed ? "justify-center" : "justify-between"
                 } ${
                   isActive
-                    ? "bg-[#ff5a07] text-white shadow-lg shadow-[#ff5a07]/25 font-black"
-                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                    ? "bg-[#2E7D32] text-white shadow-lg shadow-[#2E7D32]/25 font-black"
+                    : "text-slate-600 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32]"
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <Icon
                     className={`h-4 w-4 shrink-0 transition-transform ${
-                      isActive ? "text-white scale-110" : "text-slate-400 group-hover:text-white"
+                      isActive ? "text-white scale-110" : "text-slate-400 group-hover:text-[#2E7D32]"
                     }`}
                   />
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -93,7 +93,7 @@ export function SidebarSection({
                     className={`text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-[#ffb81e]/20 text-[#ffb81e] border border-[#ffb81e]/30"
+                        : "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20"
                     }`}
                   >
                     {item.badge}

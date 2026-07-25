@@ -1368,7 +1368,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const totalExpensesLogged = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row text-left font-sans">
+    <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         activeModule={activeModule}
@@ -1390,7 +1390,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"} p-4 sm:p-6 lg:p-8 space-y-6`}>
         
         {/* Top Sticky Header */}
-        <div className="bg-slate-900 border border-slate-800/90 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white border border-[#2E7D32]/20 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -1583,7 +1583,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   <Button
                     size="sm"
                     onClick={() => setSelected120Inspection(insp)}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] uppercase tracking-wider h-8 px-3 rounded-xl shrink-0"
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-[10px] uppercase tracking-wider h-8 px-3 rounded-xl shrink-0"
                   >
                     View Certificate
                   </Button>
@@ -2772,8 +2772,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
             {/* LIVE DYNAMIC CARD PREVIEW */}
             <div className="lg:col-span-5 space-y-6 sticky top-24">
-              <div className="p-6 bg-slate-900 text-white rounded-[32px] space-y-4 border border-white/10 shadow-2xl">
-                <h4 className="font-black text-slate-100 uppercase tracking-wider flex items-center gap-2 text-xs">
+              <div className="p-6 bg-[#2E7D32]/10 text-slate-800 rounded-[32px] space-y-4 border border-[#2E7D32]/20 shadow-2xl">
+                <h4 className="font-black text-[#2E7D32] uppercase tracking-wider flex items-center gap-2 text-xs">
                   <Sparkles className="h-4 w-4 text-amber-500" /> Live Mock Website Card Preview
                 </h4>
                 
@@ -3233,7 +3233,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsFormOpen(false);
           }}
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 bg-[#2E7D32]/20 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
         >
           <div className="bg-white border border-slate-100 rounded-[32px] max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto relative text-left">
             <button
@@ -3407,9 +3407,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                                 />
                                 
                                 {/* Image Overlay Badges */}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5">
+                                <div className="absolute inset-0 bg-[#2E7D32]/30 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5">
                                   <div className="flex justify-between items-start">
-                                    <span className="bg-slate-900/80 text-white font-mono text-[8px] px-1 rounded-sm">
+                                    <span className="bg-[#2E7D32]/80 text-white font-mono text-[8px] px-1 rounded-sm">
                                       #{index + 1}
                                     </span>
                                     <button
@@ -3424,7 +3424,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                                           };
                                         });
                                       }}
-                                      className="p-1 bg-red-600 hover:bg-red-700 rounded text-white cursor-pointer"
+                                      className="p-1 bg-rose-500 hover:bg-rose-600 rounded text-white cursor-pointer"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </button>
