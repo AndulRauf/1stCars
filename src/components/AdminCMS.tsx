@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { 
   Search, Filter, Plus, Edit3, Trash2, RefreshCw, 
   Check, X, AlertCircle, Sparkles, Folder, Settings, 
@@ -406,7 +407,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       dashboard: {},
       cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [] },
       users: { name: "", email: "", mobile: "", role: "Buyer", city: "Mumbai" },
-      buyer_enquiries: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Test Drive Request", preferred_date: "", preferred_time: "Morning", notes: "" },
+      test_drive_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Test Drive Request", preferred_date: "", preferred_time: "Morning", notes: "" },
+      booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
+
       seller_enquiries: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", year: 2022, km_driven: 25000, city: "Surat", address: "", status: "pending", notes: "" },
       staff: { name: "", email: "", role: "Inspector", region: "Mumbai", shift: "Morning", status: "Active" },
       dealers: { name: "", manager: "", rating: 5.0, city: "Mumbai", credits: 500000, active_bids: 0 },
@@ -887,15 +890,20 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       headers = ["brand_name", "model_name", "category", "engine", "power", "logo_url", "is_popular", "audience", "status"];
       rows = getCombinedBrandsModels();
       filename = "1stcars-brands-models-catalog.xls";
-    } else if (type === "buyer_enquiries") {
+    } else if (type === "test_drive_requests" || type === "booking_requests") {
       headers = ["created_at", "name", "mobile", "city", "vehicle", "type", "preferred_date", "preferred_time", "status", "notes"];
       try {
-        rows = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+        const allLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+        rows = allLeads.filter((lead: any) => {
+          const isTestDrive = String(lead.type || "").toLowerCase().includes("test drive");
+          return type === "test_drive_requests" ? isTestDrive : !isTestDrive;
+        });
       } catch (e) {
         rows = [];
       }
-      filename = "1stcars-buyer-enquiries.xls";
+      filename = type === "test_drive_requests" ? "1stcars-test-drive-requests.xls" : "1stcars-booking-requests.xls";
     } else if (type === "seller_enquiries") {
+
       headers = ["created_at", "seller_name", "seller_mobile", "reg_number", "brand", "model", "year", "km_driven", "city", "address", "status", "notes"];
       rows = inspections;
       filename = "1stcars-seller-enquiries.xls";
@@ -935,7 +943,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     toast.success(`Spreadsheet downloaded successfully: ${filename}`);
   };
 
-  const handleImportXLS = (type: "cars" | "brands" | "buyer_enquiries", event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportXLS = (type: "cars" | "brands" | "test_drive_requests" | "booking_requests", event: React.ChangeEvent<HTMLInputElement>) => {
+
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -1004,9 +1013,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               images: rowData.image_url ? [rowData.image_url] : []
             };
             importedRecords.push(finalRecord);
-          } else if (type === "buyer_enquiries") {
+          } else if (type === "test_drive_requests" || type === "booking_requests") {
             const finalRecord = {
               id: rowData.id || `lead-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+
               created_at: rowData.created_at || new Date().toISOString(),
               name: rowData.name || rowData.buyer_name || "Buyer Inquiry",
               mobile: rowData.mobile || rowData.phone || rowData.contact || "",
@@ -1047,8 +1057,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         if (type === "cars") {
           const { error } = await supabase.from("cars").insert(importedRecords);
           if (error) throw error;
-        } else if (type === "buyer_enquiries") {
+        } else if (type === "test_drive_requests" || type === "booking_requests") {
           const currentLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+
           const mergedLeads = [...importedRecords, ...currentLeads];
           localStorage.setItem("1stcars_sales_leads", JSON.stringify(mergedLeads));
           for (const rec of importedRecords) {
@@ -1306,13 +1317,22 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     switch (activeModule) {
       case "cars": return cars;
       case "users": return users;
-      case "buyer_enquiries":
+      case "test_drive_requests":
         try {
-          return JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+          const leads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+          return leads.filter((lead: any) => String(lead.type || "").toLowerCase().includes("test drive"));
+        } catch (e) {
+          return [];
+        }
+      case "booking_requests":
+        try {
+          const leads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+          return leads.filter((lead: any) => !String(lead.type || "").toLowerCase().includes("test drive"));
         } catch (e) {
           return [];
         }
       case "seller_enquiries":
+
         return inspections;
       case "inspections": return inspections;
       case "auctions": return auctions;
@@ -1651,13 +1671,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           </div>
 
           {/* Bulk Spreadsheet Stock/Brand/Enquiry/Dealer Actions */}
-          {(activeModule === "cars" || activeModule === "brands" || activeModule === "buyer_enquiries" || activeModule === "seller_enquiries" || activeModule === "dealers") && (
+          {(activeModule === "cars" || activeModule === "brands" || activeModule === "test_drive_requests" || activeModule === "booking_requests" || activeModule === "seller_enquiries" || activeModule === "dealers") && (
             <div className="p-4 bg-emerald-50/60 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-left">
                 <h4 className="font-black text-xs text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="h-4 w-4 text-emerald-700 shrink-0" />
-                  {activeModule === "buyer_enquiries" 
-                    ? "Buyer Enquiries Management & Download Sheet" 
+                  {activeModule === "test_drive_requests" 
+                    ? "Test Drive Requests Management & Download Sheet" 
+                    : activeModule === "booking_requests" 
+                    ? "Booking Requests Management & Download Sheet" 
                     : activeModule === "seller_enquiries" 
                     ? "Seller Enquiries Management & Download Sheet" 
                     : activeModule === "dealers" 
@@ -1665,8 +1687,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                     : `Bulk spreadsheet ${activeModule} catalog manager`}
                 </h4>
                 <p className="text-[10px] text-emerald-800/80 font-bold uppercase tracking-widest mt-1">
-                  {activeModule === "buyer_enquiries" 
-                    ? "Download all test drive bookings and buy requests in a dedicated Excel/CSV sheet" 
+                  {activeModule === "test_drive_requests" 
+                    ? "Download all priority test drive bookings in a dedicated Excel/CSV sheet" 
+                    : activeModule === "booking_requests" 
+                    ? "Download all buy car / reservation requests in a dedicated Excel/CSV sheet" 
                     : activeModule === "seller_enquiries" 
                     ? "Download all car valuation and evaluation requests in a separate Excel/CSV sheet" 
                     : activeModule === "dealers" 
@@ -1679,9 +1703,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   onClick={() => handleExportXLS(activeModule)}
                   className="bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-black uppercase tracking-wider h-9 px-4 rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
-                  <ArrowDownToLine className="h-3.5 w-3.5" /> Download {activeModule === "buyer_enquiries" ? "Buyer Sheet (.XLS)" : activeModule === "seller_enquiries" ? "Seller Sheet (.XLS)" : activeModule === "dealers" ? "Dealer Applications (.XLS)" : "Catalog XLS"}
+                  <ArrowDownToLine className="h-3.5 w-3.5" /> Download {activeModule === "test_drive_requests" ? "Test Drive Sheet (.XLS)" : activeModule === "booking_requests" ? "Booking Sheet (.XLS)" : activeModule === "seller_enquiries" ? "Seller Sheet (.XLS)" : activeModule === "dealers" ? "Dealer Applications (.XLS)" : "Catalog XLS"}
                 </Button>
-                {(activeModule === "cars" || activeModule === "brands" || activeModule === "buyer_enquiries") && (
+                {(activeModule === "cars" || activeModule === "brands" || activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
                   <div className="relative">
                     <input
                       type="file"
@@ -1694,13 +1718,14 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                       variant="secondary"
                       className="bg-white border border-emerald-200 text-emerald-900 text-[10px] font-black uppercase tracking-wider h-9 px-3.5 rounded-xl flex items-center gap-1.5 shadow-xs"
                     >
-                      <ArrowUpFromLine className="h-3.5 w-3.5" /> Upload {activeModule === "buyer_enquiries" ? "Buyer XLS" : "Bulk XLS"}
+                      <ArrowUpFromLine className="h-3.5 w-3.5" /> Upload {activeModule === "test_drive_requests" ? "Test Drive XLS" : activeModule === "booking_requests" ? "Booking XLS" : "Bulk XLS"}
                     </Button>
                   </div>
                 )}
               </div>
             </div>
           )}
+
 
           {/* CRUD Dynamic Table Grid */}
           <div className="overflow-x-auto border border-slate-100 rounded-2xl">
@@ -1764,12 +1789,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-indigo-600 font-black uppercase tracking-wider mt-0.5">High Bidder: {item.highest_bidder_name || "No bids placed yet"}</p>
                         </div>
                       )}
-                      {activeModule === "buyer_enquiries" && (
+                      {(activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
                         <div>
-                          <p className="font-black text-slate-800">{item.name || "Buyer Enquiry"} ({item.mobile || "N/A"})</p>
+                          <p className="font-black text-slate-800">{item.name || (activeModule === "test_drive_requests" ? "Test Drive Request" : "Booking Request")} ({item.mobile || "N/A"})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Vehicle: {item.vehicle || item.model || "General Inquiry"} • City: {item.city || "Surat"}</p>
                         </div>
                       )}
+
                       {activeModule === "seller_enquiries" && (
                         <div>
                           <p className="font-black text-slate-800">{item.seller_name || item.name} ({item.seller_mobile || item.mobile})</p>
@@ -1827,12 +1853,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.km_driven} km • {item.fuel}</p>
                         </div>
                       )}
-                      {activeModule === "buyer_enquiries" && (
+                      {(activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
                         <div>
-                          <p className="font-black text-indigo-600 uppercase text-[10px]">{item.type || "Test Drive Request"}</p>
+                          <p className="font-black text-indigo-600 uppercase text-[10px]">{item.type || (activeModule === "test_drive_requests" ? "Test Drive Request" : "Buy Car / Reservation")}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Pref: {item.preferred_date || "Flexible"} ({item.preferred_time || "Anytime"})</p>
                         </div>
                       )}
+
                       {activeModule === "seller_enquiries" && (
                         <div>
                           <p className="font-black text-slate-900 text-[10px]">{item.km_driven ? `${item.km_driven} km` : "Valuation Request"} • {item.fuel || "Petrol"}</p>

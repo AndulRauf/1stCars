@@ -3,11 +3,12 @@ import {
   ClipboardList, FileText, Gavel, Users, UserCheck, 
   ShieldCheck, Shield, Star, HelpCircle, DollarSign, 
   Bell, TrendingUp, BookOpen, Link, Palette, Edit3,
-  Sparkles
+  Sparkles, Calendar
 } from "lucide-react";
 
 export type CMSModule = 
-  | "dashboard" | "cars" | "users" | "buyer_enquiries" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
+  | "dashboard" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
+
   | "inspections" | "certifications" | "auctions" | "park_sell" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "warranty" | "notifications" | "expenses"
   | "reports" | "pages" | "footer_links" | "settings" | "text_editor";
@@ -43,8 +44,10 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
   {
     title: "Leads & Sales",
     items: [
-      { id: "buyer_enquiries", label: "Buyer Enquiries", icon: ClipboardList },
+      { id: "test_drive_requests", label: "Test Drive Requests", icon: Calendar },
+      { id: "booking_requests", label: "Booking Requests", icon: ClipboardList },
       { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
+
       { id: "auctions", label: "Live Auctions", icon: Gavel, badge: "LIVE" }
     ]
   },
