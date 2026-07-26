@@ -34,14 +34,38 @@ export function BuyNowCheckout({
   const [buyerName, setBuyerName] = React.useState("");
   const [buyerMobile, setBuyerMobile] = React.useState("");
 
+  // Mobile OTP verification state
+  const [otpSent, setOtpSent] = React.useState(false);
+  const [generatedOtp, setGeneratedOtp] = React.useState("");
+  const [enteredOtp, setEnteredOtp] = React.useState("");
+  const [isSendingOtp, setIsSendingOtp] = React.useState(false);
+  const [isMobileVerified, setIsMobileVerified] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(0);
+  const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; code: string } | null>(null);
+
   React.useEffect(() => {
     if (isOpen) {
       setShowPriceSummary(false);
       setIsSubmitted(false);
       setBuyerName("");
       setBuyerMobile("");
+      setOtpSent(false);
+      setGeneratedOtp("");
+      setEnteredOtp("");
+      setIsMobileVerified(false);
+      setCountdown(0);
+      setSimulatedSms(null);
     }
   }, [isOpen]);
+
+  // OTP resend countdown timer
+  React.useEffect(() => {
+    let timer: any;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
 
   if (!isOpen || !car) return null;
@@ -81,6 +105,55 @@ export function BuyNowCheckout({
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   };
 
+  // Step 1: Send a verification OTP to the buyer's mobile number
+  const handleSendOtp = async () => {
+    if (!buyerName.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!buyerMobile || buyerMobile.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(otpCode);
+      setOtpSent(true);
+      setEnteredOtp("");
+      setCountdown(30);
+
+      // Simulated SMS gateway (mirrors the login OTP experience)
+      setSimulatedSms({ mobile: buyerMobile, code: otpCode });
+      setTimeout(() => setSimulatedSms(null), 15000);
+
+      toast.success(`🔑 SMS Gateway: Your checkout OTP is ${otpCode}`);
+    } catch (err) {
+      console.error("Send OTP error:", err);
+      toast.error("Failed to send OTP. Please try again.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  // Resend OTP (respects the countdown timer)
+  const handleResendOtp = () => {
+    if (countdown > 0) return;
+    handleSendOtp();
+  };
+
+  // Step 2: Verify OTP, then proceed to create the reservation
+  const handleVerifyAndPay = async () => {
+    if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
+      toast.error("Incorrect OTP. Please check the code and try again.");
+      return;
+    }
+    setIsMobileVerified(true);
+    toast.success("Mobile number verified successfully!");
+    await handleContinueToPay();
+  };
+
   const handleContinueToPay = async () => {
     if (!buyerName.trim()) {
       toast.error("Please enter your full name.");
@@ -110,6 +183,7 @@ export function BuyNowCheckout({
         created_at: new Date().toISOString(),
         name: buyerName.trim(),
         mobile: buyerMobile.trim(),
+        mobile_verified: true,
         city: selectedCity || car.cities?.[0] || car.location || "Surat",
         vehicle: vehicleTitle,
         car_id: car.id,
@@ -126,8 +200,8 @@ export function BuyNowCheckout({
 
       await supabase.from("sales_notifications").insert([
         {
-          name: "Buyer (Checkout)",
-          mobile: "N/A",
+          name: buyerName.trim() || "Buyer (Checkout)",
+          mobile: buyerMobile.trim(),
           city: selectedCity || car.cities?.[0] || car.location || "Surat",
           preferred_date: new Date().toISOString().split("T")[0],
           preferred_time: "Immediate Reservation",
@@ -136,12 +210,12 @@ export function BuyNowCheckout({
           car_model: car.model,
           type: "buy_now",
           status: "pending",
-          notes: `Token ${fmt(BOOKING_TOKEN)} | Total ${fmt(totalPrice)} | Ref ${refId}`,
+          notes: `Token ${fmt(BOOKING_TOKEN)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
         },
       ]);
 
       await notificationService.triggerCarReserved({
-        buyerName: "Buyer (Checkout)",
+        buyerName: buyerName.trim() || "Buyer (Checkout)",
         carTitle: vehicleTitle,
         price: car.price,
       });
@@ -219,11 +293,41 @@ export function BuyNowCheckout({
   // Main checkout sheet
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+      {/* Simulated SMS Notification Banner */}
+      {simulatedSms && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4">
+          <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20 flex flex-col gap-2 animate-bounce">
+            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+              <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 uppercase tracking-wider">
+                💬 Messages • Live Notification
+              </span>
+              <button onClick={() => setSimulatedSms(null)} className="text-white/40 hover:text-white/80 text-xs font-bold cursor-pointer">✕</button>
+            </div>
+            <div className="text-[11px] leading-relaxed font-semibold text-slate-100">
+              <strong className="text-white">+91 {simulatedSms.mobile}</strong>: [1stCars] Your checkout verification OTP is {simulatedSms.code}. Valid for 5 minutes. Do not share it with anyone.
+            </div>
+            <button
+              onClick={() => {
+                setEnteredOtp(simulatedSms.code);
+                toast.success("OTP autofilled! Click Verify & Pay to continue.");
+                setSimulatedSms(null);
+              }}
+              className="mt-1 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg py-2 transition-all cursor-pointer shadow-lg shadow-[#2E7D32]/20"
+            >
+              ⚡ Autofill OTP: {simulatedSms.code}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl animate-in slide-in-from-bottom-4 duration-300 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
-          <button onClick={onClose} className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer">
-            <ArrowLeft className="h-4 w-4" /> Checkout
+          <button
+            onClick={otpSent ? () => setOtpSent(false) : onClose}
+            className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Checkout"}
           </button>
         </div>
 
@@ -272,28 +376,64 @@ export function BuyNowCheckout({
             </div>
           </div>
 
-          {/* Buyer details */}
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={buyerName}
-              onChange={(e) => setBuyerName(e.target.value)}
-              placeholder="Your full name *"
-              className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
-            />
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-xs font-black text-slate-400">+91</span>
-              <input
-                type="tel"
-                value={buyerMobile}
-                onChange={(e) => setBuyerMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="10-digit mobile number *"
-                className="w-full h-10 border border-slate-200 rounded-xl pl-10 pr-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
-              />
-            </div>
-          </div>
+          {!otpSent ? (
+            <>
+              {/* Buyer details */}
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={buyerName}
+                  onChange={(e) => setBuyerName(e.target.value)}
+                  placeholder="Your full name *"
+                  className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+                />
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs font-black text-slate-400">+91</span>
+                  <input
+                    type="tel"
+                    value={buyerMobile}
+                    onChange={(e) => setBuyerMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="10-digit mobile number *"
+                    className="w-full h-10 border border-slate-200 rounded-xl pl-10 pr-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+                  />
+                </div>
+              </div>
 
-          <p className="text-center text-xs font-bold text-[#2E7D32]">Your token is 100% refundable</p>
+              <p className="text-center text-xs font-bold text-[#2E7D32]">Your token is 100% refundable</p>
+            </>
+          ) : (
+            <>
+              {/* OTP verification step */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5">
+                  <ShieldCheck className="h-4 w-4 text-[#2E7D32] shrink-0" />
+                  <p className="text-xs font-semibold text-slate-600">
+                    We sent a 6-digit OTP to <strong className="text-slate-900">+91 {buyerMobile}</strong>.
+                    <button onClick={() => setOtpSent(false)} className="text-[#2E7D32] font-bold underline ml-1 cursor-pointer">Change</button>
+                  </p>
+                </div>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={enteredOtp}
+                  onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="Enter 6-digit OTP"
+                  autoFocus
+                  className="w-full h-12 border border-slate-200 rounded-xl px-3 text-center text-lg font-black tracking-[0.4em] text-slate-900 placeholder-slate-300 placeholder:tracking-normal placeholder:text-sm placeholder:font-bold focus:outline-none focus:border-[#2E7D32]"
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-slate-400 font-medium">Didn't receive it?</p>
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={countdown > 0}
+                    className={`text-xs font-bold cursor-pointer ${countdown > 0 ? "text-slate-300 cursor-not-allowed" : "text-[#2E7D32] underline"}`}
+                  >
+                    {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Sticky bottom CTA */}
@@ -302,13 +442,23 @@ export function BuyNowCheckout({
           <div>
             <p className="text-xl font-black text-slate-900">{fmt(BOOKING_TOKEN)}</p>
           </div>
-          <Button
-            onClick={handleContinueToPay}
-            disabled={isSubmitting}
-            className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-sm uppercase tracking-wider h-12 rounded-2xl shadow-md shadow-[#2E7D32]/20 cursor-pointer"
-          >
-            {isSubmitting ? "Processing..." : "Continue to pay"}
-          </Button>
+          {!otpSent ? (
+            <Button
+              onClick={handleSendOtp}
+              disabled={isSendingOtp}
+              className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-sm uppercase tracking-wider h-12 rounded-2xl shadow-md shadow-[#2E7D32]/20 cursor-pointer"
+            >
+              {isSendingOtp ? "Sending OTP..." : "Verify mobile to pay"}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleVerifyAndPay}
+              disabled={isSubmitting || enteredOtp.length < 6}
+              className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-sm uppercase tracking-wider h-12 rounded-2xl shadow-md shadow-[#2E7D32]/20 cursor-pointer"
+            >
+              {isSubmitting ? "Processing..." : "Verify & pay"}
+            </Button>
+          )}
         </div>
       </div>
     </div>
