@@ -153,7 +153,7 @@ export function CarDetailsView({
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-28 lg:pb-10">
+    <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-10">
 
 
       {schemaData && (
@@ -809,28 +809,6 @@ export function CarDetailsView({
         </div>
 
       </div>
-
-      {/* Mobile sticky CTA bar — 2 rows so WhatsApp widget doesn't cover buttons */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-slate-200 px-4 pt-3 pb-4 shadow-lg space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            onClick={() => handleScrollToBooking("test_drive")}
-            className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-xs rounded-xl h-11 flex items-center justify-center gap-1.5 shadow-md shadow-[#2E7D32]/20"
-          >
-            <Sparkles className="h-3.5 w-3.5" /> Test Drive
-          </Button>
-          <Button
-            onClick={() => handleScrollToBooking("buy_now")}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-wider text-xs rounded-xl h-11 flex items-center justify-center gap-1.5"
-          >
-            <DollarSign className="h-3.5 w-3.5" /> Buy Now
-          </Button>
-        </div>
-        <p className="text-center text-[10px] text-slate-400 font-medium">
-          💬 WhatsApp available bottom-right · SSL Secured
-        </p>
-      </div>
-
 
       {/* Booking Modal */}
       <BookingModal

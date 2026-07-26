@@ -187,7 +187,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
       // Rule 6: Dealer places bid → Notify Seller and Admin.
       await notificationService.triggerBidPlaced({
-        sellerId: targetInsp.seller_id,
+        sellerId: targetInsp.seller_id || "",
         dealerName: currentUser.name,
         carTitle: auction.car_title,
         bidAmount: amount,
@@ -1272,7 +1272,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
                                 // Rule 3: Admin approves → Notify Seller
                                 await notificationService.triggerInspectionApproved({
-                                  sellerId: item.seller_id,
+                                  sellerId: item.seller_id || "",
                                   inspectionId: item.id,
                                   brand: item.brand,
                                   model: item.model,
