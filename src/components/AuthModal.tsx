@@ -1085,7 +1085,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="e.g. admin@1stcars.com"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -1100,7 +1099,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="••••••••"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
