@@ -509,9 +509,9 @@ export function Navbar({
         </div>
 
         {/* Mobile Quick Action Buttons footer */}
-        <div className="border-t border-slate-100 pt-6 flex flex-col space-y-4">
+        <div className="border-t border-slate-100 pt-6 flex flex-col space-y-3">
           {/* Mobile City Selector */}
-          <div className="px-4 mb-2">
+          <div>
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
               Operational Region (Gujarat Only)
             </label>
@@ -521,7 +521,7 @@ export function Navbar({
                 setIsOpen(false);
                 setIsCityModalOpen(true);
               }}
-              className="w-full bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-4 py-3 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+              className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
             >
               <div className="flex items-center gap-2.5">
                 <MapPin className="h-4 w-4 text-[#2E7D32] shrink-0" />
@@ -531,32 +531,35 @@ export function Navbar({
             </button>
           </div>
 
-          <div className="flex items-center justify-between px-4">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onSavedClick?.();
-              }}
-              className="text-sm font-bold text-[#2E7D32] flex items-center hover:underline"
-            >
-              <Heart className="h-4 w-4 mr-2 fill-primary/10" /> Saved Cars
-            </button>
+          {/* Saved Cars */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              onSavedClick?.();
+            }}
+            className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+          >
+            <div className="flex items-center gap-2.5">
+              <Heart className="h-4 w-4 text-[#2E7D32] shrink-0 fill-[#2E7D32]/10" />
+              <span>Saved Cars</span>
+            </div>
             {savedCount > 0 && (
-              <span className="bg-primary text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                {savedCount} {savedCount === 1 ? 'Car' : 'Cars'}
+              <span className="bg-[#2E7D32] text-white text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                {savedCount} {savedCount === 1 ? "Car" : "Cars"}
               </span>
             )}
-          </div>
+          </button>
 
           {currentUser && (
-            <div className="grid grid-cols-2 gap-3 px-4">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
                   setIsOpen(false);
                   onViewChange?.("role_dashboards");
                 }}
-                className="w-full text-[10px] font-black uppercase tracking-wider h-10 rounded-xl"
+                className="w-full text-[10px] font-black uppercase tracking-wider h-12 rounded-xl"
               >
                 Dashboard
               </Button>
@@ -565,7 +568,7 @@ export function Navbar({
                   setIsOpen(false);
                   onLogout?.();
                 }}
-                className="w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider h-10 rounded-xl shadow-xs"
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
               >
                 Logout
               </Button>
