@@ -170,7 +170,32 @@ export function BuyNowCheckout({
     const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
 
     try {
+      // Auto-register / sign the buyer in as a Buyer so they land on the Buyer
+      // Dashboard (not the login gateway) after reserving. Mirrors BookingModal.
+      // App's onAuthStateChange listener picks up this session and sets currentUser.
+      const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
+      try {
+        const { data: authData } = await supabase.auth.signUp({
+          email: buyerEmail,
+          password: "Password123!",
+          options: {
+            data: {
+              name: buyerName.trim(),
+              mobile: buyerMobile.trim(),
+              role: "Buyer",
+              city: selectedCity || car.cities?.[0] || car.location || "Surat",
+            },
+          },
+        });
+        if (!authData?.user) {
+          await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
+        }
+      } catch (authErr) {
+        console.warn("Auto sign in error during checkout:", authErr);
+      }
+
       if (car.id) {
+
         const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
         if (!existingSaved.includes(car.id)) {
           localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
