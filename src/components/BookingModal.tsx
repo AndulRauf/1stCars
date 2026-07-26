@@ -572,20 +572,6 @@ export function BookingModal({
               </select>
             </div>
 
-            {/* Special Notes (Optional) */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Notes or Specific Requirements (Optional)
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Doorstep valuation, finance assistance, trade-in details..."
-                rows={2}
-                className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
-              />
-            </div>
-
             {/* Submit CTA Button */}
             <Button
               type="submit"
