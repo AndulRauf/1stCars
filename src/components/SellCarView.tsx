@@ -697,18 +697,49 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
 
     setIsSubmitting(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    
     // Find RTO city name
     const rtoDetails = gujaratRTOs.find(r => r.code === selectedRTO);
     const resolvedCity = rtoDetails ? rtoDetails.city : "Gujarat";
+
+    // Resolve name early so we can use it for the auto Seller account
+    const preliminaryName = name || `Customer (${mobile.substring(6)})`;
+
+    // Ensure the seller is signed in so they land on the Seller Dashboard (not the login gateway)
+    // after submitting. Mirrors the Buyer auto-registration flow used in BookingModal.
+    let { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const sellerEmail = `${mobile}@1stcars.com`;
+      try {
+        const { data: authData } = await supabase.auth.signUp({
+          email: sellerEmail,
+          password: "Password123!",
+          options: {
+            data: {
+              name: preliminaryName,
+              mobile: mobile,
+              role: "Seller",
+              city: resolvedCity
+            }
+          }
+        });
+
+        if (authData?.user) {
+          user = authData.user;
+        } else {
+          const { data: signInData } = await supabase.auth.signInWithPassword({ email: sellerEmail });
+          user = signInData?.user || null;
+        }
+      } catch (authErr) {
+        console.warn("Auto Seller sign-in error during inspection submit:", authErr);
+      }
+    }
 
     // Construct registration number with custom suffix or fallback
     const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase() : "AB-1234";
     const computedReg = `${selectedRTO}-${finalRegSuffix}`;
 
     // Smart default fallbacks for removed fields
-    const finalName = name || user?.user_metadata?.name || `Customer (${mobile.substring(6)})`;
+    const finalName = name || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
     const finalAddress = address || `Home Doorstep Inspection near RTO ${selectedRTO} (${resolvedCity})`;
     const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
     const finalTime = preferredTime || "11:00 AM - 01:00 PM";

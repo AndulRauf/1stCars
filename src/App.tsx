@@ -2,7 +2,6 @@ import * as React from "react";
 import { toast } from "@/src/lib/toast";
 import { Navbar } from "@/src/components/layout/Navbar";
 import { CarCard } from "@/src/components/CarCard";
-import { WhatsAppFloatingButton } from "@/src/components/WhatsAppFloatingButton";
 import { cn } from "@/src/lib/utils";
 import { Footer } from "@/src/components/layout/Footer";
 import { Button } from "@/src/components/ui/Button";
@@ -117,17 +116,17 @@ export default function App() {
 
   React.useEffect(() => {
     // Listen to Supabase auth events (works with both mock and live Supabase clients)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (session?.user) {
         // Cast or shape the Supabase user object into the Profile interface
         const user = session.user;
         setCurrentUser({
           id: user.id,
-          name: user.user_metadata?.name || user.email?.split("@")[0] || "User",
+          name: user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User",
           email: user.email || "",
-          mobile: user.user_metadata?.mobile || "",
-          role: user.user_metadata?.role || "Buyer",
-          city: user.user_metadata?.city || "Mumbai",
+          mobile: user.user_metadata?.mobile || user.mobile || "",
+          role: user.user_metadata?.role || user.role || "Buyer",
+          city: user.user_metadata?.city || user.city || "Mumbai",
           created_at: user.created_at || new Date().toISOString()
         } as any);
       } else {
@@ -1110,9 +1109,6 @@ export default function App() {
           setAuthModal({ isOpen: true, mode });
         }}
       />
-
-      {/* FLOATING WHATSAPP BUTTON */}
-      <WhatsAppFloatingButton />
 
     </div>
   );
