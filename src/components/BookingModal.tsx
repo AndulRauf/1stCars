@@ -51,7 +51,9 @@ export function BookingModal({
   // Submission state
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState("");
   const [leadRefId, setLeadRefId] = React.useState("");
+
 
   // Reset state on open/close or initialType change
   React.useEffect(() => {
@@ -136,8 +138,10 @@ export function BookingModal({
     }
 
     setIsSubmitting(true);
+    setSubmitError("");
     const refId = `INQ-${Math.floor(100000 + Math.random() * 900000)}`;
     setLeadRefId(refId);
+
 
     const vehicleTitle = car ? `${car.brand} ${car.model} (${car.year})` : "General Vehicle Inquiry";
 
@@ -220,8 +224,8 @@ export function BookingModal({
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-      // 3. Save to Supabase table sales_notifications
-      await supabase.from("sales_notifications").insert([
+      // 3. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
+      const { error: insertError } = await supabase.from("sales_notifications").insert([
         {
           name: name.trim(),
           mobile: mobile.trim(),
@@ -236,6 +240,12 @@ export function BookingModal({
           notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
         }
       ]);
+
+      if (insertError) {
+        // The lead did NOT reach the Sales desk — surface a real failure instead of a false success.
+        throw new Error(insertError.message || "Could not save your request to the database.");
+      }
+
 
       // 4. Trigger system notifications
       if (bookingType === "test_drive") {
@@ -257,11 +267,13 @@ export function BookingModal({
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
     } catch (err) {
       console.error("Booking submission error:", err);
-      // Still show success to buyer since local storage lead is saved!
-      setIsSubmitted(true);
+      const message = err instanceof Error ? err.message : "Something went wrong while submitting your request.";
+      setSubmitError(message);
+      toast.error(`Could not submit your inquiry: ${message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
+
   };
 
   const formattedPrice = car ? new Intl.NumberFormat("en-IN", {
@@ -572,10 +584,19 @@ export function BookingModal({
               </select>
             </div>
 
+            {/* Inline error banner — shows real failure instead of a false success */}
+            {submitError && (
+              <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-3 py-2.5 text-xs font-bold animate-in fade-in duration-200">
+                <X className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>Submission failed: {submitError}. Please check your details and try again.</span>
+              </div>
+            )}
+
             {/* Submit CTA Button */}
             <Button
               type="submit"
               disabled={isSubmitting}
+
               className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-xl cursor-pointer shadow-md shadow-[#2E7D32]/20 flex items-center justify-center gap-2 mt-2"
             >
               {isSubmitting ? (

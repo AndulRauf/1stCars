@@ -770,7 +770,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
 
     try {
       const { data, error } = await supabase.from("inspections").insert([inspectionRecord]);
+      if (error) {
+        // Insert failed — do NOT show a false success screen.
+        throw new Error(error.message || "Could not save your inspection request.");
+      }
       const inserted = data && Array.isArray(data) ? data[0] : (data || inspectionRecord);
+
       setCreatedRequest(inserted);
 
       // Trigger Notification
@@ -787,8 +792,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
       toast.success("Inspection scheduled successfully!");
     } catch (error) {
       console.error("Error creating inspection request:", error);
-      toast.error("Failed to register your details. Please check database constraints.");
+      const message = error instanceof Error ? error.message : "Please check your details and try again.";
+      toast.error(`Failed to register your inspection: ${message}`);
     } finally {
+
       setIsSubmitting(false);
     }
   };

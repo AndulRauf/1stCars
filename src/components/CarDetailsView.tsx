@@ -2,9 +2,8 @@ import * as React from "react";
 import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { CARS_DATA } from "@/src/data/cars";
-import { supabase } from "@/src/lib/supabaseClient";
-import { notificationService } from "@/src/lib/notifications";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
+
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
@@ -73,7 +72,7 @@ export function CarDetailsView({
   
   const getCarPhotos = (car: any) => {
     if (Array.isArray(car.images) && car.images.length > 0) {
-      return car.images.map((url, idx) => ({
+      return car.images.map((url: string, idx: number) => ({
         url,
         title: idx === 0 ? "Featured Profile" : `Detail Angle #${idx + 1}`,
         text: `${car.brand} ${car.model} — Cinematic view #${idx + 1}`
@@ -113,24 +112,9 @@ export function CarDetailsView({
   const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
 
 
-  // Booking form states
-  const [bookingForm, setBookingForm] = React.useState({
-    name: "",
-    mobile: "",
-    city: car.cities?.[0] || car.location || "Surat",
-    preferredDate: "",
-    preferredTime: "11:00 AM - 01:00 PM",
-    type: "test_drive" as "test_drive" | "buy_now" | "whatsapp" | "call_request",
-  });
-  const [bookingSubmitted, setBookingSubmitted] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
   // Finance slider state
   const [downPayment, setDownPayment] = React.useState(20000);
   const [loanTerm, setLoanTerm] = React.useState(60); // months
-
-  // Scroll or Open booking modal
-  const bookingFormRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = (type: "test_drive" | "buy_now") => {
     if (type === "buy_now") {
@@ -141,92 +125,8 @@ export function CarDetailsView({
     }
   };
 
-
-  // WhatsApp / Call Request Handler
-  const handleInstantContact = async (contactType: "whatsapp" | "call") => {
-    setIsSubmitting(true);
-    try {
-      await supabase.from("sales_notifications").insert([
-        {
-          name: "Visitor (Instant Inquirer)",
-          mobile: "+91 8866377722",
-          city: car.cities?.[0] || car.location || "Surat",
-          preferred_date: new Date().toISOString().split("T")[0],
-          preferred_time: "Immediate Connection Requested",
-          car_id: car.id,
-          car_brand: car.brand,
-          car_model: car.model,
-          type: contactType === "whatsapp" ? "whatsapp" : "call_request",
-          status: "pending",
-          notes: `Clicked active ${contactType} CTA on details screen`
-        },
-      ]);
-      
-      const message = contactType === "whatsapp" 
-        ? "Opening WhatsApp chat with our Private Concierge..."
-        : "Sales associate notified! We will call you within 15 minutes.";
-      
-      toast.success(`${message} (Lead successfully logged to Supabase)`);
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to submit contact request. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Submit Booking Form
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookingForm.name || !bookingForm.mobile || !bookingForm.preferredDate) {
-      toast.error("Please fill in all requested fields.");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await supabase.from("sales_notifications").insert([
-        {
-          name: bookingForm.name,
-          mobile: bookingForm.mobile,
-          city: bookingForm.city,
-          preferred_date: bookingForm.preferredDate,
-          preferred_time: bookingForm.preferredTime,
-          car_id: car.id,
-          car_brand: car.brand,
-          car_model: car.model,
-          type: bookingForm.type,
-          status: "pending",
-          notes: `Scheduled ${bookingForm.type.replace("_", " ")} lead via online details panel.`
-        },
-      ]);
-
-      // Trigger Notification Workflows based on Booking type
-      if (bookingForm.type === "test_drive") {
-        // Rule 4: Buyer books test drive → Notify Sales Associate.
-        await notificationService.triggerTestDriveBooked({
-          buyerName: bookingForm.name,
-          carTitle: `${car.brand} ${car.model}`,
-          preferredDate: bookingForm.preferredDate,
-          preferredTime: bookingForm.preferredTime
-        });
-      } else if (bookingForm.type === "buy_now") {
-        // Rule 5: Buyer reserves car → Notify Sales Associate.
-        await notificationService.triggerCarReserved({
-          buyerName: bookingForm.name,
-          carTitle: `${car.brand} ${car.model}`,
-          price: car.price
-        });
-      }
-
-      setBookingSubmitted(true);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Finance calculations
+
   const calculatedEmi = React.useMemo(() => {
     const principal = car.price - downPayment;
     if (principal <= 0) return 0;
@@ -399,7 +299,7 @@ export function CarDetailsView({
 
             {/* Thumbnail strip */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {angles.map((ang, i) => (
+              {angles.map((ang: { url?: string; title?: string; text?: string }, i: number) => (
                 <button
                   key={i}
                   onClick={() => setActiveImageIndex(i)}

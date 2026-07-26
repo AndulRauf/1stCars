@@ -223,7 +223,7 @@ export function BuyNowCheckout({
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-      await supabase.from("sales_notifications").insert([
+      const { error: insertError } = await supabase.from("sales_notifications").insert([
         {
           name: buyerName.trim() || "Buyer (Checkout)",
           mobile: buyerMobile.trim(),
@@ -239,6 +239,12 @@ export function BuyNowCheckout({
         },
       ]);
 
+      if (insertError) {
+        // Reservation did NOT reach the Sales desk — surface a real failure.
+        throw new Error(insertError.message || "Could not save your reservation to the database.");
+      }
+
+
       await notificationService.triggerCarReserved({
         buyerName: buyerName.trim() || "Buyer (Checkout)",
         carTitle: vehicleTitle,
@@ -249,10 +255,12 @@ export function BuyNowCheckout({
       toast.success("Reservation started! Our team will connect with you to complete the payment.");
     } catch (err) {
       console.error("Buy now checkout error:", err);
-      setIsSubmitted(true);
+      const message = err instanceof Error ? err.message : "Something went wrong while creating your reservation.";
+      toast.error(`Reservation failed: ${message}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
+
   };
 
   // Price Summary Sheet
