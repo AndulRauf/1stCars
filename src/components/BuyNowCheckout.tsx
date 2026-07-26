@@ -225,9 +225,6 @@ export function BuyNowCheckout({
           <button onClick={onClose} className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer">
             <ArrowLeft className="h-4 w-4" /> Checkout
           </button>
-          <button className="p-1.5 text-slate-400 hover:text-slate-700 cursor-pointer">
-            <Headphones className="h-5 w-5" />
-          </button>
         </div>
 
         <div className="px-5 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
@@ -262,16 +259,8 @@ export function BuyNowCheckout({
 
           </div>
 
-          {/* EMI + Price row */}
+          {/* Price row */}
           <div className="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
-            <div className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="text-xs text-slate-500 font-medium">EMI starts at</p>
-                <p className="text-lg font-black text-slate-900">{fmt(displayEmi)}<span className="text-sm font-bold text-slate-500">/mo</span></p>
-
-              </div>
-              <button className="text-sm font-bold text-amber-600 flex items-center gap-1 cursor-pointer">Check eligibility <ArrowRight className="h-3.5 w-3.5" /></button>
-            </div>
             <div className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-xs text-slate-500 font-medium">Car Price</p>
@@ -280,24 +269,6 @@ export function BuyNowCheckout({
               <button onClick={() => setShowPriceSummary(true)} className="text-sm font-bold text-slate-800 flex items-center gap-1 cursor-pointer hover:text-[#2E7D32]">
                 Understand price <ArrowRight className="h-3.5 w-3.5" />
               </button>
-            </div>
-          </div>
-
-          {/* Trust badges */}
-          <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl px-4 py-4">
-            <p className="text-sm font-black text-slate-900 text-center mb-3">Save the hassle, let us take care of that</p>
-            <div className="grid grid-cols-4 gap-2 text-center">
-              {[
-                { icon: <ShieldCheck className="h-5 w-5 mx-auto text-slate-700" />, label: "120+ Quality checks" },
-                { icon: <RotateCcw className="h-5 w-5 mx-auto text-slate-700" />, label: "30-day return" },
-                { icon: <Home className="h-5 w-5 mx-auto text-slate-700" />, label: "Free home delivery" },
-                { icon: <BadgeCheck className="h-5 w-5 mx-auto text-slate-700" />, label: "1 month warranty" },
-              ].map((b, i) => (
-                <div key={i} className="space-y-1.5">
-                  {b.icon}
-                  <p className="text-[10px] font-bold text-slate-600 leading-tight">{b.label}</p>
-                </div>
-              ))}
             </div>
           </div>
 
