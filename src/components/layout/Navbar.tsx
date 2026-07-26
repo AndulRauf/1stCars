@@ -165,6 +165,23 @@ export function Navbar({
     { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification" },
   ];
 
+  // Static home-page section shortcuts (About Us & FAQ) shown in nav menus
+  const sectionLinks: { label: string; section: string }[] = [
+    { label: "About Us", section: "certified-benefits" },
+    { label: "FAQ", section: "about-section" },
+  ];
+
+  const handleSectionLinkClick = (e: React.MouseEvent, section: string) => {
+    e.preventDefault();
+    onViewChange?.("home");
+    setTimeout(() => {
+      const el = document.getElementById(section);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 120);
+  };
+
   const handleLinkClick = (e: React.MouseEvent, view: any, href: string) => {
     e.preventDefault();
     if (view === "sell_car" || view === "role_dashboards") {
@@ -267,6 +284,16 @@ export function Navbar({
                   )}
                 >
                   {link.label}
+                </a>
+              ))}
+              {sectionLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={`#${item.section}`}
+                  onClick={(e) => handleSectionLinkClick(e, item.section)}
+                  className="text-[13px] font-bold uppercase tracking-widest transition-colors duration-200 relative py-1 text-[#2E7D32]/75 hover:text-[#2E7D32] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#2E7D32] after:transition-all after:duration-300 hover:after:w-full"
+                >
+                  {item.label}
                 </a>
               ))}
               {customPages.filter((page) => !page.is_footer).map((page) => (
@@ -441,6 +468,21 @@ export function Navbar({
               >
                 {link.label}
                 <ChevronRight className={cn("h-4 w-4", currentView === link.view ? "text-white" : "text-slate-400")} />
+              </a>
+            ))}
+            {/* About Us & FAQ shortcuts (scroll to home page sections) */}
+            {sectionLinks.map((item) => (
+              <a
+                key={item.label}
+                href={`#${item.section}`}
+                onClick={(e) => {
+                  setIsOpen(false);
+                  handleSectionLinkClick(e, item.section);
+                }}
+                className="flex items-center justify-between text-sm font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl transition-colors hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
+              >
+                {item.label}
+                <ChevronRight className="h-4 w-4 text-slate-400" />
               </a>
             ))}
             {customPages.filter((page) => !page.is_footer).map((page) => (
