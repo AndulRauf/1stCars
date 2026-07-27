@@ -901,24 +901,6 @@ export default function App() {
             <Card hoverEffect className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg shadow-slate-200/40">
               <div className="space-y-4">
                 <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
-                  <Layers className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">DMV & RC Transfer Assistance</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  We assign a dedicated concierge agent who processes all ownership, DMV registration, transfer titles, and custom license plates on your behalf.
-                </p>
-                <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> 100% Free Processing</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Zero DMV Queue Anxiety</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Pre-approved Finance Titles</div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Benefit 4 */}
-            <Card hoverEffect className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg shadow-slate-200/40">
-              <div className="space-y-4">
-                <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
                   <Clock className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Verified & Clean History</h3>
