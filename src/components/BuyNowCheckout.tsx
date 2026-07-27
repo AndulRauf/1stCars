@@ -381,7 +381,8 @@ export function BuyNowCheckout({
               <p className="text-xs text-slate-500 font-medium">Refundable booking token</p>
             </div>
 
-            {upiSettings.upiId ? (
+            {/* UPI ID + QR (shown when configured by admin) */}
+            {upiSettings.upiId && (
               <div className="space-y-3">
                 {upiSettings.qrUrl && (
                   <div className="flex justify-center">
@@ -400,34 +401,42 @@ export function BuyNowCheckout({
                     <Copy className="h-3.5 w-3.5" /> Copy
                   </button>
                 </div>
-
-                {/* Pay directly with UPI apps via deep links */}
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Pay directly with your UPI app</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {upiApps.map((app) => (
-                      <a
-                        key={app.name}
-                        href={buildUpiLink(app.scheme)}
-                        onClick={() => toast.info(`Opening ${app.name}… complete the payment, then enter the UTR below.`)}
-                        className="flex items-center justify-center gap-2 h-12 rounded-2xl border border-slate-200 bg-white hover:border-[#2E7D32] hover:bg-[#2E7D32]/5 transition-colors cursor-pointer active:scale-95"
-                      >
-                        <span className="text-lg">{app.icon}</span>
-                        <span className="text-xs font-black text-slate-800">{app.name}</span>
-                      </a>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-medium text-center">Tapping a button opens the app with the amount pre-filled. On desktop, scan the QR above instead.</p>
-                </div>
-
                 {upiSettings.instructions && (
                   <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{upiSettings.instructions}</p>
                 )}
               </div>
-            ) : (
+            )}
+
+            {/* Pay directly with UPI apps via deep links — ALWAYS shown */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Pay directly with your UPI app</p>
+              <div className="grid grid-cols-2 gap-2">
+                {upiApps.map((app) => (
+                  <a
+                    key={app.name}
+                    href={buildUpiLink(app.scheme)}
+                    onClick={(e) => {
+                      if (!upiSettings.upiId) {
+                        e.preventDefault();
+                        toast.error("UPI collection isn't set up yet. Enter your payment reference below or our team will contact you.");
+                        return;
+                      }
+                      toast.info(`Opening ${app.name}… complete the payment, then enter the UTR below.`);
+                    }}
+                    className="flex items-center justify-center gap-2 h-12 rounded-2xl border border-slate-200 bg-white hover:border-[#2E7D32] hover:bg-[#2E7D32]/5 transition-colors cursor-pointer active:scale-95"
+                  >
+                    <span className="text-lg">{app.icon}</span>
+                    <span className="text-xs font-black text-slate-800">{app.name}</span>
+                  </a>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium text-center">Tapping a button opens the app with the amount pre-filled. On desktop, scan the QR above instead.</p>
+            </div>
+
+            {!upiSettings.upiId && (
               <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 flex items-center gap-2">
                 <QrCode className="h-5 w-5 text-amber-500 shrink-0" />
-                <p className="text-xs font-semibold text-amber-700">UPI payment details not configured yet. Our team will contact you to collect the token payment.</p>
+                <p className="text-xs font-semibold text-amber-700">UPI collection isn't fully configured yet. You can still tap your UPI app above, or our team will contact you to collect the token payment.</p>
               </div>
             )}
 
