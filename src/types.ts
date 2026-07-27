@@ -47,6 +47,7 @@ export interface Car {
   bootCapacity?: string;
   fuelTank?: string;
   keyCount?: number;
+  price_breakup?: { label: string; amount: number; desc?: string }[];
 }
 
 export type ViewType = "home" | "buy_cars" | "car_details" | "sales_dashboard";

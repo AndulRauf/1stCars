@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight } from "lucide-react";
+import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight, Copy, QrCode } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
@@ -43,6 +43,18 @@ export function BuyNowCheckout({
   const [countdown, setCountdown] = React.useState(0);
   const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; code: string } | null>(null);
 
+  // UPI payment step
+  const [showUpiPayment, setShowUpiPayment] = React.useState(false);
+  const [upiRef, setUpiRef] = React.useState("");
+  const [upiSettings, setUpiSettings] = React.useState<{ upiId: string; qrUrl: string; instructions: string }>({ upiId: "", qrUrl: "", instructions: "" });
+
+  React.useEffect(() => {
+    const raw = localStorage.getItem("1stcars_payment_settings");
+    if (raw) {
+      try { setUpiSettings(JSON.parse(raw)); } catch {}
+    }
+  }, []);
+
   React.useEffect(() => {
     if (isOpen) {
       setShowPriceSummary(false);
@@ -55,6 +67,8 @@ export function BuyNowCheckout({
       setIsMobileVerified(false);
       setCountdown(0);
       setSimulatedSms(null);
+      setShowUpiPayment(false);
+      setUpiRef("");
     }
   }, [isOpen]);
 
@@ -73,23 +87,29 @@ export function BuyNowCheckout({
   const fmt = (val: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
 
-  // Price breakup
+  // Price breakup — use the admin-configured per-car breakup when available,
+  // otherwise fall back to the default drive-away charges.
   const basePrice = car.price;
-  const rcTransfer = 10000;
-  const roadTax = Math.round(basePrice * 0.011);
-  const thirdPartyInsurance = 2474;
-  const extendedWarranty = 12000;
-  const servicingCharges = 11000;
-  const totalPrice = basePrice + rcTransfer + roadTax + thirdPartyInsurance + extendedWarranty + servicingCharges;
+  const customBreakup = Array.isArray((car as any).price_breakup) ? (car as any).price_breakup : null;
+
+  const defaultExtras = [
+    { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
+    { label: "Intra state road tax", amount: Math.round(basePrice * 0.011), desc: "Government mandated tax on the transfer of ownership" },
+    { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
+    { label: "Extended Warranty – 12 Months", amount: 12000, desc: "Built-in protection for your car's engine, gearbox & drivetrain for a full year so you drive worry free" },
+    { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance to ensure safe drives" },
+  ];
+
+  const extras = customBreakup
+    ? customBreakup.map((r: any) => ({ label: r.label, amount: Number(r.amount) || 0, desc: r.desc || null }))
+    : defaultExtras;
 
   const priceRows = [
     { label: "Base price", amount: basePrice, desc: null },
-    { label: "RC transfer price", amount: rcTransfer, desc: "Seamless RC transfer services with RTO assistance" },
-    { label: "Intra state road tax", amount: roadTax, desc: "Government mandated tax on the transfer of ownership" },
-    { label: "Third party insurance", amount: thirdPartyInsurance, desc: "Govt mandated insurance against third party damages" },
-    { label: "Extended Warranty – 12 Months", amount: extendedWarranty, desc: "Built-in protection for your car's engine, gearbox & drivetrain for a full year so you drive worry free" },
-    { label: "Car Servicing Charges", amount: servicingCharges, desc: "One-time fee for pre-sale car maintenance to ensure safe drives" },
+    ...extras,
   ];
+
+  const totalPrice = priceRows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
 
   const kmDriven = ((car as any).km_driven || car.mileage) || 0;
   const kmLabel = kmDriven >= 1000 ? `${(kmDriven / 1000).toFixed(2)} T km` : `${kmDriven.toLocaleString()} km`;
@@ -143,15 +163,15 @@ export function BuyNowCheckout({
     handleSendOtp();
   };
 
-  // Step 2: Verify OTP, then proceed to create the reservation
+  // Step 2: Verify OTP → show UPI payment screen
   const handleVerifyAndPay = async () => {
     if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
       toast.error("Incorrect OTP. Please check the code and try again.");
       return;
     }
     setIsMobileVerified(true);
-    toast.success("Mobile number verified successfully!");
-    await handleContinueToPay();
+    toast.success("Mobile number verified! Proceed to pay the booking token.");
+    setShowUpiPayment(true);
   };
 
   const handleContinueToPay = async () => {
@@ -262,6 +282,139 @@ export function BuyNowCheckout({
     }
 
   };
+
+  // UPI Payment Screen
+  if (showUpiPayment) {
+    const handleConfirmPayment = async () => {
+      if (!upiRef.trim()) {
+        toast.error("Please enter your UPI transaction reference number.");
+        return;
+      }
+      setIsSubmitting(true);
+      const refId = `BUY-${Math.floor(100000 + Math.random() * 900000)}`;
+      setLeadRefId(refId);
+      const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
+      try {
+        const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
+        try {
+          const { data: authData } = await supabase.auth.signUp({
+            email: buyerEmail, password: "Password123!",
+            options: { data: { name: buyerName.trim(), mobile: buyerMobile.trim(), role: "Buyer", city: selectedCity || "Surat" } }
+          });
+          if (!authData?.user) await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
+        } catch {}
+
+        if (car.id) {
+          const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
+          if (!existingSaved.includes(car.id)) localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
+          if (onSaveToggle && !savedCars?.includes(car.id)) onSaveToggle(car.id, car.model);
+        }
+
+        const leadRecord = {
+          id: refId, created_at: new Date().toISOString(),
+          name: buyerName.trim(), mobile: buyerMobile.trim(), mobile_verified: true,
+          city: selectedCity || car.cities?.[0] || car.location || "Surat",
+          vehicle: vehicleTitle, car_id: car.id, car_brand: car.brand, car_model: car.model,
+          price: car.price, type: "Buy Car / Reservation", status: "Payment Submitted",
+          notes: `Token ${fmt(BOOKING_TOKEN)} paid via UPI | UPI Ref: ${upiRef.trim()} | UPI ID: ${upiSettings.upiId} | Total: ${fmt(totalPrice)} | Ref: ${refId}`,
+          upi_ref: upiRef.trim(), upi_id: upiSettings.upiId, payment_status: "submitted"
+        };
+        const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+        localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
+
+        const { error: insertError } = await supabase.from("sales_notifications").insert([{
+          name: buyerName.trim() || "Buyer (Checkout)",
+          mobile: buyerMobile.trim(),
+          city: selectedCity || car.cities?.[0] || car.location || "Surat",
+          preferred_date: new Date().toISOString().split("T")[0],
+          preferred_time: "Immediate Reservation",
+          car_id: car.id, car_brand: car.brand, car_model: car.model,
+          type: "buy_now", status: "payment_submitted",
+          notes: `Token ${fmt(BOOKING_TOKEN)} | UPI Ref: ${upiRef.trim()} | UPI ID: ${upiSettings.upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
+        }]);
+        if (insertError) throw new Error(insertError.message);
+
+        await notificationService.triggerCarReserved({ buyerName: buyerName.trim(), carTitle: vehicleTitle, price: car.price });
+        setIsSubmitted(true);
+        toast.success("Payment submitted! Our team will verify and confirm your reservation.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Something went wrong.";
+        toast.error(`Reservation failed: ${message}`);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center animate-in fade-in duration-200">
+        <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl animate-in slide-in-from-bottom-4 duration-300 overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+            <button onClick={() => setShowUpiPayment(false)} className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer">
+              <ArrowLeft className="h-4 w-4" /> Pay Booking Token
+            </button>
+          </div>
+          <div className="px-5 py-5 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center space-y-1">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount to Pay</p>
+              <p className="text-3xl font-black text-slate-900">{fmt(BOOKING_TOKEN)}</p>
+              <p className="text-xs text-slate-500 font-medium">Refundable booking token</p>
+            </div>
+
+            {upiSettings.upiId ? (
+              <div className="space-y-3">
+                {upiSettings.qrUrl && (
+                  <div className="flex justify-center">
+                    <img src={upiSettings.qrUrl} alt="UPI QR Code" className="w-44 h-44 rounded-2xl border border-slate-200 object-contain" />
+                  </div>
+                )}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">UPI ID</p>
+                    <p className="text-sm font-black text-slate-900">{upiSettings.upiId}</p>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(upiSettings.upiId); toast.success("UPI ID copied!"); }}
+                    className="flex items-center gap-1 text-xs font-bold text-[#2E7D32] cursor-pointer"
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Copy
+                  </button>
+                </div>
+                {upiSettings.instructions && (
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{upiSettings.instructions}</p>
+                )}
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-amber-500 shrink-0" />
+                <p className="text-xs font-semibold text-amber-700">UPI payment details not configured yet. Our team will contact you to collect the token payment.</p>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-wider">UPI Transaction Reference No.</label>
+              <input
+                type="text"
+                value={upiRef}
+                onChange={(e) => setUpiRef(e.target.value)}
+                placeholder="Enter UTR / Transaction ID after payment"
+                className="w-full h-11 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+              />
+              <p className="text-[10px] text-slate-400 font-medium">Find this in your UPI app under payment history</p>
+            </div>
+          </div>
+          <div className="px-5 py-4 border-t border-slate-100 bg-white">
+            <Button
+              onClick={handleConfirmPayment}
+              disabled={isSubmitting || !upiRef.trim()}
+              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-sm uppercase tracking-wider h-12 rounded-2xl shadow-md shadow-[#2E7D32]/20 cursor-pointer"
+            >
+              {isSubmitting ? "Confirming..." : "Confirm Payment & Reserve"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Price Summary Sheet
   if (showPriceSummary) {

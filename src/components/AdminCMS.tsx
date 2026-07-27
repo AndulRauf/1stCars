@@ -124,6 +124,33 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote"
   });
 
+  // UPI / Payment settings
+  const [paymentSettings, setPaymentSettings] = React.useState<{ upiId: string; qrUrl: string; instructions: string; payeeName: string }>(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("1stcars_payment_settings");
+      if (raw) {
+        try { return { upiId: "", qrUrl: "", instructions: "", payeeName: "", ...JSON.parse(raw) }; } catch {}
+      }
+    }
+    return { upiId: "", qrUrl: "", instructions: "Scan the QR or pay to the UPI ID above, then enter the transaction reference number to confirm your booking.", payeeName: "1stCars" };
+  });
+
+  const handleSavePaymentSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem("1stcars_payment_settings", JSON.stringify(paymentSettings));
+    toast.success("UPI payment settings saved! Buyers can now pay the booking token via UPI at checkout.");
+  };
+
+  const handlePaymentQrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    compressImageFile(file, 800, 0.85).then((url) => {
+      setPaymentSettings((prev) => ({ ...prev, qrUrl: url }));
+      toast.success("UPI QR code uploaded successfully.");
+    });
+    e.target.value = "";
+  };
+
   // UI States
   const [isLoading, setIsLoading] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -405,7 +432,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     // Set realistic default template keys based on current module
     const defaultTemplates: Record<CMSModule, any> = {
       dashboard: {},
-      cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [] },
+      cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
+        { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
+        { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
+        { label: "Extended Warranty – 12 Months", amount: 12000, desc: "Built-in protection for engine, gearbox & drivetrain for a full year" },
+        { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance" }
+      ] },
       users: { name: "", email: "", mobile: "", role: "Buyer", city: "Mumbai" },
       test_drive_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Test Drive Request", preferred_date: "", preferred_time: "Morning", notes: "" },
       booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
@@ -431,7 +463,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       pages: { title: "", slug: "", content: "# Page Title\n\nPage text goes here.", is_footer: false },
       footer_links: { title: "", slug: "", content: "# Footer Page Title\n\nFooter page text goes here.", is_footer: true },
       settings: {},
-      text_editor: {}
+      text_editor: {},
+      payment_settings: {}
     };
 
     setFormData(defaultTemplates[activeModule] || {});
@@ -1614,8 +1647,100 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </div>
       )}
 
+      {/* UPI PAYMENT SETTINGS PANEL */}
+      {activeModule === "payment_settings" && (
+        <form onSubmit={handleSavePaymentSettings} className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-6 text-xs font-semibold max-w-3xl">
+          <div className="border-b border-slate-100 pb-4">
+            <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-[#2E7D32]" /> UPI Payment Collection Settings
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+              Connect your UPI ID to receive booking token payments. Buyers pay directly at checkout and their transaction reference is recorded in Booking Requests.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Your UPI ID *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. yourname@okhdfcbank"
+                value={paymentSettings.upiId}
+                onChange={(e) => setPaymentSettings({ ...paymentSettings, upiId: e.target.value })}
+                className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] font-bold"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Payee / Merchant Name</label>
+              <input
+                type="text"
+                placeholder="e.g. 1stCars"
+                value={paymentSettings.payeeName}
+                onChange={(e) => setPaymentSettings({ ...paymentSettings, payeeName: e.target.value })}
+                className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] font-bold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Payment Instructions (shown to buyer)</label>
+            <textarea
+              value={paymentSettings.instructions}
+              onChange={(e) => setPaymentSettings({ ...paymentSettings, instructions: e.target.value })}
+              className="w-full min-h-20 bg-slate-50 border border-slate-200 rounded-lg p-3 outline-none focus:ring-1 focus:ring-[#2E7D32] font-medium text-slate-700"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">UPI QR Code Image (optional)</label>
+            <div className="flex items-center gap-4">
+              {paymentSettings.qrUrl ? (
+                <div className="relative">
+                  <img src={paymentSettings.qrUrl} alt="UPI QR" className="w-32 h-32 rounded-xl border border-slate-200 object-contain bg-white" referrerPolicy="no-referrer" />
+                  <button
+                    type="button"
+                    onClick={() => setPaymentSettings({ ...paymentSettings, qrUrl: "" })}
+                    className="absolute -top-2 -right-2 p-1 bg-rose-500 hover:bg-rose-600 rounded-full text-white cursor-pointer shadow"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 text-[10px] font-bold text-center px-2">
+                  No QR uploaded
+                </div>
+              )}
+              <div>
+                <input type="file" accept="image/*" onChange={handlePaymentQrUpload} className="hidden" id="upi-qr-file" />
+                <label htmlFor="upi-qr-file" className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[10px] font-black uppercase px-4 py-2 rounded-xl cursor-pointer shadow-xs">
+                  <Upload className="h-3.5 w-3.5" /> Upload QR Code
+                </label>
+                <p className="text-[9px] text-slate-400 mt-1.5 font-bold max-w-48">Upload a QR generated by your UPI app (GPay, PhonePe, Paytm, etc.)</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 flex items-start gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-emerald-800 font-bold leading-relaxed">
+              When a buyer verifies their mobile and pays at checkout, their UPI transaction reference is captured and logged into the <strong>Booking Requests</strong> module with a "Payment Submitted" status for your team to verify.
+            </p>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100">
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase h-12 px-8 rounded-xl flex items-center justify-center shadow-lg"
+            >
+              ✔️ Save UPI Payment Settings
+            </Button>
+          </div>
+        </form>
+      )}
+
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
-      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && (
+      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
@@ -3281,7 +3406,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 {Object.keys(formData).map((key) => {
-                  if (key === "id" || key === "created_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images") return null;
+                  if (key === "id" || key === "created_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup") return null;
                   
                   const value = formData[key];
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -3346,6 +3471,106 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   );
                 })}
               </div>
+
+              {/* Editable Price Summary / Breakup for Cars */}
+              {activeModule === "cars" && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
+                        Price Summary Breakup ({Array.isArray(formData.price_breakup) ? formData.price_breakup.length : 0} items)
+                      </label>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        Add, edit, or delete the additional charges shown to buyers in the drive-away price summary
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          price_breakup: [...(Array.isArray(prev.price_breakup) ? prev.price_breakup : []), { label: "New Charge", amount: 0, desc: "" }]
+                        }));
+                      }}
+                      className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer shrink-0"
+                    >
+                      <Plus className="h-3 w-3" /> Add Row
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(Array.isArray(formData.price_breakup) ? formData.price_breakup : []).map((row: any, idx: number) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-start bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                        <div className="col-span-12 sm:col-span-4">
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Label</label>
+                          <input
+                            type="text"
+                            value={row.label || ""}
+                            onChange={(e) => {
+                              setFormData((prev: any) => {
+                                const next = [...prev.price_breakup];
+                                next[idx] = { ...next[idx], label: e.target.value };
+                                return { ...prev, price_breakup: next };
+                              });
+                            }}
+                            className="w-full h-8 bg-white border border-slate-200 rounded-lg px-2 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-3">
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Amount (₹)</label>
+                          <input
+                            type="number"
+                            value={row.amount || 0}
+                            onChange={(e) => {
+                              setFormData((prev: any) => {
+                                const next = [...prev.price_breakup];
+                                next[idx] = { ...next[idx], amount: Number(e.target.value) };
+                                return { ...prev, price_breakup: next };
+                              });
+                            }}
+                            className="w-full h-8 bg-white border border-slate-200 rounded-lg px-2 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+                        <div className="col-span-5 sm:col-span-4">
+                          <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Description</label>
+                          <input
+                            type="text"
+                            value={row.desc || ""}
+                            onChange={(e) => {
+                              setFormData((prev: any) => {
+                                const next = [...prev.price_breakup];
+                                next[idx] = { ...next[idx], desc: e.target.value };
+                                return { ...prev, price_breakup: next };
+                              });
+                            }}
+                            className="w-full h-8 bg-white border border-slate-200 rounded-lg px-2 text-xs font-medium outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                          />
+                        </div>
+                        <div className="col-span-1 flex items-end justify-end h-full pb-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                price_breakup: prev.price_breakup.filter((_: any, i: number) => i !== idx)
+                              }));
+                            }}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:border-rose-500 hover:text-rose-500 text-slate-400 bg-white cursor-pointer"
+                            title="Delete row"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(!Array.isArray(formData.price_breakup) || formData.price_breakup.length === 0) && (
+                      <p className="text-[10px] text-slate-400 italic text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        No extra charges. Only the base price will be shown. Click "Add Row" to add charges like RC transfer, insurance, etc.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Dynamic Image Upload for Catalog record / vehicle / testimonial */}
               {(formData.image_url !== undefined || formData.logo_url !== undefined || formData.photo !== undefined || activeModule === "brands") && (
