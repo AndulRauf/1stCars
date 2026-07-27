@@ -46,7 +46,7 @@ export function BuyNowCheckout({
   // UPI payment step
   const [showUpiPayment, setShowUpiPayment] = React.useState(false);
   const [upiRef, setUpiRef] = React.useState("");
-  const [upiSettings, setUpiSettings] = React.useState<{ upiId: string; qrUrl: string; instructions: string }>({ upiId: "", qrUrl: "", instructions: "" });
+  const [upiSettings, setUpiSettings] = React.useState<{ upiId: string; qrUrl: string; instructions: string; payeeName: string }>({ upiId: "", qrUrl: "", instructions: "", payeeName: "1stCars" });
 
   React.useEffect(() => {
     const raw = localStorage.getItem("1stcars_payment_settings");
@@ -86,6 +86,27 @@ export function BuyNowCheckout({
 
   const fmt = (val: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
+
+  // Build a UPI deep-link for a given app scheme (e.g. "upi", "gpay", "phonepe", "paytm").
+  // Uses the standard NPCI UPI URL parameters so any UPI app can pre-fill the payment.
+  const buildUpiLink = (scheme: string) => {
+    const params = new URLSearchParams({
+      pa: upiSettings.upiId,
+      pn: upiSettings.payeeName || "1stCars",
+      am: String(BOOKING_TOKEN),
+      cu: "INR",
+      tn: `1stCars Booking Token ${car ? `${car.brand} ${car.model}` : ""}`.trim(),
+    });
+    return `${scheme}://pay?${params.toString()}`;
+  };
+
+  // Popular UPI apps with their intent schemes.
+  const upiApps = [
+    { name: "Google Pay", icon: "🟢", scheme: "tez" },
+    { name: "PhonePe", icon: "🟣", scheme: "phonepe" },
+    { name: "Paytm", icon: "🔵", scheme: "paytmmp" },
+    { name: "Other UPI", icon: "💳", scheme: "upi" },
+  ];
 
   // Price breakup — use the admin-configured per-car breakup when available,
   // otherwise fall back to the default drive-away charges.
@@ -379,6 +400,26 @@ export function BuyNowCheckout({
                     <Copy className="h-3.5 w-3.5" /> Copy
                   </button>
                 </div>
+
+                {/* Pay directly with UPI apps via deep links */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Pay directly with your UPI app</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {upiApps.map((app) => (
+                      <a
+                        key={app.name}
+                        href={buildUpiLink(app.scheme)}
+                        onClick={() => toast.info(`Opening ${app.name}… complete the payment, then enter the UTR below.`)}
+                        className="flex items-center justify-center gap-2 h-12 rounded-2xl border border-slate-200 bg-white hover:border-[#2E7D32] hover:bg-[#2E7D32]/5 transition-colors cursor-pointer active:scale-95"
+                      >
+                        <span className="text-lg">{app.icon}</span>
+                        <span className="text-xs font-black text-slate-800">{app.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium text-center">Tapping a button opens the app with the amount pre-filled. On desktop, scan the QR above instead.</p>
+                </div>
+
                 {upiSettings.instructions && (
                   <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{upiSettings.instructions}</p>
                 )}
