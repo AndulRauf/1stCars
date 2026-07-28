@@ -10,6 +10,7 @@ import { Input } from "@/src/components/ui/Input";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { toast } from "@/src/lib/toast";
+import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface SellCarViewProps {
   onNavigateToDashboard: () => void;
@@ -710,30 +711,27 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     let { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       const sellerEmail = `${mobile}@1stcars.com`;
-      try {
-        const { data: authData } = await supabase.auth.signUp({
-          email: sellerEmail,
-          password: "Password123!",
-          options: {
-            data: {
-              name: preliminaryName,
-              mobile: mobile,
-              role: "Seller",
-              city: resolvedCity
-            }
+      const autoPassword = generateAutoPassword();
+      localStorage.setItem(getAutoPasswordKey(sellerEmail), autoPassword);
+
+      const { user: signedInUser, error: authError } = await resolveAutoSignIn(
+        supabase,
+        sellerEmail,
+        autoPassword,
+        {
+          data: {
+            name: preliminaryName,
+            mobile: mobile,
+            role: "Seller",
+            city: resolvedCity
           }
-        });
-
-        if (authData?.user) {
-          user = authData.user;
-        } else {
-          const { data: signInData } = await supabase.auth.signInWithPassword({ email: sellerEmail, password: "Password123!" });
-
-          user = signInData?.user || null;
         }
-      } catch (authErr) {
-        console.warn("Auto Seller sign-in error during inspection submit:", authErr);
+      );
+
+      if (authError) {
+        console.warn("Auto Seller sign-in error during inspection submit:", authError);
       }
+      user = signedInUser || null;
     }
 
     // Construct registration number with custom suffix or fallback

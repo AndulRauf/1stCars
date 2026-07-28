@@ -5,6 +5,7 @@ import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
+import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -184,21 +185,24 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       return;
     }
 
+    const autoPassword = generateAutoPassword();
+    localStorage.setItem(getAutoPasswordKey(demoEmail), autoPassword);
+
     try {
-      const { data, error: authErr } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
         email: demoEmail,
-        password: "password123"
+        password: autoPassword
       });
 
-      if (!authErr && data.user) {
+      if (!signInErr && signInData?.user) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", data.user.id)
+          .eq("id", signInData.user.id)
           .single();
 
         const finalUser = profile || {
-          id: data.user.id,
+          id: signInData.user.id,
           name: matchedDemo.name,
           email: demoEmail,
           role: defaultRole,
@@ -213,10 +217,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         return;
       }
 
-      // If Supabase Auth fails (e.g. user not created in Auth table yet), attempt auto signup or fallback profile login
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: demoEmail,
-        password: "password123",
+        password: autoPassword,
         options: {
           data: {
             name: matchedDemo.name,
@@ -246,7 +249,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         onClose();
       }, 800);
     } catch (err: any) {
-      // Graceful fallback session so user is never blocked
       const fallbackUser = {
         id: "demo-" + matchedDemo.email.split("@")[0],
         name: matchedDemo.name,

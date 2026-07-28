@@ -6,6 +6,7 @@ import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
+import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -170,24 +171,26 @@ export function BookingModal({
       const userName = name.trim();
       const userMobile = mobile.trim();
       const userCity = city || "Surat";
+      const autoPassword = generateAutoPassword();
+      localStorage.setItem(getAutoPasswordKey(userEmail), autoPassword);
 
       try {
-        const { data: authData } = await supabase.auth.signUp({
-          email: userEmail,
-          password: "Password123!",
-          options: {
+        const { user, error: authError } = await resolveAutoSignIn(
+          supabase,
+          userEmail,
+          autoPassword,
+          {
             data: {
               name: userName,
               mobile: userMobile,
               role: "Buyer",
-              city: userCity
-            }
+              city: userCity,
+            },
           }
-        });
+        );
 
-        if (!authData?.user) {
-          await supabase.auth.signInWithPassword({ email: userEmail, password: "Password123!" });
-
+        if (authError) {
+          console.warn("Auto sign in error during booking:", authError);
         }
       } catch (authErr) {
         console.warn("Auto sign in error during booking:", authErr);
