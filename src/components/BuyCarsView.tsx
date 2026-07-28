@@ -78,6 +78,8 @@ export function BuyCarsView({
     city: selectedCity || "Surat",
   });
 
+  const [yearsOld, setYearsOld] = React.useState<string>("All");
+
   // Sync initial parameters when route changes
   React.useEffect(() => {
     if (initialBrand || initialSearch) {
@@ -125,6 +127,7 @@ export function BuyCarsView({
       yearMax: 2026,
       city: "All Cities",
     });
+    setYearsOld("All");
     setSortBy("featured");
     setCurrentPage(1);
     onCityChange?.("All Cities");
@@ -139,6 +142,18 @@ export function BuyCarsView({
     if (key === "city") {
       onCityChange?.(value);
     }
+  };
+
+  const handleYearsOldChange = (value: string) => {
+    setYearsOld(value);
+    if (value === "All") {
+      setFilters(prev => ({ ...prev, yearMin: 2015, yearMax: 2026 }));
+    } else {
+      const years = parseInt(value);
+      const currentYear = new Date().getFullYear();
+      setFilters(prev => ({ ...prev, yearMin: currentYear - years, yearMax: currentYear }));
+    }
+    setCurrentPage(1);
   };
 
   const handleBudgetRangeChange = (label: string) => {
@@ -477,37 +492,21 @@ export function BuyCarsView({
                   </div>
                 </div>
 
-                {/* Year Range (2 Cols) */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                      Min Model Year
-                    </label>
-                    <select
-                      value={filters.yearMin}
-                      onChange={(e) => handleFilterChange("yearMin", parseInt(e.target.value))}
-                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
-                    >
-                      {[2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map((year) => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                      Max Model Year
-                    </label>
-                    <select
-                      value={filters.yearMax}
-                      onChange={(e) => handleFilterChange("yearMax", parseInt(e.target.value))}
-                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
-                    >
-                      {[2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map((year) => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Year Filter - Years Old */}
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                    Years Old
+                  </label>
+                  <select
+                    value={yearsOld}
+                    onChange={(e) => handleYearsOldChange(e.target.value)}
+                    className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
+                  >
+                    <option value="All">All</option>
+                    <option value={3}>3 years old</option>
+                    <option value={5}>5 years old</option>
+                    <option value={7}>7 years old</option>
+                  </select>
                 </div>
               </div>
 
@@ -671,36 +670,21 @@ export function BuyCarsView({
               </div>
             </div>
 
-            {/* Model Year Range */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                  Model Year Range
-                </label>
-                <span className="text-xs font-black text-[#2E7D32]">
-                  {filters.yearMin} - {filters.yearMax}
-                </span>
-              </div>
-              <div className="flex items-center space-x-3 pt-1">
-                <input
-                  type="range"
-                  min="2015"
-                  max="2026"
-                  step="1"
-                  value={filters.yearMin}
-                  onChange={(e) => handleFilterChange("yearMin", parseInt(e.target.value))}
-                  className="w-full accent-[#2E7D32] h-1.5 bg-slate-100 rounded-lg cursor-pointer"
-                />
-                <input
-                  type="range"
-                  min="2015"
-                  max="2026"
-                  step="1"
-                  value={filters.yearMax}
-                  onChange={(e) => handleFilterChange("yearMax", parseInt(e.target.value))}
-                  className="w-full accent-[#2E7D32] h-1.5 bg-slate-100 rounded-lg cursor-pointer"
-                />
-              </div>
+            {/* Years Old Filter */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">
+                Years Old
+              </label>
+              <select
+                value={yearsOld}
+                onChange={(e) => handleYearsOldChange(e.target.value)}
+                className="w-full bg-[#FAF9F6] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] cursor-pointer"
+              >
+                <option value="All">All</option>
+                <option value={3}>3 years old</option>
+                <option value={5}>5 years old</option>
+                <option value={7}>7 years old</option>
+              </select>
             </div>
           </div>
 
