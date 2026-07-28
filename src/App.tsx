@@ -620,8 +620,9 @@ export default function App() {
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
-          onNavigateToDashboard={() => {
-            if (currentUser) {
+          onNavigateToDashboard={async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
               handleNavigate("role_dashboards");
             } else {
               setAuthModal({ isOpen: true, mode: "login" });
