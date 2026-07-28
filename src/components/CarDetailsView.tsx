@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon } from "lucide-react";
 import { Car } from "@/src/types";
-import { CARS_DATA } from "@/src/data/cars";
+    import { CARS_DATA } from "@/src/data/cars";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
 import { Button } from "@/src/components/ui/Button";

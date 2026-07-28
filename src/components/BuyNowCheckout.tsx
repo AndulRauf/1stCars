@@ -18,6 +18,101 @@ interface BuyNowCheckoutProps {
 
 const BOOKING_TOKEN = 3000;
 
+const processCheckout = async (
+  car: Car,
+  selectedCity: string,
+  buyerName: string,
+  buyerMobile: string,
+  refId: string,
+  vehicleTitle: string,
+  totalPrice: number,
+  fmt: (val: number) => string,
+  upiRef: string,
+  upiId: string,
+  paymentStatus: string,
+  onSaveToggle?: (id: string, model: string) => void,
+  savedCars?: string[]
+) => {
+  const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
+  try {
+    const { data: authData } = await supabase.auth.signUp({
+      email: buyerEmail,
+      password: "Password123!",
+      options: {
+        data: {
+          name: buyerName.trim(),
+          mobile: buyerMobile.trim(),
+          role: "Buyer",
+          city: selectedCity || car.cities?.[0] || car.location || "Surat",
+        },
+      },
+    });
+    if (!authData?.user) {
+      await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
+    }
+  } catch (authErr) {
+    console.warn("Auto sign in error during checkout:", authErr);
+  }
+
+  if (car.id) {
+    const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
+    if (!existingSaved.includes(car.id)) {
+      localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
+    }
+    if (onSaveToggle && !existingSaved.includes(car.id)) onSaveToggle(car.id, car.model);
+  }
+
+  const leadRecord = {
+    id: refId,
+    created_at: new Date().toISOString(),
+    name: buyerName.trim(),
+    mobile: buyerMobile.trim(),
+    mobile_verified: true,
+    city: selectedCity || car.cities?.[0] || car.location || "Surat",
+    vehicle: vehicleTitle,
+    car_id: car.id,
+    car_brand: car.brand,
+    car_model: car.model,
+    price: car.price,
+    type: "Buy Car / Reservation",
+    status: paymentStatus,
+    notes: paymentStatus === "Payment Submitted"
+      ? `Token ${fmt(BOOKING_TOKEN)} paid via UPI | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total: ${fmt(totalPrice)} | Ref: ${refId}`
+      : `Booking token ${fmt(BOOKING_TOKEN)} | Total drive-away ${fmt(totalPrice)} | Ref: ${refId}`,
+    ...(paymentStatus === "Payment Submitted" && {
+      upi_ref: upiRef,
+      upi_id: upiId,
+      payment_status: "submitted"
+    })
+  };
+  const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+  localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
+
+  const { error: insertError } = await supabase.from("sales_notifications").insert([{
+    name: buyerName.trim() || "Buyer (Checkout)",
+    mobile: buyerMobile.trim(),
+    city: selectedCity || car.cities?.[0] || car.location || "Surat",
+    preferred_date: new Date().toISOString().split("T")[0],
+    preferred_time: "Immediate Reservation",
+    car_id: car.id,
+    car_brand: car.brand,
+    car_model: car.model,
+    type: "buy_now",
+    status: paymentStatus === "Payment Submitted" ? "payment_submitted" : "pending",
+    notes: paymentStatus === "Payment Submitted"
+      ? `Token ${fmt(BOOKING_TOKEN)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
+      : `Token ${fmt(BOOKING_TOKEN)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
+  }]);
+
+  if (insertError) throw new Error(insertError.message);
+
+  await notificationService.triggerCarReserved({
+    buyerName: buyerName.trim(),
+    carTitle: vehicleTitle,
+    price: car.price,
+  });
+};
+
 export function BuyNowCheckout({
   isOpen,
   onClose,
@@ -72,6 +167,16 @@ export function BuyNowCheckout({
     }
   }, [isOpen]);
 
+  React.useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        onClose();
+        onNavigateToDashboard?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, onClose, onNavigateToDashboard]);
+
   // OTP resend countdown timer
   React.useEffect(() => {
     let timer: any;
@@ -95,22 +200,22 @@ export function BuyNowCheckout({
       pn: upiSettings.payeeName || "1stCars",
       am: String(BOOKING_TOKEN),
       cu: "INR",
-      tn: `1stCars Booking Token ${car ? `${car.brand} ${car.model}` : ""}`.trim(),
+      tn: `1stCars Booking Token ${car ? encodeURIComponent(`${car.brand} ${car.model}`) : ""}`.trim(),
     });
-    
+
     // App-specific URL formats
     if (scheme === "tez") {
       // Google Pay (GPay)
-      return `tez://upi/pay?${params.toString()}`;
+      return `tez://upi/pay?${encodeURIComponent(params.toString())}`;
     } else if (scheme === "phonepe") {
       // PhonePe
-      return `phonepe://pay?${params.toString()}`;
+      return `phonepe://pay?${encodeURIComponent(params.toString())}`;
     } else if (scheme === "paytmmp") {
       // Paytm
-      return `paytmmp://pay?${params.toString()}`;
+      return `paytmmp://pay?${encodeURIComponent(params.toString())}`;
     } else {
       // Generic UPI intent
-      return `upi://pay?${params.toString()}`;
+      return `upi://pay?${encodeURIComponent(params.toString())}`;
     }
   };
 
@@ -225,87 +330,7 @@ export function BuyNowCheckout({
     const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
 
     try {
-      // Auto-register / sign the buyer in as a Buyer so they land on the Buyer
-      // Dashboard (not the login gateway) after reserving. Mirrors BookingModal.
-      // App's onAuthStateChange listener picks up this session and sets currentUser.
-      const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
-      try {
-        const { data: authData } = await supabase.auth.signUp({
-          email: buyerEmail,
-          password: "Password123!",
-          options: {
-            data: {
-              name: buyerName.trim(),
-              mobile: buyerMobile.trim(),
-              role: "Buyer",
-              city: selectedCity || car.cities?.[0] || car.location || "Surat",
-            },
-          },
-        });
-        if (!authData?.user) {
-          await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
-        }
-      } catch (authErr) {
-        console.warn("Auto sign in error during checkout:", authErr);
-      }
-
-      if (car.id) {
-
-        const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
-        if (!existingSaved.includes(car.id)) {
-          localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
-        }
-        if (onSaveToggle && !savedCars?.includes(car.id)) onSaveToggle(car.id, car.model);
-      }
-
-      const leadRecord = {
-        id: refId,
-        created_at: new Date().toISOString(),
-        name: buyerName.trim(),
-        mobile: buyerMobile.trim(),
-        mobile_verified: true,
-        city: selectedCity || car.cities?.[0] || car.location || "Surat",
-        vehicle: vehicleTitle,
-        car_id: car.id,
-        car_brand: car.brand,
-        car_model: car.model,
-        price: car.price,
-        type: "Buy Car / Reservation",
-        status: "Pending",
-        notes: `Booking token ${fmt(BOOKING_TOKEN)} | Total drive-away ${fmt(totalPrice)} | Ref: ${refId}`,
-
-      };
-      const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-      localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
-
-      const { error: insertError } = await supabase.from("sales_notifications").insert([
-        {
-          name: buyerName.trim() || "Buyer (Checkout)",
-          mobile: buyerMobile.trim(),
-          city: selectedCity || car.cities?.[0] || car.location || "Surat",
-          preferred_date: new Date().toISOString().split("T")[0],
-          preferred_time: "Immediate Reservation",
-          car_id: car.id,
-          car_brand: car.brand,
-          car_model: car.model,
-          type: "buy_now",
-          status: "pending",
-          notes: `Token ${fmt(BOOKING_TOKEN)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
-        },
-      ]);
-
-      if (insertError) {
-        // Reservation did NOT reach the Sales desk — surface a real failure.
-        throw new Error(insertError.message || "Could not save your reservation to the database.");
-      }
-
-
-      await notificationService.triggerCarReserved({
-        buyerName: buyerName.trim() || "Buyer (Checkout)",
-        carTitle: vehicleTitle,
-        price: car.price,
-      });
-
+      await processCheckout(car, selectedCity, buyerName, buyerMobile, refId, vehicleTitle, totalPrice, fmt, "", "", "Pending", onSaveToggle, savedCars);
       setIsSubmitted(true);
       toast.success("Reservation started! Our team will connect with you to complete the payment.");
     } catch (err) {
@@ -315,7 +340,6 @@ export function BuyNowCheckout({
     } finally {
       setIsSubmitting(false);
     }
-
   };
 
   // UPI Payment Screen
@@ -330,48 +354,9 @@ export function BuyNowCheckout({
       setLeadRefId(refId);
       const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
       try {
-        const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
-        try {
-          const { data: authData } = await supabase.auth.signUp({
-            email: buyerEmail, password: "Password123!",
-            options: { data: { name: buyerName.trim(), mobile: buyerMobile.trim(), role: "Buyer", city: selectedCity || "Surat" } }
-          });
-          if (!authData?.user) await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
-        } catch {}
-
-        if (car.id) {
-          const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
-          if (!existingSaved.includes(car.id)) localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
-          if (onSaveToggle && !savedCars?.includes(car.id)) onSaveToggle(car.id, car.model);
-        }
-
-        const leadRecord = {
-          id: refId, created_at: new Date().toISOString(),
-          name: buyerName.trim(), mobile: buyerMobile.trim(), mobile_verified: true,
-          city: selectedCity || car.cities?.[0] || car.location || "Surat",
-          vehicle: vehicleTitle, car_id: car.id, car_brand: car.brand, car_model: car.model,
-          price: car.price, type: "Buy Car / Reservation", status: "Payment Submitted",
-          notes: `Token ${fmt(BOOKING_TOKEN)} paid via UPI | UPI Ref: ${upiRef.trim()} | UPI ID: ${upiSettings.upiId} | Total: ${fmt(totalPrice)} | Ref: ${refId}`,
-          upi_ref: upiRef.trim(), upi_id: upiSettings.upiId, payment_status: "submitted"
-        };
-        const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-        localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
-
-        const { error: insertError } = await supabase.from("sales_notifications").insert([{
-          name: buyerName.trim() || "Buyer (Checkout)",
-          mobile: buyerMobile.trim(),
-          city: selectedCity || car.cities?.[0] || car.location || "Surat",
-          preferred_date: new Date().toISOString().split("T")[0],
-          preferred_time: "Immediate Reservation",
-          car_id: car.id, car_brand: car.brand, car_model: car.model,
-          type: "buy_now", status: "payment_submitted",
-          notes: `Token ${fmt(BOOKING_TOKEN)} | UPI Ref: ${upiRef.trim()} | UPI ID: ${upiSettings.upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
-        }]);
-        if (insertError) throw new Error(insertError.message);
-
-        await notificationService.triggerCarReserved({ buyerName: buyerName.trim(), carTitle: vehicleTitle, price: car.price });
+        await processCheckout(car, selectedCity, buyerName, buyerMobile, refId, vehicleTitle, totalPrice, fmt, upiRef.trim(), upiSettings.upiId, "Payment Submitted", onSaveToggle, savedCars);
         setIsSubmitted(true);
-        toast.success("Payment submitted! Our team will verify and confirm your reservation.");
+        toast.success("Payment submitted! Our team will contact you shortly.");
       } catch (err) {
         const message = err instanceof Error ? err.message : "Something went wrong.";
         toast.error(`Reservation failed: ${message}`);
@@ -536,9 +521,9 @@ export function BuyNowCheckout({
             <CheckCircle2 className="h-9 w-9 text-[#2E7D32] stroke-[2.5]" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-slate-900">Reservation Confirmed!</h3>
+            <h3 className="text-xl font-black text-slate-900">Payment Confirmed!</h3>
             <p className="text-sm text-slate-500 mt-1">Ref: <strong className="text-slate-800">{leadRefId}</strong></p>
-            <p className="text-sm text-slate-500 mt-2">Our team will contact you shortly to complete the booking token payment of <strong className="text-[#2E7D32]">{fmt(BOOKING_TOKEN)}</strong>.</p>
+            <p className="text-sm text-slate-500 mt-2">Your Sales Assistant will contact you shortly.</p>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-2">
             <Button variant="outline" onClick={onClose} className="rounded-xl font-bold text-xs uppercase tracking-wider h-11">Close</Button>
