@@ -750,7 +750,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const computedKms = match ? Number(match[0].replace(/,/g, "")) : 35000;
 
     const inspectionRecord = {
-      seller_id: user ? user.id : "u-seller",
+      seller_id: user?.id || crypto.randomUUID(),
       seller_name: finalName,
       seller_mobile: mobile,
       reg_number: computedReg,
