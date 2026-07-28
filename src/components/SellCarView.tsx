@@ -14,6 +14,7 @@ import { toast } from "@/src/lib/toast";
 interface SellCarViewProps {
   onNavigateToDashboard: () => void;
   onBackToHome: () => void;
+  onNavigateToSeller?: () => void;
 }
 
 // Extensive brand logos lookup (Indian market brands, 2000 onwards)
@@ -443,7 +444,7 @@ const gujaratRTOs = [
   { code: "GJ-38", city: "Bavla" }
 ];
 
-export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarViewProps) {
+export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller }: SellCarViewProps) {
   const [settings, setSettings] = React.useState({
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
     sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
@@ -789,7 +790,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome }: SellCarView
       });
 
       setFormStep("success");
-      toast.success("Inspection scheduled successfully!");
+      toast.success("Your inspection will contact you shortly!");
+
+      // Redirect to seller dashboard after 3 seconds
+      setTimeout(() => {
+        onNavigateToSeller?.();
+      }, 3000);
     } catch (error) {
       console.error("Error creating inspection request:", error);
       const message = error instanceof Error ? error.message : "Please check your details and try again.";
