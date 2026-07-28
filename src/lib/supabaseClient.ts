@@ -25,8 +25,65 @@ class SupabaseMockClient {
     }
   }
 
+  // ---- Secure credential store (kept separate from public profile data) ----
+  // Passwords are NEVER stored on the profile object (which is world-readable
+  // and returned in sessions). Instead we keep a salted SHA-256 hash in an
+  // isolated storage key and verify against it on sign-in.
+  private authStoreKey = "1stcars_sb_auth";
+  private DEMO_PASSWORD = "password123";
+
+  private getCredentials(): Record<string, { salt: string; hash: string }> {
+    if (typeof window === "undefined") return {};
+    const raw = localStorage.getItem(this.authStoreKey);
+    return raw ? JSON.parse(raw) : {};
+  }
+
+  private randomSalt(): string {
+    const cryptoObj = typeof globalThis !== "undefined" ? (globalThis.crypto as Crypto | undefined) : undefined;
+    if (cryptoObj?.getRandomValues) {
+      const arr = new Uint8Array(16);
+      cryptoObj.getRandomValues(arr);
+      return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  private async hashPassword(password: string, salt: string): Promise<string> {
+    const cryptoObj = typeof globalThis !== "undefined" ? (globalThis.crypto as Crypto | undefined) : undefined;
+    if (cryptoObj?.subtle) {
+      const data = new TextEncoder().encode(`${salt}:${password}`);
+      const digest = await cryptoObj.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    // Fallback for non-crypto environments (keeps the demo functional).
+    let h = 0;
+    const str = `${salt}:${password}`;
+    for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    return `fallback-${(h >>> 0).toString(16)}`;
+  }
+
+  private async setCredential(email: string, password: string) {
+    if (typeof window === "undefined") return;
+    const creds = this.getCredentials();
+    const salt = this.randomSalt();
+    creds[email] = { salt, hash: await this.hashPassword(password || this.DEMO_PASSWORD, salt) };
+    localStorage.setItem(this.authStoreKey, JSON.stringify(creds));
+  }
+
+  private async verifyPassword(email: string, password: string | undefined): Promise<boolean> {
+    const stored = this.getCredentials()[email];
+    if (stored) {
+      if (password == null) return false;
+      return (await this.hashPassword(password, stored.salt)) === stored.hash;
+    }
+    // Pre-seeded demo accounts have no stored credential: only the shared demo
+    // password is accepted (never a blank/arbitrary password).
+    return password === this.DEMO_PASSWORD;
+  }
+
   // Reactive state callbacks for auth change subscriptions
   private authListeners: Array<(event: string, session: any) => void> = [];
+
 
   private triggerAuthChange(event: string, session: any) {
     this.authListeners.forEach((cb) => cb(event, session));
@@ -286,7 +343,7 @@ class SupabaseMockClient {
             id: "p-about",
             title: "About Us",
             slug: "about-us",
-            content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **120-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n- **6-Month Premium Warranty**: Covers engine, gearbox & dual-clutch assemblies.\n\n### Contact Details\n- **Email**: suport@1stcars.in\n- **Mobile**: +91 8866377722\n- **Office**: 1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India`,
+            content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **120-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n- **6-Month Premium Warranty**: Covers engine, gearbox & dual-clutch assemblies.\n\n### Contact Details\n- **Email**: support@1stcars.com\n- **Mobile**: +91 8866377722\n- **Office**: 1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India`,
             created_at: new Date().toISOString(),
             is_footer: false
           },
@@ -302,7 +359,7 @@ class SupabaseMockClient {
             id: "p-warranty",
             title: "Warranty Terms",
             slug: "warranty-terms",
-            content: `# 6-Month Premium Warranty Policy\n\nAt **1stCars**, every certified pre-owned vehicle qualifies for our complimentary **6-Month / 10,000 km Premium Warranty** to guarantee peace of mind.\n\n### What is Covered\nOur premium warranty covers 100% of parts and labor costs for major mechanical assemblies:\n\n1. **Engine Assembly**: Cylinder block, pistons, crankshaft, camshafts, valvetrain, turbocharger/supercharger systems, and oil pump.\n2. **Gearbox & Transmission**: Torque converter, dual-clutch transmission (DCT/DSG) modules, manual gear sets, and transfer case.\n3. **Electrical Modules**: ECU, alternator, starter motor, and hybrid battery management controller.\n4. **Cooling System**: Radiator, water pump, and thermostat housing.\n\n### What is Not Covered\n- Normal wear and tear items (brake pads, clutch plates, tires, wiper blades, suspension bushings).\n- Modifications or tuning after delivery.\n- Accidental damage or driving through flooded streets.\n\n### Claim Process\nShould you encounter any issue, simply contact our dedicated claims team at **suport@1stcars.in** or call **+91 8866377722**. We will arrange a flatbed tow to our authorized service hub and provide cashless repairs.`,
+            content: `# 6-Month Premium Warranty Policy\n\nAt **1stCars**, every certified pre-owned vehicle qualifies for our complimentary **6-Month / 10,000 km Premium Warranty** to guarantee peace of mind.\n\n### What is Covered\nOur premium warranty covers 100% of parts and labor costs for major mechanical assemblies:\n\n1. **Engine Assembly**: Cylinder block, pistons, crankshaft, camshafts, valvetrain, turbocharger/supercharger systems, and oil pump.\n2. **Gearbox & Transmission**: Torque converter, dual-clutch transmission (DCT/DSG) modules, manual gear sets, and transfer case.\n3. **Electrical Modules**: ECU, alternator, starter motor, and hybrid battery management controller.\n4. **Cooling System**: Radiator, water pump, and thermostat housing.\n\n### What is Not Covered\n- Normal wear and tear items (brake pads, clutch plates, tires, wiper blades, suspension bushings).\n- Modifications or tuning after delivery.\n- Accidental damage or driving through flooded streets.\n\n### Claim Process\nShould you encounter any issue, simply contact our dedicated claims team at **support@1stcars.com** or call **+91 8866377722**. We will arrange a flatbed tow to our authorized service hub and provide cashless repairs.`,
             created_at: new Date().toISOString(),
             is_footer: true
           },
@@ -361,28 +418,40 @@ class SupabaseMockClient {
 
       const updated = [...profiles, newProfile];
       this.setStorage("1stcars_sb_profiles", updated);
-      
+
+      // Persist a salted hash of the chosen password so sign-in can verify it.
+      await this.setCredential(emailLower, password);
+
       const session = { access_token: `mock-jwt-${id}`, user: newProfile };
+
       localStorage.setItem("1stcars_sb_current_session", JSON.stringify(session));
       this.triggerAuthChange("SIGNED_IN", session);
 
       return { data: { user: newProfile, session }, error: null };
     },
 
-    signInWithPassword: async ({ email }: any) => {
+    signInWithPassword: async ({ email, password }: any) => {
       const query = email.toLowerCase();
       const profiles = this.getStorage<any>("1stcars_sb_profiles", this.getInitialData("profiles"));
       const user = profiles.find((p) => p.email.toLowerCase() === query || p.mobile === query);
 
-      if (user) {
-        const session = { access_token: `mock-jwt-${user.id}`, user };
-        localStorage.setItem("1stcars_sb_current_session", JSON.stringify(session));
-        this.triggerAuthChange("SIGNED_IN", session);
-        return { data: { user, session }, error: null };
+      if (!user) {
+        return { data: { user: null, session: null }, error: { message: "Invalid login credentials" } };
       }
 
-      return { data: { user: null, session: null }, error: { message: "Invalid login credentials" } };
+      // Verify the password against the stored hash (or the shared demo password
+      // for pre-seeded accounts). A missing/incorrect password is rejected.
+      const ok = await this.verifyPassword(user.email.toLowerCase(), password);
+      if (!ok) {
+        return { data: { user: null, session: null }, error: { message: "Invalid login credentials" } };
+      }
+
+      const session = { access_token: `mock-jwt-${user.id}`, user };
+      localStorage.setItem("1stcars_sb_current_session", JSON.stringify(session));
+      this.triggerAuthChange("SIGNED_IN", session);
+      return { data: { user, session }, error: null };
     },
+
 
     signOut: async () => {
       localStorage.removeItem("1stcars_sb_current_session");

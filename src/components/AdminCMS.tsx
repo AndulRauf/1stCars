@@ -95,7 +95,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     instagram: "https://instagram.com/1stcars",
     twitter: "https://twitter.com/1stcars",
     youtube: "https://youtube.com/1stcars",
-    supportEmail: "suport@1stcars.in",
+    supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
@@ -396,7 +396,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || (parsed.buyCarsSubheadingText && parsed.buyCarsSubheadingText.includes("owned directly")) || !parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
             parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
-            parsed.supportEmail = "suport@1stcars.in";
+            parsed.supportEmail = "support@1stcars.com";
             parsed.buyCarsSubheadingText = "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.";
             parsed.logoUrl = "/logo.png";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));

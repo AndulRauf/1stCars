@@ -422,46 +422,26 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           return;
         }
 
-        try {
-          if (isUsingMock) {
-            const mockUser = {
-              id: "mock-" + Date.now(),
-              name: email.split("@")[0],
-              email: email,
-              role: "Buyer",
-              city: "Mumbai"
-            };
-            setSuccess("Successfully signed in!");
-            setTimeout(() => {
-              onLoginSuccess(mockUser);
-              onClose();
-            }, 800);
-            setLoading(false);
-            return;
-          }
+        // A password is always required for a normal email login — no silent
+        // defaults or password-less fallbacks (works for both mock & real).
+        if (!password) {
+          setError("Please enter your password.");
+          setLoading(false);
+          return;
+        }
 
+        try {
           const { data, error: authErr } = await supabase.auth.signInWithPassword({
             email: email.trim(),
-            password: password || "password123"
+            password: password
           });
 
-          if (authErr) {
-            // Check if profile exists in profiles table directly
-            const { data: profiles } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("email", email.trim());
-
-            if (profiles && profiles.length > 0) {
-              setSuccess(`Signed in as ${profiles[0].name}!`);
-              setTimeout(() => {
-                onLoginSuccess(profiles[0]);
-                onClose();
-              }, 800);
-            } else {
-              setError(authErr.message || "Invalid credentials. If this is a demo account, use the quick demo buttons below!");
-            }
+          if (authErr || !data?.user) {
+            // Do NOT fall back to a password-less profile lookup — that would
+            // let anyone in with just an email. Surface the failure instead.
+            setError(authErr?.message || "Invalid credentials. If this is a demo account, use the quick demo buttons below!");
           } else if (data.user) {
+
             const { data: profile } = await supabase
               .from("profiles")
               .select("*")

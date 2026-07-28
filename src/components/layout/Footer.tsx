@@ -14,7 +14,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
   const [footerPages, setFooterPages] = React.useState<any[]>([]);
 
   const [settings, setSettings] = React.useState({
-    supportEmail: "suport@1stcars.in",
+    supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
@@ -37,7 +37,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
           if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || (parsed.highlight2Title && parsed.highlight2Title.includes("Buyback"))) {
             parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
-            parsed.supportEmail = "suport@1stcars.in";
+            parsed.supportEmail = "support@1stcars.com";
             parsed.highlight1Title = "120-Point Certificate";
             parsed.highlight1Desc = "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.";
             parsed.highlight2Title = "Single Owned, Non Accident Trusted*";

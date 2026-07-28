@@ -73,7 +73,47 @@ const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512
   </g>
 </svg>`;
 
+// 1200x630 Open Graph / Twitter social share card (branded)
+const ogSvgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f3d24" />
+      <stop offset="100%" stop-color="#28592B" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Tire emblem on the left -->
+  <g transform="translate(300 315) scale(1.05)">
+    <circle cx="0" cy="0" r="172" fill="#28592B" />
+    <circle cx="0" cy="0" r="162" fill="#91A95D" />
+    <circle cx="0" cy="0" r="120" fill="#28592B" />
+    <circle cx="0" cy="0" r="108" stroke="#316733" stroke-width="3" fill="none" />
+    <circle cx="0" cy="0" r="94" fill="#245226" />
+    <path fill="#91A95D" d="M -18 -78
+             C -28 -68 -42 -58 -56 -52
+             L -56 -32
+             C -42 -38 -28 -46 -18 -56
+             L -18 62
+             C -18 68 -14 72 -8 72
+             L 8 72
+             C 14 72 18 68 18 62
+             L 18 -78
+             C 18 -84 14 -88 8 -88
+             L -8 -88
+             C -14 -88 -18 -84 -18 -78
+             Z" />
+  </g>
+
+  <!-- Brand text on the right -->
+  <text x="560" y="270" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="800" fill="#ffffff">1stCars</text>
+  <text x="562" y="340" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="600" fill="#91A95D">Premium Used Car Marketplace</text>
+  <text x="562" y="410" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="400" fill="#d7e3c8">150-Point Inspection • Single Owned • Non-Accident</text>
+  <text x="562" y="452" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="400" fill="#d7e3c8">1stMark Certified Trusted Guarantee</text>
+</svg>`;
+
 async function generateIcons() {
+
   const publicDir = path.join(process.cwd(), 'public');
 
   // Save SVG
@@ -125,8 +165,17 @@ async function generateIcons() {
     .png()
     .toFile(path.join(publicDir, 'favicon-16x16.png'));
 
-  console.log('Successfully generated all logo PNGs and SVG files!');
+  // 1200x630 Open Graph / Twitter social share image (JPEG for broad compatibility)
+  const ogBuffer = Buffer.from(ogSvgContent);
+  await sharp(ogBuffer)
+    .resize(1200, 630)
+    .jpeg({ quality: 85 })
+    .toFile(path.join(publicDir, 'og-image.jpg'));
+  console.log('Generated og-image.jpg (1200x630)');
+
+  console.log('Successfully generated all logo PNGs, the OG image, and SVG files!');
 }
+
 
 generateIcons().catch(console.error);
 

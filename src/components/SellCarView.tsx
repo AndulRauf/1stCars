@@ -727,7 +727,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         if (authData?.user) {
           user = authData.user;
         } else {
-          const { data: signInData } = await supabase.auth.signInWithPassword({ email: sellerEmail });
+          const { data: signInData } = await supabase.auth.signInWithPassword({ email: sellerEmail, password: "Password123!" });
+
           user = signInData?.user || null;
         }
       } catch (authErr) {

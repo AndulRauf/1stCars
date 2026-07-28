@@ -186,7 +186,8 @@ export function BookingModal({
         });
 
         if (!authData?.user) {
-          await supabase.auth.signInWithPassword({ email: userEmail });
+          await supabase.auth.signInWithPassword({ email: userEmail, password: "Password123!" });
+
         }
       } catch (authErr) {
         console.warn("Auto sign in error during booking:", authErr);

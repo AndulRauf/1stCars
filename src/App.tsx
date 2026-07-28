@@ -158,7 +158,7 @@ export default function App() {
     facebook: "https://facebook.com/1stcars",
     instagram: "https://instagram.com/1stcars",
     youtube: "https://youtube.com/1stcars",
-    supportEmail: "suport@1stcars.in",
+    supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
@@ -203,7 +203,7 @@ export default function App() {
           if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || !parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
             parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
-            parsed.supportEmail = "suport@1stcars.in";
+            parsed.supportEmail = "support@1stcars.com";
             parsed.logoUrl = "/logo.png";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
@@ -391,11 +391,12 @@ export default function App() {
     setCalcError("");
 
     // Calculate realistic premium used car price anchor
-    let baseValue = 65000;
-    if (calcBrand.toLowerCase().includes("porsche") || calcBrand.toLowerCase().includes("ferrari")) {
-      baseValue = 110000;
+    // Base anchor values in INR (₹) for the Indian pre-owned market
+    let baseValue = 1800000;
+    if (calcBrand.toLowerCase().includes("porsche") || calcBrand.toLowerCase().includes("ferrari") || calcBrand.toLowerCase().includes("lamborghini") || calcBrand.toLowerCase().includes("bentley")) {
+      baseValue = 9000000;
     } else if (calcBrand.toLowerCase().includes("mercedes") || calcBrand.toLowerCase().includes("bmw") || calcBrand.toLowerCase().includes("audi")) {
-      baseValue = 55000;
+      baseValue = 3500000;
     }
 
     const age = 2026 - parseInt(calcYear);
@@ -403,7 +404,7 @@ export default function App() {
     const mileageDepreciation = Math.max(0.2, 1 - (mileageNum * 0.000005));
     
     const finalValue = Math.round(baseValue * ageDepreciation * mileageDepreciation);
-    setCalcEstimatedValue(Math.max(12000, finalValue));
+    setCalcEstimatedValue(Math.max(50000, finalValue));
     triggerToast(`Instant valuation compiled for your ${calcBrand}!`);
   };
 
@@ -885,9 +886,9 @@ export default function App() {
                 <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
                   <Award className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">12-Month Premium Warranty</h3>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">6-Month Premium Warranty</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Every 1stMark Certified vehicle includes complimentary 1-Year/15,000-mile comprehensive mechanical breakdown coverage for peace of mind.
+                  Every 1stMark Certified vehicle includes a complimentary 6-Month / 10,000 km comprehensive mechanical breakdown coverage for peace of mind.
                 </p>
                 <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
                   <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Complimentary Coverage</div>
@@ -905,7 +906,7 @@ export default function App() {
                 </div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">Verified & Clean History</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  We verify ownership history, insurance claims, odometer readings, and past service logs with CARFAX so there are no surprise skeletons.
+                  We verify ownership history, insurance claims, odometer readings, and past service logs through trusted verification partners so there are no surprise skeletons.
                 </p>
                 <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
                   <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Certified Clean Titles Only</div>
