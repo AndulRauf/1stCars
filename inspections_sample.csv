@@ -1,0 +1,6 @@
+﻿seller_id,seller_name,seller_mobile,reg_number,brand,model,variant,fuel,transmission,year,km_driven,city,address,preferred_date,preferred_time,status,notes
+u-seller1,Rajesh Patel,9876543210,GJ-01-AB-1234,Maruti Suzuki,Swift,LXI,Petrol,Manual,2020,45000,Surat,Home near RTO Surat,2026-07-29,10:00 AM - 12:00 PM,pending,New inspection request
+u-seller2,Ankit Sharma,9876543211,GJ-02-CD-5678,Hyundai,Creta,EX,Diesel,Automatic,2021,30000,Ahmedabad,Home near RTO Ahmedabad,2026-07-30,02:00 PM - 04:00 PM,pending,New inspection request
+u-seller3,Priya Singh,9876543212,GJ-03-EF-9012,Tata,Nexon,XZ,Petrol,Manual,2022,25000,Vadodara,Home near RTO Vadodara,2026-07-31,11:00 AM - 01:00 PM,pending,New inspection request
+u-seller4,Mehul Joshi,9876543213,GJ-04-GH-3456,Mahindra,Thar,AX,Petrol,Manual,2023,15000,Rajkot,Home near RTO Rajkot,2026-08-01,09:00 AM - 11:00 AM,pending,New inspection request
+u-seller5,Neha Gupta,9876543214,GJ-05-IJ-7890,Maruti Suzuki,Brezza,VXI,Diesel,Automatic,2019,60000,Surat,Home near RTO Surat,2026-08-02,03:00 PM - 05:00 PM,pending,New inspection request
