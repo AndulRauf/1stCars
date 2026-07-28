@@ -794,7 +794,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
       // Redirect to seller dashboard after 3 seconds
       setTimeout(() => {
-        onNavigateToSeller?.();
+        onNavigateToDashboard?.();
       }, 3000);
     } catch (error) {
       console.error("Error creating inspection request:", error);
