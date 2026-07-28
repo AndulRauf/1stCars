@@ -621,8 +621,17 @@ export default function App() {
       ) : currentView === "sell_car" ? (
         <SellCarView
           onNavigateToDashboard={async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
+            const waitForAuth = async (retries = 20, delay = 250) => {
+              for (let i = 0; i < retries; i++) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) return true;
+                await new Promise((r) => setTimeout(r, delay));
+              }
+              return false;
+            };
+
+            const authed = await waitForAuth();
+            if (authed) {
               handleNavigate("role_dashboards");
             } else {
               setAuthModal({ isOpen: true, mode: "login" });
