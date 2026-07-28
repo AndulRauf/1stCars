@@ -87,7 +87,7 @@ export function BuyNowCheckout({
   const fmt = (val: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
 
-  // Build a UPI deep-link for a given app scheme (e.g. "upi", "gpay", "phonepe", "paytm").
+  // Build a UPI deep-link for a given app scheme.
   // Uses the standard NPCI UPI URL parameters so any UPI app can pre-fill the payment.
   const buildUpiLink = (scheme: string) => {
     const params = new URLSearchParams({
@@ -97,7 +97,21 @@ export function BuyNowCheckout({
       cu: "INR",
       tn: `1stCars Booking Token ${car ? `${car.brand} ${car.model}` : ""}`.trim(),
     });
-    return `${scheme}://pay?${params.toString()}`;
+    
+    // App-specific URL formats
+    if (scheme === "tez") {
+      // Google Pay (GPay)
+      return `tez://upi/pay?${params.toString()}`;
+    } else if (scheme === "phonepe") {
+      // PhonePe
+      return `phonepe://pay?${params.toString()}`;
+    } else if (scheme === "paytmmp") {
+      // Paytm
+      return `paytmmp://pay?${params.toString()}`;
+    } else {
+      // Generic UPI intent
+      return `upi://pay?${params.toString()}`;
+    }
   };
 
   // Popular UPI apps with their intent schemes.
@@ -418,10 +432,19 @@ export function BuyNowCheckout({
                     onClick={(e) => {
                       if (!upiSettings.upiId) {
                         e.preventDefault();
-                        toast.error("UPI collection isn't set up yet. Enter your payment reference below or our team will contact you.");
+                        toast.error("UPI collection isn't set up yet. Please ask the team to configure a UPI ID, or enter your payment reference below.");
                         return;
                       }
+                      // Fire the deep link; if the app isn't installed the OS simply ignores it,
+                      // so we also surface a hint after a short delay.
                       toast.info(`Opening ${app.name}… complete the payment, then enter the UTR below.`);
+                      // Fallback for desktop / when no app handles the scheme: after 1.2s,
+                      // if the page is still visible, tell the user to scan the QR / use another app.
+                      setTimeout(() => {
+                        if (document.visibilityState === "visible") {
+                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR / copy the UPI ID above.`);
+                        }
+                      }, 1200);
                     }}
                     className="flex items-center justify-center gap-2 h-12 rounded-2xl border border-slate-200 bg-white hover:border-[#2E7D32] hover:bg-[#2E7D32]/5 transition-colors cursor-pointer active:scale-95"
                   >
