@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fix Admin Role</title>
+</head>
+<body>
+  <h1>Admin Role Fixer</h1>
+  <p>Open this page in the same browser where you're logged in.</p>
+  <button onclick="fixAdminRole()">Click to Make Me Admin</button>
+  <pre id="output"></pre>
+
+  <script>
+    function fixAdminRole() {
+      const userId = '0a7eff78-1fc0-420d-a5fb-19c5c9fe37a4';
+      const output = document.getElementById('output');
+      
+      // Get current profiles
+      const profilesRaw = localStorage.getItem('1stcars_sb_profiles');
+      let profiles = profilesRaw ? JSON.parse(profilesRaw) : [];
+      
+      output.textContent = 'Current profiles:\n' + JSON.stringify(profiles, null, 2) + '\n\n';
+      
+      // Find and update user
+      let found = false;
+      profiles = profiles.map(p => {
+        if (p.id === userId) {
+          found = true;
+          p.role = 'Admin';
+          p.updated_at = new Date().toISOString();
+          output.textContent += '✅ Found and updated user to Admin!\n';
+        }
+        return p;
+      });
+      
+      if (!found) {
+        output.textContent += '❌ User not found in profiles. Adding new admin profile...\n';
+        profiles.push({
+          id: userId,
+          email: 'raufshaikh88@gmail.com',
+          name: 'Administrator',
+          role: 'Admin',
+          city: '',
+          mobile: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
+      
+      // Save back
+      localStorage.setItem('1stcars_sb_profiles', JSON.stringify(profiles));
+      
+      // Update current session
+      const sessionRaw = localStorage.getItem('1stcars_sb_current_session');
+      if (sessionRaw) {
+        const session = JSON.parse(sessionRaw);
+        if (session.user && session.user.id === userId) {
+          session.user.role = 'Admin';
+          localStorage.setItem('1stcars_sb_current_session', JSON.stringify(session));
+          output.textContent += '✅ Session updated!\n';
+        }
+      }
+      
+      output.textContent += '\nDone! Refresh your app now.';
+      
+      // Auto refresh after 2 seconds
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

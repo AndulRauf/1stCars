@@ -81,6 +81,15 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "role_dashboards" };
   }
 
+  // Route 4b: Role-specific dashboards
+  if (pathname === "/buyer-dashboard" || pathname === "/buyer") {
+    return { view: "role_dashboards", pageId: "buyer" };
+  }
+  
+  if (pathname === "/seller-dashboard" || pathname === "/seller") {
+    return { view: "role_dashboards", pageId: "seller" };
+  }
+
   if (pathname === "/sales-portal" || pathname === "/sales-dashboard" || pathname === "/sales") {
     return { view: "sales_dashboard" };
   }
@@ -148,6 +157,13 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
       return "/certification";
 
     case "role_dashboards":
+      // Check for role-specific dashboard via pageId param
+      if (params?.pageId === "buyer") {
+        return "/buyer-dashboard";
+      }
+      if (params?.pageId === "seller") {
+        return "/seller-dashboard";
+      }
       return "/dashboard";
 
     case "sales_dashboard":

@@ -609,7 +609,8 @@ export default function App() {
             handleNavigate("sales_dashboard");
           }}
           onNavigateToDashboard={() => {
-            handleNavigate("role_dashboards");
+            // Force redirect to buyer-dashboard after purchase completion
+            handleNavigate("role_dashboards", { pageId: "buyer" });
           }}
         />
       ) : currentView === "sales_dashboard" ? (
@@ -632,7 +633,8 @@ export default function App() {
 
             const authed = await waitForAuth();
             if (authed) {
-              handleNavigate("role_dashboards");
+              // Force redirect to seller-dashboard after listing submission
+              handleNavigate("role_dashboards", { pageId: "seller" });
             } else {
               setAuthModal({ isOpen: true, mode: "login" });
             }
