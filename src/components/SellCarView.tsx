@@ -11,7 +11,6 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { toast } from "@/src/lib/toast";
 import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
-import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface SellCarViewProps {
   onNavigateToDashboard: () => void;
@@ -779,18 +778,20 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
       setCreatedRequest(inserted);
 
-      // Trigger Notification
-      await notificationService.triggerInspectionSubmitted({
+      // Show success immediately — the seller should not wait on background
+      // notification dispatch (inspector alerts). Fire-and-forget so the UI is snappy.
+      setFormStep("success");
+      toast.success("Your inspection will contact you shortly!");
+
+      // Trigger inspector notifications in the background (non-blocking).
+      void notificationService.triggerInspectionSubmitted({
         id: inserted.id || "insp-temp-id",
         sellerName: finalName,
         brand: selectedBrand,
         model: selectedModel,
         city: resolvedCity,
         preferred_date: finalDate
-      });
-
-      setFormStep("success");
-      toast.success("Your inspection will contact you shortly!");
+      }).catch((err) => console.warn("Background inspection notification failed:", err));
 
       // Redirect to seller dashboard after 3 seconds
       setTimeout(() => {

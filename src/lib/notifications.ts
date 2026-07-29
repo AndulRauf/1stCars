@@ -245,16 +245,19 @@ export const notificationService = {
 
     const inspectorList = inspectors || [{ id: "u-inspector" }];
 
-    // Dispatch notification to inspectors
-    for (const inspector of inspectorList) {
-      await this.createNotification({
-        recipientId: inspector.id,
-        title: "New Vehicle Inspection Request",
-        message: `${inspection.sellerName} has requested an inspection for a ${inspection.brand} ${inspection.model} in ${inspection.city} on ${inspection.preferred_date}.`,
-        type: "action",
-        metadata: { inspection_id: inspection.id, city: inspection.city }
-      });
-    }
+    // Dispatch notifications to all inspectors in parallel (much faster than
+    // awaiting each insert sequentially).
+    await Promise.all(
+      inspectorList.map((inspector: { id: string }) =>
+        this.createNotification({
+          recipientId: inspector.id,
+          title: "New Vehicle Inspection Request",
+          message: `${inspection.sellerName} has requested an inspection for a ${inspection.brand} ${inspection.model} in ${inspection.city} on ${inspection.preferred_date}.`,
+          type: "action",
+          metadata: { inspection_id: inspection.id, city: inspection.city }
+        })
+      )
+    );
   },
 
   /**
