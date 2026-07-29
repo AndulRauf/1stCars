@@ -1,0 +1,27 @@
+{
+  "short_name": "1stCars",
+  "name": "1stCars - Certified Premium Used Cars",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#135D38",
+  "theme_color": "#135D38",
+  "display": "standalone"
+}
