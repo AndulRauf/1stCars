@@ -267,8 +267,8 @@ export function Navbar({
               )}
             </a>
 
-            {/* Navigation */}
-            <div className="flex items-center space-x-8">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-8">
               {navLinks.filter(l => !l.requiresAuth || currentUser).map((link) => (
                 <a
                   key={link.label}
@@ -314,8 +314,8 @@ export function Navbar({
               ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex items-center space-x-4">
+            {/* Quick Actions (Desktop) */}
+            <div className="hidden lg:flex items-center space-x-4">
               <button
                 aria-label="Saved Cars"
                 onClick={onSavedClick}
@@ -367,7 +367,7 @@ export function Navbar({
             </div>
 
             {/* Mobile Actions Header */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 lg:hidden">
               <button
                 type="button"
                 onClick={() => setIsCityModalOpen(true)}
@@ -394,7 +394,7 @@ export function Navbar({
       {/* Mobile Drawer Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -402,7 +402,7 @@ export function Navbar({
       {/* Mobile Navigation Drawer */}
       <div
         className={cn(
-          "fixed top-0 bottom-0 right-0 z-50 w-full max-w-sm bg-white p-6 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col justify-between",
+          "fixed top-0 bottom-0 right-0 z-50 w-full max-w-sm bg-white p-6 shadow-2xl lg:hidden transform transition-transform duration-300 ease-in-out flex flex-col justify-between",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
