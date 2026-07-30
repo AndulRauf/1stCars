@@ -296,7 +296,7 @@ export function Navbar({
                   {item.label}
                 </a>
               ))}
-              {customPages.filter((page) => !page.is_footer).map((page) => (
+              {customPages.filter((page) => !page.is_footer && page.slug !== "about-us" && page.slug !== "faqs").map((page) => (
                 <a
                   key={page.id}
                   href={`#page-${page.slug}`}
@@ -485,7 +485,7 @@ export function Navbar({
                 <ChevronRight className="h-4 w-4 text-slate-400" />
               </a>
             ))}
-            {customPages.filter((page) => !page.is_footer).map((page) => (
+            {customPages.filter((page) => !page.is_footer && page.slug !== "about-us" && page.slug !== "faqs").map((page) => (
               <a
                 key={page.id}
                 href={`#page-${page.slug}`}
