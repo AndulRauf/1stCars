@@ -712,8 +712,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     let { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       const sellerEmail = `${mobile}@1stcars.com`;
-      const autoPassword = generateAutoPassword();
-      localStorage.setItem(getAutoPasswordKey(sellerEmail), autoPassword);
+      // Reuse a previously stored auto-password for this mobile so repeat
+      // submissions can sign back into the SAME auto-created Seller account.
+      // Generating a fresh password each time breaks sign-in once the account
+      // already exists (the stored credential hash would no longer match),
+      // which is what left the seller unauthenticated and bounced to the login
+      // popup after tapping "Go to Seller Dashboard".
+      const autoPasswordKey = getAutoPasswordKey(sellerEmail);
+      const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+      localStorage.setItem(autoPasswordKey, autoPassword);
+
 
       const { user: signedInUser, error: authError } = await resolveAutoSignIn(
         supabase,

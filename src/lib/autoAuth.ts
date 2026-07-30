@@ -33,9 +33,14 @@ export async function resolveAutoSignIn(
       options: signUpOptions,
     });
 
-    if (authData?.user) {
+    // Only treat sign-up as "signed in" when it actually produced an active
+    // session. A user object WITHOUT a session means either the account already
+    // exists or the sign-up needs confirmation — in both cases we must sign in
+    // explicitly below so getUser() returns the user afterwards.
+    if (authData?.user && authData?.session) {
       return { user: authData.user, error: null };
     }
+
 
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,

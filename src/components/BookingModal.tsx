@@ -171,8 +171,14 @@ export function BookingModal({
       const userName = name.trim();
       const userMobile = mobile.trim();
       const userCity = city || "Surat";
-      const autoPassword = generateAutoPassword();
-      localStorage.setItem(getAutoPasswordKey(userEmail), autoPassword);
+      // Reuse a previously stored auto-password for this email so repeat
+      // bookings can sign back into the SAME auto-created Buyer account.
+      // Generating a fresh password every time breaks sign-in once the account
+      // already exists (the stored credential hash no longer matches).
+      const autoPasswordKey = getAutoPasswordKey(userEmail);
+      const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+      localStorage.setItem(autoPasswordKey, autoPassword);
+
 
       try {
         const { user, error: authError } = await resolveAutoSignIn(
