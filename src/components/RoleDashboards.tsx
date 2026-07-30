@@ -25,9 +25,11 @@ interface RoleDashboardsProps {
   onLogout: () => void;
   onNavigateToInventory: () => void;
   onReloadAllData?: () => void;
+  onNavigateToBuyerDashboard?: () => void;
+  onNavigateToSellerDashboard?: () => void;
 }
 
-export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
+export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData, onNavigateToBuyerDashboard, onNavigateToSellerDashboard }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -403,6 +405,20 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {/* BUYER LINKS */}
                 {currentUser.role === "Buyer" && (
                   <>
+                    <button
+                      onClick={() => {
+                        setActiveTab("saved_cars");
+                        if (onNavigateToBuyerDashboard) onNavigateToBuyerDashboard();
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        activeTab === "saved_cars" 
+                          ? "bg-[#2E7D32] text-white" 
+                          : "text-slate-500 hover:bg-slate-50"
+                      }`}
+                    >
+                      <Heart className="h-4.5 w-4.5" />
+                      <span>Buyer Dashboard</span>
+                    </button>
                     {[
                       { id: "saved_cars", label: "Saved Cars Collection", icon: Heart },
                       { id: "test_drives", label: "My Test Drive Bookings", icon: Calendar },
@@ -427,6 +443,20 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {/* SELLER LINKS */}
                 {currentUser.role === "Seller" && (
                   <>
+                    <button
+                      onClick={() => {
+                        setActiveTab("inspections");
+                        if (onNavigateToSellerDashboard) onNavigateToSellerDashboard();
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        activeTab === "inspections" 
+                          ? "bg-[#2E7D32] text-white" 
+                          : "text-slate-500 hover:bg-slate-50"
+                      }`}
+                    >
+                      <ClipboardList className="h-4.5 w-4.5" />
+                      <span>Seller Dashboard</span>
+                    </button>
                     {[
                       { id: "inspections", label: "Inspection Status", icon: ClipboardList },
                       { id: "offers", label: "Dealer Offers Bids", icon: DollarSign },

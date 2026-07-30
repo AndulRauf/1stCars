@@ -351,10 +351,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       ]));
 
       setModels(getStored("models", [
-        { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "Coupe", engine: "3.0L Twin-Turbo", power: "450 HP" },
-        { id: "m-2", brand: "BMW", name: "M4 Competition", category: "Coupe", engine: "3.0L Straight-6", power: "503 HP" },
+        { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "SUV", engine: "3.0L Twin-Turbo", power: "450 HP" },
+        { id: "m-2", brand: "BMW", name: "M4 Competition", category: "SUV", engine: "3.0L Straight-6", power: "503 HP" },
         { id: "m-3", brand: "Mercedes-Benz", name: "G-Class AMG G 63", category: "SUV", engine: "4.0L BiTurbo V8", power: "577 HP" },
-        { id: "m-4", brand: "Audi", name: "e-tron GT", category: "Sedan", engine: "Dual Electric Motor", power: "637 HP" }
+        { id: "m-4", brand: "Audi", name: "e-tron GT", category: "EV", engine: "Dual Electric Motor", power: "637 HP" }
       ]));
 
       setCities(getStored("cities", [
@@ -451,7 +451,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       certifications: {},
       auctions: { car_title: "", base_price: 1500000, current_bid: 1500000, time_remaining: "24 Hours", total_bids: 0, status: "active" },
       park_sell: { slot: "Slot D-01", vehicle: "", price_per_day: 3500, status: "available", seller_name: "", duration_days: 0 },
-      brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
+      brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "SUV", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
       cities: { name: "", state: "", branch_manager: "", support_number: "" },
       faqs: { category: "General", question: "", answer: "" },
       testimonials: { name: "", role: "Private Buyer", rating: 5, content: "", photo: "👤" },
@@ -1414,11 +1414,26 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     currentPage * itemsPerPage
   );
 
-  // Stats calculation for the master KPI row
+  // Stats calculation for the master KPI row - Launch Readiness Tracker
   const activeAuctionsCount = auctions.filter(a => a.status === "active").length;
   const pendingInspsCount = inspections.filter(i => i.status === "pending").length;
+  const assignedInspsCount = inspections.filter(i => i.status === "assigned").length;
+  const completedInspsCount = inspections.filter(i => i.status === "completed").length;
   const totalCRMLeads = 12; // CRM leads stat
   const totalExpensesLogged = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  
+  // Launch Readiness Steps Tracker
+  const launchSteps = [
+    { id: 1, name: "Initial Inspection Request", status: inspections.length > 0 ? "complete" : "pending", desc: "Seller submits car for inspection" },
+    { id: 2, name: "Inspector Assignment", status: assignedInspsCount > 0 ? "complete" : "pending", desc: "Admin assigns inspector to vehicle" },
+    { id: 3, name: "120-Point Inspection", status: completedInspsCount > 0 ? "complete" : "pending", desc: "Inspector completes certification report" },
+    { id: 4, name: "Admin Review & Approval", status: completedInspsCount > 0 && auctions.length > 0 ? "complete" : "pending", desc: "Admin reviews and approves listing" },
+    { id: 5, name: "Live Dealer Auction", status: activeAuctionsCount > 0 ? "complete" : "pending", desc: "Vehicle listed for dealer bidding" },
+    { id: 6, name: "Offer Acceptance", status: auctions.some(a => a.status === "sold") ? "complete" : "pending", desc: "Seller accepts winning bid" },
+    { id: 7, name: "Payment & RC Transfer", status: auctions.some(a => a.status === "sold") ? "complete" : "pending", desc: "Final payment and ownership transfer" }
+  ];
+  const completedSteps = launchSteps.filter(s => s.status === "complete").length;
+  const pendingSteps = launchSteps.filter(s => s.status === "pending").length;
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
@@ -1484,6 +1499,64 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         {/* 1. DASHBOARD OVERVIEW */}
         {activeModule === "dashboard" && (
         <div className="space-y-6">
+          {/* Launch Readiness Tracker */}
+          <div className="bg-gradient-to-br from-[#2E7D32] to-emerald-800 border border-[#2E7D32]/20 rounded-3xl p-6 shadow-xl text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-6 w-6 text-white" />
+                <h3 className="text-lg font-black uppercase tracking-wider">🚀 Vehicle Launch Readiness Tracker</h3>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold uppercase tracking-widest opacity-80">Progress</p>
+                <p className="text-2xl font-black">{completedSteps}/{launchSteps.length} Steps Complete</p>
+              </div>
+            </div>
+            
+            <div className="w-full bg-white/20 rounded-full h-3 mb-4">
+              <div 
+                className="bg-white h-3 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(completedSteps / launchSteps.length) * 100}%` }}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {launchSteps.map((step, idx) => (
+                <div 
+                  key={step.id}
+                  className={`p-3 rounded-xl border text-xs font-semibold flex items-start gap-2 transition-all ${
+                    step.status === "complete" 
+                      ? "bg-white/20 border-white/40 text-white" 
+                      : "bg-white/10 border-white/20 text-white/70"
+                  }`}
+                >
+                  <div className={`mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${
+                    step.status === "complete" ? "bg-white text-[#2E7D32]" : "bg-white/20 text-white/60"
+                  }`}>
+                    {step.status === "complete" ? <Check className="h-3 w-3" strokeWidth={3} /> : <span className="text-[10px] font-black">{idx + 1}</span>}
+                  </div>
+                  <div>
+                    <p className="font-black uppercase tracking-wider text-[10px] leading-tight">{step.name}</p>
+                    <p className="text-[9px] opacity-70 mt-0.5 leading-tight">{step.desc}</p>
+                    <p className={`text-[8px] font-bold uppercase tracking-wider mt-1 ${
+                      step.status === "complete" ? "text-emerald-300" : "text-amber-300"
+                    }`}>
+                      {step.status === "complete" ? "✓ Completed" : "⏳ Pending"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {pendingSteps > 0 && (
+              <div className="mt-4 p-3 bg-amber-500/20 border border-amber-400/30 rounded-xl flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-300 shrink-0" />
+                <p className="text-xs font-bold text-amber-100">
+                  <strong>{pendingSteps} step{pendingSteps > 1 ? 's' : ''} remaining</strong> before vehicle is ready for market launch
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Active Auctions", val: activeAuctionsCount, desc: "Dealer bidding open", color: "bg-indigo-50 border-indigo-200 text-indigo-700" },

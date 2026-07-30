@@ -7,6 +7,8 @@ export type ViewType =
   | "sales_dashboard" 
   | "sell_car" 
   | "role_dashboards" 
+  | "buyer_dashboard"
+  | "seller_dashboard"
   | "firstmark_certification" 
   | "custom_page" 
   | "error_404" 
@@ -81,6 +83,16 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "role_dashboards" };
   }
 
+  // Route 4b: Buyer Dashboard
+  if (pathname === "/buyer-dashboard" || pathname === "/buyer" || pathname === "/buyer-portal") {
+    return { view: "buyer_dashboard" };
+  }
+
+  // Route 4c: Seller Dashboard  
+  if (pathname === "/seller-dashboard" || pathname === "/seller" || pathname === "/seller-portal") {
+    return { view: "seller_dashboard" };
+  }
+
   if (pathname === "/sales-portal" || pathname === "/sales-dashboard" || pathname === "/sales") {
     return { view: "sales_dashboard" };
   }
@@ -136,7 +148,7 @@ export function parseCurrentUrl(): RouteParams {
 /**
  * Format a canonical URL path for a given view and route parameters
  */
-export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string }): string {
+export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string; role?: string }): string {
   switch (view) {
     case "home":
       return "/";
@@ -148,7 +160,16 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
       return "/certification";
 
     case "role_dashboards":
+      // Support role-specific dashboard URLs
+      if (params?.role === "Buyer") return "/buyer-dashboard";
+      if (params?.role === "Seller") return "/seller-dashboard";
       return "/dashboard";
+
+    case "buyer_dashboard":
+      return "/buyer-dashboard";
+
+    case "seller_dashboard":
+      return "/seller-dashboard";
 
     case "sales_dashboard":
       return "/sales-portal";
@@ -190,7 +211,7 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
  */
 export function navigateTo(
   view: ViewType, 
-  params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string },
+  params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string; role?: string },
   options?: { replace?: boolean }
 ) {
   if (typeof window === "undefined") return;
@@ -226,6 +247,10 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
       return `1stMark Certification — 120-Point Inspection Standard | 1stCars`;
     case "role_dashboards":
       return `My Portal & Dashboards | 1stCars`;
+    case "buyer_dashboard":
+      return `Buyer Dashboard | 1stCars - Saved Cars, Test Drives & Orders`;
+    case "seller_dashboard":
+      return `Seller Dashboard | 1stCars - Inspections, Offers & Auctions`;
     case "sales_dashboard":
       return `Sales Associate Management Portal | 1stCars`;
     case "custom_page":

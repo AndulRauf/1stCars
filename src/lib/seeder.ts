@@ -60,29 +60,29 @@ export const SEED_BRANDS: DemoBrand[] = [
 
 export const SEED_MODELS: DemoModel[] = [
   // Porsche
-  { brand_name: "Porsche", name: "911 Carrera S", body_type: "Coupe" },
+  { brand_name: "Porsche", name: "911 Carrera S", body_type: "SUV" },
   { brand_name: "Porsche", name: "Cayenne Coupé", body_type: "SUV" },
-  { brand_name: "Porsche", name: "Taycan Turbo S", body_type: "Sedan" },
+  { brand_name: "Porsche", name: "Taycan Turbo S", body_type: "EV" },
   { brand_name: "Porsche", name: "Panamera GTS", body_type: "Sedan" },
   { brand_name: "Porsche", name: "Macan S", body_type: "SUV" },
   // BMW
-  { brand_name: "BMW", name: "M4 Competition", body_type: "Coupe" },
+  { brand_name: "BMW", name: "M4 Competition", body_type: "SUV" },
   { brand_name: "BMW", name: "X7 xDrive40i", body_type: "SUV" },
-  { brand_name: "BMW", name: "i7 M70", body_type: "Sedan" },
+  { brand_name: "BMW", name: "i7 M70", body_type: "EV" },
   { brand_name: "BMW", name: "M5 Competition", body_type: "Sedan" },
-  { brand_name: "BMW", name: "Z4 Roadster", body_type: "Convertible" },
+  { brand_name: "BMW", name: "Z4 Roadster", body_type: "Sedan" },
   // Mercedes-Benz
   { brand_name: "Mercedes-Benz", name: "G-Class AMG G 63", body_type: "SUV" },
   { brand_name: "Mercedes-Benz", name: "S-Class S 450", body_type: "Sedan" },
-  { brand_name: "Mercedes-Benz", name: "EQS Sedan", body_type: "Sedan" },
+  { brand_name: "Mercedes-Benz", name: "EQS Sedan", body_type: "EV" },
   { brand_name: "Mercedes-Benz", name: "C-Class", body_type: "Sedan" },
-  { brand_name: "Mercedes-Benz", name: "AMG GT", body_type: "Coupe" },
+  { brand_name: "Mercedes-Benz", name: "AMG GT", body_type: "SUV" },
   // Audi
-  { brand_name: "Audi", name: "RS e-tron GT", body_type: "Sedan" },
+  { brand_name: "Audi", name: "RS e-tron GT", body_type: "EV" },
   { brand_name: "Audi", name: "Q8 Celebration", body_type: "SUV" },
   { brand_name: "Audi", name: "A8 L", body_type: "Sedan" },
-  { brand_name: "Audi", name: "RS6 Avant", body_type: "Wagon" },
-  { brand_name: "Audi", name: "R8 V10", body_type: "Coupe" },
+  { brand_name: "Audi", name: "RS6 Avant", body_type: "SUV" },
+  { brand_name: "Audi", name: "R8 V10", body_type: "SUV" },
   // Land Rover
   { brand_name: "Land Rover", name: "Defender 110 V8", body_type: "SUV" },
   { brand_name: "Land Rover", name: "Range Rover Sport", body_type: "SUV" },
@@ -90,35 +90,35 @@ export const SEED_MODELS: DemoModel[] = [
   { brand_name: "Land Rover", name: "Discovery", body_type: "SUV" },
   { brand_name: "Land Rover", name: "Velar", body_type: "SUV" },
   // Tesla
-  { brand_name: "Tesla", name: "Model S Plaid", body_type: "Sedan" },
-  { brand_name: "Tesla", name: "Model X Plaid", body_type: "SUV" },
-  { brand_name: "Tesla", name: "Model 3 Performance", body_type: "Sedan" },
-  { brand_name: "Tesla", name: "Model Y Performance", body_type: "SUV" },
-  { brand_name: "Tesla", name: "Cybertruck", body_type: "Truck" },
+  { brand_name: "Tesla", name: "Model S Plaid", body_type: "EV" },
+  { brand_name: "Tesla", name: "Model X Plaid", body_type: "EV" },
+  { brand_name: "Tesla", name: "Model 3 Performance", body_type: "EV" },
+  { brand_name: "Tesla", name: "Model Y Performance", body_type: "EV" },
+  { brand_name: "Tesla", name: "Cybertruck", body_type: "SUV" },
   // Jaguar
-  { brand_name: "Jaguar", name: "F-Type R", body_type: "Coupe" },
+  { brand_name: "Jaguar", name: "F-Type R", body_type: "SUV" },
   { brand_name: "Jaguar", name: "F-Pace", body_type: "SUV" },
-  { brand_name: "Jaguar", name: "I-Pace", body_type: "SUV" },
+  { brand_name: "Jaguar", name: "I-Pace", body_type: "EV" },
   { brand_name: "Jaguar", name: "XF", body_type: "Sedan" },
   { brand_name: "Jaguar", name: "XE", body_type: "Sedan" },
   // Aston Martin
   { brand_name: "Aston Martin", name: "DBX707", body_type: "SUV" },
-  { brand_name: "Aston Martin", name: "Vantage V8", body_type: "Coupe" },
-  { brand_name: "Aston Martin", name: "DBS Superleggera", body_type: "Coupe" },
-  { brand_name: "Aston Martin", name: "DB12", body_type: "Coupe" },
-  { brand_name: "Aston Martin", name: "Valhalla", body_type: "Coupe" },
+  { brand_name: "Aston Martin", name: "Vantage V8", body_type: "SUV" },
+  { brand_name: "Aston Martin", name: "DBS Superleggera", body_type: "SUV" },
+  { brand_name: "Aston Martin", name: "DB12", body_type: "SUV" },
+  { brand_name: "Aston Martin", name: "Valhalla", body_type: "SUV" },
   // Ferrari
-  { brand_name: "Ferrari", name: "F8 Tributo", body_type: "Coupe" },
-  { brand_name: "Ferrari", name: "296 GTB", body_type: "Coupe" },
-  { brand_name: "Ferrari", name: "SF90 Stradale", body_type: "Coupe" },
-  { brand_name: "Ferrari", name: "Roma", body_type: "Coupe" },
+  { brand_name: "Ferrari", name: "F8 Tributo", body_type: "SUV" },
+  { brand_name: "Ferrari", name: "296 GTB", body_type: "SUV" },
+  { brand_name: "Ferrari", name: "SF90 Stradale", body_type: "SUV" },
+  { brand_name: "Ferrari", name: "Roma", body_type: "SUV" },
   { brand_name: "Ferrari", name: "Purosangue", body_type: "SUV" },
   // Bentley
-  { brand_name: "Bentley", name: "Continental GT", body_type: "Coupe" },
+  { brand_name: "Bentley", name: "Continental GT", body_type: "SUV" },
   { brand_name: "Bentley", name: "Bentayga V8", body_type: "SUV" },
   { brand_name: "Bentley", name: "Flying Spur", body_type: "Sedan" },
   { brand_name: "Bentley", name: "Mulsanne", body_type: "Sedan" },
-  { brand_name: "Bentley", name: "Bacalar", body_type: "Convertible" }
+  { brand_name: "Bentley", name: "Bacalar", body_type: "SUV" }
 ];
 
 export const SEED_CARS: DemoCar[] = [

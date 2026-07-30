@@ -641,7 +641,7 @@ export default function App() {
             handleNavigate("buy_cars");
           }}
         />
-      ) : currentView === "role_dashboards" ? (
+      ) : currentView === "role_dashboards" || currentView === "buyer_dashboard" || currentView === "seller_dashboard" ? (
         currentUser ? (
           <RoleDashboards
             currentUser={currentUser}
@@ -655,6 +655,12 @@ export default function App() {
               handleNavigate("buy_cars");
             }}
             onReloadAllData={loadSettingsAndCMSData}
+            onNavigateToBuyerDashboard={() => {
+              handleNavigate("buyer_dashboard");
+            }}
+            onNavigateToSellerDashboard={() => {
+              handleNavigate("seller_dashboard");
+            }}
           />
         ) : (
           <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center bg-white rounded-3xl max-w-md mx-auto border border-slate-100 my-12 shadow-sm">
@@ -781,7 +787,7 @@ export default function App() {
 
           {/* Interactive Body Type Filter Tabs */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto bg-slate-50 p-1.5 rounded-full border border-slate-200">
-            {["All", "SUV", "Sedan", "Coupe"].map((type) => (
+            {["All", "SUV", "Sedan", "Hatchback", "EV"].map((type) => (
               <button
                 key={type}
                 onClick={() => {
