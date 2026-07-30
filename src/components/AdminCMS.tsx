@@ -351,10 +351,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       ]));
 
       setModels(getStored("models", [
-        { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "Coupe", engine: "3.0L Twin-Turbo", power: "450 HP" },
-        { id: "m-2", brand: "BMW", name: "M4 Competition", category: "Coupe", engine: "3.0L Straight-6", power: "503 HP" },
+        { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "SUV", engine: "3.0L Twin-Turbo", power: "450 HP" },
+        { id: "m-2", brand: "BMW", name: "M4 Competition", category: "SUV", engine: "3.0L Straight-6", power: "503 HP" },
         { id: "m-3", brand: "Mercedes-Benz", name: "G-Class AMG G 63", category: "SUV", engine: "4.0L BiTurbo V8", power: "577 HP" },
-        { id: "m-4", brand: "Audi", name: "e-tron GT", category: "Sedan", engine: "Dual Electric Motor", power: "637 HP" }
+        { id: "m-4", brand: "Audi", name: "e-tron GT", category: "EV", engine: "Dual Electric Motor", power: "637 HP" }
       ]));
 
       setCities(getStored("cities", [
@@ -451,7 +451,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       certifications: {},
       auctions: { car_title: "", base_price: 1500000, current_bid: 1500000, time_remaining: "24 Hours", total_bids: 0, status: "active" },
       park_sell: { slot: "Slot D-01", vehicle: "", price_per_day: 3500, status: "available", seller_name: "", duration_days: 0 },
-      brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
+      brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "SUV", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
       cities: { name: "", state: "", branch_manager: "", support_number: "" },
       faqs: { category: "General", question: "", answer: "" },
       testimonials: { name: "", role: "Private Buyer", rating: 5, content: "", photo: "👤" },

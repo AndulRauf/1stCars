@@ -787,7 +787,7 @@ export default function App() {
 
           {/* Interactive Body Type Filter Tabs */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto bg-slate-50 p-1.5 rounded-full border border-slate-200">
-            {["All", "SUV", "Sedan", "Coupe"].map((type) => (
+            {["All", "SUV", "Sedan", "Hatchback", "EV"].map((type) => (
               <button
                 key={type}
                 onClick={() => {
