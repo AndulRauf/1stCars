@@ -11,6 +11,33 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      // Split large third-party libraries into their own long-term cacheable
+      // vendor chunks so the main bundle stays small and the browser only
+      // re-downloads app code when app code changes.
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            if (id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('react-markdown') || id.includes('remark') || id.includes('micromark') || id.includes('mdast') || id.includes('hast') || id.includes('unist') || id.includes('unified') || id.includes('vfile')) {
+              return 'vendor-markdown';
+            }
+            if (id.includes('/motion/') || id.includes('framer-motion')) return 'vendor-motion';
+            if (id.includes('@google/genai')) return 'vendor-genai';
+            return 'vendor';
+          },
+        },
+      },
+      // Raise the warning threshold slightly now that chunks are split; the
+      // largest remaining chunk should be well under this.
+      chunkSizeWarningLimit: 700,
+    },
+
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.

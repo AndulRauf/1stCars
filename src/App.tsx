@@ -46,18 +46,38 @@ import {
 } from "lucide-react";
 import { CARS_DATA, FAMOUS_BRANDS, BUDGET_RANGES } from "@/src/data/cars";
 import { Car } from "@/src/types";
-import { BuyCarsView } from "@/src/components/BuyCarsView";
-import { CarDetailsView } from "@/src/components/CarDetailsView";
-import { SalesDashboardView } from "@/src/components/SalesDashboardView";
 import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
-import { SellCarView } from "@/src/components/SellCarView";
-import { RoleDashboards } from "@/src/components/RoleDashboards";
-import { Error404Page, Error500Page } from "@/src/components/ErrorPages";
-import { FirstMarkCertification } from "@/src/components/FirstMarkCertification";
-import { CustomPageView } from "@/src/components/CustomPageView";
 import { supabase } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+// ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
+// so it always lives in the main chunk. Import it statically here too to avoid
+// a redundant dynamic chunk.
+import { Error404Page, Error500Page } from "@/src/components/ErrorPages";
+
+
+// Route-level views are code-split via React.lazy so the initial bundle only
+// ships the home page. Each view (and its heavy deps like AdminCMS or
+// react-markdown) is fetched on demand when the user navigates to it.
+const BuyCarsView = React.lazy(() => import("@/src/components/BuyCarsView").then(m => ({ default: m.BuyCarsView })));
+const CarDetailsView = React.lazy(() => import("@/src/components/CarDetailsView").then(m => ({ default: m.CarDetailsView })));
+const SalesDashboardView = React.lazy(() => import("@/src/components/SalesDashboardView").then(m => ({ default: m.SalesDashboardView })));
+const SellCarView = React.lazy(() => import("@/src/components/SellCarView").then(m => ({ default: m.SellCarView })));
+const RoleDashboards = React.lazy(() => import("@/src/components/RoleDashboards").then(m => ({ default: m.RoleDashboards })));
+const FirstMarkCertification = React.lazy(() => import("@/src/components/FirstMarkCertification").then(m => ({ default: m.FirstMarkCertification })));
+const CustomPageView = React.lazy(() => import("@/src/components/CustomPageView").then(m => ({ default: m.CustomPageView })));
+
+
+// Lightweight fallback shown while a lazily-loaded view chunk is downloading.
+function ViewLoader() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+      <div className="h-10 w-10 rounded-full border-4 border-[#2E7D32]/20 border-t-[#2E7D32] animate-spin" />
+      <p className="text-xs font-black uppercase tracking-widest text-slate-400">Loading…</p>
+    </div>
+  );
+}
+
 
 export default function App() {
   // Navigation & interaction states
@@ -590,8 +610,10 @@ export default function App() {
         onCityChange={setSelectedCity}
       />
 
+      <React.Suspense fallback={<ViewLoader />}>
       {currentView === "buy_cars" ? (
         <BuyCarsView
+
           onViewDetails={(id) => {
             handleNavigate("car_details", { carId: id });
           }}
@@ -1100,8 +1122,10 @@ export default function App() {
       </Section>
         </>
       )}
+      </React.Suspense>
 
       {/* 9. PREMIUM FOOTER */}
+
       <Footer 
         currentView={currentView}
         onViewChange={(view, pageId) => {
