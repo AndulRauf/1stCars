@@ -320,17 +320,17 @@ export function BuyCarsView({
           </div>
 
           {/* Right Toolbar controls */}
-          <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-3">
+          <div className="flex items-center justify-between w-full gap-3">
             <Button
               variant="outline"
               onClick={() => setShowFiltersMobile(!showFiltersMobile)}
-              className="md:hidden flex items-center gap-2 border-[#2E7D32]/10 text-slate-700 h-11 px-4 rounded-xl text-xs font-bold uppercase tracking-wider"
+              className="flex items-center gap-2 border-[#2E7D32]/10 text-slate-700 h-11 px-4 rounded-xl text-xs font-bold uppercase tracking-wider"
             >
               <SlidersHorizontal className="h-4 w-4" /> Filters
             </Button>
 
             <div className="flex items-center space-x-3.5">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:inline">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest inline">
                 Sort By
               </span>
               <select
@@ -347,7 +347,7 @@ export function BuyCarsView({
             </div>
 
             {/* Layout Toggles */}
-            <div className="bg-[#FAF9F6] p-1.5 rounded-xl border border-slate-100 items-center space-x-1 hidden sm:flex">
+            <div className="bg-[#FAF9F6] p-1.5 rounded-xl border border-slate-100 items-center space-x-1 flex">
               <button
                 onClick={() => setIsListView(false)}
                 className={cn(
@@ -376,11 +376,11 @@ export function BuyCarsView({
         {showFiltersMobile && (
           <>
             <div 
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
               onClick={() => setShowFiltersMobile(false)}
             />
 
-            <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl max-h-[70vh] flex flex-col shadow-2xl border-t border-slate-200 lg:hidden overflow-hidden">
+            <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl max-h-[70vh] flex flex-col shadow-2xl border-t border-slate-200 overflow-hidden">
               {/* Top Drag Handle */}
               <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto my-2 shrink-0" />
 
@@ -524,10 +524,10 @@ export function BuyCarsView({
         )}
 
         {/* Content Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
-          {/* Filters Sidebar (Desktop) */}
-          <div className="hidden lg:block lg:col-span-1 bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm h-fit space-y-6">
+          {/* Filters Sidebar */}
+          <div className="md:col-span-1 bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm h-fit space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="font-black text-lg text-slate-900 tracking-tight flex items-center gap-2">
                 <SlidersHorizontal className="h-4.5 w-4.5 text-[#2E7D32]" /> Advanced Filters
