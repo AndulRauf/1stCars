@@ -532,7 +532,14 @@ class SupabaseMockClient {
 
     const chain = {
       select: (columns: string = "*") => {
-        queryState.operation = "select";
+        // `.select()` after a write (insert/update/upsert/delete) is Supabase's
+        // "returning" clause — it must NOT downgrade a pending write back into a
+        // read. Only mark this as a read query when no write op is queued, so that
+        // `insert([...]).select()` still returns the newly created rows (and their
+        // generated ids) on both the mock and the real Supabase client.
+        if (!["insert", "update", "upsert", "delete"].includes(queryState.operation)) {
+          queryState.operation = "select";
+        }
         return chain;
       },
 

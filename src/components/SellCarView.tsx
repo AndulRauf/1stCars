@@ -501,6 +501,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [selectedModel, setSelectedModel] = React.useState("");
   const [selectedYear, setSelectedYear] = React.useState<number>(2018);
   const [selectedFuel, setSelectedFuel] = React.useState("Petrol");
+  const [selectedTransmission, setSelectedTransmission] = React.useState("Manual");
   const [selectedVariant, setSelectedVariant] = React.useState("Sportz");
   const [selectedRTO, setSelectedRTO] = React.useState("");
   const [selectedKMs, setSelectedKMs] = React.useState("30,000 - 40,000 Km");
@@ -757,7 +758,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       model: selectedModel,
       variant: selectedVariant || "Standard",
       fuel: selectedFuel,
-      transmission: "Manual",
+      transmission: selectedTransmission,
       year: Number(selectedYear),
       km_driven: computedKms,
       city: resolvedCity,
@@ -769,7 +770,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      const { data, error } = await supabase.from("inspections").insert([inspectionRecord]);
+      // `.select()` returns the newly-created row(s) — including the DB-generated
+      // id — so the follow-up inspector notification references the real record.
+      const { data, error } = await supabase.from("inspections").insert([inspectionRecord]).select();
       if (error) {
         // Insert failed — do NOT show a false success screen.
         throw new Error(error.message || "Could not save your inspection request.");
@@ -1268,8 +1271,34 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Fuel type</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Specify the primary propulsion fuel</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Fuel &amp; transmission</h3>
+                      <p className="text-xs text-slate-400 font-semibold">Pick the gearbox, then tap your fuel type</p>
+                    </div>
+
+                    {/* Transmission toggle */}
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-slate-500 tracking-wider mb-2">
+                        Transmission
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Manual", "Automatic"].map((t) => {
+                          const isSelected = selectedTransmission === t;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setSelectedTransmission(t)}
+                              className={`p-3 rounded-2xl border text-center text-xs font-black transition-all ${
+                                isSelected
+                                  ? "border-[#2E7D32] bg-emerald-50 text-[#2E7D32]"
+                                  : "border-slate-100 hover:border-slate-300 bg-[#FAF9F6] text-slate-800"
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Grid of Fuel Types */}
