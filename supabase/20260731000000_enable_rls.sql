@@ -77,6 +77,32 @@ CREATE POLICY "Users edit own profile" ON public.profiles FOR UPDATE USING (auth
 DROP POLICY IF EXISTS "Admin manages all profiles" ON public.profiles;
 CREATE POLICY "Admin manages all profiles" ON public.profiles FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
+-- Non-admins may NEVER change their own role / approval / email on the row
+-- (the "Users edit own profile" policy would otherwise allow self-escalation
+-- to Admin). Runs as SECURITY DEFINER-agnostic trigger checking the actor.
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS trigger AS $$
+DECLARE
+  actor_role public.user_role;
+BEGIN
+  IF auth.uid() = NEW.id
+     AND (NEW.role IS DISTINCT FROM OLD.role
+          OR NEW.is_approved IS DISTINCT FROM OLD.is_approved
+          OR NEW.email IS DISTINCT FROM OLD.email) THEN
+    actor_role := public.get_auth_user_role();
+    IF actor_role IS DISTINCT FROM 'Admin'::public.user_role THEN
+      RAISE EXCEPTION 'Only an administrator may change role, approval status, or email';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER prevent_self_role_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_self_role_escalation();
+
 -- ---------- Brands ----------
 DROP POLICY IF EXISTS "Public read brands" ON public.brands;
 CREATE POLICY "Public read brands" ON public.brands FOR SELECT USING (true);
@@ -201,21 +227,48 @@ CREATE POLICY "Admin configures settings" ON public.settings FOR ALL USING (publ
 
 -- ---------- Offers ----------
 DROP POLICY IF EXISTS "Anyone reads offers" ON public.offers;
-CREATE POLICY "Anyone reads offers" ON public.offers FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages offers" ON public.offers;
-CREATE POLICY "Anyone manages offers" ON public.offers FOR ALL USING (true);
+CREATE POLICY "Sellers, dealers and staff read offers" ON public.offers FOR SELECT USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Dealers and staff place offers" ON public.offers FOR INSERT WITH CHECK (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
+CREATE POLICY "Dealers and sellers update offers, staff manage" ON public.offers FOR UPDATE USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Staff delete offers" ON public.offers FOR DELETE USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
 
 -- ---------- Auctions ----------
-DROP POLICY IF EXISTS "Anyone reads auctions" ON public.auctions;
-CREATE POLICY "Anyone reads auctions" ON public.auctions FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages auctions" ON public.auctions;
-CREATE POLICY "Anyone manages auctions" ON public.auctions FOR ALL USING (true);
+CREATE POLICY "Dealers bid on active auctions" ON public.auctions FOR UPDATE USING (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+) WITH CHECK (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+);
+CREATE POLICY "Staff and inspectors manage auctions" ON public.auctions FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+);
 
--- ---------- Sales Notifications ----------
+-- ---------- Sales Notifications (customer leads contain PII) ----------
 DROP POLICY IF EXISTS "Anyone reads sales_notifications" ON public.sales_notifications;
-CREATE POLICY "Anyone reads sales_notifications" ON public.sales_notifications FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages sales_notifications" ON public.sales_notifications;
-CREATE POLICY "Anyone manages sales_notifications" ON public.sales_notifications FOR ALL USING (true);
+CREATE POLICY "Visitors submit leads" ON public.sales_notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Staff manage leads" ON public.sales_notifications FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
+GRANT INSERT ON public.sales_notifications TO anon;
 
 -- ---------- Pages ----------
 DROP POLICY IF EXISTS "Anyone reads pages" ON public.pages;
@@ -230,11 +283,20 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
 
 -- ====================================================
 -- NOTE: public.read-only data (cars/brands/models/cities/
--- pages/settings/faq/testimonials/offers/auctions) stays
--- readable by visitors by design. Anything holding personal
--- data (profiles, inspections, sales_notifications,
+-- pages/settings/faq/testimonials) stays readable by
+-- visitors by design. Anything holding personal data
+-- (profiles, inspections, sales_notifications,
 -- test_drives, purchases, dealer_bids, park_sell) is now
 -- locked to the owner or staff roles only.
+--
+-- offers: locked to the participating dealer, the car's
+--   seller, and staff.
+-- auctions: public read, dealers may bid on ACTIVE rows,
+--   staff/inspectors manage.
+-- sales_notifications: visitors may SUBMIT a lead, but
+--   only staff can read/update/delete them.
+-- profiles: non-admins cannot change their own
+--   role / is_approved / email (trigger).
 -- ====================================================
 
 -- ====================================================
@@ -242,7 +304,8 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
 -- back when reporting issues):
 --   policies      = total RLS policies (expect 50)
 --   rls_tables    = tables with RLS enabled (expect 22)
---   anon_insert   = tables anon may INSERT into (expect 0)
+--   anon_insert   = tables anon may INSERT into (expect 1: sales_notifications only)
+--   escalation    = trigger present (expect 1)
 -- ====================================================
 SELECT 'policies' AS check_name, count(*)::int AS n
   FROM pg_policies WHERE schemaname = 'public'
@@ -252,4 +315,7 @@ SELECT 'rls_tables', count(*)::int
 UNION ALL
 SELECT 'anon_insert', count(*)::int
   FROM information_schema.role_table_grants
-  WHERE grantee = 'anon' AND privilege_type = 'INSERT';
+  WHERE grantee = 'anon' AND privilege_type = 'INSERT'
+UNION ALL
+SELECT 'escalation', count(*)::int
+  FROM pg_trigger WHERE tgname = 'prevent_self_role_escalation';

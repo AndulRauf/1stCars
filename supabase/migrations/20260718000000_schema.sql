@@ -14,6 +14,7 @@ CREATE TABLE public.profiles (
   mobile TEXT,
   role public.user_role DEFAULT 'Buyer'::public.user_role NOT NULL,
   city TEXT,
+  is_approved BOOLEAN DEFAULT true NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -313,6 +314,31 @@ CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Users edit own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Admin manages all profiles" ON public.profiles FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
+-- Non-admins may NEVER change their own role / approval / email on the row
+-- (the UPDATE policy above would otherwise allow self-escalation to Admin).
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS trigger AS $$
+DECLARE
+  actor_role public.user_role;
+BEGIN
+  IF auth.uid() = NEW.id
+     AND (NEW.role IS DISTINCT FROM OLD.role
+          OR NEW.is_approved IS DISTINCT FROM OLD.is_approved
+          OR NEW.email IS DISTINCT FROM OLD.email) THEN
+    actor_role := public.get_auth_user_role();
+    IF actor_role IS DISTINCT FROM 'Admin'::public.user_role THEN
+      RAISE EXCEPTION 'Only an administrator may change role, approval status, or email';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER prevent_self_role_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_self_role_escalation();
+
 -- 2. Brands Policies
 CREATE POLICY "Public read brands" ON public.brands FOR SELECT USING (true);
 CREATE POLICY "Admin manages brands" ON public.brands FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
@@ -413,8 +439,28 @@ CREATE TABLE IF NOT EXISTS public.offers (
 );
 
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone reads offers" ON public.offers FOR SELECT USING (true);
-CREATE POLICY "Anyone manages offers" ON public.offers FOR ALL USING (true);
+-- Only the participating dealer, the car's seller, and staff may read offers.
+CREATE POLICY "Sellers, dealers and staff read offers" ON public.offers FOR SELECT USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Dealers and staff place offers" ON public.offers FOR INSERT WITH CHECK (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
+CREATE POLICY "Dealers and sellers update offers, staff manage" ON public.offers FOR UPDATE USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Staff delete offers" ON public.offers FOR DELETE USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
 
 
 -- 21. AUCTIONS TABLE
@@ -435,8 +481,17 @@ CREATE TABLE IF NOT EXISTS public.auctions (
 );
 
 ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
+-- Anyone may view auctions (public listings); only dealers may bid on
+-- ACTIVE ones; staff and inspectors manage them.
 CREATE POLICY "Anyone reads auctions" ON public.auctions FOR SELECT USING (true);
-CREATE POLICY "Anyone manages auctions" ON public.auctions FOR ALL USING (true);
+CREATE POLICY "Dealers bid on active auctions" ON public.auctions FOR UPDATE USING (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+) WITH CHECK (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+);
+CREATE POLICY "Staff and inspectors manage auctions" ON public.auctions FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+);
 
 
 -- 22. SALES NOTIFICATIONS TABLE
@@ -457,8 +512,13 @@ CREATE TABLE IF NOT EXISTS public.sales_notifications (
 );
 
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone reads sales_notifications" ON public.sales_notifications FOR SELECT USING (true);
-CREATE POLICY "Anyone manages sales_notifications" ON public.sales_notifications FOR ALL USING (true);
+-- Leads contain customer PII (name/mobile). Visitors may SUBMIT a lead, but
+-- only staff (Admin / Sales Associate) can read, update, or delete them.
+CREATE POLICY "Visitors submit leads" ON public.sales_notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Staff manage leads" ON public.sales_notifications FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
+GRANT INSERT ON public.sales_notifications TO anon;
 
 
 -- ====================================================
