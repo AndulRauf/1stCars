@@ -190,20 +190,40 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
   const [categoryDraft, setCategoryDraft] = React.useState<Inspection120Category>({ id: "", title: "", totalPoints: 0, pointsPassedText: "", scorePercentageText: "", summary: "", questions: [] });
 
-  // Load the latest admin-edited catalog + inspection form on mount
+  // Load the latest admin-edited catalog + inspection form on mount.
+  // Prefer localStorage (freshest local edits) and only fall back to Supabase
+  // when there is no local copy, so a stale remote snapshot never wipes edits.
   React.useEffect(() => {
-    loadSellCatalogFromSupabase().then((stored) => {
-      if (!stored) return;
-      setStoredSellCatalog(stored);
-      setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, stored.brands, stored.removed));
-      setSellRemovedBrands(stored.removed);
-    });
-    loadInspectionFormFromSupabase().then((cats) => {
-      if (!cats) return;
-      localStorage.setItem(INSPECTION_FORM_STORAGE_KEY, JSON.stringify(cats));
-      setInspectionCategories(cats);
-    });
+    if (!getStoredSellCatalog()) {
+      loadSellCatalogFromSupabase().then((stored) => {
+        if (!stored) return;
+        setStoredSellCatalog(stored);
+        setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, stored.brands, stored.removed));
+        setSellRemovedBrands(stored.removed);
+      });
+    }
+    if (!localStorage.getItem(INSPECTION_FORM_STORAGE_KEY)) {
+      loadInspectionFormFromSupabase().then((cats) => {
+        if (!cats) return;
+        localStorage.setItem(INSPECTION_FORM_STORAGE_KEY, JSON.stringify(cats));
+        setInspectionCategories(cats);
+      });
+    }
   }, []);
+
+  // Auto-save every Sell Form & Brands edit (brands / models / categories) so
+  // nothing is ever lost even if "Save All Changes" is never clicked.
+  const sellFormAutoSave = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    if (sellFormAutoSave.current) window.clearTimeout(sellFormAutoSave.current);
+    sellFormAutoSave.current = window.setTimeout(() => {
+      saveSellCatalog({ removed: sellRemovedBrands, brands: sellCatalog });
+      saveInspectionForm(inspectionCategories);
+    }, 400);
+    return () => {
+      if (sellFormAutoSave.current) window.clearTimeout(sellFormAutoSave.current);
+    };
+  }, [sellCatalog, sellRemovedBrands, inspectionCategories]);
 
   // ----- Sell Form & Brands handlers -----
   const openAddBrandForm = () => {
@@ -391,7 +411,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     setInspectionCategories(JSON.parse(JSON.stringify(OFFICIAL_120_CATEGORIES)));
     setCategoryFormOpen(false);
     setBrandFormOpen(false);
-    toast.success("Sell Form & Brands reset to defaults. Click Save to persist.");
+    toast.success("Sell Form & Brands reset to defaults. Auto-saved.");
   };
 
   // UI States
@@ -1976,6 +1996,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                 </p>
               </div>
               <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Auto-save on
+                </span>
                 <Button
                   onClick={handleResetSellForm}
                   className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-black uppercase tracking-wider text-[10px] h-9 px-4 rounded-xl flex items-center justify-center gap-2"
