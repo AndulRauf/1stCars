@@ -18,11 +18,23 @@ import { Badge } from "@/src/components/ui/Badge";
 import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
 import { Inspection120FormModal } from "./Inspection120FormModal";
-import { Full120PointReport } from "@/src/data/inspection120Data";
+import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY, OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 import { Gavel, Globe } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
 import { Breadcrumb } from "./admin/Breadcrumb";
 import { CMSModule } from "./admin/adminNavData";
+import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
+import {
+  SellCatalog, SellBrandEntry, SellModel, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
+  saveSellCatalog, saveInspectionForm, catalogFromLegacy, getStoredInspectionCategories,
+  loadSellCatalogFromSupabase, loadInspectionFormFromSupabase, DEFAULT_POPULAR_SELL_BRANDS
+} from "@/src/lib/sellFormData";
+
+// Default sell-car catalog derived from the built-in brand database
+const DEFAULT_SELL_CATALOG = catalogFromLegacy(defaultBrandData, defaultBrandLogos, DEFAULT_POPULAR_SELL_BRANDS);
+
+const isLogoImageUrl = (url: string) =>
+  !!url && url !== "⭐" && (url.startsWith("http") || url.startsWith("/") || url.startsWith("data:"));
 
 interface AdminCMSProps {
   onReloadAllData?: () => void;
@@ -151,6 +163,225 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       toast.success("UPI QR code uploaded successfully.");
     });
     e.target.value = "";
+  };
+
+  // ===== Sell Car Form Editor state (brands / models / variants) =====
+  const [sellCatalog, setSellCatalog] = React.useState<SellCatalog>(() => {
+    const stored = getStoredSellCatalog();
+    return mergeCatalog(DEFAULT_SELL_CATALOG, stored?.brands, stored?.removed);
+  });
+  const [sellRemovedBrands, setSellRemovedBrands] = React.useState<string[]>(() => getStoredSellCatalog()?.removed || []);
+  const [sellFormTab, setSellFormTab] = React.useState<"brands" | "models" | "inspection">("brands");
+  const [brandFilter, setBrandFilter] = React.useState("");
+
+  const [brandFormOpen, setBrandFormOpen] = React.useState(false);
+  const [editingBrandName, setEditingBrandName] = React.useState<string | null>(null);
+  const [brandDraftName, setBrandDraftName] = React.useState("");
+  const [brandDraftLogo, setBrandDraftLogo] = React.useState("");
+  const [brandDraftPopular, setBrandDraftPopular] = React.useState(true);
+
+  const [modelBrand, setModelBrand] = React.useState<string>(() => Object.keys(DEFAULT_SELL_CATALOG)[0] || "");
+  const [modelFormOpen, setModelFormOpen] = React.useState(false);
+  const [editingModelIndex, setEditingModelIndex] = React.useState<number | null>(null);
+  const [modelDraft, setModelDraft] = React.useState<SellModel>({ name: "", category: "Hatchback", years: "", image: "🚗", variants: [] });
+
+  const [inspectionCategories, setInspectionCategories] = React.useState<Inspection120Category[]>(() => getStoredInspectionCategories());
+  const [categoryFormOpen, setCategoryFormOpen] = React.useState(false);
+  const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
+  const [categoryDraft, setCategoryDraft] = React.useState<Inspection120Category>({ id: "", title: "", totalPoints: 0, pointsPassedText: "", scorePercentageText: "", summary: "", questions: [] });
+
+  // Load the latest admin-edited catalog + inspection form on mount
+  React.useEffect(() => {
+    loadSellCatalogFromSupabase().then((stored) => {
+      if (!stored) return;
+      setStoredSellCatalog(stored);
+      setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, stored.brands, stored.removed));
+      setSellRemovedBrands(stored.removed);
+    });
+    loadInspectionFormFromSupabase().then((cats) => {
+      if (!cats) return;
+      localStorage.setItem(INSPECTION_FORM_STORAGE_KEY, JSON.stringify(cats));
+      setInspectionCategories(cats);
+    });
+  }, []);
+
+  // ----- Sell Car Form handlers -----
+  const openAddBrandForm = () => {
+    setEditingBrandName(null);
+    setBrandDraftName("");
+    setBrandDraftLogo("");
+    setBrandDraftPopular(true);
+    setBrandFormOpen(true);
+  };
+
+  const openEditBrandForm = (name: string) => {
+    const entry = sellCatalog[name];
+    setEditingBrandName(name);
+    setBrandDraftName(name);
+    setBrandDraftLogo(entry?.logo || "");
+    setBrandDraftPopular(!!entry?.isPopular);
+    setBrandFormOpen(true);
+  };
+
+  const handleSaveBrand = () => {
+    const name = brandDraftName.trim();
+    if (!name) {
+      toast.error("Please enter a brand name.");
+      return;
+    }
+    if (editingBrandName && editingBrandName !== name && sellCatalog[name]) {
+      toast.error("A brand with that name already exists.");
+      return;
+    }
+    const existing = sellCatalog[editingBrandName || name];
+    const entry: SellBrandEntry = {
+      logo: brandDraftLogo.trim() || existing?.logo || "⭐",
+      isPopular: brandDraftPopular,
+      models: existing?.models || []
+    };
+    setSellCatalog((prev) => {
+      const next = { ...prev };
+      if (editingBrandName && editingBrandName !== name) {
+        delete next[editingBrandName];
+      }
+      next[name] = entry;
+      return next;
+    });
+    setSellRemovedBrands((prev) => prev.filter((b) => b !== name));
+    setBrandFormOpen(false);
+    toast.success(editingBrandName ? `Brand "${name}" updated.` : `Brand "${name}" added.`);
+  };
+
+  const handleDeleteBrand = (name: string) => {
+    if (!window.confirm(`Delete brand "${name}" and all its models from the Sell Car form?`)) return;
+    setSellCatalog((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    setSellRemovedBrands((prev) => (prev.includes(name) ? prev : [...prev, name]));
+    setModelBrand((prev) => (prev === name ? Object.keys(sellCatalog).find((b) => b !== name) || "" : prev));
+    toast.success(`Brand "${name}" deleted from the Sell Car form.`);
+  };
+
+  const openAddModelForm = (brand: string) => {
+    setModelBrand(brand);
+    setEditingModelIndex(null);
+    setModelDraft({ name: "", category: "Hatchback", years: "", image: "🚗", variants: [] });
+    setModelFormOpen(true);
+  };
+
+  const openEditModelForm = (brand: string, index: number) => {
+    const model = sellCatalog[brand]?.models?.[index];
+    if (!model) return;
+    setModelBrand(brand);
+    setEditingModelIndex(index);
+    setModelDraft({ ...model, variants: [...(model.variants || [])] });
+    setModelFormOpen(true);
+  };
+
+  const handleSaveModel = () => {
+    const name = modelDraft.name.trim();
+    if (!name) {
+      toast.error("Please enter a model name.");
+      return;
+    }
+    const variants = (modelDraft.variants || []).map((v) => v.trim()).filter(Boolean);
+    const model: SellModel = { ...modelDraft, name, variants };
+    setSellCatalog((prev) => {
+      const brandEntry = prev[modelBrand];
+      if (!brandEntry) return prev;
+      const models = [...(brandEntry.models || [])];
+      if (editingModelIndex !== null) {
+        models[editingModelIndex] = model;
+      } else {
+        models.push(model);
+      }
+      return { ...prev, [modelBrand]: { ...brandEntry, models } };
+    });
+    setEditingModelIndex(null);
+    setModelFormOpen(false);
+    toast.success(editingModelIndex !== null ? `Model "${name}" updated.` : `Model "${name}" added to ${modelBrand}.`);
+  };
+
+  const handleDeleteModel = (brand: string, index: number) => {
+    const model = sellCatalog[brand]?.models?.[index];
+    if (!window.confirm(`Delete model "${model?.name || "this model"}" from ${brand}?`)) return;
+    setSellCatalog((prev) => {
+      const brandEntry = prev[brand];
+      if (!brandEntry) return prev;
+      const models = (brandEntry.models || []).filter((_, i) => i !== index);
+      return { ...prev, [brand]: { ...brandEntry, models } };
+    });
+    toast.success("Model deleted.");
+  };
+
+  const openAddCategoryForm = () => {
+    setEditingCategoryId(null);
+    setCategoryDraft({ id: "", title: "", totalPoints: 0, pointsPassedText: "", scorePercentageText: "", summary: "", questions: [{ id: "", question: "", passed: true }] });
+    setCategoryFormOpen(true);
+  };
+
+  const openEditCategoryForm = (cat: Inspection120Category) => {
+    setEditingCategoryId(cat.id);
+    setCategoryDraft(JSON.parse(JSON.stringify(cat)));
+    setCategoryFormOpen(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (!categoryDraft.title.trim()) {
+      toast.error("Please enter a category title.");
+      return;
+    }
+    const questions = categoryDraft.questions
+      .map((q, i) => ({ ...q, id: q.id || `q_${Date.now()}_${i}`, question: q.question.trim() }))
+      .filter((q) => q.question);
+    if (questions.length === 0) {
+      toast.error("Add at least one question to the category.");
+      return;
+    }
+    const passedCount = questions.filter((q) => q.passed).length;
+    const cat: Inspection120Category = {
+      ...categoryDraft,
+      id: categoryDraft.id || `cat_${Date.now()}`,
+      totalPoints: questions.length,
+      pointsPassedText: `${passedCount} / ${questions.length} Points Passed`,
+      scorePercentageText: `${Math.round((passedCount / questions.length) * 100)}% PASS`,
+      questions
+    };
+    setInspectionCategories((prev) => {
+      const exists = prev.some((c) => c.id === cat.id);
+      return exists ? prev.map((c) => (c.id === cat.id ? cat : c)) : [...prev, cat];
+    });
+    setCategoryFormOpen(false);
+    toast.success(editingCategoryId ? "Category updated." : "Category added to the inspection form.");
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    if (!window.confirm("Delete this inspection category and all its questions?")) return;
+    setInspectionCategories((prev) => prev.filter((c) => c.id !== id));
+    toast.success("Category deleted from the inspection form.");
+  };
+
+  const handleSaveSellFormAll = async () => {
+    const payload = { removed: sellRemovedBrands, brands: sellCatalog };
+    const savedCatalog = await saveSellCatalog(payload);
+    const savedForm = await saveInspectionForm(inspectionCategories);
+    if (savedCatalog || savedForm) {
+      toast.success("Sell Car Form saved! Brand / model / variant suggestions and the 120-point inspection checklist are now live.");
+    } else {
+      toast.success("Sell Car Form saved locally. (Supabase sync unavailable right now.)");
+    }
+  };
+
+  const handleResetSellForm = () => {
+    if (!window.confirm("Reset the entire Sell Car Form back to the built-in defaults? Your edits will be lost.")) return;
+    setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, {}, []));
+    setSellRemovedBrands([]);
+    setInspectionCategories(JSON.parse(JSON.stringify(OFFICIAL_120_CATEGORIES)));
+    setCategoryFormOpen(false);
+    setBrandFormOpen(false);
+    toast.success("Sell Car Form reset to defaults. Click Save to persist.");
   };
 
   // UI States
@@ -454,7 +685,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       footer_links: { title: "", slug: "", content: "# Footer Page Title\n\nFooter page text goes here.", is_footer: true },
       settings: {},
       text_editor: {},
-      payment_settings: {}
+      payment_settings: {},
+      sell_form: {}
     };
 
     setFormData(defaultTemplates[activeModule] || {});
@@ -1722,8 +1954,437 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </form>
       )}
 
+      {/* SELL CAR FORM EDITOR (brands / models / variants + 120-point inspection checklist) */}
+      {activeModule === "sell_form" && (
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Sell Car Form Editor</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                  Manage the brands, models, variants & logos on the Sell Your Car page + the full 120-point inspection checklist
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <Button
+                  onClick={handleResetSellForm}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-black uppercase tracking-wider text-[10px] h-9 px-4 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Reset Defaults
+                </Button>
+                <Button
+                  onClick={handleSaveSellFormAll}
+                  className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-9 px-4 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <Check className="h-3.5 w-3.5" /> Save All Changes
+                </Button>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mt-5">
+              {([
+                ["brands", "Brands", "Logo / brand names on the sell page"],
+                ["models", "Models & Variants", "Auto-suggestion lists per brand"],
+                ["inspection", "Inspection Form", "120-point checklist structure"]
+              ] as const).map(([id, label, hint]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSellFormTab(id)}
+                  className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${
+                    sellFormTab === id
+                      ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  {label}
+                  <span className={`block text-[8px] font-bold normal-case tracking-normal mt-0.5 ${sellFormTab === id ? "text-emerald-100" : "text-slate-400"}`}>{hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* BRANDS TAB */}
+          {sellFormTab === "brands" && (
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">Brands</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{Object.keys(sellCatalog).length} brands shown on the Sell Your Car page</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandFilter}
+                      onChange={(e) => setBrandFilter(e.target.value)}
+                      className="w-full md:w-56 h-10 pl-9 pr-3 text-xs font-semibold border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                    />
+                  </div>
+                  <Button
+                    onClick={openAddBrandForm}
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-10 px-4 rounded-xl flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Brand
+                  </Button>
+                </div>
+              </div>
+
+              {brandFormOpen && (
+                <div className="bg-emerald-50/60 border border-emerald-500/20 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-black text-xs text-emerald-950 uppercase tracking-wider">
+                      {editingBrandName ? `Edit Brand: ${editingBrandName}` : "Add New Brand"}
+                    </h5>
+                    <button type="button" onClick={() => setBrandFormOpen(false)} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Brand Name *</label>
+                      <input
+                        type="text"
+                        value={brandDraftName}
+                        onChange={(e) => setBrandDraftName(e.target.value)}
+                        placeholder="e.g. Porsche"
+                        className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Logo URL or Emoji</label>
+                      <input
+                        type="text"
+                        value={brandDraftLogo}
+                        onChange={(e) => setBrandDraftLogo(e.target.value)}
+                        placeholder="https://... or ⭐ / 🚗"
+                        className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                      />
+                    </div>
+                    <div className="flex items-end gap-3 pb-0.5">
+                      <label className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 cursor-pointer">
+                        <input type="checkbox" checked={brandDraftPopular} onChange={(e) => setBrandDraftPopular(e.target.checked)} className="h-4 w-4 accent-[#2E7D32]" />
+                        Show as Popular
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <Button onClick={handleSaveBrand} className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5" /> {editingBrandName ? "Save Brand" : "Add Brand"}
+                    </Button>
+                    <Button onClick={() => setBrandFormOpen(false)} className="bg-white border border-slate-200 text-slate-600 font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {Object.keys(sellCatalog)
+                  .filter((b) => b.toLowerCase().includes(brandFilter.toLowerCase()))
+                  .sort((a, b) => Number(!!sellCatalog[b].isPopular) - Number(!!sellCatalog[a].isPopular))
+                  .map((brand) => {                    const entry = sellCatalog[brand];
+                    return (
+                      <div key={brand} className="border border-slate-100 hover:border-slate-300 rounded-2xl p-4 bg-white flex items-center gap-3 transition-all">
+                        <div className="w-12 h-12 rounded-xl border border-slate-100 bg-[#FAF9F6] flex items-center justify-center overflow-hidden shrink-0">
+                          {isLogoImageUrl(entry?.logo) ? (
+                            <img src={entry?.logo} alt={brand} className="h-8 w-8 object-contain" referrerPolicy="no-referrer" />
+                          ) : (
+                            <span className="text-lg">{entry?.logo && entry.logo !== "⭐" ? entry.logo : brand.substring(0, 2).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-black text-slate-900 truncate">{brand}</p>
+                            {entry?.isPopular && <Star className="h-3 w-3 text-amber-400 fill-amber-400 shrink-0" />}
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                            {entry?.models?.length || 0} models
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button type="button" onClick={() => openEditBrandForm(brand)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-[#2E7D32] hover:border-[#2E7D32] cursor-pointer" title="Edit brand">
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+                          <button type="button" onClick={() => handleDeleteBrand(brand)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-500 cursor-pointer" title="Delete brand">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* MODELS & VARIANTS TAB */}
+          {sellFormTab === "models" && (
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">Models & Variants</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Sell car auto-suggestions shown after the buyer picks a brand</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={modelBrand}
+                    onChange={(e) => {
+                      setModelBrand(e.target.value);
+                      setEditingModelIndex(null);
+                    }}
+                    className="h-10 border border-slate-200 bg-white rounded-xl text-xs font-bold px-3 outline-none cursor-pointer focus:ring-1 focus:ring-[#2E7D32] max-w-52"
+                  >
+                    {Object.keys(sellCatalog).map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                  <Button
+                    onClick={() => openAddModelForm(modelBrand)}
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-10 px-4 rounded-xl flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Model
+                  </Button>
+                </div>
+              </div>
+
+              {modelFormOpen && modelBrand && (
+                <div className="bg-emerald-50/60 border border-emerald-500/20 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-black text-xs text-emerald-950 uppercase tracking-wider">
+                      {editingModelIndex !== null ? `Edit Model in ${modelBrand}` : `Add Model to ${modelBrand}`}
+                    </h5>
+                    <button type="button" onClick={() => { setEditingModelIndex(null); setModelFormOpen(false); setModelDraft({ name: "", category: "Hatchback", years: "", image: "🚗", variants: [] }); }} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Model Name *</label>
+                      <input type="text" value={modelDraft.name} onChange={(e) => setModelDraft({ ...modelDraft, name: e.target.value })} placeholder="e.g. 911 Carrera S" className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category / Body Type</label>
+                      <input type="text" value={modelDraft.category} onChange={(e) => setModelDraft({ ...modelDraft, category: e.target.value })} placeholder="e.g. Coupe" className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Production Years</label>
+                      <input type="text" value={modelDraft.years} onChange={(e) => setModelDraft({ ...modelDraft, years: e.target.value })} placeholder="e.g. 2012 - Now" className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Model Emoji / Image</label>
+                      <input type="text" value={modelDraft.image} onChange={(e) => setModelDraft({ ...modelDraft, image: e.target.value })} placeholder="🚗 / 🚙 / 🛻" className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Variants (comma separated)</label>
+                      <input
+                        type="text"
+                        value={(modelDraft.variants || []).join(", ")}
+                        onChange={(e) => setModelDraft({ ...modelDraft, variants: e.target.value.split(",").map((v) => v.trim()) })}
+                        placeholder="e.g. Carrera, Carrera S, Turbo, Turbo S"
+                        className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <Button onClick={handleSaveModel} className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5" /> {editingModelIndex !== null ? "Save Model" : "Add Model"}
+                    </Button>
+                    <Button onClick={() => { setEditingModelIndex(null); setModelFormOpen(false); setModelDraft({ name: "", category: "Hatchback", years: "", image: "🚗", variants: [] }); }} className="bg-white border border-slate-200 text-slate-600 font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {(() => {
+                  const models = sellCatalog[modelBrand]?.models || [];
+                  if (models.length === 0) {
+                    return (
+                      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-wider">No models yet for {modelBrand}</p>
+                        <p className="text-[10px] text-slate-300 font-bold mt-1">Click "Add Model" to create the first suggestion.</p>
+                      </div>
+                    );
+                  }
+                  return models.map((model, idx) => (
+                    <div key={`${model.name}-${idx}`} className="border border-slate-100 hover:border-slate-300 rounded-2xl p-4 bg-white flex flex-col md:flex-row md:items-center gap-3 transition-all">
+                      <div className="w-10 h-10 rounded-xl border border-slate-100 bg-[#FAF9F6] flex items-center justify-center text-lg shrink-0">
+                        {model.image || "🚗"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-black text-slate-900">{model.name}</p>
+                          <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">{model.category}</span>
+                          <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-md">{model.years}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1 truncate">
+                          {(model.variants || []).join(" · ") || "No variants — buyers pick from default options"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onClick={() => openEditModelForm(modelBrand, idx)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-[#2E7D32] hover:border-[#2E7D32] cursor-pointer" title="Edit model">
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => handleDeleteModel(modelBrand, idx)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-500 cursor-pointer" title="Delete model">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* INSPECTION FORM TAB */}
+          {sellFormTab === "inspection" && (
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">120-Point Inspection Checklist</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                    {inspectionCategories.reduce((sum, c) => sum + c.questions.length, 0)} questions across {inspectionCategories.length} categories
+                  </p>
+                </div>
+                <Button
+                  onClick={openAddCategoryForm}
+                  className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-10 px-4 rounded-xl flex items-center justify-center gap-2 shrink-0"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add Category
+                </Button>
+              </div>
+
+              {categoryFormOpen && (
+                <div className="bg-emerald-50/60 border border-emerald-500/20 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-black text-xs text-emerald-950 uppercase tracking-wider">
+                      {editingCategoryId ? "Edit Inspection Category" : "Add Inspection Category"}
+                    </h5>
+                    <button type="button" onClick={() => setCategoryFormOpen(false)} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category Title *</label>
+                    <input
+                      type="text"
+                      value={categoryDraft.title}
+                      onChange={(e) => setCategoryDraft({ ...categoryDraft, title: e.target.value })}
+                      placeholder='e.g. 3. Structural Body Inspection (10 Points)'
+                      className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category Summary (shown on certificate)</label>
+                    <textarea
+                      value={categoryDraft.summary}
+                      onChange={(e) => setCategoryDraft({ ...categoryDraft, summary: e.target.value })}
+                      className="w-full min-h-16 bg-white border border-slate-200 rounded-xl p-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-medium text-slate-700"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-[10px] font-black uppercase text-slate-500">Questions (each = 1 point)</label>
+                      <button
+                        type="button"
+                        onClick={() => setCategoryDraft((prev) => ({ ...prev, questions: [...prev.questions, { id: "", question: "", passed: true }] }))}
+                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#2E7D32] hover:text-emerald-700 cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Question
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {categoryDraft.questions.map((q, qIdx) => (
+                        <div key={qIdx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={q.question}
+                            onChange={(e) => setCategoryDraft((prev) => ({
+                              ...prev,
+                              questions: prev.questions.map((item, i) => (i === qIdx ? { ...item, question: e.target.value } : item))
+                            }))}
+                            placeholder={`Question ${qIdx + 1}`}
+                            className="flex-1 h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setCategoryDraft((prev) => ({
+                              ...prev,
+                              questions: prev.questions.map((item, i) => (i === qIdx ? { ...item, passed: !item.passed } : item))
+                            }))}
+                            className={`p-2 rounded-lg border text-[9px] font-black uppercase shrink-0 cursor-pointer ${q.passed ? "bg-emerald-100 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-600"}`}
+                            title="Toggle default pass state"
+                          >
+                            {q.passed ? "PASS" : "FAIL"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCategoryDraft((prev) => ({
+                              ...prev,
+                              questions: prev.questions.filter((_, i) => i !== qIdx)
+                            }))}
+                            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-500 cursor-pointer shrink-0"
+                            title="Remove question"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <Button onClick={handleSaveCategory} className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5" /> {editingCategoryId ? "Save Category" : "Add Category"}
+                    </Button>
+                    <Button onClick={() => setCategoryFormOpen(false)} className="bg-white border border-slate-200 text-slate-600 font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {inspectionCategories.map((cat) => (
+                  <div key={cat.id} className="border border-slate-100 hover:border-slate-300 rounded-2xl p-4 bg-white transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-slate-900">{cat.title}</p>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1 leading-relaxed">{cat.summary}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="bg-slate-100 text-slate-500 text-[9px] font-black px-2 py-1 rounded-lg">{cat.questions.length} pts</span>
+                        <button type="button" onClick={() => openEditCategoryForm(cat)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-[#2E7D32] hover:border-[#2E7D32] cursor-pointer" title="Edit category">
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-500 cursor-pointer" title="Delete category">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {cat.questions.slice(0, 6).map((q) => (
+                        <span key={q.id} className="bg-[#FAF9F6] border border-slate-100 text-slate-500 text-[9px] font-bold px-2 py-1 rounded-lg truncate max-w-44">
+                          {q.question}
+                        </span>
+                      ))}
+                      {cat.questions.length > 6 && (
+                        <span className="bg-emerald-50 text-emerald-700 text-[9px] font-black px-2 py-1 rounded-lg">+{cat.questions.length - 6} more</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
-      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && (
+      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
@@ -3821,15 +4482,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       )}
 
       {/* 120-Point Inspection Modal for Admin */}
-      <Inspection120FormModal
-        inspection={selected120Inspection}
-        isOpen={!!selected120Inspection}
-        onClose={() => setSelected120Inspection(null)}
-        onSubmitReport={(id, data) => handleSave120Report(id, data)}
-        onStartAuction={(insp, data) => handleStartAuction(insp, data)}
-        onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
-        userRole="Admin"
-      />
+      {!!selected120Inspection && (
+        <Inspection120FormModal
+          inspection={selected120Inspection}
+          isOpen={!!selected120Inspection}
+          onClose={() => setSelected120Inspection(null)}
+          onSubmitReport={(id, data) => handleSave120Report(id, data)}
+          onStartAuction={(insp, data) => handleStartAuction(insp, data)}
+          onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
+          userRole="Admin"
+        />
+      )}
 
       </div>
     </div>

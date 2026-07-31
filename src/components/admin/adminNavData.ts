@@ -3,7 +3,7 @@ import {
   ClipboardList, FileText, Gavel, Users, UserCheck, 
   ShieldCheck, Shield, Star, HelpCircle, DollarSign, 
   Bell, TrendingUp, BookOpen, Link, Palette, Edit3,
-  Sparkles, Calendar, QrCode
+  Sparkles, Calendar, QrCode, ClipboardEdit
 } from "lucide-react";
 
 export type CMSModule = 
@@ -11,7 +11,8 @@ export type CMSModule =
 
   | "inspections" | "certifications" | "auctions" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
-  | "reports" | "pages" | "footer_links" | "settings" | "text_editor" | "payment_settings";
+  | "reports" | "pages" | "footer_links" | "settings" | "text_editor" | "payment_settings"
+  | "sell_form";
 
 export interface NavItem {
   id: CMSModule;
@@ -66,7 +67,8 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
       { id: "inspections", label: "120-Pt Inspections", icon: ClipboardList },
       { id: "certifications", label: "1st Mark Certification", icon: Sparkles },
       { id: "testimonials", label: "Reviews", icon: Star },
-      { id: "faqs", label: "FAQs", icon: HelpCircle }
+      { id: "faqs", label: "FAQs", icon: HelpCircle },
+      { id: "sell_form", label: "Sell Car Form", icon: ClipboardEdit }
     ]
   },
   {

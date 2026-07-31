@@ -352,7 +352,8 @@ export function calculate120ReportScore(categories: Inspection120Category[]) {
 }
 
 export function getInitial120Report(): Full120PointReport {
-  const categories = JSON.parse(JSON.stringify(OFFICIAL_120_CATEGORIES)) as Inspection120Category[];
+  const categories = getStoredInspectionCategories();
+
   const calc = calculate120ReportScore(categories);
 
   return {
@@ -368,4 +369,27 @@ export function getInitial120Report(): Full120PointReport {
     notes: "120-Point Certified Inspection completed. All major mechanical and structural systems thoroughly tested.",
     workflowStage: "inspected"
   };
+}
+
+// Storage keys for the admin-editable inspection form (shared with Admin CMS)
+export const INSPECTION_FORM_STORAGE_KEY = "1stcars_cms_inspection_120_form";
+export const INSPECTION_FORM_SETTING_KEY = "inspection_120_form";
+
+// Returns the admin-edited inspection form if one has been saved, otherwise
+// falls back to the built-in OFFICIAL_120_CATEGORIES checklist.
+export function getStoredInspectionCategories(): Inspection120Category[] {
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem(INSPECTION_FORM_STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return JSON.parse(JSON.stringify(parsed)) as Inspection120Category[];
+        }
+      } catch (e) {
+        console.error("Failed to parse stored inspection form", e);
+      }
+    }
+  }
+  return JSON.parse(JSON.stringify(OFFICIAL_120_CATEGORIES)) as Inspection120Category[];
 }

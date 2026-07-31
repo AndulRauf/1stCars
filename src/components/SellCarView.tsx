@@ -11,6 +11,10 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { toast } from "@/src/lib/toast";
 import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import {
+  catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
+  loadSellCatalogFromSupabase, SellCatalog
+} from "@/src/lib/sellFormData";
 
 interface SellCarViewProps {
   onNavigateToDashboard: () => void;
@@ -19,7 +23,7 @@ interface SellCarViewProps {
 }
 
 // Extensive brand logos lookup (Indian market brands, 2000 onwards)
-const BRAND_LOGOS: { [brand: string]: string } = {
+export const BRAND_LOGOS: { [brand: string]: string } = {
   // Mass-market / Indian brands
   "Maruti Suzuki": "https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg",
   "Hyundai": "https://upload.wikimedia.org/wikipedia/commons/4/44/Hyundai_Motor_Company_logo.svg",
@@ -74,7 +78,7 @@ const BRAND_LOGOS: { [brand: string]: string } = {
 
 
 // Extensive brand model database for interactive auto-suggestions
-const brandData: {
+export const brandData: {
   [brand: string]: {
     models: {
       name: string;
@@ -402,6 +406,9 @@ const brandData: {
   }
 };
 
+// Unified default catalog for the sell car form (brands + logos + popular flags)
+// derived from the built-in brand database. Admin CMS edits layer on top of this.
+const DEFAULT_SELL_CATALOG = catalogFromLegacy(brandData, BRAND_LOGOS);
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
@@ -611,6 +618,31 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   
   const [dbBrands, setDbBrands] = React.useState<any[]>([]);
 
+  // Admin-editable brand / model / variant catalog for the sell car form
+  const [sellCatalog, setSellCatalog] = React.useState<SellCatalog>(() => {
+    const stored = getStoredSellCatalog();
+    return mergeCatalog(DEFAULT_SELL_CATALOG, stored?.brands, stored?.removed);
+  });
+
+  // Refresh catalog from Supabase settings + live-update on admin saves
+  React.useEffect(() => {
+    let active = true;
+    const applyStored = () => {
+      const stored = getStoredSellCatalog();
+      if (stored) setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, stored.brands, stored.removed));
+    };
+    window.addEventListener("1stcars_settings_updated", applyStored);
+    loadSellCatalogFromSupabase().then((stored) => {
+      if (!active || !stored) return;
+      setStoredSellCatalog(stored);
+      setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, stored.brands, stored.removed));
+    });
+    return () => {
+      active = false;
+      window.removeEventListener("1stcars_settings_updated", applyStored);
+    };
+  }, []);
+
   // Populate user data if logged in & Fetch dynamic brands from Supabase database
   React.useEffect(() => {
     const fetchUserAndBrands = async () => {
@@ -637,15 +669,15 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   }, []);
 
   const dbBrandNames = dbBrands.map(b => b.name);
-  const allBrands = Array.from(new Set([...dbBrandNames, ...popularBrandsList, ...luxuryBrandsList])).filter(Boolean);
+  const allBrands = Array.from(new Set([...dbBrandNames, ...popularBrandsList, ...luxuryBrandsList, ...Object.keys(sellCatalog)])).filter(Boolean);
 
   // Filter lists based on search
   const filteredBrands = allBrands.filter(b => 
     b.toLowerCase().includes(brandSearch.toLowerCase())
   );
 
-  const brandModels = (selectedBrand && brandData[selectedBrand]) 
-    ? brandData[selectedBrand].models 
+  const brandModels = (selectedBrand && sellCatalog[selectedBrand]?.models)
+    ? sellCatalog[selectedBrand].models
     : [
         { name: "Grand i10", category: "Hatchback", years: "2013-2020", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
         { name: "Swift Dzire", category: "Sedan", years: "2008-Now", image: "🚗", variants: ["LXI", "VXI", "ZXI"] },
@@ -999,7 +1031,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       {(showAllBrands ? filteredBrands : filteredBrands.slice(0, 12)).map((b) => {
                         const isSelected = selectedBrand === b;
                         const matchingDbBrand = dbBrands.find(brand => brand.name === b);
-                        const logoUrl = BRAND_LOGOS[b] || matchingDbBrand?.logo_url || matchingDbBrand?.logo;
+                        const logoUrl = sellCatalog[b]?.logo || BRAND_LOGOS[b] || matchingDbBrand?.logo_url || matchingDbBrand?.logo;
                         const isImgValid = logoUrl && logoUrl !== "⭐" && (
                           logoUrl.startsWith("http") || 
                           logoUrl.startsWith("/") || 
@@ -1156,7 +1188,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {(() => {
                         // Find model variants in DB
-                        const matchingModel = (brandData[selectedBrand]?.models || []).find(m => m.name === selectedModel);
+                        const matchingModel = (sellCatalog[selectedBrand]?.models || []).find(m => m.name === selectedModel);
                         const list = matchingModel?.variants || ["Sportz", "Magna", "Asta", "Standard", "LXI", "VXI", "ZXI"];
                         return list.map((v) => {
                           const isSelected = selectedVariant === v;

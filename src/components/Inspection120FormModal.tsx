@@ -34,8 +34,6 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
   onPublishToWebsite,
   userRole = "Inspector"
 }) => {
-  if (!isOpen || !inspection) return null;
-
   // Initialize report state from stored report_150_json / report_120_json or initial report
   const [reportData, setReportData] = useState<Full120PointReport>(() => {
     const rawJson = inspection.report_120_json || inspection.report_150_json;
@@ -159,6 +157,8 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
       default: return "bg-rose-600 text-white";
     }
   };
+
+  if (!isOpen || !inspection) return null;
 
   return (
     <div 

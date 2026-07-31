@@ -997,25 +997,29 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   )}
 
                   {/* 120-POINT REPORT UPLOAD MODAL */}
-                  <Inspection120FormModal
-                    inspection={selectedInspection}
-                    isOpen={!!selectedInspection}
-                    onClose={() => setSelectedInspection(null)}
-                    onSubmitReport={handleUploadReport}
-                    userRole="Inspector"
-                  />
+                  {!!selectedInspection && (
+                    <Inspection120FormModal
+                      inspection={selectedInspection}
+                      isOpen={!!selectedInspection}
+                      onClose={() => setSelectedInspection(null)}
+                      onSubmitReport={handleUploadReport}
+                      userRole="Inspector"
+                    />
+                  )}
 
                   {/* 120-POINT REPORT DEALER VIEW MODAL */}
-                  <Inspection120FormModal
-                    inspection={selectedDealerReport}
-                    isOpen={!!selectedDealerReport}
-                    onClose={() => setSelectedDealerReport(null)}
-                    onSubmitReport={() => {
-                      toast.success("Inspection report verified by Dealer.");
-                      setSelectedDealerReport(null);
-                    }}
-                    userRole="Dealer"
-                  />
+                  {!!selectedDealerReport && (
+                    <Inspection120FormModal
+                      inspection={selectedDealerReport}
+                      isOpen={!!selectedDealerReport}
+                      onClose={() => setSelectedDealerReport(null)}
+                      onSubmitReport={() => {
+                        toast.success("Inspection report verified by Dealer.");
+                        setSelectedDealerReport(null);
+                      }}
+                      userRole="Dealer"
+                    />
+                  )}
 
                 </div>
               )}
