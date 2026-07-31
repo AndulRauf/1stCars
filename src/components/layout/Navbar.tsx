@@ -171,6 +171,17 @@ export function Navbar({
     { label: "FAQ", section: "about-section" },
   ];
 
+  // CMS pages are de-duplicated against the static section links above so the
+  // same label never appears twice (e.g. a seeded "About Us"/"FAQs" page).
+  const sectionLinkLabels = new Set(sectionLinks.map((l) => l.label.toLowerCase()));
+  const isDuplicateOfSectionLink = (title: string) => {
+    const t = title.toLowerCase();
+    return sectionLinkLabels.has(t) || sectionLinkLabels.has(t.endsWith("s") ? t.slice(0, -1) : t);
+  };
+  const visibleCustomPages = customPages.filter(
+    (page) => !page.is_footer && !isDuplicateOfSectionLink(page.title || "")
+  );
+
   const handleSectionLinkClick = (e: React.MouseEvent, section: string) => {
     e.preventDefault();
     onViewChange?.("home");
@@ -296,7 +307,7 @@ export function Navbar({
                   {item.label}
                 </a>
               ))}
-              {customPages.filter((page) => !page.is_footer).map((page) => (
+              {visibleCustomPages.map((page) => (
                 <a
                   key={page.id}
                   href={`#page-${page.slug}`}
@@ -485,7 +496,7 @@ export function Navbar({
                 <ChevronRight className="h-4 w-4 text-slate-400" />
               </a>
             ))}
-            {customPages.filter((page) => !page.is_footer).map((page) => (
+            {visibleCustomPages.map((page) => (
               <a
                 key={page.id}
                 href={`#page-${page.slug}`}
