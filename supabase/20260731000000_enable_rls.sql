@@ -315,7 +315,7 @@ SELECT 'rls_tables', count(*)::int
 UNION ALL
 SELECT 'anon_insert', count(*)::int
   FROM information_schema.role_table_grants
-  WHERE grantee = 'anon' AND privilege_type = 'INSERT'
+  WHERE grantee = 'anon' AND privilege_type = 'INSERT' AND table_schema = 'public'
 UNION ALL
 SELECT 'escalation', count(*)::int
   FROM pg_trigger WHERE tgname = 'prevent_self_role_escalation';
