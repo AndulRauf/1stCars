@@ -68,7 +68,7 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
       { id: "certifications", label: "1st Mark Certification", icon: Sparkles },
       { id: "testimonials", label: "Reviews", icon: Star },
       { id: "faqs", label: "FAQs", icon: HelpCircle },
-      { id: "sell_form", label: "Sell Car Form", icon: ClipboardEdit }
+      { id: "sell_form", label: "Sell Form & Brands", icon: ClipboardEdit }
     ]
   },
   {

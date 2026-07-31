@@ -165,7 +165,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     e.target.value = "";
   };
 
-  // ===== Sell Car Form Editor state (brands / models / variants) =====
+  // ===== Sell Form & Brands Editor state (brands / models / variants) =====
   const [sellCatalog, setSellCatalog] = React.useState<SellCatalog>(() => {
     const stored = getStoredSellCatalog();
     return mergeCatalog(DEFAULT_SELL_CATALOG, stored?.brands, stored?.removed);
@@ -205,7 +205,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     });
   }, []);
 
-  // ----- Sell Car Form handlers -----
+  // ----- Sell Form & Brands handlers -----
   const openAddBrandForm = () => {
     setEditingBrandName(null);
     setBrandDraftName("");
@@ -368,20 +368,20 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     const savedCatalog = await saveSellCatalog(payload);
     const savedForm = await saveInspectionForm(inspectionCategories);
     if (savedCatalog || savedForm) {
-      toast.success("Sell Car Form saved! Brand / model / variant suggestions and the 120-point inspection checklist are now live.");
+      toast.success("Sell Form & Brands saved! Brand / model / variant suggestions and the 120-point inspection checklist are now live.");
     } else {
-      toast.success("Sell Car Form saved locally. (Supabase sync unavailable right now.)");
+      toast.success("Sell Form & Brands saved locally. (Supabase sync unavailable right now.)");
     }
   };
 
   const handleResetSellForm = () => {
-    if (!window.confirm("Reset the entire Sell Car Form back to the built-in defaults? Your edits will be lost.")) return;
+    if (!window.confirm("Reset the entire Sell Form & Brands editor back to the built-in defaults? Your edits will be lost.")) return;
     setSellCatalog(mergeCatalog(DEFAULT_SELL_CATALOG, {}, []));
     setSellRemovedBrands([]);
     setInspectionCategories(JSON.parse(JSON.stringify(OFFICIAL_120_CATEGORIES)));
     setCategoryFormOpen(false);
     setBrandFormOpen(false);
-    toast.success("Sell Car Form reset to defaults. Click Save to persist.");
+    toast.success("Sell Form & Brands reset to defaults. Click Save to persist.");
   };
 
   // UI States
@@ -1954,13 +1954,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </form>
       )}
 
-      {/* SELL CAR FORM EDITOR (brands / models / variants + 120-point inspection checklist) */}
+      {/* SELL FORM & BRANDS EDITOR (brands / models / variants + 120-point inspection checklist) */}
       {activeModule === "sell_form" && (
         <div className="space-y-6">
           <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Sell Car Form Editor</h3>
+                <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Sell Form & Brands Editor</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                   Manage the brands, models, variants & logos on the Sell Your Car page + the full 120-point inspection checklist
                 </p>
