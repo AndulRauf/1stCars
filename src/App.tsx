@@ -32,7 +32,6 @@ import {
   CheckCircle2,
   Phone,
   Shield,
-  Award,
   Clock,
   Car as CarIcon,
   ChevronDown,
@@ -952,24 +951,6 @@ export default function App() {
                   >
                     View Certification Process <ArrowRight className="h-3.5 w-3.5" />
                   </button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Benefit 2 */}
-            <Card hoverEffect className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg shadow-slate-200/40">
-              <div className="space-y-4">
-                <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
-                  <Award className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">6-Month Premium Warranty</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Every 1stMark Certified vehicle includes a complimentary 6-Month / 10,000 km comprehensive mechanical breakdown coverage for peace of mind.
-                </p>
-                <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Complimentary Coverage</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Engine & Gearbox Protection</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Roadside Assistance Included</div>
                 </div>
               </div>
             </Card>

@@ -236,7 +236,6 @@ export function BuyNowCheckout({
     { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
     { label: "Intra state road tax", amount: Math.round(basePrice * 0.011), desc: "Government mandated tax on the transfer of ownership" },
     { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
-    { label: "Extended Warranty – 12 Months", amount: 12000, desc: "Built-in protection for your car's engine, gearbox & drivetrain for a full year so you drive worry free" },
     { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance to ensure safe drives" },
   ];
 

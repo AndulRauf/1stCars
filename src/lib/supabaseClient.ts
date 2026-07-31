@@ -343,7 +343,7 @@ class SupabaseMockClient {
             id: "p-about",
             title: "About Us",
             slug: "about-us",
-            content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **120-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n- **6-Month Premium Warranty**: Covers engine, gearbox & dual-clutch assemblies.\n\n### Contact Details\n- **Email**: support@1stcars.com\n- **Mobile**: +91 8866377722\n- **Office**: 1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India`,
+            content: `# About 1stCars\n\n1stCars is the premier marketplace for certified premium pre-owned vehicles inside the **Gujarat region** (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.\n\n### Our Quality Pillars\n\n- **120-Point Inspection**: Done by master structural engineers on-site.\n- **True Kilometers Guarantee**: Multiple ECU-sweep diagnostics.\n\n### Contact Details\n- **Email**: support@1stcars.com\n- **Mobile**: +91 8866377722\n- **Office**: 1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India`,
             created_at: new Date().toISOString(),
             is_footer: false
           },
@@ -351,17 +351,9 @@ class SupabaseMockClient {
             id: "p-faq",
             title: "FAQs",
             slug: "faqs",
-            content: `# Frequently Asked Questions\n\nHere are the answers to the most common queries about our premium inspection services.\n\n### 1. What does the 120-Point check cover?\nIt covers a detailed scan of the underbody, frame, engine pressure, dual-clutch transmission latency, hybrid battery health, and electronic modules via OBD-II.\n\n### 2. Can I get a doorstep check done in Vadodara?\nAbsolutely. We send fully equipped team vans to any address across Surat, Vadodara, Bharuch, and Vapi regions within 24 hours.\n\n### 3. How does the 6-month warranty work?\nIt is an optional upgrade. If selected, it covers cashless repairs for all engine and drivetrain components at our authorized service networks.`,
+            content: `# Frequently Asked Questions\n\nHere are the answers to the most common queries about our premium inspection services.\n\n### 1. What does the 120-Point check cover?\nIt covers a detailed scan of the underbody, frame, engine pressure, dual-clutch transmission latency, hybrid battery health, and electronic modules via OBD-II.\n\n### 2. Can I get a doorstep check done in Vadodara?\nAbsolutely. We send fully equipped team vans to any address across Surat, Vadodara, Bharuch, and Vapi regions within 24 hours.`,
             created_at: new Date().toISOString(),
             is_footer: false
-          },
-          {
-            id: "p-warranty",
-            title: "Warranty Terms",
-            slug: "warranty-terms",
-            content: `# 6-Month Premium Warranty Policy\n\nAt **1stCars**, every certified pre-owned vehicle qualifies for our complimentary **6-Month / 10,000 km Premium Warranty** to guarantee peace of mind.\n\n### What is Covered\nOur premium warranty covers 100% of parts and labor costs for major mechanical assemblies:\n\n1. **Engine Assembly**: Cylinder block, pistons, crankshaft, camshafts, valvetrain, turbocharger/supercharger systems, and oil pump.\n2. **Gearbox & Transmission**: Torque converter, dual-clutch transmission (DCT/DSG) modules, manual gear sets, and transfer case.\n3. **Electrical Modules**: ECU, alternator, starter motor, and hybrid battery management controller.\n4. **Cooling System**: Radiator, water pump, and thermostat housing.\n\n### What is Not Covered\n- Normal wear and tear items (brake pads, clutch plates, tires, wiper blades, suspension bushings).\n- Modifications or tuning after delivery.\n- Accidental damage or driving through flooded streets.\n\n### Claim Process\nShould you encounter any issue, simply contact our dedicated claims team at **support@1stcars.com** or call **+91 8866377722**. We will arrange a flatbed tow to our authorized service hub and provide cashless repairs.`,
-            created_at: new Date().toISOString(),
-            is_footer: true
           },
           {
             id: "p-certificate",
@@ -499,7 +491,7 @@ class SupabaseMockClient {
     if (table === "pages") {
       let changed = false;
       items = items.map((it: any) => {
-        if (["p-warranty", "p-certificate", "p-terms", "p-showrooms"].includes(it.id) && it.is_footer !== true) {
+        if (["p-certificate", "p-terms", "p-showrooms"].includes(it.id) && it.is_footer !== true) {
           it.is_footer = true;
           changed = true;
         } else if (["p-about", "p-faq"].includes(it.id) && it.is_footer !== false) {

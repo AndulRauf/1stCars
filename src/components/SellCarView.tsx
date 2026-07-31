@@ -883,7 +883,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                   Select your preferred way to sell:
                 </p>
-                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs font-bold">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-xs font-bold">
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
                     <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 1</span>
                     <span className="text-slate-800 block font-black">Instant Offer</span>
@@ -893,11 +893,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 2</span>
                     <span className="text-slate-800 block font-black">Dealer Auction</span>
                     <span className="text-[10px] font-semibold text-slate-500 mt-0.5">1,000+ premium dealers bid live.</span>
-                  </li>
-                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 3</span>
-                    <span className="text-slate-800 block font-black">Park & Sell</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Consign securely in showroom.</span>
                   </li>
                 </ul>
               </div>

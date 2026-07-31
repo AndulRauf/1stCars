@@ -1,5 +1,5 @@
 import { 
-  BarChart3, Car, Award, Layers, MapPin, 
+  BarChart3, Car, Award, MapPin, 
   ClipboardList, FileText, Gavel, Users, UserCheck, 
   ShieldCheck, Shield, Star, HelpCircle, DollarSign, 
   Bell, TrendingUp, BookOpen, Link, Palette, Edit3,
@@ -9,8 +9,8 @@ import {
 export type CMSModule = 
   | "dashboard" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
 
-  | "inspections" | "certifications" | "auctions" | "park_sell" | "brands" | "cities"
-  | "faqs" | "testimonials" | "finance" | "warranty" | "notifications" | "expenses"
+  | "inspections" | "certifications" | "auctions" | "brands" | "cities"
+  | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
   | "reports" | "pages" | "footer_links" | "settings" | "text_editor" | "payment_settings";
 
 export interface NavItem {
@@ -37,7 +37,6 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "cars", label: "Cars Catalog", icon: Car },
       { id: "brands", label: "Brands & Models", icon: Award },
-      { id: "park_sell", label: "Park & Sell", icon: Layers },
       { id: "cities", label: "Cities", icon: MapPin }
     ]
   },
@@ -66,7 +65,6 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "inspections", label: "120-Pt Inspections", icon: ClipboardList },
       { id: "certifications", label: "1st Mark Certification", icon: Sparkles },
-      { id: "warranty", label: "Warranty", icon: Shield },
       { id: "testimonials", label: "Reviews", icon: Star },
       { id: "faqs", label: "FAQs", icon: HelpCircle }
     ]

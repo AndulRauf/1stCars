@@ -124,7 +124,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
           {/* Quick Links Column 1: Trust & Policies (Dynamic Footer Pages) */}
           <div>
             <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
-              Warranty & Trust
+              Trust & Policies
             </h5>
             <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
               {footerPages.map((page) => (

@@ -563,7 +563,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                   />
                   <div>
                     <p className="text-xs font-black text-white">Issue 1stMark Certified Certificate</p>
-                    <p className="text-[10px] text-emerald-300">Unlocks 12-Month Warranty and publishing on 1stCars marketplace</p>
+                    <p className="text-[10px] text-emerald-300">Unlocks publishing on 1stCars marketplace</p>
                   </div>
                 </label>
               </div>

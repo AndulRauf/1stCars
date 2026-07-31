@@ -102,7 +102,7 @@ export function CarDetailsView({
   ];
 
   // Active Tab State
-  const [activeTab, setActiveTab] = React.useState<"specs" | "features" | "inspection" | "warranty" | "finance">("specs");
+  const [activeTab, setActiveTab] = React.useState<"specs" | "features" | "inspection" | "finance">("specs");
 
   // Booking Modal states
   const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
@@ -476,7 +476,6 @@ export function CarDetailsView({
                   { id: "specs", label: "Specifications", icon: Award },
                   { id: "features", label: "Key Features", icon: Sparkles },
                   { id: "inspection", label: "120-Point Inspection Report", icon: ShieldCheck },
-                  { id: "warranty", label: "Warranty Coverage", icon: CheckCircle2 },
                   { id: "finance", label: "Finance Eligibility", icon: Calculator },
                 ].map((tab) => {
                   const Icon = tab.icon;
@@ -624,48 +623,6 @@ export function CarDetailsView({
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Warranty Tab */}
-                {activeTab === "warranty" && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Comprehensive Warranty Security</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      We stand behind our cars. Drive with complete absolute tranquility backed by our premium multi-point assurance warranty.
-                    </p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start space-x-3">
-                        <ShieldCheck className="h-6 w-6 text-[#2E7D32] flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Active Coverage Period</p>
-                          <p className="text-base font-extrabold text-slate-800 mt-1">
-                            {car.warrantyInfo?.months || "24"} Months or {((car.warrantyInfo?.miles || 24000) * 1.609).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} km
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start space-x-3">
-                        <Award className="h-6 w-6 text-[#2E7D32] flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest font-bold">Assurance Category</p>
-                          <p className="text-sm font-extrabold text-slate-800 mt-1">
-                            {car.warrantyInfo?.coverage || "Comprehensive bumper-to-bumper 1stMark Elite Protection"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2">
-                      <p className="text-xs font-black text-[#2E7D32] uppercase tracking-widest">Included Concierge Perks</p>
-                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-xs font-bold text-slate-600">
-                        <li className="flex items-center gap-2">✔️ 24/7 Roadside Assistance & Towing</li>
-                        <li className="flex items-center gap-2">✔️ Free Annual Service Checks</li>
-                        <li className="flex items-center gap-2">✔️ Doorstep Pickup and Return</li>
-                        <li className="flex items-center gap-2">✔️ 100% Original Spare Parts Guarantee</li>
-                      </ul>
                     </div>
                   </div>
                 )}

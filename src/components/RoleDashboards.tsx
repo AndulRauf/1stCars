@@ -3,7 +3,7 @@ import {
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
   Trash2, ArrowRight, DollarSign, Hammer, BarChart3, 
   Users, Settings, Upload, Check, X, AlertCircle, 
-  UserCheck, RefreshCw, Star, ClipboardList, Car, Gauge, Bell, Sparkles
+  UserCheck, RefreshCw, Star, ClipboardList, Car, Bell, Sparkles
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -429,8 +429,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   <>
                     {[
                       { id: "inspections", label: "Inspection Status", icon: ClipboardList },
-                      { id: "offers", label: "Dealer Offers Bids", icon: DollarSign },
-                      { id: "park_sell", label: "Park & Sell Program", icon: Car }
+                      { id: "offers", label: "Dealer Offers Bids", icon: DollarSign }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -816,47 +815,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <p className="text-[11px] text-slate-400 mt-0.5">Completed inspections enter dealer live bidding instantly.</p>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Park & Sell */}
-              {currentUser.role === "Seller" && activeTab === "park_sell" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">1stCars Park & Sell Program</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">consignment list with full premium showroom display privileges.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                    <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-3">
-                      <h4 className="font-black text-[#2E7D32] text-sm uppercase tracking-widest flex items-center gap-1.5">
-                        <ShieldCheck className="h-4.5 w-4.5" /> High Valuation Program
-                      </h4>
-                      <p className="leading-relaxed text-slate-600 font-medium">
-                        Leave your vehicle at our secured luxury hubs. We manage full professional cosmetic grooming, premium photography, high-visibility digital catalog features, and handle 100% of customer inquiries.
-                      </p>
-                      <ul className="space-y-1 text-slate-500 font-bold list-disc pl-4">
-                        <li>Free detailed professional car detailing</li>
-                        <li>High exposure to 20k+ monthly premium buyers</li>
-                        <li>Escrow deposit protection</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-5 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-3">
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest flex items-center gap-1.5">
-                        <Gauge className="h-4.5 w-4.5 text-[#2E7D32]" /> Eligibility Checklist
-                      </h4>
-                      <p className="leading-relaxed text-slate-600 font-medium">
-                        Vehicles must be under 7 years old, have run less than 80,000 km, have clear financial records, and successfully pass our mandatory 1stMark 200-point inspection check.
-                      </p>
-                      <Button
-                        onClick={onNavigateToInventory}
-                        className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-10 rounded-xl mt-2"
-                      >
-                        Browse Luxury Hubs
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               )}
 

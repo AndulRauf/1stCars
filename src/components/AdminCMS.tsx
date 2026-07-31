@@ -72,13 +72,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [dealers, setDealers] = React.useState<any[]>([]);
   const [inspectors, setInspectors] = React.useState<any[]>([]);
   const [salesAssociates, setSalesAssociates] = React.useState<any[]>([]);
-  const [parkSell, setParkSell] = React.useState<any[]>([]);
   const [models, setModels] = React.useState<any[]>([]);
   const [cities, setCities] = React.useState<any[]>([]);
   const [faqs, setFaqs] = React.useState<any[]>([]);
   const [testimonials, setTestimonials] = React.useState<any[]>([]);
   const [financePartners, setFinancePartners] = React.useState<any[]>([]);
-  const [warrantyPlans, setWarrantyPlans] = React.useState<any[]>([]);
   const [expenses, setExpenses] = React.useState<any[]>([]);
   const [websiteSettings, setWebsiteSettings] = React.useState<any>({
     logoUrl: "/logo.png",
@@ -350,12 +348,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "sa-2", name: "Anil Kapoor", email: "anil@1stcars.com", active_leads: 4, closed_deals: 27, performance_score: 9.1 }
       ]));
 
-      setParkSell(getStored("park_sell", [
-        { id: "ps-1", slot: "Slot A-10", vehicle: "BMW M4 Competition", price_per_day: 4500, status: "occupied", seller_name: "John Doe", duration_days: 15 },
-        { id: "ps-2", slot: "Slot B-02", vehicle: "Porsche 911 Carrera S", price_per_day: 6000, status: "occupied", seller_name: "Amit Verma", duration_days: 30 },
-        { id: "ps-3", slot: "Slot C-05", vehicle: "Mercedes-Benz G-Class", price_per_day: 7500, status: "available", seller_name: "", duration_days: 0 }
-      ]));
-
       setModels(getStored("models", [
         { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "Coupe", engine: "3.0L Twin-Turbo", power: "450 HP" },
         { id: "m-2", brand: "BMW", name: "M4 Competition", category: "Coupe", engine: "3.0L Straight-6", power: "503 HP" },
@@ -382,11 +374,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       setFinancePartners(getStored("finance", [
         { id: "fp-1", name: "HDFC Bank Premium Finance", rate: "7.9%", tenure_months: "84 Months", max_funding: "90%", approval_hours: "2 Hours" },
         { id: "fp-2", name: "ICICI Bank Luxury Auto Loan", rate: "8.2%", tenure_months: "60 Months", max_funding: "100%", approval_hours: "4 Hours" }
-      ]));
-
-      setWarrantyPlans(getStored("warranty", [
-        { id: "w-1", name: "1stShield Platinum Cover", price: 75000, duration_months: 24, covered_parts: "Engine, Gearbox, Air Suspension, All Electronics", claim_limit: 1500000 },
-        { id: "w-2", name: "1stShield Gold Cover", price: 45000, duration_months: 12, covered_parts: "Engine, Drivetrain, Powertrain, AC Compressor", claim_limit: 800000 }
       ]));
 
       setExpenses(getStored("expenses", [
@@ -441,7 +428,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
         { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
         { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
-        { label: "Extended Warranty – 12 Months", amount: 12000, desc: "Built-in protection for engine, gearbox & drivetrain for a full year" },
         { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance" }
       ] },
       users: { name: "", email: "", mobile: "", role: "Buyer", city: "Mumbai" },
@@ -456,13 +442,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Mumbai", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
       certifications: {},
       auctions: { car_title: "", base_price: 1500000, current_bid: 1500000, time_remaining: "24 Hours", total_bids: 0, status: "active" },
-      park_sell: { slot: "Slot D-01", vehicle: "", price_per_day: 3500, status: "available", seller_name: "", duration_days: 0 },
       brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
       cities: { name: "", state: "", branch_manager: "", support_number: "" },
       faqs: { category: "General", question: "", answer: "" },
       testimonials: { name: "", role: "Private Buyer", rating: 5, content: "", photo: "👤" },
       finance: { name: "", rate: "8.5%", tenure_months: "60 Months", max_funding: "90%", approval_hours: "2 Hours" },
-      warranty: { name: "", price: 25000, duration_months: 12, covered_parts: "Engine & Gearbox", claim_limit: 500000 },
       notifications: { recipient_id: "all", title: "", message: "", type: "info" },
       expenses: { title: "", category: "Operations", amount: 5000, date: new Date().toISOString().split("T")[0], logged_by: "u-admin" },
       reports: {},
@@ -780,13 +764,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           dealers: [dealers, (d) => persistMockTable("dealers", d)],
           inspectors: [inspectors, (d) => persistMockTable("inspectors", d)],
           sales: [salesAssociates, (d) => persistMockTable("sales_associates", d)],
-          park_sell: [parkSell, (d) => persistMockTable("park_sell", d)],
           models: [models, (d) => persistMockTable("models", d)],
           cities: [cities, (d) => persistMockTable("cities", d)],
           faqs: [faqs, (d) => persistMockTable("faqs", d)],
           testimonials: [testimonials, (d) => persistMockTable("testimonials", d)],
           finance: [financePartners, (d) => persistMockTable("finance", d)],
-          warranty: [warrantyPlans, (d) => persistMockTable("warranty", d)],
           expenses: [expenses, (d) => persistMockTable("expenses", d)]
         };
 
@@ -850,13 +832,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           dealers: [dealers, (d) => persistMockTable("dealers", d)],
           inspectors: [inspectors, (d) => persistMockTable("inspectors", d)],
           sales: [salesAssociates, (d) => persistMockTable("sales_associates", d)],
-          park_sell: [parkSell, (d) => persistMockTable("park_sell", d)],
           models: [models, (d) => persistMockTable("models", d)],
           cities: [cities, (d) => persistMockTable("cities", d)],
           faqs: [faqs, (d) => persistMockTable("faqs", d)],
           testimonials: [testimonials, (d) => persistMockTable("testimonials", d)],
           finance: [financePartners, (d) => persistMockTable("finance", d)],
-          warranty: [warrantyPlans, (d) => persistMockTable("warranty", d)],
           expenses: [expenses, (d) => persistMockTable("expenses", d)]
         };
 
@@ -1380,12 +1360,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "dealers": return dealers;
       case "inspectors": return inspectors;
       case "sales": return salesAssociates;
-      case "park_sell": return parkSell;
       case "cities": return cities;
       case "faqs": return faqs;
       case "testimonials": return testimonials;
       case "finance": return financePartners;
-      case "warranty": return warrantyPlans;
       case "expenses": return expenses;
       case "pages": return pages.filter(p => !p.is_footer);
       case "footer_links": return pages.filter(p => p.is_footer);
@@ -2034,12 +2012,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Time: {item.time_remaining || "Ended"}</p>
                         </div>
                       )}
-                      {activeModule === "warranty" && (
-                        <div>
-                          <p className="font-black text-[#2E7D32]">₹{(item.price).toLocaleString()}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Duration: {item.duration_months} mos</p>
-                        </div>
-                      )}
                       {(activeModule === "pages" || activeModule === "footer_links") && (
                         <div>
                           <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
@@ -2052,7 +2024,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         </div>
                       )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "warranty", "pages", "footer_links", "brands"].includes(activeModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands"].includes(activeModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
