@@ -223,6 +223,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     setBrandFormOpen(true);
   };
 
+  const handleBrandLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    compressImageFile(file, 240, 0.9).then((url) => {
+      setBrandDraftLogo(url);
+      toast.success("Brand logo uploaded. Save the brand to apply it.");
+    });
+    e.target.value = "";
+  };
+
   const handleSaveBrand = () => {
     const name = brandDraftName.trim();
     if (!name) {
@@ -2055,14 +2065,27 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Logo URL or Emoji</label>
-                      <input
-                        type="text"
-                        value={brandDraftLogo}
-                        onChange={(e) => setBrandDraftLogo(e.target.value)}
-                        placeholder="https://... or ⭐ / 🚗"
-                        className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
-                      />
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Brand Logo</label>
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden shrink-0">
+                          {isLogoImageUrl(brandDraftLogo) ? (
+                            <img src={brandDraftLogo} alt="Logo preview" className="h-7 w-7 object-contain" referrerPolicy="no-referrer" />
+                          ) : (
+                            <span className="text-sm font-black text-slate-400">{brandDraftLogo && brandDraftLogo !== "⭐" ? brandDraftLogo : "Logo"}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                          <input type="file" accept="image/*" onChange={handleBrandLogoUpload} className="hidden" id="brand-logo-file" />
+                          <label htmlFor="brand-logo-file" className="inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[9px] font-black uppercase px-3 py-1.5 rounded-lg cursor-pointer shadow-xs">
+                            <Upload className="h-3 w-3" /> Upload Logo
+                          </label>
+                          {brandDraftLogo && (
+                            <button type="button" onClick={() => setBrandDraftLogo("")} className="text-left text-[9px] font-bold text-rose-500 hover:text-rose-600 uppercase tracking-wider cursor-pointer">
+                              Remove logo
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-end gap-3 pb-0.5">
                       <label className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 cursor-pointer">
@@ -2070,6 +2093,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         Show as Popular
                       </label>
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Or paste a logo URL / emoji</label>
+                    <input
+                      type="text"
+                      value={brandDraftLogo}
+                      onChange={(e) => setBrandDraftLogo(e.target.value)}
+                      placeholder="https://... or ⭐ / 🚗"
+                      className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 outline-none focus:ring-1 focus:ring-[#2E7D32] text-xs font-bold"
+                    />
                   </div>
                   <div className="flex items-center gap-2.5 pt-1">
                     <Button onClick={handleSaveBrand} className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-9 px-5 rounded-xl flex items-center gap-2">
