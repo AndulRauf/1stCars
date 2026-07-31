@@ -5,6 +5,25 @@
 -- then restores sensible default grants.
 -- ====================================================
 
+-- The auctions table may not exist yet on this database
+-- (it was added to schema.sql after the first setup), so
+-- create it first or the RLS statements below will fail.
+CREATE TABLE IF NOT EXISTS public.auctions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  car_title TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  km_driven INTEGER NOT NULL,
+  fuel TEXT NOT NULL,
+  transmission TEXT NOT NULL,
+  city TEXT NOT NULL,
+  base_price INTEGER NOT NULL,
+  current_bid INTEGER NOT NULL,
+  highest_bidder_name TEXT,
+  ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  status TEXT DEFAULT 'active' NOT NULL
+);
+
 -- ---------- Enable RLS on all public tables ----------
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
