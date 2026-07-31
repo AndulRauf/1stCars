@@ -3,7 +3,7 @@
 // photo + title, then redirects human browsers to the SPA car detail page.
 export default async function handler(req: any, res: any) {
   const carId: string = String(req.query.id || "").replace(/[^a-zA-Z0-9-]/g, "");
-  const origin = `https://1st-cars-git-main-raufshaikh88-5167s-projects.vercel.app`;
+  const origin = `https://1stcars.in`;
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || "";
