@@ -63,6 +63,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [brands, setBrands] = React.useState<any[]>([]);
   const [pages, setPages] = React.useState<any[]>([]);
+  // Sales leads (test drives & buy-now bookings) come from Supabase
+  // sales_notifications — the source of truth written by BookingModal /
+  // BuyNowCheckout. localStorage is only a fallback for demo/mock mode.
+  const [salesLeads, setSalesLeads] = React.useState<any[]>([]);
   
   // Custom mock/localStorage tables for the other modules requested
   const [dealers, setDealers] = React.useState<any[]>([]);
@@ -312,6 +316,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       const { data: nData } = await supabase.from("notifications").select();
       const { data: bData } = await supabase.from("brands").select();
       const { data: pData } = await supabase.from("pages").select();
+      const { data: lData } = await supabase.from("sales_notifications").select();
 
       if (cData) setCars(cData);
       if (uData) setUsers(uData);
@@ -320,6 +325,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (nData) setNotifications(nData);
       if (bData) setBrands(bData);
       if (pData) setPages(pData);
+      if (lData && lData.length > 0) setSalesLeads(lData);
 
       // Load local-storage metadata schemas for extra requested modules
       const getStored = (key: string, def: any[]) => {
@@ -1351,19 +1357,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "cars": return cars;
       case "users": return users;
       case "test_drive_requests":
-        try {
-          const leads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-          return leads.filter((lead: any) => String(lead.type || "").toLowerCase().includes("test drive"));
-        } catch (e) {
-          return [];
-        }
-      case "booking_requests":
-        try {
-          const leads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-          return leads.filter((lead: any) => !String(lead.type || "").toLowerCase().includes("test drive"));
-        } catch (e) {
-          return [];
-        }
+      case "booking_requests": {
+        // Prefer Supabase sales_notifications (source of truth). Fall back to
+        // the legacy localStorage leads list only when nothing came from the DB.
+        const leads = salesLeads.length > 0
+          ? salesLeads
+          : JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+        const isTestDrive = (lead: any) =>
+          String(lead.type || "").toLowerCase().includes("test drive");
+        return activeModule === "test_drive_requests"
+          ? leads.filter((lead: any) => isTestDrive(lead))
+          : leads.filter((lead: any) => !isTestDrive(lead));
+      }
       case "seller_enquiries":
 
         return inspections;

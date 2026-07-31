@@ -137,17 +137,42 @@ export default function App() {
 
   React.useEffect(() => {
     // Listen to Supabase auth events (works with both mock and live Supabase clients)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    let disposed = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       if (session?.user) {
         // Cast or shape the Supabase user object into the Profile interface
         const user = session.user;
+
+        // The ROLE lives authoritatively in the profiles table (admins are
+        // promoted there via the Supabase Table Editor). user_metadata.role is
+        // only the signup default, so fetch the profile to pick up promotions.
+        let role: string = user.user_metadata?.role || user.role || "Buyer";
+        let name: string = user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User";
+        let mobile: string = user.user_metadata?.mobile || user.mobile || "";
+        let city: string = user.user_metadata?.city || user.city || "Mumbai";
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, name, email, mobile, role, city")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (profile) {
+            role = profile.role || role;
+            name = profile.name || name;
+            mobile = profile.mobile || mobile;
+            city = profile.city || city;
+          }
+        } catch (e) {
+          // Profile lookup is best-effort; fall back to token metadata.
+        }
+        if (disposed) return;
         setCurrentUser({
           id: user.id,
-          name: user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User",
+          name,
           email: user.email || "",
-          mobile: user.user_metadata?.mobile || user.mobile || "",
-          role: user.user_metadata?.role || user.role || "Buyer",
-          city: user.user_metadata?.city || user.city || "Mumbai",
+          mobile,
+          role,
+          city,
           created_at: user.created_at || new Date().toISOString()
         } as any);
       } else {
@@ -156,6 +181,7 @@ export default function App() {
     });
 
     return () => {
+      disposed = true;
       subscription?.unsubscribe();
     };
   }, []);

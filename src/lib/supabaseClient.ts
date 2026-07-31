@@ -683,6 +683,12 @@ class SupabaseMockClient {
         return { data: data[0] || null, error: null };
       },
 
+      maybeSingle: async () => {
+        const { data, error } = await chain.execute();
+        if (error) return { data: null, error };
+        return { data: data[0] || null, error: null };
+      },
+
       insert: (records: any | any[]) => {
         queryState.operation = "insert";
         queryState.payload = records;
