@@ -101,6 +101,10 @@ export function parseCurrentUrl(): RouteParams {
 
   // Route 7: Buy Cars / Filters (`/buy-cars`, `/buy`, `/buy/:brand`, `/buy/:brand/:model`)
   if (pathname === "/buy-cars" || pathname === "/buy" || pathname.startsWith("/buy/")) {
+    // Handoff from the crawler-preview page: `/buy-cars?carId=x` opens the car detail view.
+    if (searchParams.get("carId")) {
+      return { view: "car_details", carId: searchParams.get("carId") as string };
+    }
     const segments = pathname.replace(/^\/buy\/?/, "").split("/").filter(Boolean);
     let brand = brandQuery;
     let model = modelQuery;

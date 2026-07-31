@@ -2,6 +2,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/cars/:id",
+      "destination": "/api/car-preview/:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
