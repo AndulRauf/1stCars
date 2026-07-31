@@ -236,3 +236,20 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
 -- test_drives, purchases, dealer_bids, park_sell) is now
 -- locked to the owner or staff roles only.
 -- ====================================================
+
+-- ====================================================
+-- SELF-CHECK (runs after the patch; paste this result
+-- back when reporting issues):
+--   policies      = total RLS policies (expect 50)
+--   rls_tables    = tables with RLS enabled (expect 22)
+--   anon_insert   = tables anon may INSERT into (expect 0)
+-- ====================================================
+SELECT 'policies' AS check_name, count(*)::int AS n
+  FROM pg_policies WHERE schemaname = 'public'
+UNION ALL
+SELECT 'rls_tables', count(*)::int
+  FROM pg_tables WHERE schemaname = 'public' AND rowsecurity
+UNION ALL
+SELECT 'anon_insert', count(*)::int
+  FROM information_schema.role_table_grants
+  WHERE grantee = 'anon' AND privilege_type = 'INSERT';
