@@ -18,7 +18,7 @@ import { Badge } from "@/src/components/ui/Badge";
 import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
 import { Inspection120FormModal } from "./Inspection120FormModal";
-import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY, OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
+import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY, OFFICIAL_120_CATEGORIES, getStoredInspectionCategories } from "@/src/data/inspection120Data";
 import { Gavel, Globe } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
 import { Breadcrumb } from "./admin/Breadcrumb";
@@ -26,7 +26,7 @@ import { CMSModule } from "./admin/adminNavData";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
   SellCatalog, SellBrandEntry, SellModel, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
-  saveSellCatalog, saveInspectionForm, catalogFromLegacy, getStoredInspectionCategories,
+  saveSellCatalog, saveInspectionForm, catalogFromLegacy,
   loadSellCatalogFromSupabase, loadInspectionFormFromSupabase, DEFAULT_POPULAR_SELL_BRANDS
 } from "@/src/lib/sellFormData";
 

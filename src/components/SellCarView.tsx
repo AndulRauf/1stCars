@@ -604,18 +604,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }, 1000);
   };
 
-  // Popular, Indian, and luxury brands from 2000 onwards
-  const popularBrandsList = [
-    "Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota", 
-    "Kia", "Renault", "Volkswagen", "Skoda", "Ford", "MG", 
-    "Force", "ICML", "San Motors", "DC Design", "Reva",
-    "Nissan", "Fiat", "Chevrolet"
-  ];
-  const luxuryBrandsList = [
-    "BMW", "Audi", "Mercedes-Benz", "Jaguar", "Land Rover", "Volvo", 
-    "Mini Cooper", "Jeep", "Tesla", "Porsche", "Bentley", "Aston Martin", "Ferrari"
-  ];
-  
   const [dbBrands, setDbBrands] = React.useState<any[]>([]);
 
   // Admin-editable brand / model / variant catalog for the sell car form
@@ -669,7 +657,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   }, []);
 
   const dbBrandNames = dbBrands.map(b => b.name);
-  const allBrands = Array.from(new Set([...dbBrandNames, ...popularBrandsList, ...luxuryBrandsList, ...Object.keys(sellCatalog)])).filter(Boolean);
+  const allBrands = Array.from(new Set([...dbBrandNames, ...Object.keys(sellCatalog)])).filter(Boolean);
 
   // Filter lists based on search
   const filteredBrands = allBrands.filter(b => 
