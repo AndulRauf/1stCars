@@ -168,6 +168,16 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       : matchedDemo.email.includes("sales") ? "Sales Associate" 
       : "Buyer";
 
+    // Staff roles (Admin / Sales Associate / Inspector) may only be used via
+    // the LOCAL mock database. On the real shared backend a public one-click
+    // demo sign-in must never mint a staff account.
+    const isStaffDemo = ["admin", "sales", "inspector"].some((k) => matchedDemo.email.includes(k));
+    if (!isUsingMock && isStaffDemo) {
+      setError("Staff demo accounts are only available on the local demo database. Please register a Buyer account or contact the administrator.");
+      setLoading(false);
+      return;
+    }
+
     if (isUsingMock) {
       const mockUser = {
         id: "demo-" + matchedDemo.email.split("@")[0],

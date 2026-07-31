@@ -240,14 +240,32 @@ CREATE TABLE public.settings (
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  requested_role public.user_role;
 BEGIN
+  requested_role := coalesce(
+    (new.raw_user_meta_data->>'role')::public.user_role,
+    'Buyer'::public.user_role
+  );
+
   INSERT INTO public.profiles (id, name, email, mobile, role, city)
   VALUES (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
     new.email,
     new.raw_user_meta_data->>'mobile',
-    coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'Buyer'::public.user_role),
+    CASE
+      -- Staff roles (Admin / Sales Associate / Inspector) are ONLY granted to
+      -- pre-approved accounts. Everyone else may pick a public role
+      -- (Buyer / Seller / Dealer); anything else silently falls back to Buyer.
+      WHEN new.email IN (
+        'admin@1stcars.com',
+        'sales@1stcars.com',
+        'inspector@1stcars.com'
+      ) THEN requested_role
+      WHEN requested_role IN ('Buyer', 'Seller', 'Dealer') THEN requested_role
+      ELSE 'Buyer'::public.user_role
+    END,
     coalesce(new.raw_user_meta_data->>'city', 'Mumbai')
   );
   RETURN new;
@@ -441,6 +459,54 @@ CREATE TABLE IF NOT EXISTS public.sales_notifications (
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone reads sales_notifications" ON public.sales_notifications FOR SELECT USING (true);
 CREATE POLICY "Anyone manages sales_notifications" ON public.sales_notifications FOR ALL USING (true);
+
+
+-- ====================================================
+-- 23. PAGES TABLE (CMS-managed static/footer pages)
+-- Used by AdminCMS, Navbar, Footer, and CustomPageView.
+-- ====================================================
+CREATE TABLE IF NOT EXISTS public.pages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  content TEXT NOT NULL DEFAULT '',
+  is_footer BOOLEAN DEFAULT false NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone reads pages" ON public.pages FOR SELECT USING (true);
+CREATE POLICY "Admin manages pages" ON public.pages FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
+
+-- Seed default CMS pages (footer/nav links) so the live site is not empty.
+INSERT INTO public.pages (title, slug, content, is_footer) VALUES
+  ('About Us', 'about-us', '# About 1stCars' || E'\n\n' || '1stCars is the premier marketplace for certified premium pre-owned vehicles inside the Gujarat region (Surat, Bharuch, Vadodara, Vapi). We stand by absolute transparency, zero-tolerance for tampered odometers, and 100% certified chassis security.', false),
+  ('FAQs', 'faqs', '# Frequently Asked Questions' || E'\n\n' || 'Answers to the most common queries about our premium inspection services.', false),
+  ('Warranty Terms', 'warranty-terms', '# 6-Month Premium Warranty Policy' || E'\n\n' || 'Every certified pre-owned vehicle qualifies for our complimentary 6-Month / 10,000 km Premium Warranty.', true),
+  ('120-Point Certificate', '120-point-certificate', '# 120-Point Structural & Technical Inspection' || E'\n\n' || 'Every vehicle undergoes a meticulous 120-point check executed by our certified structural engineers.', true),
+  ('Terms & Conditions', 'terms-and-conditions', '# Terms & Conditions of Business' || E'\n\n' || 'By using our marketplace and services you agree to our booking, delivery, and odometer-integrity policies.', true),
+  ('Our Showrooms', 'our-showrooms', '# 1stCars Flagship Showrooms' || E'\n\n' || 'Visit our multi-brand flagship stores across Surat, Vadodara, Bharuch, and Vapi.', true)
+ON CONFLICT (slug) DO NOTHING;
+
+
+
+-- ====================================================
+-- 24. SCHEMA COMPATIBILITY PATCHES
+-- Columns the frontend writes to that were missing from the
+-- original table definitions. Idempotent so this file can be
+-- re-run safely.
+-- ====================================================
+
+-- Sellers need an approval gate; AdminCMS + AuthModal set this.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true NOT NULL;
+
+-- Inspection dashboards persist denormalized seller info, a score,
+-- and free-form notes directly on the inspection row.
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_name TEXT;
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_mobile TEXT;
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS overall_score NUMERIC(3,1);
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS notes TEXT;
 
 
 -- ====================================================

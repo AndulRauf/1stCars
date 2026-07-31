@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { supabase, isRealSupabase } from "./supabaseClient";
 
 export interface DemoCar {
   id?: string;
@@ -565,5 +565,36 @@ export async function seedSupabaseDatabase(currentUserId?: string) {
   } catch (error: any) {
     console.error("Database seeding failed:", error);
     return { success: false, error: error?.message || String(error) };
+  }
+}
+
+const AUTO_SEED_FLAG_PREFIX = "1stcars_auto_seed_";
+
+/**
+ * Auto-seed the catalog (cities, brands, models, cars) once per staff member
+ * when the real Supabase database is empty. Runs as soon as a staff user's
+ * session is known, so the marketplace is never launched with zero inventory.
+ * Idempotent: a localStorage flag prevents repeated API calls per browser.
+ */
+export async function maybeAutoSeedDatabase(user?: { id?: string; role?: string } | null) {
+  if (!isRealSupabase) return;
+
+  const isStaff = user?.role === "Admin" || user?.role === "Sales Associate";
+  if (!isStaff || !user?.id) return;
+
+  const flagKey = `${AUTO_SEED_FLAG_PREFIX}${user.id}`;
+  if (typeof window !== "undefined" && localStorage.getItem(flagKey) === "done") return;
+
+  try {
+    const { data: cityData } = await supabase.from("cities").select("id").limit(1);
+    if (cityData && cityData.length > 0) {
+      if (typeof window !== "undefined") localStorage.setItem(flagKey, "done");
+      return;
+    }
+    await seedSupabaseDatabase(user.id);
+  } catch (error) {
+    console.error("Auto-seed failed:", error);
+  } finally {
+    if (typeof window !== "undefined") localStorage.setItem(flagKey, "done");
   }
 }

@@ -50,6 +50,7 @@ import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
 import { supabase } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
 // ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
 // so it always lives in the main chunk. Import it statically here too to avoid
 // a redundant dynamic chunk.
@@ -158,6 +159,14 @@ export default function App() {
       subscription?.unsubscribe();
     };
   }, []);
+
+  // Auto-seed the catalog once per staff member when the real Supabase
+  // database is empty, so the marketplace never launches with zero inventory.
+  React.useEffect(() => {
+    if (currentUser) {
+      maybeAutoSeedDatabase(currentUser as any);
+    }
+  }, [currentUser]);
 
   // Dynamic website configuration states from Admin CMS settings
   const [websiteSettings, setWebsiteSettings] = React.useState({

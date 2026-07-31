@@ -240,14 +240,32 @@ CREATE TABLE public.settings (
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  requested_role public.user_role;
 BEGIN
+  requested_role := coalesce(
+    (new.raw_user_meta_data->>'role')::public.user_role,
+    'Buyer'::public.user_role
+  );
+
   INSERT INTO public.profiles (id, name, email, mobile, role, city)
   VALUES (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
     new.email,
     new.raw_user_meta_data->>'mobile',
-    coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'Buyer'::public.user_role),
+    CASE
+      -- Staff roles (Admin / Sales Associate / Inspector) are ONLY granted to
+      -- pre-approved accounts. Everyone else may pick a public role
+      -- (Buyer / Seller / Dealer); anything else silently falls back to Buyer.
+      WHEN new.email IN (
+        'admin@1stcars.com',
+        'sales@1stcars.com',
+        'inspector@1stcars.com'
+      ) THEN requested_role
+      WHEN requested_role IN ('Buyer', 'Seller', 'Dealer') THEN requested_role
+      ELSE 'Buyer'::public.user_role
+    END,
     coalesce(new.raw_user_meta_data->>'city', 'Mumbai')
   );
   RETURN new;

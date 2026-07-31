@@ -14,7 +14,11 @@ credentials. Follow these steps to go live with a real, shared backend.
    - This creates all tables (profiles, cars, inspections, auctions, `pages`, …),
      the signup trigger, Row-Level Security policies, seed CMS pages, and the
      `car-images` / `logos` storage buckets.
-   - The file is safe to re-run (uses `IF NOT EXISTS` / `ON CONFLICT`).
+   - The file is safe to re-run (uses `IF NOT EXISTS` / `ON CONFLICT` /
+     `CREATE OR REPLACE`).
+   - **Already ran it before? Re-run the updated file** — it now includes the
+     `pages` table, schema-compat patches, and a hardened signup trigger
+     (re-running applies all of them).
 
 ## 3. Configure auth
 - **Authentication → Providers → Email**: enable it.
@@ -51,9 +55,17 @@ from the mock to the real Supabase client (see `src/lib/supabaseClient.ts`).
    `role = Admin`.
 3. Reload the app — you now have full CMS/admin access.
 
+> Security note: the signup trigger only grants staff roles (Admin, Sales
+> Associate, Inspector) to the pre-approved `@1stcars.com` demo emails; any
+> other signup gets Buyer/Seller/Dealer at most. The one-click **staff demo
+> buttons** are therefore hidden on the real backend — create staff accounts
+> via the Table Editor instead.
+
 ## 6. (Optional) Seed inventory
 The helper in `src/lib/seeder.ts` can populate brands, models, cities, and demo
-cars. Trigger it from the Admin CMS, or run its logic once against the real DB.
+cars. Trigger it from the Admin CMS, **or it runs automatically**: the first
+time an Admin / Sales Associate signs in on an empty database, the catalog is
+seeded in the background (once per browser per user).
 
 ---
 
