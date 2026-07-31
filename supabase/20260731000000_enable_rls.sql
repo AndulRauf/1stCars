@@ -24,6 +24,27 @@ CREATE TABLE IF NOT EXISTS public.auctions (
   status TEXT DEFAULT 'active' NOT NULL
 );
 
+-- ---------- Compatibility columns ----------
+-- The live database predates some columns the policies and
+-- the frontend rely on (e.g. inspector_id on inspections).
+-- All statements are idempotent so this file stays re-runnable.
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS inspector_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS overall_score NUMERIC(3,1);
+ALTER TABLE public.inspection_reports ADD COLUMN IF NOT EXISTS inspection_id UUID REFERENCES public.inspections(id) ON DELETE CASCADE;
+ALTER TABLE public.inspection_reports ADD COLUMN IF NOT EXISTS inspector_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+ALTER TABLE public.dealers ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false NOT NULL;
+ALTER TABLE public.dealer_bids ADD COLUMN IF NOT EXISTS inspection_id UUID REFERENCES public.inspections(id) ON DELETE CASCADE;
+ALTER TABLE public.dealer_bids ADD COLUMN IF NOT EXISTS dealer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.park_sell ADD COLUMN IF NOT EXISTS seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.test_drives ADD COLUMN IF NOT EXISTS buyer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.purchases ADD COLUMN IF NOT EXISTS buyer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS recipient_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.testimonials ADD COLUMN IF NOT EXISTS author_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+ALTER TABLE public.sell_requests ADD COLUMN IF NOT EXISTS seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+ALTER TABLE public.cities ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true NOT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true NOT NULL;
+
 -- ---------- Enable RLS on all public tables ----------
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
