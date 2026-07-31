@@ -18,7 +18,7 @@ export default async function handler(req: any, res: any) {
 
   let title = "1stCars | Certified Premium Used Cars";
   let description = "1stCars — the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
-  let image = `${origin}/og-image.jpg?v=3`;
+  let image = `${origin}/og-image.jpg?v=4`;
   let redirect = "/";
 
   if (carId) {
