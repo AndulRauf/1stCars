@@ -570,15 +570,27 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const loadCMSData = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch tables from Supabase/Mock tables
-      const { data: cData } = await supabase.from("cars").select();
-      const { data: uData } = await supabase.from("profiles").select();
-      const { data: iData } = await supabase.from("inspections").select();
-      const { data: aData } = await supabase.from("auctions").select();
-      const { data: nData } = await supabase.from("notifications").select();
-      const { data: bData } = await supabase.from("brands").select();
-      const { data: pData } = await supabase.from("pages").select();
-      const { data: lData } = await supabase.from("sales_notifications").select();
+      // 1. Fetch tables from Supabase/Mock tables in parallel so "Reload
+      //    Engine" doesn't take ~15s of sequential round-trips in live mode.
+      const [
+        { data: cData },
+        { data: uData },
+        { data: iData },
+        { data: aData },
+        { data: nData },
+        { data: bData },
+        { data: pData },
+        { data: lData }
+      ] = await Promise.all([
+        supabase.from("cars").select(),
+        supabase.from("profiles").select(),
+        supabase.from("inspections").select(),
+        supabase.from("auctions").select(),
+        supabase.from("notifications").select(),
+        supabase.from("brands").select(),
+        supabase.from("pages").select(),
+        supabase.from("sales_notifications").select()
+      ]);
 
       if (cData) setCars(cData);
       if (uData) setUsers(uData);
