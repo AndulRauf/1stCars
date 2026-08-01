@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronRight, Fuel, ShieldAlert, Check, Share2, X } from "lucide-react";
 import { Car, FilterState } from "@/src/types";
-import { CARS_DATA, FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
+import { FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
 import { CarCard } from "./CarCard";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";

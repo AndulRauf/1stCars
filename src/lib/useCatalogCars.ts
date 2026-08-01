@@ -1,6 +1,5 @@
 import * as React from "react";
 import { supabase } from "@/src/lib/supabaseClient";
-import { CARS_DATA } from "@/src/data/cars";
 import { Car } from "@/src/types";
 
 // Cache key for the DB catalog so the merged list paints instantly on next
@@ -60,42 +59,28 @@ function normalizeDbCar(row: any): Car {
   } as Car;
 }
 
+// Only list cars that are actually on sale. Hidden/sold/ended records never
+// surface on the public site, no matter what was deleted or edited.
 function isListable(car: any) {
   return !car.status || car.status === "available";
 }
 
-function mergeCatalogs(dbRows: any[]): Car[] {
-  const dbCars = dbRows.filter(isListable).map(normalizeDbCar);
-  // Newest listings first, then the curated static catalog. Dedupe by id so a
-  // DB car with the same id as a static one is never rendered twice.
-  const seen = new Set<string>();
-  const merged: Car[] = [];
-  const push = (car: Car) => {
-    if (seen.has(car.id)) return;
-    seen.add(car.id);
-    merged.push(car);
-  };
-  dbCars
-    .slice()
-    .sort((a, b) => String((b as any).created_at || "").localeCompare(String((a as any).created_at || "")))
-    .forEach(push);
-  CARS_DATA.forEach(push);
-  return merged;
-}
-
 export function useCatalogCars(): Car[] {
+  // The Supabase "cars" table is the single source of truth for the live
+  // inventory. We never fall back to the bundled static demo list, so deleting
+  // or publishing cars in the Admin CMS is reflected 1:1 on the public site.
   const [cars, setCars] = React.useState<Car[]>(() => {
-    if (typeof window === "undefined") return CARS_DATA;
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(DB_CACHE_KEY);
       if (raw) {
         const cached = JSON.parse(raw);
-        if (Array.isArray(cached)) return mergeCatalogs(cached);
+        if (Array.isArray(cached)) return cached.filter(isListable).map(normalizeDbCar);
       }
     } catch (e) {
       // ignore corrupted cache
     }
-    return CARS_DATA;
+    return [];
   });
 
   React.useEffect(() => {
@@ -109,7 +94,7 @@ export function useCatalogCars(): Car[] {
           if (typeof window !== "undefined") {
             localStorage.setItem(DB_CACHE_KEY, JSON.stringify(data));
           }
-          setCars(mergeCatalogs(data));
+          setCars(data.filter(isListable).map(normalizeDbCar));
         }
       } catch (e) {
         console.error("Failed to load cars from catalog:", e);
@@ -118,12 +103,14 @@ export function useCatalogCars(): Car[] {
 
     refresh();
 
+    // Admin CMS dispatches this after every create/update/delete, so the
+    // public catalog refreshes instantly.
     const handleSettingsUpdated = () => refresh();
     const handleStorage = (e: StorageEvent) => {
       if (e.key === DB_CACHE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setCars(mergeCatalogs(parsed));
+          if (Array.isArray(parsed)) setCars(parsed.filter(isListable).map(normalizeDbCar));
         } catch (err) {
           // ignore
         }

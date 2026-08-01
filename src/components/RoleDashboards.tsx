@@ -8,7 +8,6 @@ import {
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { Badge } from "@/src/components/ui/Badge";
-import { CARS_DATA } from "@/src/data/cars";
 import { 
   Profile, Inspection, 
   Offer, Auction, SalesNotification, UserRole 
@@ -1272,7 +1271,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   </div>
 
                   <div className="space-y-2">
-                    {CARS_DATA.map(car => (
+                    {catalogCars.map(car => (
                       <div key={car.id} className="border border-slate-100 rounded-xl p-3 bg-[#FAF9F6] flex justify-between items-center text-xs">
                         <div>
                           <p className="font-black text-slate-800">{car.brand} {car.model}</p>

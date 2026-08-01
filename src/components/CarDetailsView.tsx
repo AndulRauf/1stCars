@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
@@ -153,6 +153,29 @@ export function CarDetailsView({
       maximumFractionDigits: 0,
     }).format(val);
   };
+
+  // Car not in the live catalog (deleted in Admin CMS or not published yet).
+  if (!car) {
+    return (
+      <div className="bg-[#FAF9F6] min-h-screen flex items-center justify-center p-8">
+        <div className="bg-white border border-slate-100 rounded-3xl max-w-md w-full p-8 text-center shadow-sm space-y-4">
+          <div className="mx-auto h-14 w-14 rounded-full bg-[#2E7D32]/10 flex items-center justify-center">
+            <CarIcon className="h-7 w-7 text-[#2E7D32]" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">Vehicle Not Available</h2>
+          <p className="text-sm text-slate-500 font-medium">
+            This car is no longer in our live inventory. It may have been sold or removed by the admin.
+          </p>
+          <Button
+            onClick={onBack}
+            className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl px-6 h-11"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Back to Inventory
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-10">

@@ -43,7 +43,7 @@ import {
   TrendingUp,
   Sliders
 } from "lucide-react";
-import { CARS_DATA, FAMOUS_BRANDS, BUDGET_RANGES } from "@/src/data/cars";
+import { FAMOUS_BRANDS, BUDGET_RANGES } from "@/src/data/cars";
 import { Car } from "@/src/types";
 import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
@@ -96,6 +96,11 @@ export default function App() {
   // (they live in the Supabase "cars" table, so they must be merged in here).
   const catalogCars = useCatalogCars();
 
+  // Keep a stable ref so navigation callbacks (used by many children) can read
+  // the latest catalog without changing identity on every inventory refresh.
+  const catalogCarsRef = React.useRef(catalogCars);
+  catalogCarsRef.current = catalogCars;
+
   // Central Navigation handler that keeps URL in sync
   const handleNavigate = React.useCallback((
     view: ViewType,
@@ -111,7 +116,7 @@ export default function App() {
 
     navigateTo(view, params, options);
 
-    const car = CARS_DATA.find(c => c.id === (params?.carId || activeCarId));
+    const car = catalogCarsRef.current.find(c => c.id === (params?.carId || activeCarId));
     const carName = car ? `${car.year} ${car.brand} ${car.model}` : undefined;
     document.title = getPageTitle(view, carName);
   }, [activeCarId]);
@@ -127,7 +132,7 @@ export default function App() {
       if (route.model) setSelectedModel(route.model);
       if (route.search) setSearchQuery(route.search);
 
-      const car = CARS_DATA.find(c => c.id === (route.carId || activeCarId));
+      const car = catalogCarsRef.current.find(c => c.id === (route.carId || activeCarId));
       const carName = car ? `${car.year} ${car.brand} ${car.model}` : undefined;
       document.title = getPageTitle(route.view, carName);
     };
