@@ -125,7 +125,7 @@ export function CarCard({
       {/* Premium Image Gallery Panel */}
       <div className={cn(
         "relative overflow-hidden flex-shrink-0 select-none",
-        isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full h-36 sm:h-48 md:h-52"
+        isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full aspect-[4/3]"
       )}>
         {/* Dynamic Angle Gradient Background */}
         <div 

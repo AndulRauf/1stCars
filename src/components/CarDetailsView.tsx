@@ -253,7 +253,7 @@ export function CarDetailsView({
           <div className="lg:col-span-7 space-y-3">
 
             {/* Main image */}
-            <div className="bg-slate-950 rounded-2xl overflow-hidden relative shadow-md select-none" style={{aspectRatio:"16/10"}}>
+            <div className="bg-slate-950 rounded-2xl overflow-hidden relative shadow-md select-none" style={{aspectRatio:"4/3"}}>
               <div
                 className={cn(
                   "absolute inset-0 transition-all duration-700",
