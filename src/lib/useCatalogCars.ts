@@ -15,47 +15,51 @@ const isRealUrl = (value?: string | null) =>
 // Normalize a raw Supabase "cars" row into the frontend Car shape, filling in
 // defaults for every field the UI relies on (emi, mileage, owners, images, ...).
 function normalizeDbCar(row: any): Car {
-  const price = Number(row.price) || 0;
-  const kmDriven = Number(row.km_driven ?? row.mileage) || 0;
-  const imageUrl = isRealUrl(row.image_url) ? row.image_url : undefined;
-  const images = Array.isArray(row.images)
-    ? row.images.filter(isRealUrl)
+  // Real-mode rows store the rich record (images, price_breakup, inspection,
+  // ...) in a JSONB "payload" column; merge it under the row so every field the
+  // UI expects is available no matter which mode produced the row.
+  const data = { ...(row.payload || {}), ...row };
+  const price = Number(data.price) || 0;
+  const kmDriven = Number(data.km_driven ?? data.mileage) || 0;
+  const imageUrl = isRealUrl(data.image_url) ? data.image_url : undefined;
+  const images = Array.isArray(data.images)
+    ? data.images.filter(isRealUrl)
     : imageUrl
       ? [imageUrl]
       : [];
 
   return {
-    id: row.id || `db-car-${Math.random().toString(36).substr(2, 9)}`,
-    brand: row.brand || "Unknown",
-    model: row.model || row.title || "Vehicle",
-    year: Number(row.year) || new Date().getFullYear(),
+    id: data.id || `db-car-${Math.random().toString(36).substr(2, 9)}`,
+    brand: data.brand || "Unknown",
+    model: data.model || data.title || "Vehicle",
+    year: Number(data.year) || new Date().getFullYear(),
     price,
-    emi: Number(row.emi) || Math.round(price / 60),
-    location: row.location || row.city || "Surat",
-    fuel: row.fuel || "Petrol",
-    transmission: row.transmission || "Automatic",
-    mileage: kmDriven || Number(row.mileage) || 0,
-    bodyType: row.bodyType || "Sedan",
-    certified: row.certified !== false && row.is_certified !== false,
+    emi: Number(data.emi) || Math.round(price / 60),
+    location: data.location || data.city || "Surat",
+    fuel: data.fuel || "Petrol",
+    transmission: data.transmission || "Automatic",
+    mileage: kmDriven || Number(data.mileage) || 0,
+    bodyType: data.bodyType || "Sedan",
+    certified: data.certified !== false && data.is_certified !== false,
     imageBg: "bg-emerald-950/10",
     imageUrl,
-    image_url: row.image_url || undefined,
+    image_url: data.image_url || undefined,
     images,
-    featured: row.featured !== false,
-    specifications: Array.isArray(row.specifications) ? row.specifications : [],
-    features: Array.isArray(row.features) ? row.features : undefined,
-    inspectionSummary: row.inspectionSummary || undefined,
-    owners: Number(row.owners ?? row.owner_count) || 1,
+    featured: data.featured !== false,
+    specifications: Array.isArray(data.specifications) ? data.specifications : [],
+    features: Array.isArray(data.features) ? data.features : undefined,
+    inspectionSummary: data.inspectionSummary || undefined,
+    owners: Number(data.owners ?? data.owner_count) || 1,
     km_driven: kmDriven,
-    status: row.status || "available",
-    cities: Array.isArray(row.cities) ? row.cities : undefined,
-    variant: row.variant || undefined,
-    color: row.color || undefined,
-    regCity: row.regCity || row.city || undefined,
-    regYear: row.regYear ? Number(row.regYear) : undefined,
-    rtoCode: row.rtoCode || row.reg_number || undefined,
-    price_breakup: Array.isArray(row.price_breakup) ? row.price_breakup : undefined,
-    created_at: row.created_at
+    status: data.status || "available",
+    cities: Array.isArray(data.cities) ? data.cities : undefined,
+    variant: data.variant || undefined,
+    color: data.color || undefined,
+    regCity: data.regCity || data.city || undefined,
+    regYear: data.regYear ? Number(data.regYear) : undefined,
+    rtoCode: data.rtoCode || data.reg_number || undefined,
+    price_breakup: Array.isArray(data.price_breakup) ? data.price_breakup : undefined,
+    created_at: data.created_at
   } as Car;
 }
 

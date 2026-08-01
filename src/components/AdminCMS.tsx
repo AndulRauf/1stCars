@@ -11,7 +11,8 @@ import {
   Upload, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle2, ArrowDownToLine, ArrowUpFromLine,
   Car, Link, Menu
 } from "lucide-react";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { saveCar, deleteCar, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -755,7 +756,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     try {
       const generatedId = `id-cars-${Math.random().toString(36).substr(2, 9)}`;
       const finalRecord = { ...record, id: generatedId, created_at: new Date().toISOString() };
-      await supabase.from("cars").insert([finalRecord]);
+      const { error } = await saveCar(finalRecord);
+      if (error) throw error;
       setIsCarWizardOpen(false);
       toast.success("Car uploaded & published to 1stCars website!");
       setTimeout(() => {
@@ -765,7 +767,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
       console.error("Error creating car via wizard:", err);
-      toast.error("Failed to create car: " + (err instanceof Error ? err.message : String(err)));
+      toast.error("Failed to create car: " + errorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -937,11 +939,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       const currentRecord = { ...formData, id: generatedId, created_at: formData.created_at || new Date().toISOString() };
 
       if (activeModule === "cars") {
-        if (formMode === "add") {
-          await supabase.from("cars").insert([currentRecord]);
-        } else {
-          await supabase.from("cars").update(currentRecord).eq("id", editingId);
-        }
+        const { error } = await saveCar(currentRecord, formMode === "add" ? null : editingId);
+        if (error) throw error;
       } else if (activeModule === "users") {
         if (formMode === "add") {
           await supabase.from("profiles").insert([currentRecord]);
@@ -1084,6 +1083,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
       console.error("Error submitting CMS form:", err);
+      toast.error(`Failed to save ${activeModule}: ${errorMessage(err)}`);
     } finally {
       setIsLoading(false);
     }
@@ -1096,7 +1096,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
     try {
       if (activeModule === "cars") {
-        await supabase.from("cars").delete().eq("id", id);
+        const { error } = await deleteCar(id);
+        if (error) throw error;
       } else if (activeModule === "users") {
         await supabase.from("profiles").delete().eq("id", id);
       } else if (activeModule === "inspections") {
@@ -1738,6 +1739,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           </div>
 
           <div className="flex items-center gap-2">
+            {isRealSupabase ? (
+              <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                <Activity className="h-3 w-3" /> Live Supabase · {cars.length} car{cars.length === 1 ? "" : "s"} in DB
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="Supabase env vars are not set — data is stored in THIS browser only and will NOT appear in the Supabase dashboard or on other devices.">
+                <AlertCircle className="h-3 w-3" /> Mock Browser DB · not reaching Supabase
+              </span>
+            )}
             <span className="hidden sm:inline-flex items-center gap-1.5 bg-[#ffb81e]/10 text-[#ffb81e] border border-[#ffb81e]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
               <Sparkles className="h-3 w-3" /> Super Admin Active
             </span>
