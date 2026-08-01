@@ -1,4 +1,5 @@
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { uploadCarImages } from "@/src/lib/carImageUpload";
 
 // Columns that physically exist on the real Supabase `public.cars` table
 // (see supabase/migrations/20260718000000_schema.sql). Every other field the
@@ -57,6 +58,16 @@ export function errorMessage(err: any): string {
 }
 
 export async function saveCar(record: any, editingId?: string | null) {
+  // Move data-URL photos to Supabase Storage first so the record that reaches
+  // Postgres stays small (multi-MB JSONB payloads time out on insert).
+  if (isRealSupabase) {
+    const images = await uploadCarImages(record.images);
+    let imageUrl = record.image_url;
+    if (typeof imageUrl === "string" && imageUrl.startsWith("data:")) imageUrl = undefined;
+    if (Array.isArray(images) && images.length > 0) imageUrl = images[0];
+    record = { ...record, images, image_url: imageUrl };
+  }
+
   const payload = buildCarRecord(record);
   if (editingId) {
     const { error } = await supabase.from("cars").update(payload).eq("id", editingId);
