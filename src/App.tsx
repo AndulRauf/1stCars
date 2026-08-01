@@ -618,6 +618,7 @@ export default function App() {
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           triggerToast(`Welcome back, ${user.name}!`);
+          navigateTo("role_dashboards", undefined, { replace: true });
           setCurrentView("role_dashboards");
           setAuthModal({ ...authModal, isOpen: false });
         }}

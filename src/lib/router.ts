@@ -152,7 +152,7 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
       return "/certification";
 
     case "role_dashboards":
-      return "/dashboard";
+      return "/admin";
 
     case "sales_dashboard":
       return "/sales-portal";

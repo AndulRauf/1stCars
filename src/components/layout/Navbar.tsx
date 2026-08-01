@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin, Check, LocateFixed, Sparkles } from "lucide-react";
+import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin, Check, LocateFixed, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabaseClient";
@@ -358,6 +358,16 @@ export function Navbar({
 
               {currentUser ? (
                 <div className="flex items-center space-x-2">
+                  {currentUser.role === "Admin" && (
+                    <button
+                      onClick={() => onViewChange?.("role_dashboards")}
+                      className="text-xs font-black uppercase tracking-widest text-white bg-[#2E7D32] hover:bg-[#25632a] px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-[#2E7D32]/20"
+                      title="Open Admin Panel (https://1stcars.in/admin)"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Admin Panel</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => onViewChange?.("role_dashboards")}
                     className="text-xs font-black uppercase tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 hover:bg-[#2E7D32]/25 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
@@ -564,6 +574,17 @@ export function Navbar({
 
           {currentUser && (
             <div className="grid grid-cols-2 gap-3">
+              {currentUser.role === "Admin" && (
+                <Button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onViewChange?.("role_dashboards");
+                  }}
+                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
+                >
+                  Admin Panel
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => {
