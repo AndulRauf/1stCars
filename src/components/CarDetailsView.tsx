@@ -1,7 +1,6 @@
 import * as React from "react";
 import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon } from "lucide-react";
 import { Car } from "@/src/types";
-    import { CARS_DATA } from "@/src/data/cars";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
 import { Button } from "@/src/components/ui/Button";
@@ -10,6 +9,7 @@ import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
+import { useCatalogCars } from "@/src/lib/useCatalogCars";
 
 
 interface CarDetailsViewProps {
@@ -31,10 +31,12 @@ export function CarDetailsView({
   onNavigateToSalesPortal,
   onNavigateToDashboard,
 }: CarDetailsViewProps) {
+  const catalogCars = useCatalogCars();
+
   // Locate selected car
   const car = React.useMemo(() => {
-    return CARS_DATA.find((item) => item.id === carId) || CARS_DATA[0];
-  }, [carId]);
+    return catalogCars.find((item) => item.id === carId) || catalogCars[0];
+  }, [carId, catalogCars]);
 
   // Schema.org Structured Metadata for Car
   const schemaData = React.useMemo(() => {
@@ -138,10 +140,10 @@ export function CarDetailsView({
 
   // Extract similar cars (same brand or price range +/- $30k)
   const similarCars = React.useMemo(() => {
-    return CARS_DATA.filter(
+    return catalogCars.filter(
       (item) => item.id !== car.id && (item.brand === car.brand || Math.abs(item.price - car.price) <= 40000)
     ).slice(0, 2);
-  }, [car]);
+  }, [car, catalogCars]);
 
   // Format currency
   const formatMoney = (val: number) => {

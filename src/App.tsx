@@ -50,6 +50,7 @@ import { AuthModal } from "@/src/components/AuthModal";
 import { supabase } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
 import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
+import { useCatalogCars } from "@/src/lib/useCatalogCars";
 // ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
 // so it always lives in the main chunk. Import it statically here too to avoid
 // a redundant dynamic chunk.
@@ -90,6 +91,10 @@ export default function App() {
   const [savedCars, setSavedCars] = React.useState<string[]>(["car-1", "car-3"]); // pre-saved for delightful onboarding
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
   const [selectedCity, setSelectedCity] = React.useState<string>("Surat");
+
+  // Live catalog = static curated list + cars uploaded/published via the CMS
+  // (they live in the Supabase "cars" table, so they must be merged in here).
+  const catalogCars = useCatalogCars();
 
   // Central Navigation handler that keeps URL in sync
   const handleNavigate = React.useCallback((
@@ -488,7 +493,7 @@ export default function App() {
   };
 
   // Filter listings
-  const filteredCars = CARS_DATA.filter(car => {
+  const filteredCars = catalogCars.filter(car => {
     const matchesSearch = searchTerm === "" || 
       car.brand.toLowerCase().includes(searchTerm.toLowerCase()) || 
       car.model.toLowerCase().includes(searchTerm.toLowerCase());

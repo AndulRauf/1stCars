@@ -17,6 +17,7 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { AdminCMS } from "./AdminCMS";
 import { toast } from "@/src/lib/toast";
+import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { Inspection120FormModal } from "./Inspection120FormModal";
 import { Full120PointReport } from "@/src/data/inspection120Data";
 
@@ -30,6 +31,9 @@ interface RoleDashboardsProps {
 export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
+
+  // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
+  const catalogCars = useCatalogCars();
 
   // Common Database States
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
@@ -574,7 +578,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
                   {savedCars.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {CARS_DATA.filter(car => savedCars.includes(car.id)).map(car => (
+                      {catalogCars.filter(car => savedCars.includes(car.id)).map(car => (
                         <div key={car.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex justify-between items-center">
                           <div className="space-y-1">
                             <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">{car.brand}</span>

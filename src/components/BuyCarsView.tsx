@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
+import { useCatalogCars } from "@/src/lib/useCatalogCars";
 
 interface BuyCarsViewProps {
   onViewDetails: (id: string) => void;
@@ -35,6 +36,9 @@ export function BuyCarsView({
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
     buyCarsSubheadingText: "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification."
   });
+
+  // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
+  const catalogCars = useCatalogCars();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -176,7 +180,7 @@ export function BuyCarsView({
 
   // Filter and Sort Engine
   const filteredAndSortedCars = React.useMemo(() => {
-    let result = [...CARS_DATA];
+    let result = [...catalogCars];
 
     // Search query match (model or brand or features)
     if (filters.search.trim()) {
@@ -242,7 +246,7 @@ export function BuyCarsView({
     }
 
     return result;
-  }, [filters, sortBy]);
+  }, [filters, sortBy, catalogCars]);
 
   // Pagination bounds
   const totalPages = Math.ceil(filteredAndSortedCars.length / ITEMS_PER_PAGE) || 1;
