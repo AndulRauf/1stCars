@@ -751,6 +751,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     
     let initialData = { ...item };
     if (activeModule === "cars") {
+      // Flatten the JSONB payload into the top level so photos, price breakup,
+      // inspection and every other CMS-only field survive an edit. saveCar's
+      // buildCarRecord rebuilds `payload` from the top-level record, so without
+      // this an edit would silently drop those fields (and re-saving would also
+      // move data-URL photos to Supabase Storage, which is what we want).
+      initialData = { ...item, ...(item.payload || {}) };
       if (!Array.isArray(initialData.images)) {
         initialData.images = initialData.image_url && initialData.image_url !== "🚙" 
           ? [initialData.image_url] 
@@ -4157,6 +4163,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                   const value = formData[key];
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
                   const isMultiline = key === "content" || key === "answer" || key === "notes";
+
+                  // Objects/arrays (payload, features, inspection, cities, ...)
+                  // have no text-input representation — skip rendering them but
+                  // keep them in formData so they survive the save untouched.
+                  if (value !== null && typeof value === "object") return null;
                   
                   return (
                     <div key={key} className={`space-y-1 ${isMultiline ? "sm:col-span-2" : ""}`}>
