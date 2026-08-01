@@ -657,7 +657,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   }, []);
 
   const dbBrandNames = dbBrands.map(b => b.name);
-  const allBrands = Array.from(new Set([...dbBrandNames, ...Object.keys(sellCatalog)])).filter(Boolean);
+  // Brands removed by the admin in the Sell Form & Brands Editor must stay hidden
+  // even if they still exist in the Supabase `brands` table (which is shared with
+  // the Buy-side catalog and therefore not deleted when removed from the sell form).
+  const removedSellBrands = getStoredSellCatalog()?.removed || [];
+  const allBrands = Array.from(new Set([
+    ...dbBrandNames.filter(b => !removedSellBrands.includes(b)),
+    ...Object.keys(sellCatalog)
+  ])).filter(Boolean);
 
   // Filter lists based on search
   const filteredBrands = allBrands.filter(b => 

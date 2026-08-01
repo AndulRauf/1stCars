@@ -18,6 +18,7 @@ import { Badge } from "@/src/components/ui/Badge";
 import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
 import { Inspection120FormModal } from "./Inspection120FormModal";
+import { CreateCarWizard } from "./CreateCarWizard";
 import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY, OFFICIAL_120_CATEGORIES, getStoredInspectionCategories } from "@/src/data/inspection120Data";
 import { Gavel, Globe } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
@@ -431,6 +432,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [formMode, setFormMode] = React.useState<"add" | "edit">("add");
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [formData, setFormData] = React.useState<any>({});
+  const [isCarWizardOpen, setIsCarWizardOpen] = React.useState(false);
 
   // 120-Point Inspection Modal state
   const [selected120Inspection, setSelected120Inspection] = React.useState<any | null>(null);
@@ -683,6 +685,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     setFormMode("add");
     setEditingId(null);
     
+    // Car creation uses the sell-form-style wizard instead of the generic form
+    if (activeModule === "cars") {
+      setIsCarWizardOpen(true);
+      return;
+    }
+    
     // Set realistic default template keys based on current module
     const defaultTemplates: Record<CMSModule, any> = {
       dashboard: {},
@@ -739,6 +747,28 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     
     setFormData(initialData);
     setIsFormOpen(true);
+  };
+
+  // Handler for the CreateCarWizard submission
+  const handleWizardSubmit = async (record: any) => {
+    setIsLoading(true);
+    try {
+      const generatedId = `id-cars-${Math.random().toString(36).substr(2, 9)}`;
+      const finalRecord = { ...record, id: generatedId, created_at: new Date().toISOString() };
+      await supabase.from("cars").insert([finalRecord]);
+      setIsCarWizardOpen(false);
+      toast.success("Car uploaded & published to 1stCars website!");
+      setTimeout(() => {
+        window.dispatchEvent(new Event("1stcars_settings_updated"));
+      }, 0);
+      loadCMSData();
+      if (onReloadAllData) onReloadAllData();
+    } catch (err) {
+      console.error("Error creating car via wizard:", err);
+      toast.error("Failed to create car: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Mock Storage Upload function
@@ -4499,6 +4529,14 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           </div>
         </div>
       )}
+
+      {/* Sell-form-style Car Creation Wizard */}
+      <CreateCarWizard
+        sellCatalog={sellCatalog}
+        isOpen={isCarWizardOpen}
+        onClose={() => setIsCarWizardOpen(false)}
+        onSubmit={handleWizardSubmit}
+      />
 
       {/* Document Photo Preview Modal (Visiting Card / Aadhar Card) */}
       {previewPhotoModal && (
