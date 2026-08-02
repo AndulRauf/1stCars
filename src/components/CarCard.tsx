@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, User, ChevronLeft, ChevronRight, Eye, Share2 } from "lucide-react";
+import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, User, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -303,14 +303,6 @@ export function CarCard({
 
         {/* Action Panel */}
         <div className="pt-2.5 sm:pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewDetails?.(car.id)}
-            className="flex-1 hover:bg-[#2E7D32]/5 hover:text-primary text-[#2E7D32] border-[#2E7D32]/20 font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-8 sm:h-9 rounded-lg sm:rounded-xl px-2"
-          >
-            <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" /> Quick View
-          </Button>
           <Button
             size="sm"
             onClick={() => onViewDetails?.(car.id)}
