@@ -384,25 +384,7 @@ export function Navbar({
                     Logout
                   </Button>
                 </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onAuthClick?.("register")}
-                    className="text-[#2E7D32] hover:bg-[#2E7D32]/10 font-bold uppercase tracking-wider text-xs px-3"
-                  >
-                    Register
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => onAuthClick?.("login")}
-                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-bold uppercase tracking-wider text-xs px-4 shadow-md shadow-[#2E7D32]/20"
-                  >
-                    Login
-                  </Button>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile Actions Header */}
