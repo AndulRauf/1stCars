@@ -9,7 +9,7 @@ interface NavbarProps {
   onSavedClick?: () => void;
   onAuthClick?: (mode: "login" | "register") => void;
   onSearchClick?: () => void;
-  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "custom_page" | "error_404" | "error_500";
+  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "custom_page" | "about" | "error_404" | "error_500";
   onViewChange?: (view: any, carId?: string) => void;
   currentUser?: any;
   onLoginSuccess?: (user: any) => void;
@@ -155,7 +155,7 @@ export function Navbar({
 
   const navLinks: {
     label: string;
-    view: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification";
+    view: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "about";
     href: string;
     isSpecial?: boolean;
     requiresAuth?: boolean;
@@ -163,11 +163,11 @@ export function Navbar({
     { label: "Buy Cars", view: "buy_cars" as const, href: "/buy-cars" },
     { label: "Sell Car", view: "sell_car" as const, href: "/sell-car" },
     { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification" },
+    { label: "About Us", view: "about" as const, href: "/about" },
   ];
 
-  // Static home-page section shortcuts (About Us & FAQ) shown in nav menus
+  // Static home-page section shortcuts (FAQ) shown in nav menus
   const sectionLinks: { label: string; section: string }[] = [
-    { label: "About Us", section: "certified-benefits" },
     { label: "FAQ", section: "about-section" },
   ];
 

@@ -9,6 +9,7 @@ export type ViewType =
   | "role_dashboards" 
   | "firstmark_certification" 
   | "custom_page" 
+  | "about" 
   | "error_404" 
   | "error_500";
 
@@ -74,6 +75,11 @@ export function parseCurrentUrl(): RouteParams {
   // Route 3: 1stMark Certification
   if (pathname === "/certification" || pathname === "/1stmark-certification" || pathname === "/1stmark" || pathname === "/1stmark-certified") {
     return { view: "firstmark_certification" };
+  }
+
+  // Route 3.5: About Us
+  if (pathname === "/about" || pathname === "/about-us" || pathname === "/aboutus" || pathname === "/about-1stcars" || pathname === "/company") {
+    return { view: "about" };
   }
 
   // Route 4: Dashboards / Portal
@@ -150,6 +156,9 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
 
     case "firstmark_certification":
       return "/certification";
+
+    case "about":
+      return "/about";
 
     case "role_dashboards":
       return "/admin";
@@ -228,6 +237,8 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
       return carName ? `${carName} | 1stCars Certified Pre-Owned` : `Certified Vehicle Details | 1stCars`;
     case "firstmark_certification":
       return `1stMark Certification — 120-Point Inspection Standard | 1stCars`;
+    case "about":
+      return `About Us | 1stCars — Certified Premium Used Cars`;
     case "role_dashboards":
       return `My Portal & Dashboards | 1stCars`;
     case "sales_dashboard":

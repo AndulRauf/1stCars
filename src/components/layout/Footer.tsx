@@ -127,6 +127,16 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
               Trust & Policies
             </h5>
             <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onViewChange?.("about")}
+                  className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+                >
+                  <span>About Us</span>
+                  <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+                </button>
+              </li>
               {footerPages.map((page) => (
                 <li key={page.id}>
                   <button
