@@ -333,7 +333,6 @@ export default function App() {
   }, [loadSettingsAndCMSData]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedBudget, setSelectedBudget] = React.useState(0);
-  const [selectedBodyType, setSelectedBodyType] = React.useState<string>("All");
 
   // Lead capture / Book inspection states
   const [bookPhone, setBookPhone] = React.useState("");
@@ -507,22 +506,19 @@ export default function App() {
     
     const matchesBudget = selectedBudget === 0 || car.price <= selectedBudget;
     
-    const matchesBodyType = selectedBodyType === "All" || car.bodyType === selectedBodyType;
-
     const selectedCityLower = selectedCity.toLowerCase();
     const matchesCity = selectedCity === "All Cities" || 
       car.cities?.some(c => c.toLowerCase() === selectedCityLower) || 
       car.regCity?.toLowerCase() === selectedCityLower || 
       car.location?.toLowerCase().includes(selectedCityLower);
 
-    return matchesSearch && matchesBrand && matchesBudget && matchesBodyType && matchesCity;
+    return matchesSearch && matchesBrand && matchesBudget && matchesCity;
   });
 
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedBrand("");
     setSelectedBudget(0);
-    setSelectedBodyType("All");
     triggerToast("All filters reset");
   };
 
@@ -853,26 +849,6 @@ export default function App() {
             <p className="text-sm sm:text-base text-slate-500 font-medium">
               {websiteSettings.buyCarsSubheadingText || "Every vehicle on this list is fully vetted and owned directly by 1stCars. Enjoy straightforward pricing, single-owner status, certified non-accident frames, and instant deliveries."}
             </p>
-          </div>
-
-          {/* Interactive Body Type Filter Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto bg-slate-50 p-1.5 rounded-full border border-slate-200">
-            {["All", "SUV", "Sedan", "Coupe"].map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setSelectedBodyType(type);
-                  triggerToast(`Filtering by body type: ${type}`);
-                }}
-                className={`px-5 py-2 text-xs font-extrabold uppercase tracking-widest rounded-full transition-all cursor-pointer ${
-                  selectedBodyType === type 
-                    ? "bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/10" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-              >
-                {type}s
-              </button>
-            ))}
           </div>
 
           {/* Grid of Listings */}
