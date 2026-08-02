@@ -1,7 +1,7 @@
 import * as React from "react";
 import { supabase } from "@/src/lib/supabaseClient";
 import Markdown from "react-markdown";
-import { ArrowLeft, BookOpen, Clock, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 
 interface CustomPageViewProps {
@@ -50,7 +50,7 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
       <div className="min-h-[50vh] flex flex-col items-center justify-center bg-slate-50/50 py-16">
         <div className="h-12 w-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm font-black text-slate-500 uppercase tracking-widest mt-6 animate-pulse">
-          Retrieving Vetted CMS Page...
+          Loading Page...
         </p>
       </div>
     );
@@ -92,15 +92,6 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
           <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10 space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-600/10 text-emerald-800">
-                ⭐ Verified CMS Page
-              </span>
-              <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 flex items-center">
-                <Clock className="h-3 w-3 mr-1" /> Updated Just Now
-              </span>
-            </div>
-
             <h1 className="font-sans text-3xl md:text-5xl font-black tracking-tight text-slate-900 leading-tight">
               {page.title}
             </h1>
@@ -118,13 +109,6 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
           <div className="prose max-w-none text-slate-700 leading-relaxed font-semibold text-sm space-y-6">
             <Markdown>{page.content}</Markdown>
           </div>
-        </div>
-
-        {/* Footer Accent */}
-        <div className="mt-12 text-center">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-            🏎️ 1stCars Luxury pre-owned standards • Vetted Document
-          </p>
         </div>
 
       </div>
