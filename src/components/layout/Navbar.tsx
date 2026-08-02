@@ -572,28 +572,7 @@ export function Navbar({
             )}
           </button>
 
-          {!currentUser ? (
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => {
-                  setIsOpen(false);
-                  onAuthClick?.("register");
-                }}
-                className="w-full text-[10px] font-black uppercase tracking-wider h-12 rounded-xl"
-              >
-                Register
-              </Button>
-              <Button
-                onClick={() => {
-                  setIsOpen(false);
-                  onAuthClick?.("login");
-                }}
-                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
-              >
-                Login
-              </Button>
-            </div>
-          ) : (
+          {currentUser && (
             <div className="grid grid-cols-2 gap-3">
               {currentUser.role === "Admin" && (
                 <Button
