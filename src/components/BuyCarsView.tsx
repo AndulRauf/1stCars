@@ -77,7 +77,7 @@ export function BuyCarsView({
     transmission: "All",
     budgetMin: 0,
     budgetMax: 50000000,
-    yearMin: 2015,
+    yearMin: 0,
     yearMax: 2026,
     city: selectedCity || "Surat",
   });
@@ -127,7 +127,7 @@ export function BuyCarsView({
       transmission: "All",
       budgetMin: 0,
       budgetMax: 50000000,
-      yearMin: 2015,
+      yearMin: 0,
       yearMax: 2026,
       city: "All Cities",
     });
@@ -151,7 +151,7 @@ export function BuyCarsView({
   const handleYearsOldChange = (value: string) => {
     setYearsOld(value);
     if (value === "All") {
-      setFilters(prev => ({ ...prev, yearMin: 2015, yearMax: 2026 }));
+      setFilters(prev => ({ ...prev, yearMin: 0, yearMax: 2026 }));
     } else {
       const years = parseInt(value);
       const currentYear = new Date().getFullYear();
