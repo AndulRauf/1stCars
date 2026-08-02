@@ -22,6 +22,7 @@ const processCheckout = async (
   car: Car,
   selectedCity: string,
   buyerName: string,
+  buyerEmail: string,
   buyerMobile: string,
   refId: string,
   vehicleTitle: string,
@@ -33,14 +34,15 @@ const processCheckout = async (
   onSaveToggle?: (id: string, model: string) => void,
   savedCars?: string[]
 ) => {
-  const buyerEmail = `${buyerMobile.trim()}@1stcars.com`;
+  const safeEmail = buyerEmail.trim() || `${buyerMobile.trim()}@1stcars.com`;
   try {
     const { data: authData } = await supabase.auth.signUp({
-      email: buyerEmail,
+      email: safeEmail,
       password: "Password123!",
       options: {
         data: {
           name: buyerName.trim(),
+          email: safeEmail,
           mobile: buyerMobile.trim(),
           role: "Buyer",
           city: selectedCity || car.cities?.[0] || car.location || "Surat",
@@ -48,7 +50,7 @@ const processCheckout = async (
       },
     });
     if (!authData?.user) {
-      await supabase.auth.signInWithPassword({ email: buyerEmail, password: "Password123!" });
+      await supabase.auth.signInWithPassword({ email: safeEmail, password: "Password123!" });
     }
   } catch (authErr) {
     console.warn("Auto sign in error during checkout:", authErr);
@@ -66,6 +68,7 @@ const processCheckout = async (
     id: refId,
     created_at: new Date().toISOString(),
     name: buyerName.trim(),
+    email: safeEmail,
     mobile: buyerMobile.trim(),
     mobile_verified: true,
     city: selectedCity || car.cities?.[0] || car.location || "Surat",
@@ -127,6 +130,7 @@ export function BuyNowCheckout({
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [leadRefId, setLeadRefId] = React.useState("");
   const [buyerName, setBuyerName] = React.useState("");
+  const [buyerEmail, setBuyerEmail] = React.useState("");
   const [buyerMobile, setBuyerMobile] = React.useState("");
 
   // Mobile OTP verification state
@@ -155,6 +159,7 @@ export function BuyNowCheckout({
       setShowPriceSummary(false);
       setIsSubmitted(false);
       setBuyerName("");
+      setBuyerEmail("");
       setBuyerMobile("");
       setOtpSent(false);
       setGeneratedOtp("");
@@ -270,6 +275,10 @@ export function BuyNowCheckout({
       toast.error("Please enter your full name.");
       return;
     }
+    if (!buyerEmail.trim() || !buyerEmail.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
     if (!buyerMobile || buyerMobile.length !== 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
@@ -318,6 +327,10 @@ export function BuyNowCheckout({
       toast.error("Please enter your full name.");
       return;
     }
+    if (!buyerEmail.trim() || !buyerEmail.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
     if (!buyerMobile || buyerMobile.replace(/\D/g, "").length < 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
@@ -329,7 +342,7 @@ export function BuyNowCheckout({
     const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
 
     try {
-      await processCheckout(car, selectedCity, buyerName, buyerMobile, refId, vehicleTitle, totalPrice, fmt, "", "", "Pending", onSaveToggle, savedCars);
+      await processCheckout(car, selectedCity, buyerName, buyerEmail, buyerMobile, refId, vehicleTitle, totalPrice, fmt, "", "", "Pending", onSaveToggle, savedCars);
       setIsSubmitted(true);
       toast.success("Reservation started! Our team will connect with you to complete the payment.");
     } catch (err) {
@@ -353,7 +366,7 @@ export function BuyNowCheckout({
       setLeadRefId(refId);
       const vehicleTitle = `${car.brand} ${car.model} (${car.year})`;
       try {
-        await processCheckout(car, selectedCity, buyerName, buyerMobile, refId, vehicleTitle, totalPrice, fmt, upiRef.trim(), upiSettings.upiId, "Payment Submitted", onSaveToggle, savedCars);
+        await processCheckout(car, selectedCity, buyerName, buyerEmail, buyerMobile, refId, vehicleTitle, totalPrice, fmt, upiRef.trim(), upiSettings.upiId, "Payment Submitted", onSaveToggle, savedCars);
         setIsSubmitted(true);
         toast.success("Payment submitted! Our team will contact you shortly.");
       } catch (err) {
@@ -628,6 +641,13 @@ export function BuyNowCheckout({
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
                   placeholder="Your full name *"
+                  className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
+                />
+                <input
+                  type="email"
+                  value={buyerEmail}
+                  onChange={(e) => setBuyerEmail(e.target.value.trim())}
+                  placeholder="Your email address *"
                   className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
                 />
                 <div className="relative">
