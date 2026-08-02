@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Mail, Phone, MapPin, ArrowUpRight, Github, Heart, Shield, Award, Sparkles } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowUpRight, Shield } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 
 interface FooterProps {
@@ -171,15 +171,6 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
         {/* Bottom Bar */}
         <div className="border-t border-[#2E7D32]/10 pt-8 mt-12 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
           <p>{settings.footerText.includes("©") ? settings.footerText : `© ${currentYear} ${settings.footerText}`}</p>
-          <div className="flex items-center space-x-6 mt-4 md:mt-0">
-            <a href="#privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#terms" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="#sitemap" className="hover:text-primary transition-colors">Sitemap</a>
-            <div className="flex items-center space-x-1.5 text-slate-400">
-              <span>Made with</span>
-              <Heart className="h-3.5 w-3.5 text-primary fill-primary animate-pulse" />
-            </div>
-          </div>
         </div>
 
       </div>
