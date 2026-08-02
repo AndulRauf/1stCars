@@ -878,14 +878,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Banner Section */}
-        <div className="bg-gradient-to-br from-[#1C3E24] to-[#2E7D32] text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden mb-10">
-          <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#ffffff10] via-transparent to-transparent pointer-events-none hidden md:block" />
+        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 text-slate-900 rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden mb-10">
+          <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#2E7D32]/15 via-transparent to-transparent pointer-events-none hidden md:block" />
           
           <div className="max-w-2xl space-y-4">
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none">
               {settings.sellCarBannerTitle}
             </h1>
-            <p className="text-sm md:text-base text-emerald-100 max-w-xl font-medium leading-relaxed">
+            <p className="text-sm md:text-base text-slate-600 max-w-xl font-medium leading-relaxed">
               {settings.sellCarBannerDesc}
             </p>
           </div>

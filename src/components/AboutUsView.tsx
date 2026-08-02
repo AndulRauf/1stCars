@@ -73,7 +73,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
     <div className="bg-[#FAF9F6] min-h-screen text-slate-900 pb-20">
 
       {/* Hero */}
-      <div className="bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-950 text-white relative pt-28 sm:pt-32 pb-14 md:pb-20 overflow-hidden border-b border-[#2E7D32]/20">
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-28 sm:pt-32 pb-14 md:pb-20 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
@@ -85,7 +85,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
           <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
             Your Trusted <span className="text-[#2E7D32]">Pre-Owned</span> Marketplace
           </h1>
-          <p className="text-xs sm:text-base text-slate-300 font-semibold max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
             1stCars is Gujarat's modern hub for buying and selling certified pre-owned vehicles. We combine rigorous 120-point inspections, transparent pricing, and an elite dealer network to make every transaction simple, safe, and fair.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -98,7 +98,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
             <Button
               variant="outline"
               onClick={onBackToHome}
-              className="bg-white/10 hover:bg-white/15 border border-white/10 text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
+              className="bg-white/60 hover:bg-white/80 border border-[#2E7D32]/20 text-[#2E7D32] font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
             >
               Back to Home
             </Button>

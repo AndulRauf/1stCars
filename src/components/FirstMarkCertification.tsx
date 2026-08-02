@@ -80,7 +80,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
     <div className="bg-[#F8F6F0] min-h-screen text-slate-900 pb-20">
       
       {/* Dynamic Header Hero Section */}
-      <div className="bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-950 text-white relative pt-24 sm:pt-28 pb-12 md:pb-20 overflow-hidden border-b border-[#2E7D32]/20">
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-20 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl" />
@@ -95,7 +95,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
           <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
             1stMark <span className="text-[#2E7D32]">Certification</span>
           </h1>
-          <p className="text-xs sm:text-base text-slate-300 font-semibold max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
             The ultimate benchmark for pre-owned car certification. Every vehicle undergoes our rigorous 120-Point Inspection across 12 vital mechanical and structural categories to assign an official Vehicle Grade (A+, A, B+, B, C).
           </p>
 
@@ -108,7 +108,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
             </Button>
             <a
               href="#inspection-checklist"
-              className="bg-white/10 hover:bg-white/15 border border-white/10 text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
+              className="bg-white/60 hover:bg-white/80 border border-[#2E7D32]/20 text-[#2E7D32] font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
             >
               Explore 120 Checklist Items
             </a>
