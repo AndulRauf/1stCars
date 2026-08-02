@@ -384,7 +384,25 @@ export function Navbar({
                     Logout
                   </Button>
                 </div>
-              ) : null}
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAuthClick?.("register")}
+                    className="text-[#2E7D32] hover:bg-[#2E7D32]/10 font-bold uppercase tracking-wider text-xs px-3"
+                  >
+                    Register
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => onAuthClick?.("login")}
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-bold uppercase tracking-wider text-xs px-4 shadow-md shadow-[#2E7D32]/20"
+                  >
+                    Login
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Mobile Actions Header */}
@@ -572,7 +590,28 @@ export function Navbar({
             )}
           </button>
 
-          {currentUser && (
+          {!currentUser ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => {
+                  setIsOpen(false);
+                  onAuthClick?.("register");
+                }}
+                className="w-full text-[10px] font-black uppercase tracking-wider h-12 rounded-xl"
+              >
+                Register
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsOpen(false);
+                  onAuthClick?.("login");
+                }}
+                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
+              >
+                Login
+              </Button>
+            </div>
+          ) : (
             <div className="grid grid-cols-2 gap-3">
               {currentUser.role === "Admin" && (
                 <Button
