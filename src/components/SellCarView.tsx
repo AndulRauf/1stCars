@@ -1,7 +1,7 @@
 import * as React from "react";
 import { 
   Car, ShieldCheck, Clock, Calendar, CheckCircle2, 
-  Sparkles, ShieldAlert, ChevronRight, User, Phone, 
+  Sparkles, ShieldAlert, ChevronRight, User, Mail, Phone, 
   MapPin, HelpCircle, FileText, ArrowRight, ClipboardCheck,
   Search, ArrowLeft
 } from "lucide-react";
@@ -515,6 +515,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
   // Contact details & Booking address
   const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [mobile, setMobile] = React.useState("");
   const [address, setAddress] = React.useState("");
   const [preferredDate, setPreferredDate] = React.useState("");
@@ -588,6 +589,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   }, [resendCountdown]);
 
   const handleSendOtp = async () => {
+    if (!name.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
     if (!mobile || mobile.length !== 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
@@ -638,6 +647,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setName(user.user_metadata?.name || user.email?.split("@")[0] || "");
+          setEmail(user.email || user.user_metadata?.email || "");
           setMobile(user.user_metadata?.mobile || "");
         }
       } catch (e) {
@@ -716,6 +726,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   // Submit flow
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
     if (!mobile || mobile.length !== 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
@@ -732,14 +750,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const resolvedCity = rtoDetails ? rtoDetails.city : "Gujarat";
 
     // Resolve name early so we can use it for the auto Seller account
-    const preliminaryName = name || `Customer (${mobile.substring(6)})`;
+    const preliminaryName = name.trim();
 
     // Ensure the seller is signed in so they land on the Seller Dashboard (not the login gateway)
     // after submitting. Mirrors the Buyer auto-registration flow used in BookingModal.
     let { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      const sellerEmail = `${mobile}@1stcars.com`;
-      // Reuse a previously stored auto-password for this mobile so repeat
+      const sellerEmail = email.trim();
+      // Reuse a previously stored auto-password for this email so repeat
       // submissions can sign back into the SAME auto-created Seller account.
       // Generating a fresh password each time breaks sign-in once the account
       // already exists (the stored credential hash would no longer match),
@@ -757,6 +775,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         {
           data: {
             name: preliminaryName,
+            email: email.trim(),
             mobile: mobile,
             role: "Seller",
             city: resolvedCity
@@ -775,7 +794,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const computedReg = `${selectedRTO}-${finalRegSuffix}`;
 
     // Smart default fallbacks for removed fields
-    const finalName = name || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
+    const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
+    const finalEmail = email.trim() || user?.email || "";
     const finalAddress = address || `Home Doorstep Inspection near RTO ${selectedRTO} (${resolvedCity})`;
     const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
     const finalTime = preferredTime || "11:00 AM - 01:00 PM";
@@ -788,6 +808,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       seller_id: user?.id || crypto.randomUUID(),
       seller_name: finalName,
       seller_mobile: mobile,
+      seller_email: finalEmail,
       reg_number: computedReg,
       brand: selectedBrand,
       model: selectedModel,
@@ -1525,6 +1546,48 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     </div>
 
                     <div className="space-y-4">
+                      {/* Full Name Input Row */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">FULL NAME *</label>
+                        <div className="relative">
+                          <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Enter your full name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => {
+                              if (!otpVerified) {
+                                setName(e.target.value);
+                              }
+                            }}
+                            disabled={otpVerified}
+                            required
+                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email Input Row */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">EMAIL ID *</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Enter your email address"
+                            type="email"
+                            value={email}
+                            onChange={(e) => {
+                              if (!otpVerified) {
+                                setEmail(e.target.value.trim());
+                              }
+                            }}
+                            disabled={otpVerified}
+                            required
+                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                      </div>
+
                       {/* Mobile Input Row */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">MOBILE NUMBER *</label>
@@ -1678,6 +1741,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     
                     <div>Mobile:</div>
                     <div className="text-slate-800 text-right">{createdRequest?.seller_mobile}</div>
+
+                    <div>Email:</div>
+                    <div className="text-slate-800 text-right">{createdRequest?.seller_email}</div>
 
                     <div>Inspection Slot:</div>
                     <div className="text-[#2E7D32] text-right">{createdRequest?.preferred_date} ({createdRequest?.preferred_time})</div>
