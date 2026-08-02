@@ -367,7 +367,150 @@ class SupabaseMockClient {
             id: "p-terms",
             title: "Terms & Conditions",
             slug: "terms-and-conditions",
-            content: `# Terms & Conditions of Business\n\nWelcome to **1stCars**. By browsing our marketplace or using our vehicle procurement, trade-in, or certified showroom inspection services, you agree to comply with the following terms.\n\n### 1. Booking & Delivery\n- To reserve a luxury vehicle from our handpicked fleet, a refundable holding deposit of ₹50,000 is required.\n- Full payment must be settled via certified bank transfer, RTGS, or approved showroom partner financing before delivery.\n\n### 2. Odometer and Title Integrity\n- We pledge an absolute **Zero-Tolerance Policy** for tampered odometers.\n- If any vehicle is found to have a non-genuine odometer read-out or a hidden past salvage title, we will issue a **100% Instant Refund**.\n\n### 3. Customer Sell-Your-Car & Appraisals\n- Valuations provided online are estimated guides.\n- Final purchase offers are subject to an on-site physical evaluation.\n\nFor legal or contract queries, please write to us at **legal@1stcars.com**.`,
+            content: `# 1stCars Terms & Conditions of Business
+
+**Last Updated: August 2026**
+
+These Terms & Conditions ("Terms") govern your access to and use of the 1stCars marketplace, website, and related services (together, the "Platform"). By accessing the Platform, browsing listings, or using any of our services — including buying, selling, or booking vehicle inspections — you agree to be bound by these Terms.
+
+If you do not agree with any part of these Terms, please discontinue use of the Platform immediately.
+
+---
+
+## 1. About 1stCars
+
+1stCars is a certified pre-owned vehicle marketplace operating across Gujarat, India. We connect verified car buyers, sellers, and elite dealers through transparent, deal-mediated processes. Every vehicle listed on the Platform undergoes our 120-Point Inspection and is graded across 12 vital mechanical and structural categories before listing.
+
+---
+
+## 2. Acceptance of Terms
+
+- By using the Platform, you confirm that you are at least 18 years of age and legally capable of entering into binding contracts.
+- These Terms, together with our Privacy Policy and any additional policies referenced herein, form the complete agreement between you and 1stCars.
+- If you use the Platform on behalf of a business or organization, you represent that you are authorised to bind that entity to these Terms.
+
+---
+
+## 3. Marketplace Services
+
+### 3.1 For Buyers
+- All listed vehicles are vetted, inspected, and priced transparently. The displayed price is the drive-away price and includes the cost breakup shown at checkout.
+- A refundable booking token of ₹3,000 is payable to reserve a vehicle and receive priority assistance. The token is 100% refundable as described in Section 7.
+- Vehicle ownership, RC transfer, and documentation assistance are provided to facilitate a smooth and compliant transfer.
+
+### 3.2 For Sellers
+- Sellers can request a free doorstep inspection through the Platform. A certified 1stCars inspector will contact you to confirm coordinates and schedule.
+- Post-inspection, verified elite dealers compete in live, time-boxed bidding auctions to offer you the best competitive value.
+- You agree to provide accurate and truthful information about your vehicle, including its odometer reading, ownership history, and condition.
+
+---
+
+## 4. Vehicle Listings & Accuracy
+
+- 1stCars takes reasonable care to ensure listings are accurate; however, photographs and descriptions are indicative and may not reflect every minor detail.
+- Odometer readings are verified during inspection. We do not list vehicles with tampered odometers, and any such finding leads to automatic delisting.
+- Vehicle availability is subject to change without prior notice. A vehicle shown as available may be reserved or sold at any time.
+
+---
+
+## 5. Inspections & Certification
+
+- The 120-Point Certification is performed by trained 1stCars inspectors using standardised checklists across engine, transmission, chassis, electronics, exterior, and interior categories.
+- Certification reflects the condition of the vehicle at the time of inspection. Wear and tear arising after inspection is not covered by the certification.
+- Inspection reports are for informational purposes and do not constitute a mechanical warranty unless separately agreed in writing.
+
+---
+
+## 6. Bookings & Reservations
+
+- A booking creates a reservation for a specific vehicle and does not transfer ownership until full payment and legal documentation are completed.
+- We may require mobile number verification via OTP and contact details to process your booking. By providing these details you consent to being contacted by our concierge team.
+- Priority assistance is provided to buyers who complete the token payment, subject to availability.
+
+---
+
+## 7. Booking Token & Payments
+
+- The booking token of ₹3,000 is refundable and is adjusted against the total drive-away price at final payment.
+- Token refunds are processed within 7–10 working days to the same payment method, provided no applicable cancellation or damage policy is triggered.
+- All payments are to be made in Indian Rupees (INR). You are responsible for ensuring the accuracy of UPI / bank details provided.
+
+---
+
+## 8. Ownership Transfer & Documentation
+
+- Ownership transfer, RC transfer, and applicable road tax are facilitated by 1stCars or its authorised partners, and the related charges are shown in the price breakup.
+- You remain responsible for furnishing genuine documents (RC, insurance, pollution certificate, etc.) in a timely manner.
+- 1stCars is not liable for delays caused by RTO or government processing timelines.
+
+---
+
+## 9. Limitation of Liability
+
+- To the maximum extent permitted by law, 1stCars shall not be liable for any indirect, incidental, special, or consequential damages arising out of your use of the Platform.
+- Our total liability, whether in contract, tort, or otherwise, shall not exceed the amount of the booking token paid by you in respect of the transaction giving rise to the claim.
+- The Platform is provided on an "as is" and "as available" basis. We do not warrant that the Platform will be uninterrupted, error-free, or free of harmful components.
+
+---
+
+## 10. Prohibited Conduct
+
+You agree not to:
+
+- Use the Platform for any unlawful purpose or in violation of applicable Indian laws.
+- Misrepresent your identity, vehicle details, or any information provided to 1stCars.
+- Attempt to manipulate prices, auctions, or listings.
+- Interfere with the security, integrity, or performance of the Platform.
+- Attempt to access data or accounts other than your own.
+
+---
+
+## 11. Intellectual Property
+
+- All content on the Platform — including logos, text, graphics, and branding — is the property of 1stCars or its licensors and is protected by applicable intellectual property laws.
+- You may not copy, reproduce, distribute, or create derivative works from any Platform content without prior written consent.
+
+---
+
+## 12. Privacy & Data
+
+- Your personal data is handled in accordance with our Privacy Policy and applicable data protection laws.
+- Mobile numbers provided for OTP verification and coordination are kept strictly private and used solely to dispatch inspectors, confirm quotes, and process bookings.
+
+---
+
+## 13. Third-Party Links & Services
+
+- The Platform may contain links to third-party websites, UPI applications, or services. 1stCars is not responsible for the content, policies, or practices of such third parties.
+- Payments made through third-party UPI apps are subject to the terms of the respective payment provider.
+
+---
+
+## 14. Governing Law & Jurisdiction
+
+- These Terms are governed by the laws of India.
+- Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts in Surat, Gujarat, India.
+
+---
+
+## 15. Amendments
+
+- 1stCars reserves the right to modify these Terms at any time. The revised Terms will be posted on the Platform with an updated "Last Updated" date.
+- Your continued use of the Platform after any amendment constitutes acceptance of the revised Terms.
+
+---
+
+## 16. Contact Us
+
+For questions, concerns, or feedback regarding these Terms, please contact:
+
+- **Email:** support@1stcars.com
+- **Phone:** +91 8866377722
+- **Address:** 1stCars Seller Hub, Ring 101 Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India
+
+---
+
+*By continuing to use the 1stCars Platform, you acknowledge that you have read, understood, and agreed to these Terms & Conditions.*`,
             created_at: new Date().toISOString(),
             is_footer: true
           },
