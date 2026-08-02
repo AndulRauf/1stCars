@@ -225,7 +225,7 @@ export default function App() {
     youtube: "https://youtube.com/1stcars",
     supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
-    supportAddress: "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India",
+    supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     highlight1Title: "Single Owned",
@@ -265,13 +265,16 @@ export default function App() {
       if (storedSettings) {
         try {
           const parsed = JSON.parse(storedSettings);
-          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || !parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
-            parsed.supportAddress = "1stCars Seller Hub, Ring 101 Vikas Arced, Vadod ,   Masma, Olpad, Surat, Gujarat 394540, India";
+          const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
+          if (isDemoAddress) {
+            parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
             parsed.supportEmail = "support@1stcars.com";
-            parsed.logoUrl = "/logo.png";
-            localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
+          if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
+            parsed.logoUrl = "/logo.png";
+          }
+          localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           setWebsiteSettings(prev => ({ ...prev, ...parsed }));
           if (parsed.primaryColor) {
             document.documentElement.style.setProperty("--primary-theme-color", parsed.primaryColor);
