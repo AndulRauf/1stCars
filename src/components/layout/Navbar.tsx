@@ -173,7 +173,14 @@ export function Navbar({
 
   // CMS pages are de-duplicated against the static section links above so the
   // same label never appears twice (e.g. a seeded "About Us"/"FAQs" page).
-  const sectionLinkLabels = new Set(sectionLinks.map((l) => l.label.toLowerCase()));
+  // "about us" is additionally always hidden from the nav menu because the
+  // dedicated /about page now covers it — the legacy CMS page remains usable
+  // via the footer / admin but never shows in the header.
+  const hiddenNavPageLabels = new Set(["about us"]);
+  const sectionLinkLabels = new Set([
+    ...sectionLinks.map((l) => l.label.toLowerCase()),
+    ...hiddenNavPageLabels,
+  ]);
   const isDuplicateOfSectionLink = (title: string) => {
     const t = title.toLowerCase();
     return sectionLinkLabels.has(t) || sectionLinkLabels.has(t.endsWith("s") ? t.slice(0, -1) : t);
