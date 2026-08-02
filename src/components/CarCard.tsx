@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, User, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -110,7 +110,7 @@ export function CarCard({
     { label: "Fuel", value: car.fuel, icon: Fuel },
     { label: "Transmission", value: car.transmission, icon: Award },
     { label: "KM Driven", value: `${car.mileage.toLocaleString("en-IN")} km`, icon: Gauge },
-    { label: "Owner", value: car.owners === 1 ? "1st Owner" : `${car.owners}nd Owner`, icon: User },
+    { label: "Variant", value: car.variant || "Standard", icon: SlidersHorizontal },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
 
