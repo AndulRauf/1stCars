@@ -4161,7 +4161,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 {Object.keys(formData).map((key) => {
-                  if (key === "id" || key === "created_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup") return null;
+                  if (key === "id" || key === "created_at" || key === "created_by" || key === "updated_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup") return null;
                   
                   const value = formData[key];
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
