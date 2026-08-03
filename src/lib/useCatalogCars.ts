@@ -35,7 +35,7 @@ function normalizeDbCar(row: any): Car {
     year: Number(data.year) || new Date().getFullYear(),
     price,
     emi: Number(data.emi) || Math.round(price / 60),
-    location: data.location || data.city || "Surat",
+    location: data.city || data.location || "Surat",
     fuel: data.fuel || "Petrol",
     transmission: data.transmission || "Automatic",
     mileage: kmDriven || Number(data.mileage) || 0,
