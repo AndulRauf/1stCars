@@ -327,12 +327,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   };
 
   const sendOtpCode = async (mobile: string, code: string) => {
-    // If we are in mock mode, always simulate
-    if (isUsingMock) {
-      triggerSmsNotification(mobile, code);
-      return { success: true, simulated: true };
-    }
-
     const otpProvider = resolveOtpProvider();
     let customUrl = "";
     let customHeaders = "";
