@@ -4,10 +4,13 @@
 -- ----------------------------------------------------
 
 -- 1. Custom User Roles Enum Types
-CREATE TYPE public.user_role AS ENUM ('Buyer', 'Seller', 'Dealer', 'Inspector', 'Sales Associate', 'Admin');
+DO $$ BEGIN
+  CREATE TYPE public.user_role AS ENUM ('Buyer', 'Seller', 'Dealer', 'Inspector', 'Sales Associate', 'Admin');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 2. PROFILES TABLE (Linked with auth.users)
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -19,7 +22,7 @@ CREATE TABLE public.profiles (
 );
 
 -- 3. BRANDS TABLE
-CREATE TABLE public.brands (
+CREATE TABLE IF NOT EXISTS public.brands (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   logo_url TEXT,
@@ -28,7 +31,7 @@ CREATE TABLE public.brands (
 );
 
 -- 4. MODELS TABLE
-CREATE TABLE public.models (
+CREATE TABLE IF NOT EXISTS public.models (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID REFERENCES public.brands(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -38,7 +41,7 @@ CREATE TABLE public.models (
 );
 
 -- 5. CITIES TABLE
-CREATE TABLE public.cities (
+CREATE TABLE IF NOT EXISTS public.cities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   state TEXT,
@@ -47,7 +50,7 @@ CREATE TABLE public.cities (
 );
 
 -- 6. CARS TABLE (Premium Inventory List)
-CREATE TABLE public.cars (
+CREATE TABLE IF NOT EXISTS public.cars (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   brand TEXT NOT NULL,
@@ -71,7 +74,7 @@ CREATE TABLE public.cars (
 );
 
 -- 7. CAR IMAGES TABLE
-CREATE TABLE public.car_images (
+CREATE TABLE IF NOT EXISTS public.car_images (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_id UUID REFERENCES public.cars(id) ON DELETE CASCADE NOT NULL,
   image_url TEXT NOT NULL,
@@ -80,7 +83,7 @@ CREATE TABLE public.car_images (
 );
 
 -- 8. SELL REQUESTS TABLE (Spinny-inspired intake)
-CREATE TABLE public.sell_requests (
+CREATE TABLE IF NOT EXISTS public.sell_requests (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   brand TEXT NOT NULL,
@@ -94,7 +97,7 @@ CREATE TABLE public.sell_requests (
 );
 
 -- 9. INSPECTIONS TABLE
-CREATE TABLE public.inspections (
+CREATE TABLE IF NOT EXISTS public.inspections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   sell_request_id UUID REFERENCES public.sell_requests(id) ON DELETE SET NULL,
   seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -116,7 +119,7 @@ CREATE TABLE public.inspections (
 );
 
 -- 10. INSPECTION REPORTS TABLE
-CREATE TABLE public.inspection_reports (
+CREATE TABLE IF NOT EXISTS public.inspection_reports (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   inspection_id UUID REFERENCES public.inspections(id) ON DELETE CASCADE UNIQUE NOT NULL,
   inspector_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL NOT NULL,
@@ -132,7 +135,7 @@ CREATE TABLE public.inspection_reports (
 );
 
 -- 11. DEALERS TABLE
-CREATE TABLE public.dealers (
+CREATE TABLE IF NOT EXISTS public.dealers (
   id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
   company_name TEXT NOT NULL,
   license_number TEXT,
@@ -142,7 +145,7 @@ CREATE TABLE public.dealers (
 );
 
 -- 12. DEALER BIDS TABLE
-CREATE TABLE public.dealer_bids (
+CREATE TABLE IF NOT EXISTS public.dealer_bids (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   inspection_id UUID REFERENCES public.inspections(id) ON DELETE CASCADE NOT NULL,
   dealer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -152,7 +155,7 @@ CREATE TABLE public.dealer_bids (
 );
 
 -- 13. PARK & SELL TABLE (Consignment program)
-CREATE TABLE public.park_sell (
+CREATE TABLE IF NOT EXISTS public.park_sell (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_id UUID REFERENCES public.cars(id) ON DELETE CASCADE,
   seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -163,7 +166,7 @@ CREATE TABLE public.park_sell (
 );
 
 -- 14. TEST DRIVES TABLE
-CREATE TABLE public.test_drives (
+CREATE TABLE IF NOT EXISTS public.test_drives (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_id UUID REFERENCES public.cars(id) ON DELETE CASCADE NOT NULL,
   buyer_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -176,7 +179,7 @@ CREATE TABLE public.test_drives (
 );
 
 -- 15. PURCHASES TABLE (Direct reservations and orders)
-CREATE TABLE public.purchases (
+CREATE TABLE IF NOT EXISTS public.purchases (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_id UUID REFERENCES public.cars(id) ON DELETE SET NULL UNIQUE NOT NULL,
   buyer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL NOT NULL,
@@ -189,7 +192,7 @@ CREATE TABLE public.purchases (
 );
 
 -- 16. NOTIFICATIONS TABLE (Central notification ledger)
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   recipient_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -202,7 +205,7 @@ CREATE TABLE public.notifications (
 );
 
 -- 17. TESTIMONIALS TABLE
-CREATE TABLE public.testimonials (
+CREATE TABLE IF NOT EXISTS public.testimonials (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   author_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   author_name TEXT NOT NULL,
@@ -214,7 +217,7 @@ CREATE TABLE public.testimonials (
 );
 
 -- 18. FAQ TABLE
-CREATE TABLE public.faq (
+CREATE TABLE IF NOT EXISTS public.faq (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   question TEXT NOT NULL UNIQUE,
   answer TEXT NOT NULL,
@@ -224,7 +227,7 @@ CREATE TABLE public.faq (
 );
 
 -- 19. SETTINGS TABLE
-CREATE TABLE public.settings (
+CREATE TABLE IF NOT EXISTS public.settings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   key TEXT NOT NULL UNIQUE,
   value TEXT NOT NULL,
@@ -242,18 +245,40 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 DECLARE
   requested_role public.user_role;
+  resolved_email TEXT;
+  resolved_name TEXT;
+  resolved_mobile TEXT;
 BEGIN
   requested_role := coalesce(
     (new.raw_user_meta_data->>'role')::public.user_role,
     'Buyer'::public.user_role
   );
 
+  -- Phone-OTP signups (supabase.auth.signInWithOtp) create an auth user with
+  -- `phone` but NO `email`. Derive a synthetic email + sensible defaults so
+  -- the profile insert never fails on the nullable email column.
+  resolved_email := coalesce(
+    new.email,
+    CASE WHEN new.phone IS NOT NULL
+         THEN replace(new.phone, '+', '') || '@phone.1stcars.com'
+         ELSE NULL END
+  );
+  resolved_name := coalesce(
+    new.raw_user_meta_data->>'name',
+    CASE WHEN new.email IS NOT NULL
+         THEN split_part(new.email, '@', 1)
+         WHEN new.phone IS NOT NULL
+         THEN 'Customer ' || right(new.phone, 4)
+         ELSE 'Customer' END
+  );
+  resolved_mobile := coalesce(new.raw_user_meta_data->>'mobile', new.phone);
+
   INSERT INTO public.profiles (id, name, email, mobile, role, city)
   VALUES (
     new.id,
-    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    new.email,
-    new.raw_user_meta_data->>'mobile',
+    resolved_name,
+    resolved_email,
+    resolved_mobile,
     CASE
       -- Staff roles (Admin / Sales Associate / Inspector) are ONLY granted to
       -- pre-approved accounts. Everyone else may pick a public role
@@ -309,91 +334,133 @@ RETURNS public.user_role AS $$
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- 1. Profiles Policies
+DROP POLICY IF EXISTS "Public profiles read" ON public.profiles;
 CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users edit own profile" ON public.profiles;
 CREATE POLICY "Users edit own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Admin manages all profiles" ON public.profiles;
 CREATE POLICY "Admin manages all profiles" ON public.profiles FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 2. Brands Policies
+DROP POLICY IF EXISTS "Public read brands" ON public.brands;
 CREATE POLICY "Public read brands" ON public.brands FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin manages brands" ON public.brands;
 CREATE POLICY "Admin manages brands" ON public.brands FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 3. Models Policies
+DROP POLICY IF EXISTS "Public read models" ON public.models;
 CREATE POLICY "Public read models" ON public.models FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin manages models" ON public.models;
 CREATE POLICY "Admin manages models" ON public.models FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 4. Cities Policies
+DROP POLICY IF EXISTS "Public read active cities" ON public.cities;
 CREATE POLICY "Public read active cities" ON public.cities FOR SELECT USING (is_active = true OR public.get_auth_user_role() = 'Admin'::public.user_role);
+DROP POLICY IF EXISTS "Admin manages cities" ON public.cities;
 CREATE POLICY "Admin manages cities" ON public.cities FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 5. Cars Policies (Inventory)
+DROP POLICY IF EXISTS "Anyone reads available/reserved cars" ON public.cars;
 CREATE POLICY "Anyone reads available/reserved cars" ON public.cars FOR SELECT USING (status IN ('available', 'reserved', 'bidding') OR auth.uid() = created_by OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector'));
+DROP POLICY IF EXISTS "Staff manages inventory" ON public.cars;
 CREATE POLICY "Staff manages inventory" ON public.cars FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 6. Car Images Policies
+DROP POLICY IF EXISTS "Anyone reads images" ON public.car_images;
 CREATE POLICY "Anyone reads images" ON public.car_images FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Staff manages images" ON public.car_images;
 CREATE POLICY "Staff manages images" ON public.car_images FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 7. Sell Requests Policies
+DROP POLICY IF EXISTS "Sellers manage own requests" ON public.sell_requests;
 CREATE POLICY "Sellers manage own requests" ON public.sell_requests FOR ALL USING (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Staff reads/updates sell requests" ON public.sell_requests;
 CREATE POLICY "Staff reads/updates sell requests" ON public.sell_requests FOR SELECT USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector'));
 
 -- 8. Inspections Policies
+DROP POLICY IF EXISTS "Sellers read own inspections" ON public.inspections;
 CREATE POLICY "Sellers read own inspections" ON public.inspections FOR SELECT USING (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Inspectors view assigned" ON public.inspections;
 CREATE POLICY "Inspectors view assigned" ON public.inspections FOR ALL USING (auth.uid() = inspector_id OR public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
+DROP POLICY IF EXISTS "Staff creates inspections" ON public.inspections;
 CREATE POLICY "Staff creates inspections" ON public.inspections FOR INSERT WITH CHECK (public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Seller'));
 
 -- 9. Inspection Reports Policies
+DROP POLICY IF EXISTS "Sellers read approved reports" ON public.inspection_reports;
 CREATE POLICY "Sellers read approved reports" ON public.inspection_reports FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.inspections i 
     WHERE i.id = inspection_id AND (i.seller_id = auth.uid() AND i.status = 'completed')
   )
 );
+DROP POLICY IF EXISTS "Inspectors manage reports" ON public.inspection_reports;
 CREATE POLICY "Inspectors manage reports" ON public.inspection_reports FOR ALL USING (auth.uid() = inspector_id OR public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 10. Dealers Policies
+DROP POLICY IF EXISTS "Anyone views verified dealers" ON public.dealers;
 CREATE POLICY "Anyone views verified dealers" ON public.dealers FOR SELECT USING (is_verified = true OR auth.uid() = id);
+DROP POLICY IF EXISTS "Dealers manage own info" ON public.dealers;
 CREATE POLICY "Dealers manage own info" ON public.dealers FOR ALL USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Admin manages dealers" ON public.dealers;
 CREATE POLICY "Admin manages dealers" ON public.dealers FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 11. Dealer Bids Policies
+DROP POLICY IF EXISTS "Sellers view bids on own car" ON public.dealer_bids;
 CREATE POLICY "Sellers view bids on own car" ON public.dealer_bids FOR SELECT USING (
   EXISTS (
     SELECT 1 FROM public.inspections i 
     WHERE i.id = inspection_id AND i.seller_id = auth.uid()
   )
 );
+DROP POLICY IF EXISTS "Dealers bid on assigned cars" ON public.dealer_bids;
 CREATE POLICY "Dealers bid on assigned cars" ON public.dealer_bids FOR ALL USING (auth.uid() = dealer_id);
+DROP POLICY IF EXISTS "Staff manages bids" ON public.dealer_bids;
 CREATE POLICY "Staff manages bids" ON public.dealer_bids FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 12. Park & Sell Policies
+DROP POLICY IF EXISTS "Sellers view own park-sell status" ON public.park_sell;
 CREATE POLICY "Sellers view own park-sell status" ON public.park_sell FOR SELECT USING (auth.uid() = seller_id);
+DROP POLICY IF EXISTS "Staff manages park-sell program" ON public.park_sell;
 CREATE POLICY "Staff manages park-sell program" ON public.park_sell FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 13. Test Drives Policies
+DROP POLICY IF EXISTS "Buyers manage own test drives" ON public.test_drives;
 CREATE POLICY "Buyers manage own test drives" ON public.test_drives FOR ALL USING (auth.uid() = buyer_id);
+DROP POLICY IF EXISTS "Staff schedules test drives" ON public.test_drives;
 CREATE POLICY "Staff schedules test drives" ON public.test_drives FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 14. Purchases Policies
+DROP POLICY IF EXISTS "Buyers view own purchases" ON public.purchases;
 CREATE POLICY "Buyers view own purchases" ON public.purchases FOR SELECT USING (auth.uid() = buyer_id);
+DROP POLICY IF EXISTS "Staff manages transactions" ON public.purchases;
 CREATE POLICY "Staff manages transactions" ON public.purchases FOR ALL USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- 15. Notifications Policies (Central central)
+DROP POLICY IF EXISTS "Users read own notifications" ON public.notifications;
 CREATE POLICY "Users read own notifications" ON public.notifications FOR SELECT USING (auth.uid() = recipient_id);
+DROP POLICY IF EXISTS "Users update own read status" ON public.notifications;
 CREATE POLICY "Users update own read status" ON public.notifications FOR UPDATE USING (auth.uid() = recipient_id);
+DROP POLICY IF EXISTS "System/Staff inserts notifications" ON public.notifications;
 CREATE POLICY "System/Staff inserts notifications" ON public.notifications FOR INSERT WITH CHECK (true);
 
 -- 16. Testimonials Policies
+DROP POLICY IF EXISTS "Anyone reads testimonials" ON public.testimonials;
 CREATE POLICY "Anyone reads testimonials" ON public.testimonials FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users submit testimonials" ON public.testimonials;
 CREATE POLICY "Users submit testimonials" ON public.testimonials FOR INSERT WITH CHECK (auth.uid() = author_id);
+DROP POLICY IF EXISTS "Admin approves testimonials" ON public.testimonials;
 CREATE POLICY "Admin approves testimonials" ON public.testimonials FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 17. FAQ Policies
+DROP POLICY IF EXISTS "Anyone reads FAQ" ON public.faq;
 CREATE POLICY "Anyone reads FAQ" ON public.faq FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin manages FAQ" ON public.faq;
 CREATE POLICY "Admin manages FAQ" ON public.faq FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- 18. Settings Policies
+DROP POLICY IF EXISTS "Anyone reads settings" ON public.settings;
 CREATE POLICY "Anyone reads settings" ON public.settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin configures settings" ON public.settings;
 CREATE POLICY "Admin configures settings" ON public.settings FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 
@@ -413,7 +480,9 @@ CREATE TABLE IF NOT EXISTS public.offers (
 );
 
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone reads offers" ON public.offers;
 CREATE POLICY "Anyone reads offers" ON public.offers FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone manages offers" ON public.offers;
 CREATE POLICY "Anyone manages offers" ON public.offers FOR ALL USING (true);
 
 
@@ -435,7 +504,9 @@ CREATE TABLE IF NOT EXISTS public.auctions (
 );
 
 ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone reads auctions" ON public.auctions;
 CREATE POLICY "Anyone reads auctions" ON public.auctions FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone manages auctions" ON public.auctions;
 CREATE POLICY "Anyone manages auctions" ON public.auctions FOR ALL USING (true);
 
 
@@ -457,7 +528,9 @@ CREATE TABLE IF NOT EXISTS public.sales_notifications (
 );
 
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone reads sales_notifications" ON public.sales_notifications;
 CREATE POLICY "Anyone reads sales_notifications" ON public.sales_notifications FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone manages sales_notifications" ON public.sales_notifications;
 CREATE POLICY "Anyone manages sales_notifications" ON public.sales_notifications FOR ALL USING (true);
 
 
@@ -476,7 +549,9 @@ CREATE TABLE IF NOT EXISTS public.pages (
 );
 
 ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone reads pages" ON public.pages;
 CREATE POLICY "Anyone reads pages" ON public.pages FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin manages pages" ON public.pages;
 CREATE POLICY "Admin manages pages" ON public.pages FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 -- Seed default CMS pages (footer/nav links) so the live site is not empty.
@@ -501,6 +576,11 @@ ON CONFLICT (slug) DO NOTHING;
 -- Sellers need an approval gate; AdminCMS + AuthModal set this.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true NOT NULL;
 
+-- Phone-OTP signups create auth users with a `phone` but no `email`.
+-- The profile's email must be nullable (UNIQUE still allows multiple NULLs
+-- in Postgres) so the signup trigger doesn't fail for phone-only users.
+ALTER TABLE public.profiles ALTER COLUMN email DROP NOT NULL;
+
 -- Inspection dashboards persist denormalized seller info, a score,
 -- and free-form notes directly on the inspection row.
 ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_name TEXT;
@@ -519,6 +599,8 @@ VALUES ('car-images', 'car-images', true), ('logos', 'logos', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- RLS policies for storage objects
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id IN ('car-images', 'logos'));
+DROP POLICY IF EXISTS "All Power" ON storage.objects;
 CREATE POLICY "All Power" ON storage.objects FOR ALL USING (true) WITH CHECK (true);
 
