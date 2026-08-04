@@ -3409,7 +3409,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                       }}
                       className="w-full h-10 bg-white border border-slate-200 rounded-lg px-2.5 outline-none font-bold text-slate-700 focus:ring-1 focus:ring-[#2E7D32]"
                     >
-                      <option value="simulated">📱 Simulated Sandbox (Visual push-notifications - recommended for testing)</option>
+                      <option value="simulated">📱 Auto — Real Supabase OTP on live backend / Simulated in demo (recommended)</option>
                       <option value="supabase_native">🔥 Supabase Native Phone Auth (Requires real phone provider configured)</option>
                       <option value="custom_gateway">⚡ Custom REST SMS Gateway (Twilio, Fast2SMS, MSG91, Twilio-like APIs)</option>
                     </select>

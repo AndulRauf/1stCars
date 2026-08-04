@@ -26,6 +26,27 @@ credentials. Follow these steps to go live with a real, shared backend.
   Providers → Email) so new users can sign in immediately. Turn it back on once
   you've configured an SMTP sender.
 
+### 3b. Enable Mobile OTP login (phone authentication)
+The app's **"Mobile OTP"** login tab uses Supabase's native phone OTP
+(`signInWithOtp` / `verifyOtp`) — the code is generated and verified entirely
+server-side. To make it work:
+
+1. **Authentication → Sign In / Up → Providers → Phone**: enable it.
+   - Set a **Phone template** (the SMS body; the `{{ .Code }}` / `{{ .Token }}`
+     variable is auto-injected by Supabase).
+2. **Authentication → SMS Providers**: add an SMS provider — Twilio, Termii,
+   Vonage, MessageBird, or textlocal — and enter your account credentials.
+   - Twilio (India): you'll also need a Twilio **Messaging Service** SID and an
+     approved message template for DLT/OTP compliance.
+3. Re-run `public/schema.sql` once after this setup: the latest version makes
+   `profiles.email` nullable and the signup trigger now handles **phone-only
+   users** (no email), so OTP signups create a Buyer profile automatically.
+4. Users log in from **Login → Mobile OTP → send code → verify**. New numbers
+   are auto-created as Buyer accounts; no password needed.
+
+> Phone numbers are sent to Supabase as `+91xxxxxxxxxx`. SMS costs are billed to
+> your SMS provider account.
+
 ## 4. Wire the credentials
 
 ### Local development

@@ -67,6 +67,55 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [isUsingMock, setIsUsingMock] = React.useState(() => {
     return typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
   });
+  const isRealSupabase = hasSupabaseKeys && !isUsingMock;
+
+  // Whether the Supabase project has an SMS provider configured (real phone
+  // OTP available). null = unknown/loading; we never block while checking.
+  const [smsReady, setSmsReady] = React.useState<boolean | null>(null);
+  const [showOtpNotice, setShowOtpNotice] = React.useState(false);
+  const otpLocked = isRealSupabase && smsReady === false;
+
+  // Probe the public Supabase auth config to gate the Mobile OTP tab so early
+  // users never hit a dead-end before an SMS provider is configured.
+  React.useEffect(() => {
+    if (!isOpen || !isRealSupabase) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        // @ts-ignore
+        const url = import.meta.env.VITE_SUPABASE_URL;
+        // @ts-ignore
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const res = await fetch(`${url}/auth/v1/settings`, {
+          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
+        });
+        if (!res.ok) throw new Error("settings unavailable");
+        const cfg = await res.json();
+        const ready = cfg.phone === true && cfg.sms_provider && cfg.sms_provider !== "none";
+        if (!cancelled) setSmsReady(ready);
+      } catch (e) {
+        // Can't confirm → don't block the tab.
+        if (!cancelled) setSmsReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isRealSupabase]);
+
+  // Resolve which OTP delivery engine is active.
+  // On a real Supabase backend the default/simulated mode becomes REAL native
+  // phone OTP (Supabase generates + verifies the code server-side via your SMS
+  // provider). An explicit Admin override is still respected.
+  const resolveOtpProvider = (): string => {
+    if (!isRealSupabase) return "simulated";
+    let provider = "simulated";
+    try {
+      const stored = localStorage.getItem("1stcars_cms_website_settings");
+      if (stored) provider = JSON.parse(stored).otpProvider || "simulated";
+    } catch (e) {}
+    return provider === "simulated" ? "supabase_native" : provider;
+  };
 
   const handleCopySQL = async () => {
     try {
@@ -142,6 +191,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setEnteredOtp("");
     setCountdown(0);
     setLoginMethod("email");
+    setShowOtpNotice(false);
   }, [initialMode, isOpen]);
 
   React.useEffect(() => {
@@ -283,7 +333,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       return { success: true, simulated: true };
     }
 
-    let otpProvider = "simulated";
+    const otpProvider = resolveOtpProvider();
     let customUrl = "";
     let customHeaders = "";
     let customPayload = "";
@@ -292,7 +342,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       const stored = localStorage.getItem("1stcars_cms_website_settings");
       if (stored) {
         const parsed = JSON.parse(stored);
-        otpProvider = parsed.otpProvider || "simulated";
         customUrl = parsed.customOtpUrl || "";
         customHeaders = parsed.customOtpHeaders || "";
         customPayload = parsed.customOtpPayload || "";
@@ -499,7 +548,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             const { data: profiles } = await supabase
               .from("profiles")
               .select("*")
-              .eq("mobile", loginMobile);
+              .in("mobile", [loginMobile, `+91${loginMobile}`, `91${loginMobile}`]);
 
             if (!profiles || profiles.length === 0) {
               toast.info("New mobile number — your Buyer account will be created automatically on verification!");
@@ -521,13 +570,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         }
       } else {
         // Step 2: Verify OTP
-        let otpProvider = "simulated";
-        try {
-          const stored = localStorage.getItem("1stcars_cms_website_settings");
-          if (stored) {
-            otpProvider = JSON.parse(stored).otpProvider || "simulated";
-          }
-        } catch (e) {}
+        const otpProvider = resolveOtpProvider();
 
         if (isUsingMock) {
           if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
@@ -574,9 +617,34 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 .from("profiles")
                 .select("*")
                 .eq("id", data.user.id)
-                .single();
+                .maybeSingle();
 
-              const finalUser = profile || {
+              // Phone-OTP users may have no profile row yet (e.g. trigger ran
+              // before the schema patch). Create one so the rest of the app
+              // works; the row is linked to this authenticated user.
+              let finalProfile = profile || null;
+              if (!finalProfile) {
+                const syntheticProfile = {
+                  id: data.user.id,
+                  name: data.user.user_metadata?.name || "Customer " + loginMobile.slice(-4),
+                  email: data.user.email || `${loginMobile}@1stcars.com`,
+                  mobile: loginMobile,
+                  role: "Buyer",
+                  city: "Mumbai"
+                };
+                try {
+                  const { data: inserted } = await supabase
+                    .from("profiles")
+                    .upsert(syntheticProfile)
+                    .select("*")
+                    .maybeSingle();
+                  finalProfile = inserted || syntheticProfile;
+                } catch (e) {
+                  finalProfile = syntheticProfile;
+                }
+              }
+
+              const finalUser = finalProfile || {
                 id: data.user.id,
                 name: "Customer " + loginMobile.slice(-4),
                 email: `${loginMobile}@1stcars.com`,
@@ -1072,33 +1140,166 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
 
           {mode === "login" ? (
             <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-11 pl-10 rounded-xl"
-                  />
-                </div>
+              {/* Login Method Tabs */}
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod("email");
+                    setOtpSent(false);
+                    setEnteredOtp("");
+                    setError("");
+                    setShowOtpNotice(false);
+                  }}
+                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                    loginMethod === "email"
+                      ? "bg-white text-[#2E7D32] shadow-sm"
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <Mail className="h-3 w-3 inline mr-1 -mt-0.5" /> Email Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (otpLocked) {
+                      setShowOtpNotice(true);
+                      return;
+                    }
+                    setLoginMethod("otp");
+                    setEnteredOtp("");
+                    setError("");
+                    setShowOtpNotice(false);
+                  }}
+                  title={otpLocked ? "Mobile OTP is coming soon" : undefined}
+                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    loginMethod === "otp" && !otpLocked
+                      ? "bg-white text-[#2E7D32] shadow-sm cursor-pointer"
+                      : otpLocked
+                        ? "text-slate-300 cursor-not-allowed"
+                        : "text-slate-400 hover:text-slate-600 cursor-pointer"
+                  }`}
+                >
+                  <Phone className="h-3 w-3 inline mr-1 -mt-0.5" /> Mobile OTP
+                  {otpLocked && (
+                    <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded-full bg-slate-200 text-[8px] font-black text-slate-500 uppercase tracking-wider align-middle">
+                      Soon
+                    </span>
+                  )}
+                </button>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="h-11 pl-10 rounded-xl"
-                  />
+              {showOtpNotice && (
+                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded-xl flex items-start gap-2">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
+                  <span>
+                    Mobile OTP is <strong className="text-amber-900">coming soon</strong> — it activates automatically once an SMS provider is configured. Please use <strong className="text-amber-900">Email login</strong> for now.
+                  </span>
                 </div>
-              </div>
+              )}
+
+              {loginMethod === "email" ? (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="h-11 pl-10 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="h-11 pl-10 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number *</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="tel"
+                        placeholder="10-digit mobile number"
+                        value={loginMobile}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setLoginMobile(digits);
+                          if (!otpSent) {
+                            setEnteredOtp("");
+                            setError("");
+                          }
+                        }}
+                        disabled={otpSent}
+                        required
+                        className="h-11 pl-10 rounded-xl disabled:bg-slate-50 disabled:text-slate-500"
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-semibold">We'll send a secure 6-digit OTP via SMS using Supabase Auth.</p>
+                  </div>
+
+                  {otpSent && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enter 6-Digit OTP</label>
+                      <div className="relative">
+                        <ShieldCheck className="absolute left-3.5 top-3.5 h-4 w-4 text-[#2E7D32]" />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder={`OTP sent to +91 ${loginMobile}`}
+                          value={enteredOtp}
+                          onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          required
+                          className="h-11 pl-10 rounded-xl tracking-[0.3em] font-black text-center"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        {countdown > 0 ? (
+                          <span className="text-[10px] font-bold text-slate-400">Resend available in {countdown}s</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleResendOtp}
+                            disabled={loading}
+                            className="text-[10px] font-black text-[#2E7D32] hover:underline cursor-pointer disabled:opacity-50"
+                          >
+                            ↻ Resend OTP
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setEnteredOtp("");
+                            setGeneratedOtp("");
+                            setCountdown(0);
+                            setError("");
+                          }}
+                          className="text-[10px] font-black text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          ✕ Change number
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           ) : mode === "forgot" ? (
             <div className="space-y-1">
@@ -1142,7 +1343,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
               {loading 
                 ? "Processing Application..." 
                 : mode === "login" 
-                  ? "Sign In"
+                  ? loginMethod === "otp"
+                    ? otpSent ? "Verify & Sign In" : "Send OTP"
+                    : "Sign In"
                   : mode === "register" 
                     ? "Submit Dealer Application for Admin Review" 
                     : "Send Reset Instructions"}
