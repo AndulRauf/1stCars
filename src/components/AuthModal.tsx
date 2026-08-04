@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, ShieldCheck, Mail, Lock, User, Phone, MapPin, Sparkles, Database, Check, Award, Upload } from "lucide-react";
+import { X, ShieldCheck, Mail, User, Phone, MapPin, Sparkles, Database, Check, Award, Upload } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
@@ -17,7 +17,6 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = React.useState<"login" | "register" | "forgot">(initialMode);
   const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
   
   // Dealer Registration States
   const [regName, setRegName] = React.useState("");
@@ -56,8 +55,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
-  // Email/Password login mode
-  const [loginMethod, setLoginMethod] = React.useState<"otp" | "email">("email");
+  // Google / Mobile OTP login mode
+  const [loginMethod, setLoginMethod] = React.useState<"otp" | "google">("google");
 
   // Simulated SMS Notification banner state
   const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
@@ -190,7 +189,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setGeneratedOtp("");
     setEnteredOtp("");
     setCountdown(0);
-    setLoginMethod("email");
+    setLoginMethod("google");
     setShowOtpNotice(false);
   }, [initialMode, isOpen]);
 
@@ -204,8 +203,36 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setCountdown(0);
   }, [mode, loginMethod]);
 
+  // Armed only during a Google OAuth popup flow so the SIGNED_IN event that
+  // Supabase posts back closes the modal exactly once (other login paths call
+  // onLoginSuccess themselves).
+  const googleArmedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      if (_event === "SIGNED_IN" && session?.user && googleArmedRef.current) {
+        googleArmedRef.current = false;
+        onLoginSuccess({
+          id: session.user.id,
+          email: session.user.email || "",
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
+          role: session.user.user_metadata?.role || "Buyer",
+          city: session.user.user_metadata?.city || "Mumbai",
+          mobile: session.user.user_metadata?.mobile || ""
+        });
+        onClose();
+      }
+    });
+    return () => {
+      subscription?.unsubscribe();
+      googleArmedRef.current = false;
+    };
+  }, [isOpen, onClose, onLoginSuccess]);
+
   // Demo account click logs in instantly
   const handleDemoLogin = async (demoEmail: string) => {
+    googleArmedRef.current = false;
     setLoading(true);
     setError("");
     setSuccess("");
@@ -321,6 +348,34 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         onLoginSuccess(fallbackUser);
         onClose();
       }, 800);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setSuccess("");
+    if (!isRealSupabase) {
+      setError("Google login is available on the live Supabase database. Click “Reconnect Supabase” in the mock banner, then try again.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin }
+      });
+      if (oauthErr) {
+        setError(/provider|not enabled|not configured/i.test(oauthErr.message)
+          ? "Google sign-in isn't enabled in Supabase yet. Enable the Google provider under Supabase Auth → Providers, then try again."
+          : oauthErr.message);
+      } else {
+        googleArmedRef.current = true;
+        toast.info("Opening Google sign-in…");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to start Google sign-in.");
     } finally {
       setLoading(false);
     }
@@ -463,66 +518,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setLoading(true);
 
     if (mode === "login") {
-      if (loginMethod === "email") {
-        if (!email) {
-          setError("Please enter your email address.");
-          setLoading(false);
-          return;
-        }
-
-        // Attempt demo account login first or Supabase login
-        const demoMatch = demoAccounts.find(d => d.email.toLowerCase() === email.toLowerCase().trim());
-        if (demoMatch) {
-          await handleDemoLogin(demoMatch.email);
-          return;
-        }
-
-        // A password is always required for a normal email login — no silent
-        // defaults or password-less fallbacks (works for both mock & real).
-        if (!password) {
-          setError("Please enter your password.");
-          setLoading(false);
-          return;
-        }
-
-        try {
-          const { data, error: authErr } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password: password
-          });
-
-          if (authErr || !data?.user) {
-            // Do NOT fall back to a password-less profile lookup — that would
-            // let anyone in with just an email. Surface the failure instead.
-            setError(authErr?.message || "Invalid credentials. If this is a demo account, use the quick demo buttons below!");
-          } else if (data.user) {
-
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", data.user.id)
-              .single();
-
-            const finalUser = profile || {
-              id: data.user.id,
-              name: data.user.user_metadata?.name || email.split("@")[0],
-              email: email,
-              role: data.user.user_metadata?.role || "Buyer"
-            };
-
-            setSuccess("Signed in successfully!");
-            setTimeout(() => {
-              onLoginSuccess(finalUser);
-              onClose();
-            }, 800);
-          }
-        } catch (err: any) {
-          setError(err.message || "Failed to authenticate.");
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
+      // Google login is handled by its own button; only the Mobile OTP flow
+      // reaches this submit handler.
+      googleArmedRef.current = false;
 
       // Mobile OTP Login Flow
       if (!otpSent) {
@@ -880,7 +878,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             </h2>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
               {mode === "login" 
-                ? "Enter your email address and password to sign in to your account." 
+                ? "Sign in securely with your Google account." 
                 : mode === "register" 
                 ? "Join as an Elite customer, dealer, or system representative." 
                 : "Provide your email to receive standard reset parameters."}
@@ -1139,19 +1137,26 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 <button
                   type="button"
                   onClick={() => {
-                    setLoginMethod("email");
+                    googleArmedRef.current = false;
+                    setLoginMethod("google");
                     setOtpSent(false);
                     setEnteredOtp("");
                     setError("");
                     setShowOtpNotice(false);
                   }}
                   className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-                    loginMethod === "email"
+                    loginMethod === "google"
                       ? "bg-white text-[#2E7D32] shadow-sm"
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                 >
-                  <Mail className="h-3 w-3 inline mr-1 -mt-0.5" /> Email Login
+                  <svg viewBox="0 0 48 48" className="h-3 w-3 inline mr-1 -mt-0.5" aria-hidden="true">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  Google Login
                 </button>
                 <button
                   type="button"
@@ -1160,6 +1165,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                       setShowOtpNotice(true);
                       return;
                     }
+                    googleArmedRef.current = false;
                     setLoginMethod("otp");
                     setEnteredOtp("");
                     setError("");
@@ -1187,40 +1193,50 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded-xl flex items-start gap-2">
                   <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
                   <span>
-                    Mobile OTP is <strong className="text-amber-900">coming soon</strong> — it activates automatically once an SMS provider is configured. Please use <strong className="text-amber-900">Email login</strong> for now.
+                    Mobile OTP is <strong className="text-amber-900">coming soon</strong> — it activates automatically once an SMS provider is configured. Please use <strong className="text-amber-900">Google login</strong> for now.
                   </span>
                 </div>
               )}
 
-              {loginMethod === "email" ? (
+              {loginMethod === "google" ? (
                 <>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="h-11 pl-10 rounded-xl"
-                      />
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full h-11 rounded-xl bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    <svg viewBox="0 0 48 48" className="h-4.5 w-4.5" aria-hidden="true">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    {loading ? "Connecting…" : "Continue with Google"}
+                  </button>
+                  <p className="text-[10px] text-slate-400 font-semibold text-center -mt-1">
+                    No passwords to remember — sign in securely with your Google account.
+                  </p>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="h-11 pl-10 rounded-xl"
-                      />
+                  {isUsingMock && (
+                    <div className="pt-1 space-y-1.5">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Demo Accounts</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {demoAccounts.map((d) => (
+                          <button
+                            key={d.email}
+                            type="button"
+                            onClick={() => handleDemoLogin(d.email)}
+                            disabled={loading}
+                            className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-left transition-all cursor-pointer disabled:opacity-60"
+                          >
+                            <span className="block text-[10px] font-black text-[#2E7D32] uppercase tracking-wider">{d.label}</span>
+                            <span className="block text-[9px] text-slate-500 font-semibold break-all">{d.email}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -1328,23 +1344,23 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             </div>
           )}
 
-          <div className="pt-2">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-widest rounded-xl h-11 shadow-lg shadow-[#2E7D32]/10"
-            >
-              {loading 
-                ? "Processing Application..." 
-                : mode === "login" 
-                  ? loginMethod === "otp"
+          {!(mode === "login" && loginMethod === "google") && (
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-widest rounded-xl h-11 shadow-lg shadow-[#2E7D32]/10"
+              >
+                {loading 
+                  ? "Processing Application..." 
+                  : mode === "login" 
                     ? otpSent ? "Verify & Sign In" : "Send OTP"
-                    : "Sign In"
-                  : mode === "register" 
-                    ? "Submit Dealer Application for Admin Review" 
-                    : "Send Reset Instructions"}
-            </Button>
-          </div>
+                    : mode === "register" 
+                      ? "Submit Dealer Application for Admin Review" 
+                      : "Send Reset Instructions"}
+              </Button>
+            </div>
+          )}
         </form>
 
         {/* Footer toggle switcher */}
