@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, ShieldCheck, Mail, User, Phone, MapPin, Sparkles, Database, Check, Award, Upload } from "lucide-react";
+import { X, ShieldCheck, Mail, User, Phone, MapPin, Database, Check, Award, Upload, Lock } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
@@ -51,12 +51,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [enteredOtp, setEnteredOtp] = React.useState("");
   const [countdown, setCountdown] = React.useState(0);
 
+  // Login method tabs: Mobile OTP (customers) vs Email & Password (staff/admin)
+  const [loginMethod, setLoginMethod] = React.useState<"otp" | "password">("otp");
+  const [loginEmail, setLoginEmail] = React.useState("");
+  const [loginPassword, setLoginPassword] = React.useState("");
+
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-
-  // Google / Mobile OTP login mode
-  const [loginMethod, setLoginMethod] = React.useState<"otp" | "google">("google");
 
   // Simulated SMS Notification banner state
   const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
@@ -67,52 +69,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     return typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
   });
   const isRealSupabase = hasSupabaseKeys && !isUsingMock;
-
-  // Whether the Supabase project has an SMS provider configured (real phone
-  // OTP available). null = unknown/loading; we never block while checking.
-  const [smsReady, setSmsReady] = React.useState<boolean | null>(null);
-  const [showOtpNotice, setShowOtpNotice] = React.useState(false);
-  const otpLocked = isRealSupabase && smsReady === false;
-
-  // Fetch the public Supabase auth config (available providers, phone/SMS
-  // readiness). Returns null when the endpoint can't be reached so callers can
-  // proceed optimistically instead of blocking login.
-  const fetchAuthSettings = async (): Promise<any | null> => {
-    try {
-      // @ts-ignore
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      // @ts-ignore
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const res = await fetch(`${url}/auth/v1/settings`, {
-        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
-      });
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (e) {
-      return null;
-    }
-  };
-
-  // Probe the public Supabase auth config to gate the Mobile OTP tab so early
-  // users never hit a dead-end before an SMS provider is configured.
-  React.useEffect(() => {
-    if (!isOpen || !isRealSupabase) return;
-    let cancelled = false;
-    (async () => {
-      const cfg = await fetchAuthSettings();
-      if (cancelled) return;
-      if (!cfg) {
-        // Can't confirm → don't block the tab.
-        setSmsReady(true);
-        return;
-      }
-      const ready = cfg.phone === true && cfg.sms_provider && cfg.sms_provider !== "none";
-      setSmsReady(ready);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, isRealSupabase]);
 
   // Resolve which OTP delivery engine is active.
   // On a real Supabase backend the default/simulated mode becomes REAL native
@@ -201,8 +157,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setGeneratedOtp("");
     setEnteredOtp("");
     setCountdown(0);
-    setLoginMethod("google");
-    setShowOtpNotice(false);
+    setLoginMethod("otp");
+    setLoginEmail("");
+    setLoginPassword("");
   }, [initialMode, isOpen]);
 
   React.useEffect(() => {
@@ -213,38 +170,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setGeneratedOtp("");
     setEnteredOtp("");
     setCountdown(0);
-  }, [mode, loginMethod]);
-
-  // Armed only during a Google OAuth popup flow so the SIGNED_IN event that
-  // Supabase posts back closes the modal exactly once (other login paths call
-  // onLoginSuccess themselves).
-  const googleArmedRef = React.useRef(false);
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      if (_event === "SIGNED_IN" && session?.user && googleArmedRef.current) {
-        googleArmedRef.current = false;
-        onLoginSuccess({
-          id: session.user.id,
-          email: session.user.email || "",
-          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
-          role: session.user.user_metadata?.role || "Buyer",
-          city: session.user.user_metadata?.city || "Mumbai",
-          mobile: session.user.user_metadata?.mobile || ""
-        });
-        onClose();
-      }
-    });
-    return () => {
-      subscription?.unsubscribe();
-      googleArmedRef.current = false;
-    };
-  }, [isOpen, onClose, onLoginSuccess]);
+  }, [mode]);
 
   // Demo account click logs in instantly
   const handleDemoLogin = async (demoEmail: string) => {
-    googleArmedRef.current = false;
     setLoading(true);
     setError("");
     setSuccess("");
@@ -360,43 +289,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         onLoginSuccess(fallbackUser);
         onClose();
       }, 800);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError("");
-    setSuccess("");
-    if (!isRealSupabase) {
-      setError("Google login is available on the live Supabase database. Click “Reconnect Supabase” in the mock banner, then try again.");
-      return;
-    }
-    setLoading(true);
-    try {
-      // signInWithOAuth redirects the whole page to the Supabase /authorize
-      // endpoint, which returns a raw JSON error page when the Google provider
-      // isn't enabled yet. Pre-check it via the public settings endpoint so we
-      // can show a friendly message instead of the raw error.
-      const cfg = await fetchAuthSettings();
-      if (cfg && cfg.external?.google !== true) {
-        setError("Google sign-in isn't enabled in Supabase yet. Enable the Google provider under Supabase Auth → Providers, then try again.");
-        return;
-      }
-      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin }
-      });
-      if (oauthErr) {
-        setError(/provider|not enabled|not configured/i.test(oauthErr.message)
-          ? "Google sign-in isn't enabled in Supabase yet. Enable the Google provider under Supabase Auth → Providers, then try again."
-          : oauthErr.message);
-      } else {
-        googleArmedRef.current = true;
-        toast.info("Opening Google sign-in…");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to start Google sign-in.");
     } finally {
       setLoading(false);
     }
@@ -539,9 +431,61 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setLoading(true);
 
     if (mode === "login") {
-      // Google login is handled by its own button; only the Mobile OTP flow
-      // reaches this submit handler.
-      googleArmedRef.current = false;
+      // Staff / Admin Email + Password Login
+      if (loginMethod === "password") {
+        if (!loginEmail.trim() || !loginPassword) {
+          setError("Please enter your email and password.");
+          setLoading(false);
+          return;
+        }
+        try {
+          const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+            email: loginEmail.trim(),
+            password: loginPassword
+          });
+
+          if (signInErr) {
+            setError(signInErr.message || "Invalid email or password.");
+            setLoading(false);
+            return;
+          }
+          if (!data?.user) {
+            setError("No account found for this email. Contact the administrator.");
+            setLoading(false);
+            return;
+          }
+
+          let profile: any = null;
+          try {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", data.user.id)
+              .maybeSingle();
+            profile = profileData || null;
+          } catch (e) {}
+
+          const resolvedUser = profile || {
+            id: data.user.id,
+            name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "User",
+            email: data.user.email || loginEmail.trim(),
+            role: (data.user.user_metadata?.role as UserRole) || "Buyer",
+            city: data.user.user_metadata?.city || "Mumbai",
+            mobile: data.user.user_metadata?.mobile || ""
+          };
+
+          setSuccess(`Welcome back, ${resolvedUser.name}!`);
+          setTimeout(() => {
+            onLoginSuccess(resolvedUser);
+            onClose();
+          }, 700);
+        } catch (err: any) {
+          setError(err.message || "Failed to sign in. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
 
       // Mobile OTP Login Flow
       if (!otpSent) {
@@ -822,8 +766,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     { label: "Seller", email: "seller@1stcars.com", name: "Amit" },
     { label: "Dealer", email: "dealer@1stcars.com", name: "Elite Motors" },
     { label: "Inspector", email: "inspector@1stcars.com", name: "Vikram" },
-    { label: "Sales Assoc.", email: "sales@1stcars.com", name: "Sneha" },
-    { label: "Admin", email: "admin@1stcars.com", name: "Super Admin" }
+    { label: "Sales Assoc.", email: "sales@1stcars.com", name: "Sneha" }
   ];
 
   if (!isOpen) return null;
@@ -1158,178 +1101,163 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 <button
                   type="button"
                   onClick={() => {
-                    googleArmedRef.current = false;
-                    setLoginMethod("google");
+                    setLoginMethod("otp");
                     setOtpSent(false);
                     setEnteredOtp("");
                     setError("");
-                    setShowOtpNotice(false);
                   }}
                   className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-                    loginMethod === "google"
+                    loginMethod === "otp"
                       ? "bg-white text-[#2E7D32] shadow-sm"
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                 >
-                  <svg viewBox="0 0 48 48" className="h-3 w-3 inline mr-1 -mt-0.5" aria-hidden="true">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                  </svg>
-                  Google Login
+                  <Phone className="h-3 w-3 inline mr-1 -mt-0.5" /> Mobile OTP
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    if (otpLocked) {
-                      setShowOtpNotice(true);
-                      return;
-                    }
-                    googleArmedRef.current = false;
-                    setLoginMethod("otp");
+                    setLoginMethod("password");
+                    setOtpSent(false);
                     setEnteredOtp("");
                     setError("");
-                    setShowOtpNotice(false);
                   }}
-                  title={otpLocked ? "Mobile OTP is coming soon" : undefined}
-                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                    loginMethod === "otp" && !otpLocked
-                      ? "bg-white text-[#2E7D32] shadow-sm cursor-pointer"
-                      : otpLocked
-                        ? "text-slate-300 cursor-not-allowed"
-                        : "text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                    loginMethod === "password"
+                      ? "bg-white text-[#2E7D32] shadow-sm"
+                      : "text-slate-400 hover:text-slate-600"
                   }`}
                 >
-                  <Phone className="h-3 w-3 inline mr-1 -mt-0.5" /> Mobile OTP
-                  {otpLocked && (
-                    <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded-full bg-slate-200 text-[8px] font-black text-slate-500 uppercase tracking-wider align-middle">
-                      Soon
-                    </span>
-                  )}
+                  <Mail className="h-3 w-3 inline mr-1 -mt-0.5" /> Staff Email Login
                 </button>
               </div>
 
-              {showOtpNotice && (
-                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded-xl flex items-start gap-2">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
-                  <span>
-                    Mobile OTP is <strong className="text-amber-900">coming soon</strong> — it activates automatically once an SMS provider is configured. Please use <strong className="text-amber-900">Google login</strong> for now.
-                  </span>
+              {!isRealSupabase && (
+                <div className="pt-1 space-y-1.5">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Demo Accounts</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {demoAccounts.map((d) => (
+                      <button
+                        key={d.email}
+                        type="button"
+                        onClick={() => handleDemoLogin(d.email)}
+                        disabled={loading}
+                        className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-left transition-all cursor-pointer disabled:opacity-60"
+                      >
+                        <span className="block text-[10px] font-black text-[#2E7D32] uppercase tracking-wider">{d.label}</span>
+                        <span className="block text-[9px] text-slate-500 font-semibold break-all">{d.email}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {loginMethod === "google" ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                    className="w-full h-11 rounded-xl bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
-                  >
-                    <svg viewBox="0 0 48 48" className="h-4.5 w-4.5" aria-hidden="true">
-                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                    </svg>
-                    {loading ? "Connecting…" : "Continue with Google"}
-                  </button>
-                  <p className="text-[10px] text-slate-400 font-semibold text-center -mt-1">
-                    No passwords to remember — sign in securely with your Google account.
-                  </p>
-
-                  {!isRealSupabase && (
-                    <div className="pt-1 space-y-1.5">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Demo Accounts</p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {demoAccounts.map((d) => (
-                          <button
-                            key={d.email}
-                            type="button"
-                            onClick={() => handleDemoLogin(d.email)}
-                            disabled={loading}
-                            className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-left transition-all cursor-pointer disabled:opacity-60"
-                          >
-                            <span className="block text-[10px] font-black text-[#2E7D32] uppercase tracking-wider">{d.label}</span>
-                            <span className="block text-[9px] text-slate-500 font-semibold break-all">{d.email}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number *</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="tel"
-                        placeholder="10-digit mobile number"
-                        value={loginMobile}
-                        onChange={(e) => {
-                          const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-                          setLoginMobile(digits);
-                          if (!otpSent) {
-                            setEnteredOtp("");
-                            setError("");
-                          }
-                        }}
-                        disabled={otpSent}
-                        required
-                        className="h-11 pl-10 rounded-xl disabled:bg-slate-50 disabled:text-slate-500"
-                      />
-                    </div>
-                    <p className="text-[9px] text-slate-400 font-semibold">We'll send a secure 6-digit OTP via SMS using Supabase Auth.</p>
+              {loginMethod === "password" ? (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <Input
+                      type="email"
+                      placeholder="e.g. you@company.com"
+                      value={loginEmail}
+                      onChange={(e) => {
+                        setLoginEmail(e.target.value);
+                        setError("");
+                      }}
+                      required
+                      className="h-11 pl-10 rounded-xl"
+                    />
                   </div>
 
-                  {otpSent && (
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enter 6-Digit OTP</label>
-                      <div className="relative">
-                        <ShieldCheck className="absolute left-3.5 top-3.5 h-4 w-4 text-[#2E7D32]" />
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder={`OTP sent to +91 ${loginMobile}`}
-                          value={enteredOtp}
-                          onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                          required
-                          className="h-11 pl-10 rounded-xl tracking-[0.3em] font-black text-center"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between pt-1">
-                        {countdown > 0 ? (
-                          <span className="text-[10px] font-bold text-slate-400">Resend available in {countdown}s</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleResendOtp}
-                            disabled={loading}
-                            className="text-[10px] font-black text-[#2E7D32] hover:underline cursor-pointer disabled:opacity-50"
-                          >
-                            ↻ Resend OTP
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOtpSent(false);
-                            setEnteredOtp("");
-                            setGeneratedOtp("");
-                            setCountdown(0);
-                            setError("");
-                          }}
-                          className="text-[10px] font-black text-slate-400 hover:text-slate-600 cursor-pointer"
-                        >
-                          ✕ Change number
-                        </button>
-                      </div>
+                  <div className="pt-1.5 space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        value={loginPassword}
+                        onChange={(e) => {
+                          setLoginPassword(e.target.value);
+                          setError("");
+                        }}
+                        required
+                        className="h-11 pl-10 rounded-xl"
+                      />
                     </div>
-                  )}
-                </>
+                    <p className="text-[9px] text-slate-400 font-semibold">Staff & administrators sign in with their registered email and password.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <Input
+                      type="tel"
+                      placeholder="10-digit mobile number"
+                      value={loginMobile}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setLoginMobile(digits);
+                        if (!otpSent) {
+                          setEnteredOtp("");
+                          setError("");
+                        }
+                      }}
+                      disabled={otpSent}
+                      required
+                      className="h-11 pl-10 rounded-xl disabled:bg-slate-50 disabled:text-slate-500"
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-semibold">We'll send a secure 6-digit OTP via SMS using Supabase Auth.</p>
+                </div>
+              )}
+
+              {otpSent && (
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enter 6-Digit OTP</label>
+                  <div className="relative">
+                    <ShieldCheck className="absolute left-3.5 top-3.5 h-4 w-4 text-[#2E7D32]" />
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={`OTP sent to +91 ${loginMobile}`}
+                      value={enteredOtp}
+                      onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      required
+                      className="h-11 pl-10 rounded-xl tracking-[0.3em] font-black text-center"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    {countdown > 0 ? (
+                      <span className="text-[10px] font-bold text-slate-400">Resend available in {countdown}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={loading}
+                        className="text-[10px] font-black text-[#2E7D32] hover:underline cursor-pointer disabled:opacity-50"
+                      >
+                        ↻ Resend OTP
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpSent(false);
+                        setEnteredOtp("");
+                        setGeneratedOtp("");
+                        setCountdown(0);
+                        setError("");
+                      }}
+                      className="text-[10px] font-black text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      ✕ Change number
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           ) : mode === "forgot" ? (
@@ -1365,23 +1293,23 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             </div>
           )}
 
-          {!(mode === "login" && loginMethod === "google") && (
-            <div className="pt-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-widest rounded-xl h-11 shadow-lg shadow-[#2E7D32]/10"
-              >
-                {loading 
-                  ? "Processing Application..." 
-                  : mode === "login" 
-                    ? otpSent ? "Verify & Sign In" : "Send OTP"
-                    : mode === "register" 
-                      ? "Submit Dealer Application for Admin Review" 
-                      : "Send Reset Instructions"}
-              </Button>
-            </div>
-          )}
+          <div className="pt-2">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-widest rounded-xl h-11 shadow-lg shadow-[#2E7D32]/10"
+            >
+              {loading
+                ? "Processing Application..."
+                : mode === "login"
+                  ? loginMethod === "password"
+                    ? "Sign In"
+                    : otpSent ? "Verify & Sign In" : "Send OTP"
+                  : mode === "register"
+                    ? "Submit Dealer Application for Admin Review"
+                    : "Send Reset Instructions"}
+            </Button>
+          </div>
         </form>
 
         {/* Footer toggle switcher */}

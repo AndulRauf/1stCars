@@ -260,7 +260,6 @@ BEGIN
       -- pre-approved accounts. Everyone else may pick a public role
       -- (Buyer / Seller / Dealer); anything else silently falls back to Buyer.
       WHEN new.email IN (
-        'admin@1stcars.com',
         'sales@1stcars.com',
         'inspector@1stcars.com'
       ) THEN requested_role
