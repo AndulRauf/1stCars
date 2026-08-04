@@ -603,3 +603,15 @@ CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id IN 
 DROP POLICY IF EXISTS "All Power" ON storage.objects;
 CREATE POLICY "All Power" ON storage.objects FOR ALL USING (true) WITH CHECK (true);
 
+-- ====================================================
+-- 25. ROLE GRANTS
+-- RLS policies gate which ROWS each role may touch; these
+-- grants gate which TABLES each role may access at all.
+-- Without them, signed-in users hit "permission denied
+-- for table <name>" on every write.
+-- ====================================================
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+GRANT INSERT ON public.sales_notifications TO anon;
+
