@@ -33,6 +33,17 @@ export function CarDetailsView({
 }: CarDetailsViewProps) {
   const catalogCars = useCatalogCars();
 
+  // 120-Point checklist totals computed from the official inspection data so
+  // the certificate banner always matches the module breakdown rendered below.
+  const total120Points = React.useMemo(
+    () => OFFICIAL_120_CATEGORIES.reduce((sum, cat) => sum + cat.questions.length, 0),
+    []
+  );
+  const passed120Points = React.useMemo(
+    () => OFFICIAL_120_CATEGORIES.reduce((sum, cat) => sum + cat.questions.filter((q) => q.passed).length, 0),
+    []
+  );
+
   // Locate selected car
   const car = React.useMemo(() => {
     return catalogCars.find((item) => item.id === carId) || catalogCars[0];
@@ -594,7 +605,7 @@ export function CarDetailsView({
                             <p className="text-3xl font-black text-white">Grade A+ <span className="text-xs text-[#2E7D32] bg-white px-1.5 py-0.5 rounded font-bold">Pristine</span></p>
                           </div>
                           <div className="w-16 h-16 bg-[#2E7D32] text-white font-black rounded-2xl flex flex-col items-center justify-center text-center p-1 leading-none shadow-lg shadow-[#2E7D32]/30">
-                            <span className="text-sm font-black">118/120</span>
+                            <span className="text-sm font-black">{passed120Points}/{total120Points}</span>
                             <span className="text-[8px] font-bold uppercase tracking-tighter mt-1">PASSED</span>
                           </div>
                         </div>

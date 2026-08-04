@@ -358,7 +358,7 @@ export function getInitial120Report(): Full120PointReport {
 
   return {
     totalPassedPoints: calc.totalPassed,
-    totalPoints: 120,
+    totalPoints: calc.totalPoints,
     overallScorePercent: calc.overallScorePercent,
     grade: calc.grade,
     certificationResult: calc.certificationResult,

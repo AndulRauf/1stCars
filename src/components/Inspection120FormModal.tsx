@@ -237,7 +237,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                 <div>
                   <h4 className="font-extrabold text-slate-900 text-sm">Official 120-Point Technical Evaluation Checklist</h4>
                   <p className="text-xs text-slate-600 mt-0.5">
-                    Click any point to toggle Pass/Fail status. Passed: {reportData.totalPassedPoints} / 120 ({reportData.overallScorePercent}%)
+                    Click any point to toggle Pass/Fail status. Passed: {reportData.totalPassedPoints} / {reportData.totalPoints} ({reportData.overallScorePercent}%)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -523,7 +523,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                     <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">1stCars 120-Point Official Grade</span>
                     <h3 className="text-2xl font-black text-white">Vehicle Certification Breakdown</h3>
                     <p className="text-xs text-slate-300">
-                      Passed {reportData.totalPassedPoints} of 120 Checkpoints
+                      Passed {reportData.totalPassedPoints} of {reportData.totalPoints} Checkpoints
                     </p>
                   </div>
 

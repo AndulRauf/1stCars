@@ -893,7 +893,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm">Official 120-Point Technical Evaluation Checklist</h4>
                       <p className="text-xs text-slate-600 mt-0.5">
-                        Click any point to toggle Pass/Fail status. Passed: {reportData.totalPassedPoints} / 120 ({reportData.overallScorePercent}%)
+                        Click any point to toggle Pass/Fail status. Passed: {reportData.totalPassedPoints} / {reportData.totalPoints} ({reportData.overallScorePercent}%)
                       </p>
                     </div>
                     <Badge className={`${getResultBadgeColor(reportData.certificationResult)} font-black text-xs px-3 py-1`}>
@@ -1058,7 +1058,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
                       <div className="space-y-1">
                         <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">1stCars 120-Point Official Grade</span>
                         <h3 className="text-2xl font-black text-white">Vehicle Certification Breakdown</h3>
-                        <p className="text-xs text-slate-300">Passed {reportData.totalPassedPoints} of 120 Checkpoints</p>
+                        <p className="text-xs text-slate-300">Passed {reportData.totalPassedPoints} of {reportData.totalPoints} Checkpoints</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-center px-4 py-2 bg-white/10 rounded-2xl border border-white/10">
