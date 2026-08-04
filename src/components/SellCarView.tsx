@@ -833,7 +833,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         // Insert failed — do NOT show a false success screen.
         throw new Error(error.message || "Could not save your inspection request.");
       }
-      const inserted = data && Array.isArray(data) ? data[0] : (data || inspectionRecord);
+      // Anonymous submissions (no auto-created session) may see an empty
+      // result from .select() because RLS filters the RETURNING rows — fall
+      // back to the record we built locally so the flow never crashes.
+      const inserted = Array.isArray(data) && data.length > 0 ? data[0] : (data && data.id ? data : inspectionRecord);
 
       setCreatedRequest(inserted);
 
@@ -844,7 +847,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
       // Trigger inspector notifications in the background (non-blocking).
       void notificationService.triggerInspectionSubmitted({
-        id: inserted.id || "insp-temp-id",
+        id: inserted?.id || "insp-temp-id",
         sellerName: finalName,
         brand: selectedBrand,
         model: selectedModel,

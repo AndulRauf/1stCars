@@ -383,6 +383,12 @@ DROP POLICY IF EXISTS "Inspectors view assigned" ON public.inspections;
 CREATE POLICY "Inspectors view assigned" ON public.inspections FOR ALL USING (auth.uid() = inspector_id OR public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 DROP POLICY IF EXISTS "Staff creates inspections" ON public.inspections;
 CREATE POLICY "Staff creates inspections" ON public.inspections FOR INSERT WITH CHECK (public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Seller'));
+-- The public Sell Car form is an anonymous lead submission (the mobile OTP is
+-- a client-side mock), so the auto-created Seller sign-in may not always yield
+-- a session. Allow visitors to submit a PENDING inspection request the same way
+-- they can submit a sales lead; staff still control every other operation.
+DROP POLICY IF EXISTS "Visitors submit inspection requests" ON public.inspections;
+CREATE POLICY "Visitors submit inspection requests" ON public.inspections FOR INSERT WITH CHECK (status = 'pending');
 
 -- 9. Inspection Reports Policies
 DROP POLICY IF EXISTS "Sellers read approved reports" ON public.inspection_reports;
@@ -614,4 +620,7 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
 GRANT INSERT ON public.sales_notifications TO anon;
+-- anon may submit a pending inspection request (Sell Car lead form); the
+-- "Visitors submit inspection requests" RLS policy gates it to status 'pending'.
+GRANT INSERT, SELECT ON public.inspections TO anon;
 
