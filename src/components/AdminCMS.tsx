@@ -720,9 +720,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
 
       seller_enquiries: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", year: 2022, km_driven: 25000, city: "Surat", address: "", status: "pending", notes: "" },
-      staff: { name: "", email: "", role: "Inspector", region: "Mumbai", shift: "Morning", status: "Active" },
+      staff: { name: "", email: "", role: "Inspector", region: "Surat", shift: "Morning", status: "Active" },
       dealers: { name: "", manager: "", rating: 5.0, city: "Mumbai", credits: 500000, active_bids: 0 },
-      inspectors: { name: "", email: "", certified_level: "Senior", region: "Mumbai", total_inspections: 0 },
+      inspectors: { name: "", email: "", certified_level: "Senior", region: "Surat", total_inspections: 0 },
       sales: { name: "", email: "", active_leads: 0, closed_deals: 0, performance_score: 10.0 },
       inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Mumbai", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
       certifications: {},
@@ -4193,6 +4193,32 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         >
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : key === "role" && activeModule === "staff" ? (
+                        <select
+                          value={formData[key] || "Inspector"}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
+                        >
+                          <option value="Admin">Admin</option>
+                          <option value="Sales Associate">Sales Associate</option>
+                          <option value="Inspector">Inspector</option>
+                          <option value="Buyer">Buyer</option>
+                          <option value="Seller">Seller</option>
+                          <option value="Dealer">Dealer</option>
+                        </select>
+                      ) : key === "region" ? (
+                        <select
+                          value={formData[key] || "Surat"}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
+                        >
+                          {["Surat", "Vadodara", "Bharuch", "Vapi"].map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                          {formData[key] && !["Surat", "Vadodara", "Bharuch", "Vapi"].includes(formData[key]) && (
+                            <option value={formData[key]}>{formData[key]}</option>
+                          )}
                         </select>
                       ) : typeof value === "boolean" ? (
                         <select
