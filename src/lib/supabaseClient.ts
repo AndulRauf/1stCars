@@ -395,7 +395,7 @@ If you do not agree with any part of these Terms, please discontinue use of the 
 
 ### 3.1 For Buyers
 - All listed vehicles are vetted, inspected, and priced transparently. The displayed price is the drive-away price and includes the cost breakup shown at checkout.
-- A refundable booking token of ₹3,000 is payable to reserve a vehicle and receive priority assistance. The token is 100% refundable as described in Section 7.
+- A refundable booking token equal to 1% of the vehicle's value (minimum ₹3,000, maximum ₹10,000) is payable to reserve a vehicle and receive priority assistance. The token is 100% refundable as described in Section 7.
 - Vehicle ownership, RC transfer, and documentation assistance are provided to facilitate a smooth and compliant transfer.
 
 ### 3.2 For Sellers
@@ -431,7 +431,7 @@ If you do not agree with any part of these Terms, please discontinue use of the 
 
 ## 7. Booking Token & Payments
 
-- The booking token of ₹3,000 is refundable and is adjusted against the total drive-away price at final payment.
+- The booking token (1% of the vehicle value, min ₹3,000 / max ₹10,000) is refundable and is adjusted against the total drive-away price at final payment.
 - Token refunds are processed within 7–10 working days to the same payment method, provided no applicable cancellation or damage policy is triggered.
 - All payments are to be made in Indian Rupees (INR). You are responsible for ensuring the accuracy of UPI / bank details provided.
 

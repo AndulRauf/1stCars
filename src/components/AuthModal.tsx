@@ -74,28 +74,40 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [showOtpNotice, setShowOtpNotice] = React.useState(false);
   const otpLocked = isRealSupabase && smsReady === false;
 
+  // Fetch the public Supabase auth config (available providers, phone/SMS
+  // readiness). Returns null when the endpoint can't be reached so callers can
+  // proceed optimistically instead of blocking login.
+  const fetchAuthSettings = async (): Promise<any | null> => {
+    try {
+      // @ts-ignore
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      // @ts-ignore
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const res = await fetch(`${url}/auth/v1/settings`, {
+        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  };
+
   // Probe the public Supabase auth config to gate the Mobile OTP tab so early
   // users never hit a dead-end before an SMS provider is configured.
   React.useEffect(() => {
     if (!isOpen || !isRealSupabase) return;
     let cancelled = false;
     (async () => {
-      try {
-        // @ts-ignore
-        const url = import.meta.env.VITE_SUPABASE_URL;
-        // @ts-ignore
-        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const res = await fetch(`${url}/auth/v1/settings`, {
-          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
-        });
-        if (!res.ok) throw new Error("settings unavailable");
-        const cfg = await res.json();
-        const ready = cfg.phone === true && cfg.sms_provider && cfg.sms_provider !== "none";
-        if (!cancelled) setSmsReady(ready);
-      } catch (e) {
+      const cfg = await fetchAuthSettings();
+      if (cancelled) return;
+      if (!cfg) {
         // Can't confirm → don't block the tab.
-        if (!cancelled) setSmsReady(true);
+        setSmsReady(true);
+        return;
       }
+      const ready = cfg.phone === true && cfg.sms_provider && cfg.sms_provider !== "none";
+      setSmsReady(ready);
     })();
     return () => {
       cancelled = true;
@@ -362,6 +374,15 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     }
     setLoading(true);
     try {
+      // signInWithOAuth redirects the whole page to the Supabase /authorize
+      // endpoint, which returns a raw JSON error page when the Google provider
+      // isn't enabled yet. Pre-check it via the public settings endpoint so we
+      // can show a friendly message instead of the raw error.
+      const cfg = await fetchAuthSettings();
+      if (cfg && cfg.external?.google !== true) {
+        setError("Google sign-in isn't enabled in Supabase yet. Enable the Google provider under Supabase Auth → Providers, then try again.");
+        return;
+      }
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin }

@@ -16,7 +16,13 @@ interface BuyNowCheckoutProps {
   onNavigateToDashboard?: () => void;
 }
 
-const BOOKING_TOKEN = 3000;
+const MIN_BOOKING_TOKEN = 3000;
+const MAX_BOOKING_TOKEN = 10000;
+
+// Refundable booking token = 1% of the car's value, capped between ₹3,000
+// and ₹10,000.
+const bookingTokenFor = (price: number) =>
+  Math.min(MAX_BOOKING_TOKEN, Math.max(MIN_BOOKING_TOKEN, Math.round(price * 0.01)));
 
 const processCheckout = async (
   car: Car,
@@ -35,6 +41,7 @@ const processCheckout = async (
   savedCars?: string[]
 ) => {
   const safeEmail = buyerEmail.trim() || `${buyerMobile.trim()}@1stcars.com`;
+  const tokenAmount = bookingTokenFor(car.price);
   try {
     const { data: authData } = await supabase.auth.signUp({
       email: safeEmail,
@@ -80,8 +87,8 @@ const processCheckout = async (
     type: "Buy Car / Reservation",
     status: paymentStatus,
     notes: paymentStatus === "Payment Submitted"
-      ? `Token ${fmt(BOOKING_TOKEN)} paid via UPI | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total: ${fmt(totalPrice)} | Ref: ${refId}`
-      : `Booking token ${fmt(BOOKING_TOKEN)} | Total drive-away ${fmt(totalPrice)} | Ref: ${refId}`,
+      ? `Token ${fmt(tokenAmount)} paid via UPI | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total: ${fmt(totalPrice)} | Ref: ${refId}`
+      : `Booking token ${fmt(tokenAmount)} | Total drive-away ${fmt(totalPrice)} | Ref: ${refId}`,
     ...(paymentStatus === "Payment Submitted" && {
       upi_ref: upiRef,
       upi_id: upiId,
@@ -103,8 +110,8 @@ const processCheckout = async (
     type: "buy_now",
     status: paymentStatus === "Payment Submitted" ? "payment_submitted" : "pending",
     notes: paymentStatus === "Payment Submitted"
-      ? `Token ${fmt(BOOKING_TOKEN)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
-      : `Token ${fmt(BOOKING_TOKEN)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
+      ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
+      : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
   }]);
 
   if (insertError) throw new Error(insertError.message);
@@ -197,13 +204,16 @@ export function BuyNowCheckout({
   const fmt = (val: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(val);
 
+  // Refundable booking token = 1% of the car's value (min ₹3,000 / max ₹10,000).
+  const bookingToken = bookingTokenFor(car.price);
+
   // Build a UPI deep-link for a given app scheme.
   // Uses the standard NPCI UPI URL parameters so any UPI app can pre-fill the payment.
   const buildUpiLink = (scheme: string) => {
     const params = new URLSearchParams({
       pa: upiSettings.upiId,
       pn: upiSettings.payeeName || "1stCars",
-      am: String(BOOKING_TOKEN),
+      am: String(bookingToken),
       cu: "INR",
       tn: `1stCars Booking Token ${car ? encodeURIComponent(`${car.brand} ${car.model}`) : ""}`.trim(),
     });
@@ -388,8 +398,8 @@ export function BuyNowCheckout({
           <div className="px-5 py-5 space-y-4 max-h-[80vh] overflow-y-auto">
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center space-y-1">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount to Pay</p>
-              <p className="text-3xl font-black text-slate-900">{fmt(BOOKING_TOKEN)}</p>
-              <p className="text-xs text-slate-500 font-medium">Refundable booking token</p>
+              <p className="text-3xl font-black text-slate-900">{fmt(bookingToken)}</p>
+              <p className="text-xs text-slate-500 font-medium">Refundable booking token (1% of car value)</p>
             </div>
 
             {/* UPI ID + QR (shown when configured by admin) */}
@@ -613,9 +623,9 @@ export function BuyNowCheckout({
                 </div>
                 <span className="text-sm font-bold text-slate-800">Refundable booking amount</span>
               </div>
-              <span className="text-sm font-black text-slate-900">{fmt(BOOKING_TOKEN)}</span>
+              <span className="text-sm font-black text-slate-900">{fmt(bookingToken)}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
+            <p className="text-xs text-slate-500 mt-1.5 ml-8">1% of car value (min ₹3,000, max ₹10,000). Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
 
           </div>
 
@@ -703,7 +713,7 @@ export function BuyNowCheckout({
 
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between gap-4 bg-white">
           <div>
-            <p className="text-xl font-black text-slate-900">{fmt(BOOKING_TOKEN)}</p>
+            <p className="text-xl font-black text-slate-900">{fmt(bookingToken)}</p>
           </div>
           {!otpSent ? (
             <Button
