@@ -249,13 +249,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     // the LOCAL mock database. On the real shared backend a public one-click
     // demo sign-in must never mint a staff account.
     const isStaffDemo = ["admin", "sales", "inspector"].some((k) => matchedDemo.email.includes(k));
-    if (!isUsingMock && isStaffDemo) {
+    if (isRealSupabase && isStaffDemo) {
       setError("Staff demo accounts are only available on the local demo database. Please register a Buyer account or contact the administrator.");
       setLoading(false);
       return;
     }
 
-    if (isUsingMock) {
+    if (!isRealSupabase) {
       const mockUser = {
         id: "demo-" + matchedDemo.email.split("@")[0],
         name: matchedDemo.name,
@@ -1218,7 +1218,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                     No passwords to remember — sign in securely with your Google account.
                   </p>
 
-                  {isUsingMock && (
+                  {!isRealSupabase && (
                     <div className="pt-1 space-y-1.5">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Demo Accounts</p>
                       <div className="grid grid-cols-2 gap-1.5">
