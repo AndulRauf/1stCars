@@ -256,7 +256,6 @@ export default function App() {
     customOtpPayload: ""
   });
 
-  const [faqs, setFaqs] = React.useState<any[]>([]);
   const [testimonials, setTestimonials] = React.useState<any[]>([]);
 
   const loadSettingsAndCMSData = React.useCallback(() => {
@@ -285,25 +284,6 @@ export default function App() {
         } catch (e) {
           console.error("Failed to parse website settings:", e);
         }
-      }
-
-      // FAQs
-      const rawFaqs = localStorage.getItem("1stcars_cms_faqs");
-      if (rawFaqs) {
-        try {
-          setFaqs(JSON.parse(rawFaqs));
-        } catch (e) {
-          console.error("Failed to parse FAQs", e);
-        }
-      } else {
-        const defaultFaqs = [
-          { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every 1stCars vehicle undergoes our rigorous 120-Point Certificate inspection. This is conducted by elite technical experts and covers the powertrain, electrical diagnostics, structural chassis analysis, fluid qualities, and a complete road-test performance run. Only vehicles with flawless report cards receive 1stMark certification." },
-          { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." },
-          { id: "fq-3", category: "Selling", question: "Can I sell my car instantly without purchasing another one?", answer: "Absolutely! We buy cars directly from collectors and private owners. You can use our online valuation calculator, book a free 30-minute doorstep or showroom inspection, and choose our Instant Offer to get paid on the exact same day. There is zero obligation to trade in or buy from us." },
-          { id: "fq-4", category: "Financing", question: "Do you offer financing and home test drives?", answer: "Yes! We work with top-tier financial partners to offer low-interest elite finance programs and customizable EMI tenures. Plus, we provide home test drives and doorstep premium white-glove delivery in our private closed transports. Your security and convenience are our absolute priority." }
-        ];
-        setFaqs(defaultFaqs);
-        localStorage.setItem("1stcars_cms_faqs", JSON.stringify(defaultFaqs));
       }
 
       // Testimonials
@@ -350,9 +330,6 @@ export default function App() {
   const [calcMileage, setCalcMileage] = React.useState("");
   const [calcEstimatedValue, setCalcEstimatedValue] = React.useState<number | null>(null);
   const [calcError, setCalcError] = React.useState("");
-
-  // FAQ Accordion State
-  const [expandedFaq, setExpandedFaq] = React.useState<number | null>(null);
 
   // Auth Modals state
   const [authModal, setAuthModal] = React.useState<{ isOpen: boolean; mode: "login" | "register" }>({
@@ -525,11 +502,6 @@ export default function App() {
     setSelectedBudget(0);
     triggerToast("All filters reset");
   };
-
-  const faqData = faqs.map(f => ({
-    q: f.question || f.q || "",
-    a: f.answer || f.a || ""
-  }));
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] flex flex-col font-sans selection:bg-[#2E7D32]/20 selection:text-[#2E7D32] pt-20 overflow-x-hidden">
@@ -870,6 +842,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
                 {filteredCars.slice(0, 8).map((car) => {
                   const isSaved = savedCars.includes(car.id);
+
                   return (
                     <CarCard
                       key={car.id}
@@ -1019,67 +992,7 @@ export default function App() {
         </div>
       </Section>
 
-      {/* 7. FAQ */}
-      <Section id="about-section" bg="white" padding="lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* FAQ Left Column */}
-            <div className="lg:col-span-4 text-left space-y-4">
-              <Badge variant="premium">COMMONLY ASKED</Badge>
-              <h2 className="font-sans text-3xl md:text-4xl font-black tracking-tighter text-slate-900 leading-tight">
-                Got Questions? We Have Vetted Answers.
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                Learn more about our pre-owned certifications, trade-in programs, delivery schedules, and transparent luxury transaction details.
-              </p>
-              <div className="pt-4">
-                <a 
-                  href="#contact-section" 
-                  className="inline-flex items-center text-xs font-black uppercase tracking-wider text-[#2E7D32] hover:underline"
-                >
-                  Still Unsure? Contact Concierge <ArrowRight className="h-4 w-4 ml-1.5" />
-                </a>
-              </div>
-            </div>
-
-            {/* FAQ Accordions Right Column */}
-            <div className="lg:col-span-8 space-y-4 text-left">
-              {faqData.map((faq, idx) => {
-                const isExpanded = expandedFaq === idx;
-                return (
-                  <div 
-                    key={idx}
-                    className="bg-slate-50 rounded-2xl border border-slate-200/60 overflow-hidden transition-all duration-300"
-                  >
-                    <button
-                      onClick={() => {
-                        setExpandedFaq(isExpanded ? null : idx);
-                        triggerToast(`FAQ toggled`);
-                      }}
-                      className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none cursor-pointer"
-                    >
-                      <span className="text-sm font-extrabold text-slate-900 tracking-tight">
-                        {faq.q}
-                      </span>
-                      <ChevronDown className={`h-4.5 w-4.5 text-[#2E7D32] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-                    </button>
-
-                    {isExpanded && (
-                      <div className="px-6 pb-5 text-xs text-slate-600 font-semibold leading-relaxed animate-in slide-in-from-top-2 duration-200 border-t border-slate-100 pt-3">
-                        {faq.a}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-          </div>
-        </div>
-      </Section>
-
-      {/* 8. CTA SECTION */}
+      {/* 7. CTA SECTION */}
       <Section id="contact-section" bg="dark" className="relative py-10 md:py-16 bg-linear-to-b from-slate-900 to-slate-950 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />

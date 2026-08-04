@@ -166,21 +166,11 @@ export function Navbar({
     { label: "About Us", view: "about" as const, href: "/about" },
   ];
 
-  // Static home-page section shortcuts (FAQ) shown in nav menus
-  const sectionLinks: { label: string; section: string }[] = [
-    { label: "FAQ", section: "about-section" },
-  ];
-
-  // CMS pages are de-duplicated against the static section links above so the
-  // same label never appears twice (e.g. a seeded "About Us"/"FAQs" page).
-  // "about us" is additionally always hidden from the nav menu because the
-  // dedicated /about page now covers it — the legacy CMS page remains usable
-  // via the footer / admin but never shows in the header.
+  // "about us" is always hidden from the nav menu because the dedicated /about
+  // page now covers it — the legacy CMS page remains usable via the footer /
+  // admin but never shows in the header.
   const hiddenNavPageLabels = new Set(["about us"]);
-  const sectionLinkLabels = new Set([
-    ...sectionLinks.map((l) => l.label.toLowerCase()),
-    ...hiddenNavPageLabels,
-  ]);
+  const sectionLinkLabels = new Set(hiddenNavPageLabels);
   const isDuplicateOfSectionLink = (title: string) => {
     const t = title.toLowerCase();
     return sectionLinkLabels.has(t) || sectionLinkLabels.has(t.endsWith("s") ? t.slice(0, -1) : t);
@@ -188,17 +178,6 @@ export function Navbar({
   const visibleCustomPages = customPages.filter(
     (page) => !page.is_footer && !isDuplicateOfSectionLink(page.title || "")
   );
-
-  const handleSectionLinkClick = (e: React.MouseEvent, section: string) => {
-    e.preventDefault();
-    onViewChange?.("home");
-    setTimeout(() => {
-      const el = document.getElementById(section);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 120);
-  };
 
   const handleLinkClick = (e: React.MouseEvent, view: any, href: string) => {
     e.preventDefault();
@@ -302,16 +281,6 @@ export function Navbar({
                   )}
                 >
                   {link.label}
-                </a>
-              ))}
-              {sectionLinks.map((item) => (
-                <a
-                  key={item.label}
-                  href={`#${item.section}`}
-                  onClick={(e) => handleSectionLinkClick(e, item.section)}
-                  className="text-[13px] font-bold uppercase tracking-widest transition-colors duration-200 relative py-1 text-[#2E7D32]/75 hover:text-[#2E7D32] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-[#2E7D32] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {item.label}
                 </a>
               ))}
               {visibleCustomPages.map((page) => (
@@ -496,21 +465,6 @@ export function Navbar({
               >
                 {link.label}
                 <ChevronRight className={cn("h-4 w-4", currentView === link.view ? "text-white" : "text-slate-400")} />
-              </a>
-            ))}
-            {/* About Us & FAQ shortcuts (scroll to home page sections) */}
-            {sectionLinks.map((item) => (
-              <a
-                key={item.label}
-                href={`#${item.section}`}
-                onClick={(e) => {
-                  setIsOpen(false);
-                  handleSectionLinkClick(e, item.section);
-                }}
-                className="flex items-center justify-between text-sm font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl transition-colors hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
-              >
-                {item.label}
-                <ChevronRight className="h-4 w-4 text-slate-400" />
               </a>
             ))}
             {visibleCustomPages.map((page) => (
