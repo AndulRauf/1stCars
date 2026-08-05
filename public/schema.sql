@@ -49,6 +49,32 @@ CREATE TABLE IF NOT EXISTS public.cities (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Admin CMS extras for the Cities module (must be added to existing DBs too)
+ALTER TABLE public.cities ADD COLUMN IF NOT EXISTS branch_manager TEXT;
+ALTER TABLE public.cities ADD COLUMN IF NOT EXISTS support_number TEXT;
+
+-- 5b. FINANCE PARTNERS TABLE (Admin CMS "Finance" module)
+CREATE TABLE IF NOT EXISTS public.finance_partners (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  rate TEXT,
+  tenure_months TEXT,
+  max_funding TEXT,
+  approval_hours TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 5c. EXPENSES / LEDGER TABLE (Admin CMS "Ledger" module)
+CREATE TABLE IF NOT EXISTS public.expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT,
+  amount NUMERIC DEFAULT 0 NOT NULL,
+  date TEXT,
+  logged_by TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- 6. CARS TABLE (Premium Inventory List)
 CREATE TABLE IF NOT EXISTS public.cars (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -338,6 +364,8 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.faq ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.finance_partners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
 -- Help functions to check user roles easily
 CREATE OR REPLACE FUNCTION public.get_auth_user_role()
@@ -489,7 +517,9 @@ CREATE POLICY "System/Staff inserts notifications" ON public.notifications FOR I
 DROP POLICY IF EXISTS "Staff read all notifications" ON public.notifications;
 CREATE POLICY "Staff read all notifications" ON public.notifications FOR SELECT USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role));
 DROP POLICY IF EXISTS "Staff manage all notifications" ON public.notifications;
-CREATE POLICY "Staff manage all notifications" ON public.notifications FOR ALL USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role)) WITH CHECK (true);
+CREATE POLICY "Admin manages all notifications" ON public.notifications FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role) WITH CHECK (true);
+DROP POLICY IF EXISTS "Sales Associate updates notifications" ON public.notifications;
+CREATE POLICY "Sales Associate updates notifications" ON public.notifications FOR UPDATE USING (public.get_auth_user_role() = 'Sales Associate'::public.user_role);
 
 -- 16. Testimonials Policies
 DROP POLICY IF EXISTS "Anyone reads testimonials" ON public.testimonials;
@@ -510,6 +540,18 @@ DROP POLICY IF EXISTS "Anyone reads settings" ON public.settings;
 CREATE POLICY "Anyone reads settings" ON public.settings FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Admin configures settings" ON public.settings;
 CREATE POLICY "Admin configures settings" ON public.settings FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
+
+-- 18b. Finance Partners Policies
+DROP POLICY IF EXISTS "Anyone reads finance partners" ON public.finance_partners;
+CREATE POLICY "Anyone reads finance partners" ON public.finance_partners FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admin manages finance partners" ON public.finance_partners;
+CREATE POLICY "Admin manages finance partners" ON public.finance_partners FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
+
+-- 18c. Expenses / Ledger Policies
+DROP POLICY IF EXISTS "Staff read expenses" ON public.expenses;
+CREATE POLICY "Staff read expenses" ON public.expenses FOR SELECT USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role));
+DROP POLICY IF EXISTS "Admin manages expenses" ON public.expenses;
+CREATE POLICY "Admin manages expenses" ON public.expenses FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
 
 -- ====================================================

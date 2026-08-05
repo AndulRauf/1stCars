@@ -21,7 +21,7 @@ import { toast } from "@/src/lib/toast";
 import { Inspection120FormModal } from "./Inspection120FormModal";
 import { CreateCarWizard } from "./CreateCarWizard";
 import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY, OFFICIAL_120_CATEGORIES, getStoredInspectionCategories } from "@/src/data/inspection120Data";
-import { Gavel, Globe } from "lucide-react";
+import { Gavel, Globe, Database } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
 import { Breadcrumb } from "./admin/Breadcrumb";
 import { CMSModule } from "./admin/adminNavData";
@@ -584,7 +584,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { data: mData },
         { data: qData },
         { data: tData },
-        { data: sData }
+        { data: sData },
+        { data: dlrData },
+        { data: ctData },
+        { data: fData },
+        { data: exData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -597,7 +601,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         supabase.from("models").select(),
         supabase.from("faq").select(),
         supabase.from("testimonials").select(),
-        supabase.from("settings").select()
+        supabase.from("settings").select(),
+        supabase.from("dealers").select(),
+        supabase.from("cities").select(),
+        supabase.from("finance_partners").select(),
+        supabase.from("expenses").select()
       ]);
 
       if (cData) setCars(cData);
@@ -622,15 +630,80 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "dl-3", name: "Delhi Luxury Wheels", manager: "Karan Johar", rating: 4.9, city: "Delhi NCR", credits: 750000, active_bids: 1 }
       ]));
 
+      // Supabase dealers/profiles are the source of truth; merge real dealer
+      // accounts (role=Dealer) with any legacy local-only rows.
+      if ((dlrData && dlrData.length > 0) || (uData && uData.some((p: any) => p.role === "Dealer"))) {
+        const localDealers = getStored("dealers", []);
+        const dbDealers = (uData || [])
+          .filter((p: any) => p.role === "Dealer")
+          .map((p: any) => {
+            const d = (dlrData || []).find((r: any) => r.id === p.id);
+            return {
+              id: p.id,
+              name: d?.company_name || p.name || "Unnamed Dealer",
+              manager: p.name || "",
+              rating: 4.5,
+              city: p.city || "",
+              credits: 0,
+              active_bids: 0,
+              is_verified: d?.is_verified || false,
+              is_approved: d?.is_verified || false,
+              dealerStatus: d?.is_verified ? "Approved" : "Pending"
+            };
+          });
+        setDealers([
+          ...dbDealers,
+          ...localDealers.filter((ld: any) => !dbDealers.some((dd: any) => dd.id === ld.id))
+        ]);
+      }
+
       setInspectors(getStored("inspectors", [
         { id: "insp-u1", name: "Vikram Rathore", email: "inspector@1stcars.com", certified_level: "Master", region: "Mumbai", total_inspections: 148 },
         { id: "insp-u2", name: "Ramesh Kumar", email: "ramesh@1stcars.com", certified_level: "Senior", region: "Delhi NCR", total_inspections: 89 }
       ]));
 
+      // Real Inspector-role profiles are merged in so staff signups show up.
+      if (uData && uData.some((p: any) => p.role === "Inspector")) {
+        const localInspectors = getStored("inspectors", []);
+        const dbInspectors = uData
+          .filter((p: any) => p.role === "Inspector")
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email || "",
+            certified_level: "Certified",
+            region: p.city || "All Regions",
+            total_inspections: 0
+          }));
+        setInspectors([
+          ...dbInspectors,
+          ...localInspectors.filter((li: any) => !dbInspectors.some((di: any) => di.id === li.id))
+        ]);
+      }
+
       setSalesAssociates(getStored("sales_associates", [
         { id: "sa-1", name: "Sneha Patel", email: "sales@1stcars.com", active_leads: 8, closed_deals: 42, performance_score: 9.6 },
         { id: "sa-2", name: "Anil Kapoor", email: "anil@1stcars.com", active_leads: 4, closed_deals: 27, performance_score: 9.1 }
       ]));
+
+      // Real Sales Associate-role profiles are merged in the same way.
+      if (uData && uData.some((p: any) => p.role === "Sales Associate")) {
+        const localSales = getStored("sales_associates", []);
+        const dbSales = uData
+          .filter((p: any) => p.role === "Sales Associate")
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email || "",
+            active_leads: 0,
+            closed_deals: 0,
+            performance_score: 8.0
+          }));
+        setSalesAssociates([
+          ...dbSales,
+          ...localSales.filter((ls: any) => !dbSales.some((ds: any) => ds.id === ls.id))
+        ]);
+      }
 
       setModels(getStored("models", [
         { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "Coupe", engine: "3.0L Twin-Turbo", power: "450 HP" },
@@ -671,6 +744,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "c-3", name: "Bangalore", state: "Karnataka", branch_manager: "Sudha Murty", support_number: "080-66667777" }
       ]));
 
+      // Supabase `cities` is the source of truth when rows exist.
+      if (ctData && ctData.length > 0) {
+        setCities(ctData.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          state: c.state || "",
+          branch_manager: c.branch_manager || "",
+          support_number: c.support_number || "",
+          is_active: c.is_active !== false
+        })));
+      }
+
       setFaqs(getStored("faqs", [
         { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
         { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." }
@@ -708,11 +793,35 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "fp-2", name: "ICICI Bank Luxury Auto Loan", rate: "8.2%", tenure_months: "60 Months", max_funding: "100%", approval_hours: "4 Hours" }
       ]));
 
+      // Supabase `finance_partners` is the source of truth when rows exist.
+      if (fData && fData.length > 0) {
+        setFinancePartners(fData.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          rate: f.rate || "",
+          tenure_months: f.tenure_months || "",
+          max_funding: f.max_funding || "",
+          approval_hours: f.approval_hours || ""
+        })));
+      }
+
       setExpenses(getStored("expenses", [
         { id: "ex-1", title: "Showroom Detailing and Ceramic Coating", category: "Preparation", amount: 48000, date: "2026-07-15", logged_by: "u-admin" },
         { id: "ex-2", title: "Flatbed Towing from Pune to Mumbai", category: "Logistics", amount: 15000, date: "2026-07-16", logged_by: "u-admin" },
         { id: "ex-3", title: "Doorstep Evaluator Compensation", category: "Salaries", amount: 24000, date: "2026-07-17", logged_by: "u-admin" }
       ]));
+
+      // Supabase `expenses` is the source of truth when rows exist.
+      if (exData && exData.length > 0) {
+        setExpenses(exData.map((x: any) => ({
+          id: x.id,
+          title: x.title,
+          category: x.category || "Operations",
+          amount: Number(x.amount) || 0,
+          date: x.date || "",
+          logged_by: x.logged_by || ""
+        })));
+      }
 
       const storedSettings = localStorage.getItem("1stcars_cms_website_settings");
       if (storedSettings) {
@@ -1328,6 +1437,60 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             await supabase.from("models").insert([{ ...row, brand_id: record.brand_id }]);
           }
         }
+      } else if (module === "cities") {
+        const row = {
+          name: record.name,
+          state: record.state || "",
+          branch_manager: record.branch_manager || "",
+          support_number: record.support_number || "",
+          is_active: record.is_active !== false
+        };
+        if (dbId) {
+          await supabase.from("cities").update(row).eq("id", dbId);
+        } else {
+          const { data: existing } = await supabase.from("cities").select("id").eq("name", row.name).maybeSingle();
+          if (existing) {
+            await supabase.from("cities").update(row).eq("id", existing.id);
+          } else {
+            await supabase.from("cities").insert([row]);
+          }
+        }
+      } else if (module === "finance") {
+        const row = {
+          name: record.name,
+          rate: record.rate || "",
+          tenure_months: record.tenure_months || "",
+          max_funding: record.max_funding || "",
+          approval_hours: record.approval_hours || ""
+        };
+        if (dbId) {
+          await supabase.from("finance_partners").update(row).eq("id", dbId);
+        } else {
+          const { data: existing } = await supabase.from("finance_partners").select("id").eq("name", row.name).maybeSingle();
+          if (existing) {
+            await supabase.from("finance_partners").update(row).eq("id", existing.id);
+          } else {
+            await supabase.from("finance_partners").insert([row]);
+          }
+        }
+      } else if (module === "expenses") {
+        const row = {
+          title: record.title,
+          category: record.category || "Operations",
+          amount: Number(record.amount) || 0,
+          date: record.date || "",
+          logged_by: record.logged_by || ""
+        };
+        if (dbId) {
+          await supabase.from("expenses").update(row).eq("id", dbId);
+        } else {
+          const { data: existing } = await supabase.from("expenses").select("id").eq("title", row.title).eq("date", row.date).maybeSingle();
+          if (existing) {
+            await supabase.from("expenses").update(row).eq("id", existing.id);
+          } else {
+            await supabase.from("expenses").insert([row]);
+          }
+        }
       }
     } catch (e) {
       console.error(`AdminCMS: Supabase mirror failed for ${module}:`, e);
@@ -1344,6 +1507,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         await supabase.from("testimonials").delete().eq("id", id);
       } else if (module === "models") {
         await supabase.from("models").delete().eq("id", id);
+      } else if (module === "cities") {
+        await supabase.from("cities").delete().eq("id", id);
+      } else if (module === "finance") {
+        await supabase.from("finance_partners").delete().eq("id", id);
+      } else if (module === "expenses") {
+        await supabase.from("expenses").delete().eq("id", id);
       }
     } catch (e) {
       console.error(`AdminCMS: Supabase delete failed for ${module}:`, e);
@@ -1371,6 +1540,20 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         status: "Approved"
       }).eq("id", dealerItem.id);
     } catch (e) {}
+
+    // Also flip is_verified on the real dealers table when the row exists.
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dealerItem.id || "")) {
+      try {
+        const { data: dealerRow } = await supabase.from("dealers").select("id").eq("id", dealerItem.id).maybeSingle();
+        if (dealerRow) {
+          await supabase.from("dealers").update({ is_verified: true }).eq("id", dealerItem.id);
+        } else {
+          await supabase.from("dealers").insert([
+            { id: dealerItem.id, company_name: dealerItem.name || dealerItem.company_name || "Dealer", is_verified: true }
+          ]);
+        }
+      } catch (e) {}
+    }
 
     toast.success(`Dealer "${dealerItem.name}" approved! They can now log in and participate in live auctions.`);
   };
@@ -1867,6 +2050,21 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     }
   };
 
+  // Which storage backend backs the currently active admin module? Used by the
+  // header badge so the operator always knows if edits are shared with
+  // Supabase (every device) or only live in this browser (localStorage).
+  const getModuleDataSource = (module: CMSModule): "supabase" | "local" | "dashboard" => {
+    if (module === "dashboard") return "dashboard";
+    const supabaseBacked: CMSModule[] = [
+      "cars", "users", "inspections", "auctions", "brands", "notifications",
+      "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
+      "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries"
+    ];
+    return supabaseBacked.includes(module) ? "supabase" : "local";
+  };
+
+  const moduleSource = getModuleDataSource(activeModule);
+
   const moduleList = getActiveModuleData();
 
   // Search & Filtering logic
@@ -1896,8 +2094,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   // Stats calculation for the master KPI row
   const activeAuctionsCount = auctions.filter(a => a.status === "active").length;
   const pendingInspsCount = inspections.filter(i => i.status === "pending").length;
-  const totalCRMLeads = 12; // CRM leads stat
+  const totalCRMLeads = salesLeads.length; // CRM Open Desk queries
   const totalExpensesLogged = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const totalUnreadAlerts = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
@@ -1967,6 +2166,20 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         {/* Breadcrumb Path Header */}
         <Breadcrumb activeModule={activeModule} />
 
+        {/* Storage source indicator for the active module */}
+        <div className="flex items-center gap-2">
+          {moduleSource === "supabase" && (
+            <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+              <Database className="h-3 w-3" /> Supabase-backed · shared across devices
+            </span>
+          )}
+          {moduleSource === "local" && (
+            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="This module has no compatible Supabase table yet - changes only live in THIS browser.">
+              <AlertCircle className="h-3 w-3" /> Local-only · this browser
+            </span>
+          )}
+        </div>
+
         {/* RENDER ACTIVE MODULE AREA */}
 
         {/* 1. DASHBOARD OVERVIEW */}
@@ -1980,6 +2193,23 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               { label: "Customer Leads", val: totalCRMLeads, desc: "CRM Open Desk queries", color: "bg-emerald-50 border-emerald-200 text-emerald-700" }
             ].map((card, i) => (
               <div key={i} className={`p-5 rounded-2xl border text-xs font-semibold flex flex-col justify-between shadow-xs ${card.color}`}>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{card.label}</p>
+                  <p className="text-2xl font-black mt-2 leading-none">{card.val}</p>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Cars in Inventory", val: cars.length, desc: "Published catalog", color: "bg-sky-50 border-sky-200 text-sky-700" },
+              { label: "Registered Users", val: users.length, desc: "Total profiles", color: "bg-violet-50 border-violet-200 text-violet-700" },
+              { label: "Unread Alerts", val: totalUnreadAlerts, desc: "Notification ledger", color: "bg-orange-50 border-orange-200 text-orange-700" },
+              { label: "Live Pages", val: pages.length, desc: "Custom + footer pages", color: "bg-teal-50 border-teal-200 text-teal-700" }
+            ].map((card, i) => (
+              <div key={`row2-${i}`} className={`p-5 rounded-2xl border text-xs font-semibold flex flex-col justify-between shadow-xs ${card.color}`}>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{card.label}</p>
                   <p className="text-2xl font-black mt-2 leading-none">{card.val}</p>
