@@ -580,7 +580,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { data: nData },
         { data: bData },
         { data: pData },
-        { data: lData }
+        { data: lData },
+        { data: mData },
+        { data: qData },
+        { data: tData },
+        { data: sData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -589,7 +593,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         supabase.from("notifications").select(),
         supabase.from("brands").select(),
         supabase.from("pages").select(),
-        supabase.from("sales_notifications").select()
+        supabase.from("sales_notifications").select(),
+        supabase.from("models").select(),
+        supabase.from("faq").select(),
+        supabase.from("testimonials").select(),
+        supabase.from("settings").select()
       ]);
 
       if (cData) setCars(cData);
@@ -631,6 +639,32 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "m-4", brand: "Audi", name: "e-tron GT", category: "Sedan", engine: "Dual Electric Motor", power: "637 HP" }
       ]));
 
+      // Supabase `models` is the source of truth; merge it with any local-only
+      // rows (which keep richer engine/power data) without duplicating by name.
+      if (mData && mData.length > 0) {
+        const dbModels = mData.map((m: any) => {
+          const parentBrand = bData?.find((b: any) => b.id === m.brand_id);
+          return {
+            id: m.id,
+            brand_id: m.brand_id,
+            brand: parentBrand?.name || m.brand || "",
+            name: m.name,
+            category: m.body_type || "Luxury Car",
+            engine: m.engine || "Standard Powertrain",
+            power: m.power || "N/A"
+          };
+        });
+        const localModels = getStored("models", []);
+        const mergedModels = [
+          ...dbModels,
+          ...localModels.filter((lm: any) =>
+            !dbModels.some((dm: any) =>
+              dm.brand?.toLowerCase() === lm.brand?.toLowerCase() &&
+              dm.name?.toLowerCase() === lm.name?.toLowerCase()))
+        ];
+        setModels(mergedModels);
+      }
+
       setCities(getStored("cities", [
         { id: "c-1", name: "Mumbai", state: "Maharashtra", branch_manager: "Aakash Ambani", support_number: "022-44445555" },
         { id: "c-2", name: "Delhi NCR", state: "Delhi", branch_manager: "Rajesh Khanna", support_number: "011-22223333" },
@@ -642,10 +676,32 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." }
       ]));
 
+      // Supabase `faq` is the source of truth when rows exist.
+      if (qData && qData.length > 0) {
+        setFaqs(qData.map((q: any) => ({
+          id: q.id,
+          category: q.category || "General",
+          question: q.question,
+          answer: q.answer
+        })));
+      }
+
       setTestimonials(getStored("testimonials", [
         { id: "t-1", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already.", photo: "👤" },
         { id: "t-2", name: "Priyanjali Sen", role: "Private Buyer", rating: 5, content: " व्हाइट-ग्लव डिलीवरी are world class! The home inspection and evaluation made selling my Range Rover completely painless.", photo: "👤" }
       ]));
+
+      // Supabase `testimonials` is the source of truth when rows exist.
+      if (tData && tData.length > 0) {
+        setTestimonials(tData.map((t: any) => ({
+          id: t.id,
+          name: t.author_name,
+          role: t.author_role || "Private Buyer",
+          rating: t.rating,
+          content: t.comment,
+          photo: t.photo || "👤"
+        })));
+      }
 
       setFinancePartners(getStored("finance", [
         { id: "fp-1", name: "HDFC Bank Premium Finance", rate: "7.9%", tenure_months: "84 Months", max_funding: "90%", approval_hours: "2 Hours" },
@@ -676,6 +732,21 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
         } catch (e) {
           console.error("Failed to parse stored settings:", e);
+        }
+      }
+
+      // Supabase settings table (row keyed "website_settings") is the source of
+      // truth for theme/branding/SEO; overlay it on top of any local settings.
+      if (sData && sData.length > 0) {
+        const webRow = sData.find((s: any) => s.key === "website_settings");
+        if (webRow && webRow.value) {
+          try {
+            const parsed = JSON.parse(webRow.value);
+            setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
+            localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
+          } catch (e) {
+            console.error("Failed to parse Supabase settings row:", e);
+          }
         }
       }
 
@@ -1052,6 +1123,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           }
           setModels(nextModels);
           localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
+          await mirrorRecordToSupabase("models", modelRecord, existingModelIdx > -1 ? nextModels[existingModelIdx].id : null);
         }
       } else if (activeModule === "notifications") {
         if (formMode === "add") {
@@ -1089,8 +1161,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           const [currentList, updateFn] = mapData;
           if (formMode === "add") {
             updateFn([...currentList, currentRecord]);
+            await mirrorRecordToSupabase(activeModule, currentRecord, null);
           } else {
             updateFn(currentList.map(item => item.id === editingId ? currentRecord : item));
+            await mirrorRecordToSupabase(activeModule, currentRecord, editingId);
           }
         }
       }
@@ -1158,6 +1232,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         if (mapData) {
           const [currentList, updateFn] = mapData;
           updateFn(currentList.filter(item => item.id !== id));
+          await deleteRecordFromSupabase(activeModule, id);
         }
       }
 
@@ -1191,6 +1266,89 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   function getStoredMockList(key: string): any[] {
     return safeParseArray(localStorage.getItem(`1stcars_cms_${key}`));
   }
+
+  // Mirrors CMS edits of compatible modules into the real Supabase tables so
+  // the admin panel, the public site, and other devices all share the same
+  // data. Unsupported modules (dealers/cities/etc) are simply skipped - the
+  // localStorage copy above is still updated, so a schema mismatch never
+  // breaks an admin save.
+  const mirrorRecordToSupabase = async (module: string, record: any, editingId: string | null) => {
+    const isUuid = (value: string | null | undefined) =>
+      !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    const dbId = isUuid(editingId) ? editingId : null;
+    try {
+      if (module === "faqs") {
+        const row = {
+          question: record.question,
+          answer: record.answer,
+          category: record.category || "General",
+          display_order: Number(record.display_order) || 0
+        };
+        if (dbId) {
+          await supabase.from("faq").update(row).eq("id", dbId);
+        } else {
+          const { data: existing } = await supabase.from("faq").select("id").eq("question", row.question).maybeSingle();
+          if (existing) {
+            await supabase.from("faq").update(row).eq("id", existing.id);
+          } else {
+            await supabase.from("faq").insert([row]);
+          }
+        }
+      } else if (module === "testimonials") {
+        const row = {
+          author_name: record.name,
+          author_role: record.role || "Private Buyer",
+          rating: Math.min(5, Math.max(1, Number(record.rating) || 5)),
+          comment: record.content,
+          is_featured: true
+        };
+        if (dbId) {
+          await supabase.from("testimonials").update(row).eq("id", dbId);
+        } else {
+          await supabase.from("testimonials").insert([row]);
+        }
+      } else if (module === "models") {
+        if (!record.brand_id && !record.brand) return;
+        const row = {
+          name: record.name,
+          body_type: record.category || "Luxury Car"
+        };
+        if (dbId) {
+          await supabase.from("models").update(row).eq("id", dbId);
+        } else {
+          const { data: existing } = await supabase
+            .from("models")
+            .select("id")
+            .eq("brand_id", record.brand_id)
+            .eq("name", row.name)
+            .maybeSingle();
+          if (existing) {
+            await supabase.from("models").update(row).eq("id", existing.id);
+          } else {
+            await supabase.from("models").insert([{ ...row, brand_id: record.brand_id }]);
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`AdminCMS: Supabase mirror failed for ${module}:`, e);
+    }
+  };
+
+  const deleteRecordFromSupabase = async (module: string, id: string) => {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) return;
+    try {
+      if (module === "faqs") {
+        await supabase.from("faq").delete().eq("id", id);
+      } else if (module === "testimonials") {
+        await supabase.from("testimonials").delete().eq("id", id);
+      } else if (module === "models") {
+        await supabase.from("models").delete().eq("id", id);
+      }
+    } catch (e) {
+      console.error(`AdminCMS: Supabase delete failed for ${module}:`, e);
+    }
+  };
 
   // Dealer Approval Action
   const handleApproveDealer = async (dealerItem: any) => {
@@ -1479,6 +1637,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               }
               setModels(nextModels);
               localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
+              await mirrorRecordToSupabase("models", modelRecord, existingIdx > -1 ? nextModels[existingIdx].id : null);
             }
           }
         }
@@ -1502,6 +1661,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const handleSaveWebsiteSettings = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(websiteSettings));
+    
+    // Mirror to the Supabase settings table so every device & admin session
+    // picks up the same theme/branding/SEO values on reload.
+    supabase
+      .from("settings")
+      .upsert(
+        { key: "website_settings", value: JSON.stringify(websiteSettings), description: "1stCars website theme/branding/SEO settings" },
+        { onConflict: "key" }
+      )
+      .then(({ error }) => {
+        if (error) console.error("Failed to sync website settings to Supabase:", error);
+      });
     
     // Apply visual color changes to root if possible for client demonstration
     if (typeof document !== "undefined") {

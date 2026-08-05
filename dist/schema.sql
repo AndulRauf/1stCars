@@ -486,6 +486,10 @@ DROP POLICY IF EXISTS "Users update own read status" ON public.notifications;
 CREATE POLICY "Users update own read status" ON public.notifications FOR UPDATE USING (auth.uid() = recipient_id);
 DROP POLICY IF EXISTS "System/Staff inserts notifications" ON public.notifications;
 CREATE POLICY "System/Staff inserts notifications" ON public.notifications FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Staff read all notifications" ON public.notifications;
+CREATE POLICY "Staff read all notifications" ON public.notifications FOR SELECT USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role));
+DROP POLICY IF EXISTS "Staff manage all notifications" ON public.notifications;
+CREATE POLICY "Staff manage all notifications" ON public.notifications FOR ALL USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role)) WITH CHECK (true);
 
 -- 16. Testimonials Policies
 DROP POLICY IF EXISTS "Anyone reads testimonials" ON public.testimonials;
