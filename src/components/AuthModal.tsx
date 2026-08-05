@@ -12,9 +12,10 @@ interface AuthModalProps {
   onClose: () => void;
   onLoginSuccess: (user: any) => void;
   initialMode?: "login" | "register";
+  initialEmail?: string;
 }
 
-export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "login" }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "login", initialEmail }: AuthModalProps) {
   const [mode, setMode] = React.useState<"login" | "register" | "forgot">(initialMode);
   const [email, setEmail] = React.useState("");
   
@@ -69,6 +70,15 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     return typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
   });
   const isRealSupabase = hasSupabaseKeys && !isUsingMock;
+
+  // Prefill the email/password login tab when the seller arrives from
+  // "Go to Seller Dashboard" so they only have to enter their password.
+  React.useEffect(() => {
+    if (isOpen && initialEmail) {
+      setLoginEmail(initialEmail);
+      setLoginMethod("password");
+    }
+  }, [isOpen, initialEmail]);
 
   // Resolve which OTP delivery engine is active.
   // On a real Supabase backend the default/simulated mode becomes REAL native

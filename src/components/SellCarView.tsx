@@ -20,6 +20,7 @@ interface SellCarViewProps {
   onNavigateToDashboard: () => void;
   onBackToHome: () => void;
   onNavigateToSeller?: () => void;
+  onRequireLogin?: (email?: string) => void;
 }
 
 // Extensive brand logos lookup (Indian market brands, 2000 onwards)
@@ -479,7 +480,32 @@ const gujaratRTOs = [
   { code: "GJ-38", city: "Bavla" }
 ];
 
-export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller }: SellCarViewProps) {
+export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller, onRequireLogin }: SellCarViewProps) {
+  // Remembers the auto-created Seller account so "Go to Seller Dashboard" can
+  // re-sign-in quietly instead of dropping the seller onto the login popup.
+  const sellerAutoAuthRef = React.useRef<{ email: string; password: string; signedIn: boolean }>({
+    email: "",
+    password: "",
+    signedIn: false
+  });
+
+  const navigateToSellerDashboard = React.useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      onNavigateToDashboard();
+      return;
+    }
+    const { email, password } = sellerAutoAuthRef.current;
+    if (email && password) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error && data.user) {
+        onNavigateToDashboard();
+        return;
+      }
+    }
+    onRequireLogin?.(email || undefined);
+  }, [onNavigateToDashboard, onRequireLogin]);
+
   const [settings, setSettings] = React.useState({
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
     sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
@@ -782,6 +808,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     // Ensure the seller is signed in so they land on the Seller Dashboard (not the login gateway)
     // after submitting. Mirrors the Buyer auto-registration flow used in BookingModal.
     let { data: { user } } = await supabase.auth.getUser();
+    let autoEmail = "";
+    let autoPassword = "";
     if (!user) {
       const sellerEmail = email.trim();
       // Reuse a previously stored auto-password for this email so repeat
@@ -791,14 +819,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // which is what left the seller unauthenticated and bounced to the login
       // popup after tapping "Go to Seller Dashboard".
       const autoPasswordKey = getAutoPasswordKey(sellerEmail);
-      const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
-      localStorage.setItem(autoPasswordKey, autoPassword);
+      const candidatePassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+      localStorage.setItem(autoPasswordKey, candidatePassword);
 
 
       const { user: signedInUser, error: authError } = await resolveAutoSignIn(
         supabase,
         sellerEmail,
-        autoPassword,
+        candidatePassword,
         {
           data: {
             name: preliminaryName,
@@ -814,7 +842,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         console.warn("Auto Seller sign-in error during inspection submit:", authError);
       }
       user = signedInUser || null;
+      autoEmail = sellerEmail;
+      autoPassword = candidatePassword;
+    } else {
+      autoEmail = email.trim();
+      autoPassword = localStorage.getItem(getAutoPasswordKey(autoEmail)) || "";
     }
+    sellerAutoAuthRef.current = {
+      email: autoEmail,
+      password: autoPassword,
+      signedIn: Boolean(user)
+    };
 
     // Construct registration number with custom suffix or fallback
     const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase() : "AB-1234";
@@ -934,9 +972,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         preferred_date: finalDate
       }).catch((err) => console.warn("Background inspection notification failed:", err));
 
-      // Redirect to seller dashboard after 3 seconds
+      // Redirect to seller dashboard after 3 seconds (only when the seller is
+      // already signed in, so we never surprise them with a login popup).
       setTimeout(() => {
-        onNavigateToDashboard?.();
+        if (sellerAutoAuthRef.current.signedIn) {
+          void navigateToSellerDashboard();
+        }
       }, 3000);
     } catch (error) {
       console.error("Error creating inspection request:", error);
@@ -1878,7 +1919,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
                   <Button
-                    onClick={onNavigateToDashboard}
+                    onClick={() => { void navigateToSellerDashboard(); }}
                     className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold uppercase tracking-wider px-6 rounded-xl h-11"
                   >
                     Go to Seller Dashboard

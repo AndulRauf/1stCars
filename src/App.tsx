@@ -332,7 +332,7 @@ export default function App() {
   const [calcError, setCalcError] = React.useState("");
 
   // Auth Modals state
-  const [authModal, setAuthModal] = React.useState<{ isOpen: boolean; mode: "login" | "register" }>({
+  const [authModal, setAuthModal] = React.useState<{ isOpen: boolean; mode: "login" | "register"; email?: string }>({
     isOpen: false,
     mode: "login"
   });
@@ -587,6 +587,7 @@ export default function App() {
         isOpen={authModal.isOpen}
         onClose={() => setAuthModal({ ...authModal, isOpen: false })}
         initialMode={authModal.mode}
+        initialEmail={authModal.email}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           triggerToast(`Welcome back, ${user.name}!`);
@@ -668,22 +669,11 @@ export default function App() {
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
-          onNavigateToDashboard={async () => {
-            const waitForAuth = async (retries = 20, delay = 250) => {
-              for (let i = 0; i < retries; i++) {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) return true;
-                await new Promise((r) => setTimeout(r, delay));
-              }
-              return false;
-            };
-
-            const authed = await waitForAuth();
-            if (authed) {
-              handleNavigate("role_dashboards");
-            } else {
-              setAuthModal({ isOpen: true, mode: "login" });
-            }
+          onNavigateToDashboard={() => {
+            handleNavigate("role_dashboards");
+          }}
+          onRequireLogin={(email) => {
+            setAuthModal({ isOpen: true, mode: "login", email });
           }}
           onBackToHome={() => {
             handleNavigate("buy_cars");
