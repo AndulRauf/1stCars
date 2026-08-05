@@ -285,12 +285,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         {/* Dashboard Heading & Meta Info */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-[#2E7D32]/10 p-6 md:p-8 rounded-3xl shadow-xs">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-[#2E7D32] text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-                Authenticated Portal
-              </span>
-              <span className="text-xs font-mono text-slate-400">ID: {currentUser.id}</span>
-            </div>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
               Welcome back, <span className="text-[#2E7D32]">{currentUser.name}</span>
             </h1>
