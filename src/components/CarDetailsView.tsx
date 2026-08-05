@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
@@ -118,6 +118,10 @@ export function CarDetailsView({
 
   // Active Tab State
   const [activeTab, setActiveTab] = React.useState<"specs" | "features" | "inspection" | "finance">("specs");
+
+  // 120-Point inspection accordion — keeps all 12 sections visible as compact
+  // vertical rows so the report stays swipeable instead of one giant page.
+  const [expandedCategory, setExpandedCategory] = React.useState<number | null>(0);
 
   // Booking Modal states
   const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
@@ -701,35 +705,48 @@ export function CarDetailsView({
                       </div>
                     </div>
 
-                    {/* 120-Point Official 12 Category Modules */}
-                    <div className="space-y-4 pt-1">
-                      {OFFICIAL_120_CATEGORIES.map((cat, idx) => (
-                        <div key={cat.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
-                          <div className="bg-[#FAF9F6] p-4 flex items-center justify-between border-b border-slate-100">
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs font-black text-slate-900">{cat.title}</span>
-                                <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border-none text-[9px] font-extrabold uppercase">
-                                  {cat.totalPoints} / {cat.totalPoints} Passed
-                                </Badge>
+                    {/* 120-Point Official 12 Category Modules (vertical accordion) */}
+                    <div className="space-y-2.5 pt-1">
+                      {OFFICIAL_120_CATEGORIES.map((cat, idx) => {
+                        const isOpen = expandedCategory === idx;
+                        return (
+                          <div key={cat.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedCategory(isOpen ? null : idx)}
+                              className="w-full bg-[#FAF9F6] p-4 flex items-center justify-between gap-3 border-b border-slate-100 cursor-pointer hover:bg-emerald-50/40 transition-colors text-left"
+                              aria-expanded={isOpen}
+                            >
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs font-black text-slate-900">{cat.title}</span>
+                                  <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border-none text-[9px] font-extrabold uppercase">
+                                    {cat.totalPoints} / {cat.totalPoints} Passed
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5 font-medium">All {cat.questions.length} checkpoints verified clean by lead inspector.</p>
                               </div>
-                              <p className="text-xs text-slate-500 mt-0.5 font-medium">All {cat.questions.length} checkpoints verified clean by lead inspector.</p>
-                            </div>
-                            <span className="text-xs font-black text-[#2E7D32] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 shrink-0">
-                              100% PASS
-                            </span>
-                          </div>
+                              <span className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-xs font-black text-[#2E7D32] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 shrink-0">
+                                  100% PASS
+                                </span>
+                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                              </span>
+                            </button>
 
-                          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
-                            {cat.questions.map((q) => (
-                              <div key={q.id} className="flex items-start space-x-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                                <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />
-                                <span className="text-xs font-bold text-slate-700 leading-tight">{q.question}</span>
+                            {isOpen && (
+                              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
+                                {cat.questions.map((q) => (
+                                  <div key={q.id} className="flex items-start space-x-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                                    <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />
+                                    <span className="text-xs font-bold text-slate-700 leading-tight">{q.question}</span>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
