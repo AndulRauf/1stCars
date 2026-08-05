@@ -592,9 +592,10 @@ export async function maybeAutoSeedDatabase(user?: { id?: string; role?: string 
       return;
     }
     await seedSupabaseDatabase(user.id);
+    // Only mark the seed as done AFTER it succeeds, so a transient failure is
+    // retried on the next session instead of launching with an empty database.
+    if (typeof window !== "undefined") localStorage.setItem(flagKey, "done");
   } catch (error) {
     console.error("Auto-seed failed:", error);
-  } finally {
-    if (typeof window !== "undefined") localStorage.setItem(flagKey, "done");
   }
 }

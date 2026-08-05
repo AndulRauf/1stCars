@@ -101,7 +101,7 @@ export function BookingModal({
       toast.error("Please enter the 6-digit OTP code.");
       return;
     }
-    if (enteredOtp === generatedOtp || enteredOtp === "123456") {
+    if (enteredOtp === generatedOtp) {
       setIsOtpVerified(true);
       toast.success("Mobile number verified successfully!");
     } else {
@@ -128,9 +128,9 @@ export function BookingModal({
       return;
     }
 
-    // Auto verify OTP if user hasn't manually clicked verify but filled correctly or entered simulated code
+    // Auto verify OTP if user hasn't manually clicked verify but filled correctly
     if (!isOtpVerified) {
-      if (isOtpSent && (enteredOtp === generatedOtp || enteredOtp === "123456")) {
+      if (isOtpSent && enteredOtp === generatedOtp) {
         setIsOtpVerified(true);
       } else {
         toast.error("Please send & verify your Mobile OTP before submitting.");
@@ -505,7 +505,7 @@ export function BookingModal({
                       type="text"
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="Enter OTP (e.g. 123456)"
+                      placeholder="Enter 6-digit OTP"
                       className="h-9 text-xs font-mono font-bold rounded-xl bg-white text-center tracking-widest flex-1"
                     />
                     <Button

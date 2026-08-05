@@ -101,6 +101,9 @@ CREATE TABLE IF NOT EXISTS public.inspections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   sell_request_id UUID REFERENCES public.sell_requests(id) ON DELETE SET NULL,
   seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  seller_name TEXT NOT NULL,
+  seller_mobile TEXT NOT NULL,
+  seller_email TEXT,
   inspector_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   reg_number TEXT NOT NULL,
   brand TEXT NOT NULL,
@@ -114,7 +117,17 @@ CREATE TABLE IF NOT EXISTS public.inspections (
   address TEXT NOT NULL,
   preferred_date DATE NOT NULL,
   preferred_time TEXT NOT NULL,
-  status TEXT DEFAULT 'pending' NOT NULL, -- pending, assigned, completed, rejected
+  status TEXT DEFAULT 'pending' NOT NULL, -- pending, assigned, completed, offered, sold
+  overall_score NUMERIC(3,1),
+  report_engine TEXT,
+  report_brakes TEXT,
+  report_electronics TEXT,
+  report_exterior TEXT,
+  report_interior TEXT,
+  notes TEXT,
+  report_120_json TEXT,
+  report_150_json TEXT,
+  is_certified BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

@@ -645,6 +645,7 @@ export default function App() {
         />
       ) : currentView === "car_details" ? (
         <CarDetailsView
+          key={activeCarId}
           carId={activeCarId}
           onBack={() => {
             handleNavigate("buy_cars");
@@ -669,7 +670,11 @@ export default function App() {
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
-          onNavigateToDashboard={() => {
+          onNavigateToDashboard={(profile) => {
+            // The seller flow resolves the authoritative profile (fresh role)
+            // after auto sign-in/role promotion; push it into App state so the
+            // Seller dashboard renders immediately.
+            if (profile) setCurrentUser(profile);
             handleNavigate("role_dashboards");
           }}
           onRequireLogin={(email) => {

@@ -30,7 +30,6 @@ class SupabaseMockClient {
   // and returned in sessions). Instead we keep a salted SHA-256 hash in an
   // isolated storage key and verify against it on sign-in.
   private authStoreKey = "1stcars_sb_auth";
-  private DEMO_PASSWORD = "password123";
 
   private getCredentials(): Record<string, { salt: string; hash: string }> {
     if (typeof window === "undefined") return {};
@@ -66,19 +65,15 @@ class SupabaseMockClient {
     if (typeof window === "undefined") return;
     const creds = this.getCredentials();
     const salt = this.randomSalt();
-    creds[email] = { salt, hash: await this.hashPassword(password || this.DEMO_PASSWORD, salt) };
+    creds[email] = { salt, hash: await this.hashPassword(password, salt) };
     localStorage.setItem(this.authStoreKey, JSON.stringify(creds));
   }
 
   private async verifyPassword(email: string, password: string | undefined): Promise<boolean> {
     const stored = this.getCredentials()[email];
-    if (stored) {
-      if (password == null) return false;
-      return (await this.hashPassword(password, stored.salt)) === stored.hash;
-    }
-    // Pre-seeded demo accounts have no stored credential: only the shared demo
-    // password is accepted (never a blank/arbitrary password).
-    return password === this.DEMO_PASSWORD;
+    if (!stored) return false;
+    if (password == null) return false;
+    return (await this.hashPassword(password, stored.salt)) === stored.hash;
   }
 
   // Reactive state callbacks for auth change subscriptions
@@ -573,8 +568,8 @@ For questions, concerns, or feedback regarding these Terms, please contact:
         return { data: { user: null, session: null }, error: { message: "Invalid login credentials" } };
       }
 
-      // Verify the password against the stored hash (or the shared demo password
-      // for pre-seeded accounts). A missing/incorrect password is rejected.
+      // Verify the password against the stored hash. A missing/incorrect
+      // password is rejected — there is no shared backdoor password.
       const ok = await this.verifyPassword(user.email.toLowerCase(), password);
       if (!ok) {
         return { data: { user: null, session: null }, error: { message: "Invalid login credentials" } };

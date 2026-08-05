@@ -71,14 +71,26 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   });
   const isRealSupabase = hasSupabaseKeys && !isUsingMock;
 
-  // Prefill the email/password login tab when the seller arrives from
-  // "Go to Seller Dashboard" so they only have to enter their password.
+  // Reset form state each time the modal opens. When an initialEmail is
+  // provided (e.g. "Go to Seller Dashboard") the login tab is pre-filled with
+  // it and switched to the password method so the user only enters their
+  // password — the reset below and the prefill must never fight each other.
   React.useEffect(() => {
-    if (isOpen && initialEmail) {
-      setLoginEmail(initialEmail);
+    setMode(initialMode);
+    setError("");
+    setSuccess("");
+    setLoginMobile("");
+    setOtpSent(false);
+    setGeneratedOtp("");
+    setEnteredOtp("");
+    setCountdown(0);
+    setLoginMethod("otp");
+    setLoginEmail(initialEmail || "");
+    setLoginPassword("");
+    if (initialEmail) {
       setLoginMethod("password");
     }
-  }, [isOpen, initialEmail]);
+  }, [initialMode, isOpen]);
 
   // Resolve which OTP delivery engine is active.
   // On a real Supabase backend the default/simulated mode becomes REAL native
@@ -267,14 +279,22 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         }
       });
 
-      const userObj = signUpData?.user ? {
+      // A real Supabase user must exist before we sign anyone in. If sign-in
+      // failed and sign-up returned no user (e.g. "Confirm email" is enabled
+      // in Supabase Auth settings, so the account isn't active until the link
+      // is clicked), report it honestly instead of minting a fake local user.
+      if (!signUpData?.user) {
+        const hint =
+          (signUpErr?.message || "").toLowerCase().includes("already") ||
+          (signUpErr?.message || "").toLowerCase().includes("registered")
+            ? " It looks like this demo account already exists — try the sign-in tab instead."
+            : " Please make sure 'Confirm email' is turned OFF in Supabase Auth settings, or sign in with your existing account.";
+        setError((signUpErr?.message || "Demo sign-up did not return a user.") + hint);
+        return;
+      }
+
+      const userObj = {
         id: signUpData.user.id,
-        name: matchedDemo.name,
-        email: demoEmail,
-        role: defaultRole,
-        city: "Mumbai"
-      } : {
-        id: "demo-" + matchedDemo.email.split("@")[0],
         name: matchedDemo.name,
         email: demoEmail,
         role: defaultRole,
@@ -287,18 +307,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         onClose();
       }, 800);
     } catch (err: any) {
-      const fallbackUser = {
-        id: "demo-" + matchedDemo.email.split("@")[0],
-        name: matchedDemo.name,
-        email: demoEmail,
-        role: defaultRole,
-        city: "Mumbai"
-      };
-      setSuccess(`Logged in as ${fallbackUser.role}! Redirecting...`);
-      setTimeout(() => {
-        onLoginSuccess(fallbackUser);
-        onClose();
-      }, 800);
+      // Never fabricate a login: a thrown error means the backend could not
+      // authenticate us, so surface it instead of minting a fake user.
+      setError(err?.message || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -540,8 +551,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         const otpProvider = resolveOtpProvider();
 
         if (isUsingMock) {
-          if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
-            setError("Incorrect OTP code. Please try again or use 123456.");
+          if (enteredOtp !== generatedOtp) {
+            setError("Incorrect OTP code. Please try again.");
             setLoading(false);
             return;
           }
@@ -634,7 +645,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         }
 
         // Custom SMS Gateway or Simulated OTP verification
-        if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
+        if (enteredOtp !== generatedOtp) {
           setError("Incorrect OTP verification code. Please try again.");
           setLoading(false);
           return;
@@ -722,22 +733,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         localStorage.setItem("1stcars_cms_dealers", JSON.stringify(updatedDealers));
       } catch (e) {}
 
-      // Save in profiles table in Supabase if connected
-      try {
-        await supabase.from("profiles").upsert({
-          id: newDealerRecord.id,
-          name: newDealerRecord.name,
-          email: newDealerRecord.email,
-          mobile: newDealerRecord.mobile,
-          city: newDealerRecord.city,
-          role: "Dealer",
-          is_approved: false,
-          status: "pending_approval",
-          visiting_card_url: visitingCardUrl,
-          aadhar_card_url: aadharCardUrl,
-          created_at: newDealerRecord.created_at
-        });
-      } catch (e) {}
+      // KYC documents (Visiting Card / Aadhar) are intentionally NOT written to
+      // the public `profiles` table — that table carries no KYC columns and is
+      // world-readable (Public Read Profiles policy). They live only in the
+      // Admin review queue (localStorage "1stcars_cms_dealers") until approved.
 
       setSuccess(`Dealer registration submitted for ${regName}! Your profile, Visiting Card, and Aadhar Card have been sent to Admin for review. Once approved, you can log in to participate in live auctions.`);
       toast.success("Dealer profile submitted to Admin for review!");
@@ -755,21 +754,28 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       }, 2000);
       return;
     } else {
-      // Forgot Password flow
-      const { error: resetErr } = await supabase.auth.signOut(); // reset mock or placeholder
-      setLoading(false);
-      setSuccess("Reset link sent successfully to " + email);
+      // Forgot Password flow — send a real reset email via Supabase Auth.
+      if (!email.trim() || !email.includes("@")) {
+        setError("Please enter a valid email address.");
+        setLoading(false);
+        return;
+      }
+      try {
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email.trim());
+        if (resetErr) {
+          setError(resetErr.message || "Failed to send reset link.");
+          setLoading(false);
+          return;
+        }
+        setSuccess("Reset link sent successfully to " + email.trim());
+        setEmail("");
+      } catch (err: any) {
+        setError(err.message || "Failed to send reset link.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
-
-  const rolesList: { id: UserRole; title: string; desc: string }[] = [
-    { id: "Buyer", title: "Premium Buyer", desc: "Browse, save cars, schedule test drives & make offers" },
-    { id: "Seller", title: "Private Seller", desc: "List your vehicle, schedule inspections & manage live bids" },
-    { id: "Dealer", title: "Certified Dealer", desc: "Participate in premium dealer auctions & bid on cars" },
-    { id: "Inspector", title: "Field Inspector", desc: "Assess assigned cars & upload full condition reports" },
-    { id: "Sales Associate", title: "Sales Executive", desc: "Coordinate customer bookings & manage test drive requests" },
-    { id: "Admin", title: "System Administrator", desc: "Manage staff, system configurations, users & inventory" }
-  ];
 
   const demoAccounts = [
     { label: "Buyer", email: "buyer@1stcars.com", name: "Rahul" },

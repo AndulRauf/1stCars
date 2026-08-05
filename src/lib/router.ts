@@ -24,10 +24,14 @@ export interface RouteParams {
   search?: string;
 }
 
-// Slugify helper (e.g. "BMW 3 Series" => "bmw-3-series")
+// Slugify helper (e.g. "BMW 3 Series" => "bmw-3-series").
+// Accented characters are normalized to their ASCII base first so slugs never
+// lose letters (e.g. "Café" => "cafe", not "caf").
 export function slugify(text: string): string {
   return text
     .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
@@ -139,6 +143,11 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "error_404" };
   }
 
+  // Route 9: Error 500
+  if (pathname === "/500" || pathname === "/error") {
+    return { view: "error_500" };
+  }
+
   // Default fallback for unrecognized routes -> buy_cars if starts with car name, otherwise home
   return { view: "home" };
 }
@@ -173,17 +182,21 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
       return params?.pageId ? `/page/${params.pageId}` : "/";
 
     case "buy_cars": {
-      if (params?.brand && params?.model) {
-        return `/buy/${slugify(params.brand)}/${slugify(params.model)}`;
-      }
-      if (params?.brand) {
-        return `/buy/${slugify(params.brand)}`;
-      }
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set("search", params.search);
       if (params?.city && params.city !== "All Cities") searchParams.set("city", params.city);
-      
+      if (params?.variant) searchParams.set("variant", params.variant);
       const queryStr = searchParams.toString();
+
+      if (params?.brand && params?.model) {
+        const base = `/buy/${slugify(params.brand)}/${slugify(params.model)}`;
+        return queryStr ? `${base}?${queryStr}` : base;
+      }
+      if (params?.brand) {
+        const base = `/buy/${slugify(params.brand)}`;
+        return queryStr ? `${base}?${queryStr}` : base;
+      }
+
       return queryStr ? `/buy-cars?${queryStr}` : "/buy-cars";
     }
 

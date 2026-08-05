@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
+import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -43,10 +44,18 @@ const processCheckout = async (
   const safeEmail = buyerEmail.trim() || `${buyerMobile.trim()}@1stcars.com`;
   const tokenAmount = bookingTokenFor(car.price);
   try {
-    const { data: authData } = await supabase.auth.signUp({
-      email: safeEmail,
-      password: "Password123!",
-      options: {
+    // Reuse the shared auto-auth helper so the stored auto-password matches the
+    // account's real password across ALL flows (Sell Car, Booking, Checkout).
+    // A hardcoded password here created accounts that SellCarView's later
+    // sign-in attempt could not authenticate, leaving the seller stranded.
+    const autoPasswordKey = getAutoPasswordKey(safeEmail);
+    const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+    localStorage.setItem(autoPasswordKey, autoPassword);
+    await resolveAutoSignIn(
+      supabase,
+      safeEmail,
+      autoPassword,
+      {
         data: {
           name: buyerName.trim(),
           email: safeEmail,
@@ -54,11 +63,8 @@ const processCheckout = async (
           role: "Buyer",
           city: selectedCity || car.cities?.[0] || car.location || "Surat",
         },
-      },
-    });
-    if (!authData?.user) {
-      await supabase.auth.signInWithPassword({ email: safeEmail, password: "Password123!" });
-    }
+      }
+    );
   } catch (authErr) {
     console.warn("Auto sign in error during checkout:", authErr);
   }
@@ -210,27 +216,30 @@ export function BuyNowCheckout({
   // Build a UPI deep-link for a given app scheme.
   // Uses the standard NPCI UPI URL parameters so any UPI app can pre-fill the payment.
   const buildUpiLink = (scheme: string) => {
+    // URLSearchParams encodes only the values and keeps the `key=value&key=value`
+    // separators intact, which is what UPI apps expect to parse.
     const params = new URLSearchParams({
       pa: upiSettings.upiId,
       pn: upiSettings.payeeName || "1stCars",
       am: String(bookingToken),
       cu: "INR",
-      tn: `1stCars Booking Token ${car ? encodeURIComponent(`${car.brand} ${car.model}`) : ""}`.trim(),
+      tn: `1stCars Booking Token ${car.brand} ${car.model}`.trim(),
     });
+    const queryStr = params.toString();
 
     // App-specific URL formats
     if (scheme === "tez") {
       // Google Pay (GPay)
-      return `tez://upi/pay?${encodeURIComponent(params.toString())}`;
+      return `tez://upi/pay?${queryStr}`;
     } else if (scheme === "phonepe") {
       // PhonePe
-      return `phonepe://pay?${encodeURIComponent(params.toString())}`;
+      return `phonepe://pay?${queryStr}`;
     } else if (scheme === "paytmmp") {
       // Paytm
-      return `paytmmp://pay?${encodeURIComponent(params.toString())}`;
+      return `paytmmp://pay?${queryStr}`;
     } else {
       // Generic UPI intent
-      return `upi://pay?${encodeURIComponent(params.toString())}`;
+      return `upi://pay?${queryStr}`;
     }
   };
 
@@ -323,7 +332,7 @@ export function BuyNowCheckout({
 
   // Step 2: Verify OTP → show UPI payment screen
   const handleVerifyAndPay = async () => {
-    if (enteredOtp !== generatedOtp && enteredOtp !== "123456") {
+    if (enteredOtp !== generatedOtp) {
       toast.error("Incorrect OTP. Please check the code and try again.");
       return;
     }

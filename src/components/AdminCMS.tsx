@@ -1174,10 +1174,22 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     }
   };
 
+  // Safe JSON array reader: corrupted/legacy localStorage must never crash the
+  // Admin render (a bad value falls back to an empty list instead).
+  function safeParseArray(raw: string | null): any[] {
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("AdminCMS: ignoring unreadable localStorage JSON", e);
+      return [];
+    }
+  }
+
   // Helper to fetch localStorage lists
   function getStoredMockList(key: string): any[] {
-    const raw = localStorage.getItem(`1stcars_cms_${key}`);
-    return raw ? JSON.parse(raw) : [];
+    return safeParseArray(localStorage.getItem(`1stcars_cms_${key}`));
   }
 
   // Dealer Approval Action
@@ -1656,7 +1668,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         // the legacy localStorage leads list only when nothing came from the DB.
         const leads = salesLeads.length > 0
           ? salesLeads
-          : JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+          : safeParseArray(localStorage.getItem("1stcars_sales_leads"));
         const isTestDrive = (lead: any) =>
           String(lead.type || "").toLowerCase().includes("test drive");
         return activeModule === "test_drive_requests"
@@ -1664,7 +1676,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           : leads.filter((lead: any) => !isTestDrive(lead));
       }
       case "seller_enquiries":
-
         return inspections;
       case "inspections": return inspections;
       case "auctions": return auctions;
@@ -2899,18 +2910,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                             <button
                               onClick={() => setSelected120Inspection(item)}
                               className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                              title="Start B2B Dealer Auction"
+                              title="Open the 120-Point report, then start the B2B Dealer Auction from there"
                             >
                               <Gavel className="h-3 w-3" />
-                              Auction
+                              Review &amp; Auction
                             </button>
                             <button
                               onClick={() => setSelected120Inspection(item)}
                               className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-emerald-200 text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                              title="Publish directly to website for buyers (1stMark Certified)"
+                              title="Open the 120-Point report, then publish to the website for buyers from there"
                             >
                               <Globe className="h-3 w-3" />
-                              Publish
+                              Review &amp; Publish
                             </button>
                           </>
                         )}

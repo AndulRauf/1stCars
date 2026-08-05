@@ -1,16 +1,16 @@
 import * as React from "react";
 import { 
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
-  Trash2, ArrowRight, DollarSign, Hammer, BarChart3, 
-  Users, Settings, Upload, Check, X, AlertCircle, 
-  UserCheck, RefreshCw, Star, ClipboardList, Car, Bell, Sparkles
+  Trash2, ArrowRight, DollarSign, Hammer, 
+  Upload, Check, 
+  RefreshCw, ClipboardList, Car, Bell
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { Badge } from "@/src/components/ui/Badge";
 import { 
   Profile, Inspection, 
-  Offer, Auction, SalesNotification, UserRole 
+  Offer, Auction, SalesNotification
 } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
@@ -123,12 +123,21 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
   // Handle Seller: Accept / Decline Dealer Offer
   const handleSellerOfferAction = async (offerId: string, action: "accepted" | "rejected") => {
+    const targetOffer = offers.find(o => o.id === offerId);
+    // Only the owner of the inspected car may act on its offers.
+    const ownsInspection = targetOffer
+      ? inspections.some(i => i.id === targetOffer.inspection_id && i.seller_id === currentUser.id)
+      : false;
+    if (!targetOffer || !ownsInspection) {
+      toast.error("You can only accept or reject offers placed on your own cars.");
+      return;
+    }
+
     // 1. Update Offer
     await supabase.from("offers").update({ status: action }).eq("id", offerId);
     
     // 2. If accepted, update the associated inspection to 'sold'
-    const targetOffer = offers.find(o => o.id === offerId);
-    if (targetOffer && action === "accepted") {
+    if (action === "accepted") {
       await supabase.from("inspections").update({ status: "sold" }).eq("id", targetOffer.inspection_id);
       
       // Also simulate putting this in buyer orders just in case
@@ -262,32 +271,12 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
   };
 
-  // Handle Admin: Change user role
-  const handleAdminChangeRole = async (userId: string, newRole: UserRole) => {
-    await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
-    toast.success(`User role changed to ${newRole}`);
-    reloadAllData();
-  };
-
-  // Clear Sandbox Data Utility
-  const handleResetSandbox = () => {
-    if (confirm("Reset database mock structures to pristine seed settings? All custom modifications will be flushed.")) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
-
-  // Compute stats for Admin KPI Overview
-  const adminStats = React.useMemo(() => {
-    return {
-      users: profiles.length,
-      inspectionsPending: inspections.filter(i => i.status === "pending").length,
-      inspectionsTotal: inspections.length,
-      offersPlaced: offers.length,
-      auctionsActive: auctions.filter(a => a.status === "active").length,
-      leadsPending: leads.filter(l => l.status === "pending").length
-    };
-  }, [profiles, inspections, offers, auctions, leads]);
+  // Offers placed on THIS seller's own inspected cars (never other sellers').
+  const sellerOffers = React.useMemo(() => {
+    if (currentUser.role !== "Seller") return [];
+    const sellerInspIds = new Set(inspections.filter(i => i.seller_id === currentUser.id).map(i => i.id));
+    return offers.filter(o => sellerInspIds.has(o.inspection_id));
+  }, [currentUser, inspections, offers]);
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
@@ -518,31 +507,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   </>
                 )}
 
-                {/* ADMIN LINKS */}
-                {currentUser.role === "Admin" && (
-                  <>
-                    {[
-                      { id: "overview", label: "Dashboard Overview", icon: BarChart3 },
-                      { id: "admin_cars", label: "Cars Inventory", icon: Car },
-                      { id: "admin_users", label: "Users & Security Roles", icon: Users },
-                      { id: "admin_staff", label: "Staff Directory", icon: UserCheck },
-                      { id: "admin_settings", label: "System Settings", icon: Settings }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
-                          activeTab === tab.id 
-                            ? "bg-[#2E7D32] text-white" 
-                            : "text-slate-500 hover:bg-slate-50"
-                        }`}
-                      >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
-                      </button>
-                    ))}
-                  </>
-                )}
               </div>
 
               {/* Browse inventory help callout */}
@@ -760,9 +724,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <p className="text-xs text-slate-400 mt-0.5">Competitive live bids placed on your certified inspected cars.</p>
                   </div>
 
-                  {offers.length > 0 ? (
+                  {/* Only show offers placed on the current seller's own inspected cars */}
+                  {sellerOffers.length > 0 ? (
                     <div className="space-y-4">
-                      {offers.map(off => {
+                      {sellerOffers.map(off => {
                         const associatedInsp = inspections.find(i => i.id === off.inspection_id);
                         return (
                           <div key={off.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1141,245 +1106,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   onReloadAllData={reloadAllData} 
                   onNavigateToInventory={onNavigateToInventory} 
                 />
-              )}
-
-              {/* Overview */}
-              {currentUser.role === "Admin" && activeTab === "overview" && false && (
-                <div className="space-y-6">
-                  {/* KPI Row */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { label: "Total Profiles", val: adminStats.users, color: "border-slate-100 bg-white" },
-                      { label: "Pending Inspections", val: adminStats.inspectionsPending, color: "border-amber-200 bg-amber-50/40 text-amber-700" },
-                      { label: "Live Auctions", val: adminStats.auctionsActive, color: "border-indigo-200 bg-indigo-50/40 text-indigo-700" },
-                      { label: "CRM Open Leads", val: adminStats.leadsPending, color: "border-rose-200 bg-rose-50/40 text-rose-700" }
-                    ].map((stat, i) => (
-                      <div key={i} className={`border p-5 rounded-2xl flex flex-col justify-between shadow-xs ${stat.color}`}>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</span>
-                        <span className="text-2xl font-black mt-1 leading-none">{stat.val}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-xs text-xs font-semibold">
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest border-b border-slate-100 pb-2 mb-3">System Health</h4>
-                      <div className="space-y-3 font-medium">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Database Engine:</span>
-                          <span className="text-emerald-600 font-bold">Supabase Local Emulator (OK)</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Total Inspections Recorded:</span>
-                          <span className="text-slate-800 font-bold">{adminStats.inspectionsTotal}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Dealer Offers Active:</span>
-                          <span className="text-slate-800 font-bold">{adminStats.offersPlaced}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-xs text-xs font-semibold">
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest border-b border-slate-100 pb-2 mb-3">Staff Assignment Hub</h4>
-                      <div className="space-y-3 font-medium">
-                        {inspections.filter(i => i.status === "pending").map(item => (
-                          <div key={item.id} className="p-2.5 bg-[#FAF9F6] border border-slate-100 rounded-xl flex items-center justify-between">
-                            <div>
-                              <p className="font-black text-slate-800">{item.brand} {item.model}</p>
-                              <p className="text-[10px] text-slate-400">{item.city} • {item.preferred_date}</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={async () => {
-                                // Assign to default inspector Vikram
-                                await supabase.from("inspections").update({
-                                  status: "assigned",
-                                  inspector_id: "u-inspector"
-                                }).eq("id", item.id);
-                                toast.success("Inspection request successfully assigned to Vikram Rathore.");
-                                reloadAllData();
-                              }}
-                              className="bg-[#2E7D32] text-white text-[9px] h-7 font-black uppercase tracking-wider rounded-md"
-                            >
-                              Assign Vikram
-                            </Button>
-                          </div>
-                        ))}
-                        {inspections.filter(i => i.status === "pending").length === 0 && (
-                          <p className="text-slate-400 italic text-center py-4">No unassigned inspections.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Price Certification & Approval (Rule 3) */}
-                    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-xs text-xs font-semibold md:col-span-2">
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest border-b border-slate-100 pb-2 mb-3">Completed Reports & Price Certification (Rule 3)</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-medium">
-                        {inspections.filter(i => i.status === "completed").map(item => (
-                          <div key={item.id} className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl flex flex-col justify-between gap-3 text-left">
-                            <div>
-                              <p className="font-black text-slate-800 text-sm">{item.brand} {item.model}</p>
-                              <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">
-                                Reg: {item.reg_number} • Score: <strong className="text-[#2E7D32]">{item.overall_score || "N/A"} / 10</strong>
-                              </p>
-                              <div className="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded-lg border border-slate-100 italic">
-                                Notes: "{item.notes}"
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={async () => {
-                                // Admin certifies price and approves inspection
-                                await supabase.from("inspections").update({
-                                  status: "approved"
-                                }).eq("id", item.id);
-
-                                // Rule 3: Admin approves → Notify Seller
-                                await notificationService.triggerInspectionApproved({
-                                  sellerId: item.seller_id || "",
-                                  inspectionId: item.id,
-                                  brand: item.brand,
-                                  model: item.model,
-                                  certifiedPrice: item.year > 2020 ? 850000 : 450000
-                                });
-
-                                toast.success(`Inspection approved and ₹${(item.year > 2020 ? 850000 : 450000).toLocaleString()} price certified. Seller has been notified.`);
-                                reloadAllData();
-                              }}
-                              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] h-9 font-black uppercase tracking-wider rounded-xl mt-2"
-                            >
-                              ✔️ Approve & Certify Price
-                            </Button>
-                          </div>
-                        ))}
-                        {inspections.filter(i => i.status === "completed").length === 0 && (
-                          <p className="text-slate-400 italic text-center py-4 col-span-1 md:col-span-2">No completed evaluations awaiting price certification.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Cars List */}
-              {currentUser.role === "Admin" && activeTab === "admin_cars" && false && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">System Vehicles</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Core inventory records rendered inside the master catalog list.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    {catalogCars.map(car => (
-                      <div key={car.id} className="border border-slate-100 rounded-xl p-3 bg-[#FAF9F6] flex justify-between items-center text-xs">
-                        <div>
-                          <p className="font-black text-slate-800">{car.brand} {car.model}</p>
-                          <p className="text-slate-400 font-medium">{car.year} • {car.bodyType} • {car.location}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-black text-slate-900">₹{(car.price * 80).toLocaleString()}</p>
-                          <span className="bg-[#2E7D32]/10 text-[#2E7D32] px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest">
-                            {car.certified ? "Certified" : "Consignment"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Users */}
-              {currentUser.role === "Admin" && activeTab === "admin_users" && false && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">User Security Profiles</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Admin privilege control center. Elevate or downgrade roles to test individual views seamlessly.</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {profiles.map(p => (
-                      <div key={p.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs font-semibold text-slate-700">
-                        <div>
-                          <p className="font-black text-slate-900 text-sm leading-none">{p.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">{p.email} • {p.mobile || "No Mobile"}</p>
-                        </div>
-
-                        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                          <div>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none block">Active Role</span>
-                            <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full inline-block mt-1">
-                              {p.role}
-                            </span>
-                          </div>
-
-                          <select
-                            value={p.role}
-                            onChange={(e) => handleAdminChangeRole(p.id, e.target.value as UserRole)}
-                            className="h-9 border border-slate-200 bg-white rounded-lg text-[11px] font-black uppercase tracking-widest px-2.5 outline-none cursor-pointer focus:ring-1 focus:ring-[#2E7D32]"
-                          >
-                            <option>Buyer</option>
-                            <option>Seller</option>
-                            <option>Dealer</option>
-                            <option>Inspector</option>
-                            <option>Sales Associate</option>
-                            <option>Admin</option>
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Staff */}
-              {currentUser.role === "Admin" && activeTab === "admin_staff" && false && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Staff Directory</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">System-level operators with structural dashboard access rights.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    {profiles.filter(p => p.role !== "Buyer" && p.role !== "Seller" && p.role !== "Dealer").map(staff => (
-                      <div key={staff.id} className="border border-slate-100 p-4 rounded-2xl bg-[#FAF9F6] flex gap-3 text-left items-center">
-                        <div className="h-10 w-10 bg-emerald-50 text-[#2E7D32] rounded-xl flex items-center justify-center shrink-0 font-black">
-                          {staff.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900">{staff.name}</p>
-                          <p className="text-[10px] text-slate-400 leading-none mt-0.5">{staff.email}</p>
-                          <span className="bg-[#2E7D32]/10 text-[#2E7D32] px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest mt-1.5 inline-block">
-                            {staff.role}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Settings */}
-              {currentUser.role === "Admin" && activeTab === "admin_settings" && false && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">System Settings</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Control Sandbox parameters and clear emulated database logs.</p>
-                  </div>
-
-                  <div className="p-5 bg-rose-50/50 border border-rose-100 rounded-2xl space-y-3">
-                    <p className="text-xs font-black text-rose-800 uppercase tracking-widest">Destructive Maintenance Area</p>
-                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                      Clearing local databases will restore the pristine mock parameters, resolving any diagnostic collisions or corrupted testing parameters.
-                    </p>
-                    <Button
-                      onClick={handleResetSandbox}
-                      className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider h-10 px-5 rounded-xl"
-                    >
-                      ⚠️ Clear Local Database Sandbox
-                    </Button>
-                  </div>
-                </div>
               )}
 
             </div>

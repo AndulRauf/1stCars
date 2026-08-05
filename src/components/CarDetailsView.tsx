@@ -44,9 +44,11 @@ export function CarDetailsView({
     []
   );
 
-  // Locate selected car
+  // Locate selected car. Returns undefined when the car is missing (deleted or
+  // unpublished) so the "Vehicle Not Available" state renders instead of
+  // silently falling back to an unrelated vehicle.
   const car = React.useMemo(() => {
-    return catalogCars.find((item) => item.id === carId) || catalogCars[0];
+    return catalogCars.find((item) => item.id === carId);
   }, [carId, catalogCars]);
 
   // Schema.org Structured Metadata for Car
@@ -108,11 +110,11 @@ export function CarDetailsView({
     return null;
   };
   
-  const angles = getCarPhotos(car) || [
+  const angles = car ? getCarPhotos(car) || [
     { title: "Front Exterior Profile", text: "Three-Quarter cinematic studio angle showing sleek hood lines" },
     { title: "Rear Fastback Profile", text: "Bold posture detailing standard active aerodynamics & lightbar" },
-    { title: "Cockpit Cabin Lounge", text: "Finest hand-finished stitching, carbon clusters & primary command wheel" }
-  ];
+    { title: "Cockpit Cabin Lounge", text: "Finest hand-stitched finishes, carbon clusters & primary command wheel" }
+  ] : [];
 
   // Active Tab State
   const [activeTab, setActiveTab] = React.useState<"specs" | "features" | "inspection" | "finance">("specs");
@@ -141,16 +143,18 @@ export function CarDetailsView({
   // Finance calculations
 
   const calculatedEmi = React.useMemo(() => {
+    if (!car) return 0;
     const principal = car.price - downPayment;
     if (principal <= 0) return 0;
     const annualInterestRate = 0.0549; // 5.49% Premium APR
     const monthlyInterestRate = annualInterestRate / 12;
     const emiValue = (principal * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, loanTerm)) / (Math.pow(1 + monthlyInterestRate, loanTerm) - 1);
     return Math.round(emiValue);
-  }, [car.price, downPayment, loanTerm]);
+  }, [car, downPayment, loanTerm]);
 
   // Extract similar cars (same brand or price range +/- $30k)
   const similarCars = React.useMemo(() => {
+    if (!car) return [];
     return catalogCars.filter(
       (item) => item.id !== car.id && (item.brand === car.brand || Math.abs(item.price - car.price) <= 40000)
     ).slice(0, 2);
@@ -188,6 +192,63 @@ export function CarDetailsView({
     );
   }
 
+  // Generate and download a real (dependency-free) PDF certificate instead of
+  // faking a download. A minimal single-page PDF is built by hand; only ASCII
+  // text is used so the WinAnsi/Helvetica font renders it reliably.
+  const downloadInspectionPdf = () => {
+    const safe = (s: string) =>
+      s.replace(/[^\x20-\x7E]/g, "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+    const lines = [
+      "1stCars - Official 120-Point Certified Inspection Certificate",
+      "",
+      `Vehicle:  ${safe(`${car.brand} ${car.model}`)} (${car.year})`,
+      `Location: ${safe(car.location || "N/A")}`,
+      `Grade:    A+ (Pristine)  |  Passed ${passed120Points}/${total120Points} points`,
+      `Inspector: Vikram Rathore (ID: INS-120-GJ-8842)`,
+      "",
+      "This vehicle has passed the full 1stMark 120-Point quality standard:",
+      "non-accident frame, authentic odometer, flood-free history and clean ECU scan.",
+    ];
+
+    const streamContent =
+      "BT\n/F1 14 Tf\n72 720 Td\n14 TL\n" +
+      lines.map((line, i) => (i === 0 ? `(${line}) Tj` : `(${line}) Tj T*`)).join("\n") +
+      "\nET\n";
+
+    // Minimal valid PDF: catalog, pages, page, font, content stream.
+    const parts: string[] = [];
+    parts.push("%PDF-1.4\n");
+    const objectOffsets: number[] = [];
+    const addObject = (body: string) => {
+      objectOffsets.push(parts.join("").length);
+      parts.push(`${objectOffsets.length} 0 obj\n${body}\nendobj\n`);
+    };
+
+    addObject("<< /Type /Catalog /Pages 2 0 R >>");
+    addObject("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    addObject("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>");
+    addObject("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+    addObject(`<< /Length ${streamContent.length} >>\nstream\n${streamContent}endstream`);
+
+    const xrefOffset = parts.join("").length;
+    const xref =
+      "xref\n0 " + (objectOffsets.length + 1) + "\n" +
+      "0000000000 65535 f \n" +
+      objectOffsets.map((off) => String(off).padStart(10, "0") + " 00000 n \n").join("") +
+      `trailer\n<< /Size ${objectOffsets.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+
+    const blob = new Blob([parts.join(""), xref], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${car.brand}-${car.model}-1stcars-inspection-certificate.pdf`.replace(/\s+/g, "-").toLowerCase();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Official 120-Point Certified Inspection PDF downloaded!");
+  };
+
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-10">
 
@@ -195,7 +256,17 @@ export function CarDetailsView({
       {schemaData && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+          // JSON is embedded inside a <script> element, so escape characters that
+          // could terminate the tag (e.g. "</script>") or be ambiguous for the
+          // HTML/JS parsers. Valid JSON survives these unicode escapes intact.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(schemaData)
+              .replace(/</g, "\\u003c")
+              .replace(/>/g, "\\u003e")
+              .replace(/&/g, "\\u0026")
+              .replace(/\u2028/g, "\\u2028")
+              .replace(/\u2029/g, "\\u2029"),
+          }}
         />
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -621,7 +692,7 @@ export function CarDetailsView({
                           <span>✓ Clean ECU DTC Sweep</span>
                         </div>
                         <button
-                          onClick={() => toast.success("Downloading Official 120-Point Certified Inspection PDF Report...")}
+                          onClick={downloadInspectionPdf}
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
                         >
                           <FileText className="h-3.5 w-3.5" />

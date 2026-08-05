@@ -11,13 +11,14 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { toast } from "@/src/lib/toast";
 import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
   loadSellCatalogFromSupabase, SellCatalog
 } from "@/src/lib/sellFormData";
 
 interface SellCarViewProps {
-  onNavigateToDashboard: () => void;
+  onNavigateToDashboard: (profile?: Profile) => void;
   onBackToHome: () => void;
   onNavigateToSeller?: () => void;
   onRequireLogin?: (email?: string) => void;
@@ -489,21 +490,71 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     signedIn: false
   });
 
+  const redirectTimerRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current !== null) {
+        window.clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
+
   const navigateToSellerDashboard = React.useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      onNavigateToDashboard();
-      return;
-    }
-    const { email, password } = sellerAutoAuthRef.current;
-    if (email && password) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error && data.user) {
-        onNavigateToDashboard();
-        return;
+    // Re-resolve the authoritative profile (fresh role) so the Seller
+    // dashboard renders even if the App-level auth listener resolved the
+    // role before the seller sign-up / role promotion completed.
+    const resolveProfile = async (user: any): Promise<Profile> => {
+      let role: Profile["role"] = "Seller";
+      let name: string = user?.user_metadata?.name || user?.name || user?.email?.split("@")[0] || "Seller";
+      let mobile: string = user?.user_metadata?.mobile || user?.mobile || "";
+      let city: string = user?.user_metadata?.city || user?.city || "Mumbai";
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, name, email, mobile, role, city")
+          .eq("id", user?.id)
+          .maybeSingle();
+        if (profile) {
+          // Keep staff roles as-is; promote a plain Buyer (or unset role) to
+          // Seller so the seller actually lands on the Seller dashboard.
+          if (!profile.role || profile.role === "Buyer") {
+            await supabase.from("profiles").update({ role: "Seller" }).eq("id", user?.id);
+            profile.role = "Seller";
+          }
+          role = profile.role || role;
+          name = profile.name || name;
+          mobile = profile.mobile || mobile;
+          city = profile.city || city;
+        }
+      } catch (e) {
+        console.warn("Failed to resolve seller profile:", e);
+      }
+      return {
+        id: user?.id || "",
+        name,
+        email: user?.email || "",
+        mobile,
+        role,
+        city,
+        created_at: user?.created_at || new Date().toISOString()
+      };
+    };
+
+    let user = (await supabase.auth.getUser()).data?.user;
+    if (!user) {
+      const { email, password } = sellerAutoAuthRef.current;
+      if (email && password) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error && data.user) user = data.user;
       }
     }
-    onRequireLogin?.(email || undefined);
+    if (user) {
+      const profile = await resolveProfile(user);
+      onNavigateToDashboard(profile);
+      return;
+    }
+    onRequireLogin?.(sellerAutoAuthRef.current.email || undefined);
   }, [onNavigateToDashboard, onRequireLogin]);
 
   const [settings, setSettings] = React.useState({
@@ -662,7 +713,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       setOtpSent(true);
       setOtpSending(false);
       setResendCountdown(30);
-      toast.success(`Verification SMS sent! Your OTP is: ${generatedCode}`);
+      // The code is intentionally NOT echoed back in the toast; in the demo the
+      // simulated-SMS banner below surfaces it for testing, on a live gateway
+      // the real message goes to the seller's phone.
+      toast.success("Verification SMS sent to your mobile number!");
     }, 1000);
   };
 
@@ -807,9 +861,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     // Ensure the seller is signed in so they land on the Seller Dashboard (not the login gateway)
     // after submitting. Mirrors the Buyer auto-registration flow used in BookingModal.
-    let { data: { user } } = await supabase.auth.getUser();
+    let user: any = null;
     let autoEmail = "";
     let autoPassword = "";
+    try {
+    user = (await supabase.auth.getUser()).data?.user;
     if (!user) {
       const sellerEmail = email.trim();
       // Reuse a previously stored auto-password for this email so repeat
@@ -853,6 +909,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       password: autoPassword,
       signedIn: Boolean(user)
     };
+    } catch (authErr) {
+      console.warn("Auto Seller sign-in threw during inspection submit:", authErr);
+      sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false };
+    }
 
     // Construct registration number with custom suffix or fallback
     const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase() : "AB-1234";
@@ -896,17 +956,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       let { data, error } = await supabase.from("inspections").insert([inspectionRecord]).select();
 
       // Schema-mismatch recovery: an older live database may be missing the
-      // denormalized columns added by the latest public/schema.sql
-      // (seller_name / seller_mobile / seller_email / notes / overall_score).
-      // PostgREST then rejects the insert with an "unknown column" /
-      // "schema cache" error (PGRST204). Rather than failing the whole
-      // submission, retry with ONLY the columns guaranteed by the base schema
-      // so the seller's request still gets saved.
+      // optional denormalized columns (seller_email / notes / overall_score /
+      // report_*). PostgREST then rejects the insert with an "unknown column"
+      // error (PGRST204). Rather than failing the whole submission, retry with
+      // ONLY the columns guaranteed by the base schema so the seller's request
+      // still gets saved. seller_name / seller_mobile are NOT NULL in the base
+      // schema and must never be dropped.
       if (error && isUnknownColumnError(error.message)) {
         const {
-          seller_name, seller_mobile, seller_email, notes, overall_score,
-          ...baseRecord
-        } = inspectionRecord as any;
+          seller_email, notes, ...baseRecord
+        } = inspectionRecord;
         console.warn(
           "Inspections insert rejected an optional column — retrying with base columns only.",
           error.message
@@ -929,9 +988,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           .insert([inspectionRecord]);
         if (insertOnlyError && isUnknownColumnError(insertOnlyError.message)) {
           const {
-            seller_name, seller_mobile, seller_email, notes, overall_score,
-            ...baseRecord
-          } = inspectionRecord as any;
+            seller_email, notes, ...baseRecord
+          } = inspectionRecord;
           const { error: baseInsertError } = await supabase
             .from("inspections")
             .insert([baseRecord]);
@@ -972,12 +1030,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         preferred_date: finalDate
       }).catch((err) => console.warn("Background inspection notification failed:", err));
 
-      // Redirect to seller dashboard after 3 seconds (only when the seller is
-      // already signed in, so we never surprise them with a login popup).
-      setTimeout(() => {
-        if (sellerAutoAuthRef.current.signedIn) {
-          void navigateToSellerDashboard();
-        }
+      // Redirect to seller dashboard after 3 seconds. Navigation is always
+      // attempted (not gated on the initial auto-sign-in) because the sign-in
+      // may only complete on the second attempt after the profile row exists;
+      // if it still fails the success screen's "Go to Seller Dashboard" button
+      // (and the pre-filled login fallback) remains available.
+      redirectTimerRef.current = window.setTimeout(() => {
+        void navigateToSellerDashboard();
       }, 3000);
     } catch (error) {
       console.error("Error creating inspection request:", error);
@@ -1801,7 +1860,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (enteredOtp === otpCode || enteredOtp === "1234") {
+                                  if (enteredOtp === otpCode) {
                                     setOtpVerified(true);
                                     toast.success("Mobile number verified successfully!");
                                   } else {
@@ -1813,6 +1872,26 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                                 Verify OTP
                               </button>
                             </div>
+                          </div>
+
+                          {/* Demo-only simulated SMS banner. A real gateway never
+                              shows the code here — it goes to the seller's phone. */}
+                          <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                            <p className="text-[10px] font-bold text-slate-500 leading-snug">
+                              Demo SMS: <span className="text-slate-800">+91 {mobile}</span> — your 1stCars verification code is{" "}
+                              <strong className="text-[#2E7D32]">{otpCode}</strong>.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEnteredOtp(otpCode);
+                                setOtpVerified(true);
+                                toast.success("OTP autofilled and mobile verified!");
+                              }}
+                              className="shrink-0 text-[#2E7D32] border border-[#2E7D32]/30 bg-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-pointer hover:bg-[#2E7D32] hover:text-white transition-all"
+                            >
+                              ⚡ Autofill
+                            </button>
                           </div>
                         </div>
                       )}
