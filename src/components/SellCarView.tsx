@@ -861,7 +861,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       }, 3000);
     } catch (error) {
       console.error("Error creating inspection request:", error);
-      const message = error instanceof Error ? error.message : "Please check your details and try again.";
+      const raw = error instanceof Error ? error.message : String(error);
+      // RLS insert failures happen when the live database predates the current
+      // schema (missing "Visitors submit inspection requests" policy / anon
+      // INSERT grant). Surface an actionable message instead of the raw SQL.
+      const isRlsBlocked = /row.?level security policy/i.test(raw) || /permission denied/i.test(raw);
+      const message = isRlsBlocked
+        ? "your request was blocked by the database security policy. Please re-run public/schema.sql in the Supabase SQL Editor, then try again."
+        : raw || "Please check your details and try again.";
       toast.error(`Failed to register your inspection: ${message}`);
     } finally {
 

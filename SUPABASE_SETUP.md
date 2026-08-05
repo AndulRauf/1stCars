@@ -90,6 +90,14 @@ seeded in the background (once per browser per user).
 
 ---
 
+### Troubleshooting
+- **`new row violates row-level security policy for table "inspections"`** on the
+  Sell Car form means the live database predates the "Visitors submit inspection
+  requests" INSERT policy and the anon INSERT grant. Fix: re-run
+  [`public/schema.sql`](public/schema.sql) in the Supabase SQL Editor (the file is
+  idempotent) — it drops/recreates that policy and grants
+  `INSERT, SELECT ON public.inspections TO anon`. Then hard-refresh the site.
+
 ### Notes
 - **Mock vs real:** if either env var is empty the app falls back to the mock.
   You can also force the mock in the browser console with
