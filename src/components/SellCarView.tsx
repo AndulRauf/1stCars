@@ -424,6 +424,18 @@ function isUnknownColumnError(message?: string): boolean {
   );
 }
 
+// Detect Row-Level-Security / permission failures. These can come from the
+// INSERT itself OR from the RETURNING (.select()) clause reading the row back.
+function isRlsError(message?: string): boolean {
+  if (!message) return false;
+  return (
+    /row.?level security policy/i.test(message) ||
+    /permission denied/i.test(message) ||
+    /violates row-level security/i.test(message)
+  );
+}
+
+
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
@@ -864,10 +876,41 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         ({ data, error } = await supabase.from("inspections").insert([baseRecord]).select());
       }
 
+      // RLS on the RETURNING (.select()) clause can block reading the row back
+      // even when the INSERT itself is allowed — e.g. an anonymous lead whose
+      // seller_id is NULL is filtered out by the "Sellers read own inspections"
+      // SELECT policy. Retry the write WITHOUT asking for the row back so a
+      // successful save is never reported as a failure.
+      if (error && (isRlsError(error.message) || isUnknownColumnError(error.message))) {
+        console.warn(
+          "Inspections insert with RETURNING was blocked — retrying insert without .select().",
+          error.message
+        );
+        const { error: insertOnlyError } = await supabase
+          .from("inspections")
+          .insert([inspectionRecord]);
+        if (insertOnlyError && isUnknownColumnError(insertOnlyError.message)) {
+          const {
+            seller_name, seller_mobile, seller_email, notes, overall_score,
+            ...baseRecord
+          } = inspectionRecord as any;
+          const { error: baseInsertError } = await supabase
+            .from("inspections")
+            .insert([baseRecord]);
+          error = baseInsertError;
+        } else {
+          error = insertOnlyError;
+        }
+        // We could not read the row back, but the insert succeeded — continue
+        // with the locally-built record so the seller still sees confirmation.
+        data = null;
+      }
+
       if (error) {
         // Insert failed — do NOT show a false success screen.
         throw new Error(error.message || "Could not save your inspection request.");
       }
+
 
       // Anonymous submissions (no auto-created session) may see an empty
       // result from .select() because RLS filters the RETURNING rows — fall
