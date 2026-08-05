@@ -410,6 +410,21 @@ export const brandData: {
 // derived from the built-in brand database. Admin CMS edits layer on top of this.
 const DEFAULT_SELL_CATALOG = catalogFromLegacy(brandData, BRAND_LOGOS);
 
+// Detect PostgREST "unknown column" / stale schema-cache errors so we can retry
+// the inspection insert with only the guaranteed base columns. These surface
+// when the live database was created from an older public/schema.sql that is
+// missing the denormalized seller_name/seller_mobile/seller_email/notes columns.
+function isUnknownColumnError(message?: string): boolean {
+  if (!message) return false;
+  return (
+    /schema cache/i.test(message) ||
+    /could not find the .* column/i.test(message) ||
+    /column .* does not exist/i.test(message) ||
+    /PGRST204/i.test(message)
+  );
+}
+
+
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
   { code: "GJ-1", city: "Ahmedabad" },
@@ -828,11 +843,32 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     try {
       // `.select()` returns the newly-created row(s) — including the DB-generated
       // id — so the follow-up inspector notification references the real record.
-      const { data, error } = await supabase.from("inspections").insert([inspectionRecord]).select();
+      let { data, error } = await supabase.from("inspections").insert([inspectionRecord]).select();
+
+      // Schema-mismatch recovery: an older live database may be missing the
+      // denormalized columns added by the latest public/schema.sql
+      // (seller_name / seller_mobile / seller_email / notes / overall_score).
+      // PostgREST then rejects the insert with an "unknown column" /
+      // "schema cache" error (PGRST204). Rather than failing the whole
+      // submission, retry with ONLY the columns guaranteed by the base schema
+      // so the seller's request still gets saved.
+      if (error && isUnknownColumnError(error.message)) {
+        const {
+          seller_name, seller_mobile, seller_email, notes, overall_score,
+          ...baseRecord
+        } = inspectionRecord as any;
+        console.warn(
+          "Inspections insert rejected an optional column — retrying with base columns only.",
+          error.message
+        );
+        ({ data, error } = await supabase.from("inspections").insert([baseRecord]).select());
+      }
+
       if (error) {
         // Insert failed — do NOT show a false success screen.
         throw new Error(error.message || "Could not save your inspection request.");
       }
+
       // Anonymous submissions (no auto-created session) may see an empty
       // result from .select() because RLS filters the RETURNING rows — fall
       // back to the record we built locally so the flow never crashes.
@@ -866,10 +902,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // schema (missing "Visitors submit inspection requests" policy / anon
       // INSERT grant). Surface an actionable message instead of the raw SQL.
       const isRlsBlocked = /row.?level security policy/i.test(raw) || /permission denied/i.test(raw);
-      const message = isRlsBlocked
-        ? "your request was blocked by the database security policy. Please re-run public/schema.sql in the Supabase SQL Editor, then try again."
+      const isSchemaMismatch = isUnknownColumnError(raw);
+      const message = (isRlsBlocked || isSchemaMismatch)
+        ? "your request was blocked because the live database is out of date. Please re-run public/schema.sql in the Supabase SQL Editor, then try again."
         : raw || "Please check your details and try again.";
       toast.error(`Failed to register your inspection: ${message}`);
+
     } finally {
 
       setIsSubmitting(false);
