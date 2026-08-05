@@ -559,11 +559,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
 
     let user = (await supabase.auth.getUser()).data?.user;
+    let lastAuthError: any = null;
 
     // 1. Quietly re-sign-in with the auto-created Seller credentials.
     if (!user && email && password) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error && data.user) user = data.user;
+      else lastAuthError = error;
     }
 
     // 2. The account may never have been created (e.g. an interrupted first
@@ -586,8 +588,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           }
         );
         if (!authError && signedInUser) user = signedInUser;
-        else console.warn("Auto seller sign-in still failed — falling back to local profile.", authError);
+        else {
+          lastAuthError = authError;
+          console.warn("Auto seller sign-in still failed — falling back to local profile.", authError);
+        }
       } catch (e) {
+        lastAuthError = e;
         console.warn("Auto seller sign-in threw — falling back to local profile.", e);
       }
     }
@@ -602,6 +608,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     //    submitted a valid inspection, so open the Seller dashboard with a
     //    locally-built profile. RLS-gated data may be empty until a real
     //    session exists, but the dashboard opens every time.
+    const errText = `${lastAuthError?.message || lastAuthError?.code || ""}`.toLowerCase();
+    const emailPending = /email.*(not confirmed|not verified)|email_not_confirmed|confirm/i.test(errText);
+    if (emailPending) {
+      // One-time gentle notice instead of a login popup: the seller IS in, but
+      // their account is waiting for email confirmation so inspection data
+      // syncs only after they click the confirmation link in their inbox.
+      toast.info("Your seller dashboard is ready. Please confirm the email sent to " + (email || "your inbox") + " so your inspection syncs to this account.");
+    }
     onNavigateToDashboard({
       id: user?.id || "",
       name: name || email.split("@")[0] || "Seller",
