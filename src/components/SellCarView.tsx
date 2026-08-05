@@ -21,7 +21,6 @@ interface SellCarViewProps {
   onNavigateToDashboard: (profile?: Profile) => void;
   onBackToHome: () => void;
   onNavigateToSeller?: () => void;
-  onRequireLogin?: (email?: string) => void;
 }
 
 // Extensive brand logos lookup (Indian market brands, 2000 onwards)
@@ -481,13 +480,23 @@ const gujaratRTOs = [
   { code: "GJ-38", city: "Bavla" }
 ];
 
-export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller, onRequireLogin }: SellCarViewProps) {
+export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller }: SellCarViewProps) {
   // Remembers the auto-created Seller account so "Go to Seller Dashboard" can
   // re-sign-in quietly instead of dropping the seller onto the login popup.
-  const sellerAutoAuthRef = React.useRef<{ email: string; password: string; signedIn: boolean }>({
+  const sellerAutoAuthRef = React.useRef<{
+    email: string;
+    password: string;
+    signedIn: boolean;
+    name: string;
+    mobile: string;
+    city: string;
+  }>({
     email: "",
     password: "",
-    signedIn: false
+    signedIn: false,
+    name: "",
+    mobile: "",
+    city: ""
   });
 
   const redirectTimerRef = React.useRef<number | null>(null);
@@ -541,21 +550,68 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       };
     };
 
+    let { email, password, name, mobile, city } = sellerAutoAuthRef.current;
+
+    // The submit-time auto account may be gone if the page was reloaded, but
+    // the generated password persists in localStorage — re-read it by email.
+    if (!password && email) {
+      password = localStorage.getItem(getAutoPasswordKey(email)) || "";
+    }
+
     let user = (await supabase.auth.getUser()).data?.user;
-    if (!user) {
-      const { email, password } = sellerAutoAuthRef.current;
-      if (email && password) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (!error && data.user) user = data.user;
+
+    // 1. Quietly re-sign-in with the auto-created Seller credentials.
+    if (!user && email && password) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error && data.user) user = data.user;
+    }
+
+    // 2. The account may never have been created (e.g. an interrupted first
+    //    submission). Create-or-sign-in again with the Seller role so the
+    //    dashboard's RLS queries have a real session.
+    if (!user && email) {
+      try {
+        const { user: signedInUser, error: authError } = await resolveAutoSignIn(
+          supabase,
+          email,
+          password,
+          {
+            data: {
+              name: name || email.split("@")[0],
+              email,
+              mobile: mobile || "",
+              role: "Seller",
+              city: city || "Mumbai"
+            }
+          }
+        );
+        if (!authError && signedInUser) user = signedInUser;
+        else console.warn("Auto seller sign-in still failed — falling back to local profile.", authError);
+      } catch (e) {
+        console.warn("Auto seller sign-in threw — falling back to local profile.", e);
       }
     }
+
     if (user) {
       const profile = await resolveProfile(user);
       onNavigateToDashboard(profile);
       return;
     }
-    onRequireLogin?.(sellerAutoAuthRef.current.email || undefined);
-  }, [onNavigateToDashboard, onRequireLogin]);
+
+    // 3. LAST RESORT: never drop the seller onto a login popup. They already
+    //    submitted a valid inspection, so open the Seller dashboard with a
+    //    locally-built profile. RLS-gated data may be empty until a real
+    //    session exists, but the dashboard opens every time.
+    onNavigateToDashboard({
+      id: user?.id || "",
+      name: name || email.split("@")[0] || "Seller",
+      email,
+      mobile,
+      role: "Seller",
+      city: city || "Mumbai",
+      created_at: new Date().toISOString()
+    });
+  }, [onNavigateToDashboard]);
 
   const [settings, setSettings] = React.useState({
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
@@ -907,11 +963,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     sellerAutoAuthRef.current = {
       email: autoEmail,
       password: autoPassword,
-      signedIn: Boolean(user)
+      signedIn: Boolean(user),
+      name: preliminaryName,
+      mobile: mobile,
+      city: resolvedCity
     };
     } catch (authErr) {
       console.warn("Auto Seller sign-in threw during inspection submit:", authErr);
-      sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false };
+      sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
     // Construct registration number with custom suffix or fallback

@@ -677,9 +677,6 @@ export default function App() {
             if (profile) setCurrentUser(profile);
             handleNavigate("role_dashboards");
           }}
-          onRequireLogin={(email) => {
-            setAuthModal({ isOpen: true, mode: "login", email });
-          }}
           onBackToHome={() => {
             handleNavigate("buy_cars");
           }}
