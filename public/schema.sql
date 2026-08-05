@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS public.sell_requests (
 CREATE TABLE IF NOT EXISTS public.inspections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   sell_request_id UUID REFERENCES public.sell_requests(id) ON DELETE SET NULL,
-  seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   inspector_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   reg_number TEXT NOT NULL,
   brand TEXT NOT NULL,
@@ -340,6 +340,32 @@ CREATE POLICY "Users edit own profile" ON public.profiles FOR UPDATE USING (auth
 DROP POLICY IF EXISTS "Admin manages all profiles" ON public.profiles;
 CREATE POLICY "Admin manages all profiles" ON public.profiles FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
+-- Non-admins may NEVER change their own role / approval / email on the row
+-- (the "Users edit own profile" policy would otherwise allow self-escalation
+-- to Admin). Runs as a trigger checking the actor.
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS trigger AS $$
+DECLARE
+  actor_role public.user_role;
+BEGIN
+  IF auth.uid() = NEW.id
+     AND (NEW.role IS DISTINCT FROM OLD.role
+          OR NEW.is_approved IS DISTINCT FROM OLD.is_approved
+          OR NEW.email IS DISTINCT FROM OLD.email) THEN
+    actor_role := public.get_auth_user_role();
+    IF actor_role IS DISTINCT FROM 'Admin'::public.user_role THEN
+      RAISE EXCEPTION 'Only an administrator may change role, approval status, or email';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER prevent_self_role_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_self_role_escalation();
+
 -- 2. Brands Policies
 DROP POLICY IF EXISTS "Public read brands" ON public.brands;
 CREATE POLICY "Public read brands" ON public.brands FOR SELECT USING (true);
@@ -485,10 +511,34 @@ CREATE TABLE IF NOT EXISTS public.offers (
 );
 
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+-- Only the participating dealer, the car's seller, and staff may read offers.
 DROP POLICY IF EXISTS "Anyone reads offers" ON public.offers;
-CREATE POLICY "Anyone reads offers" ON public.offers FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages offers" ON public.offers;
-CREATE POLICY "Anyone manages offers" ON public.offers FOR ALL USING (true);
+DROP POLICY IF EXISTS "Sellers, dealers and staff read offers" ON public.offers;
+DROP POLICY IF EXISTS "Dealers and staff place offers" ON public.offers;
+DROP POLICY IF EXISTS "Dealers and sellers update offers, staff manage" ON public.offers;
+DROP POLICY IF EXISTS "Staff delete offers" ON public.offers;
+CREATE POLICY "Sellers, dealers and staff read offers" ON public.offers FOR SELECT USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Dealers and staff place offers" ON public.offers FOR INSERT WITH CHECK (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
+CREATE POLICY "Dealers and sellers update offers, staff manage" ON public.offers FOR UPDATE USING (
+  auth.uid() = dealer_id
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+  OR EXISTS (
+    SELECT 1 FROM public.inspections i WHERE i.id = offers.inspection_id AND i.seller_id = auth.uid()
+  )
+);
+CREATE POLICY "Staff delete offers" ON public.offers FOR DELETE USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
 
 
 -- 21. AUCTIONS TABLE
@@ -509,10 +559,21 @@ CREATE TABLE IF NOT EXISTS public.auctions (
 );
 
 ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
+-- Anyone may view auctions (public listings); only dealers may bid on
+-- ACTIVE ones; staff and inspectors manage them.
 DROP POLICY IF EXISTS "Anyone reads auctions" ON public.auctions;
 CREATE POLICY "Anyone reads auctions" ON public.auctions FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages auctions" ON public.auctions;
-CREATE POLICY "Anyone manages auctions" ON public.auctions FOR ALL USING (true);
+DROP POLICY IF EXISTS "Dealers bid on active auctions" ON public.auctions;
+DROP POLICY IF EXISTS "Staff and inspectors manage auctions" ON public.auctions;
+CREATE POLICY "Dealers bid on active auctions" ON public.auctions FOR UPDATE USING (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+) WITH CHECK (
+  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
+);
+CREATE POLICY "Staff and inspectors manage auctions" ON public.auctions FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+);
 
 
 -- 22. SALES NOTIFICATIONS TABLE
@@ -533,10 +594,16 @@ CREATE TABLE IF NOT EXISTS public.sales_notifications (
 );
 
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
+-- Leads contain customer PII (name/mobile). Visitors may SUBMIT a lead, but
+-- only staff (Admin / Sales Associate) can read, update, or delete them.
 DROP POLICY IF EXISTS "Anyone reads sales_notifications" ON public.sales_notifications;
-CREATE POLICY "Anyone reads sales_notifications" ON public.sales_notifications FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Anyone manages sales_notifications" ON public.sales_notifications;
-CREATE POLICY "Anyone manages sales_notifications" ON public.sales_notifications FOR ALL USING (true);
+DROP POLICY IF EXISTS "Visitors submit leads" ON public.sales_notifications;
+DROP POLICY IF EXISTS "Staff manage leads" ON public.sales_notifications;
+CREATE POLICY "Visitors submit leads" ON public.sales_notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Staff manage leads" ON public.sales_notifications FOR ALL USING (
+  public.get_auth_user_role() IN ('Admin', 'Sales Associate')
+);
 
 
 -- ====================================================
@@ -590,8 +657,20 @@ ALTER TABLE public.profiles ALTER COLUMN email DROP NOT NULL;
 -- and free-form notes directly on the inspection row.
 ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_name TEXT;
 ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_mobile TEXT;
+ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS seller_email TEXT;
 ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS overall_score NUMERIC(3,1);
 ALTER TABLE public.inspections ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- The public Sell Car form is an anonymous lead submission (the mobile OTP is a
+-- client-side mock), so the auto-created Seller sign-in may not always yield a
+-- session. Visitors may insert a PENDING inspection request with seller_id NULL;
+-- their identity lives in the denormalized seller_name/seller_mobile/seller_email
+-- columns until staff link the lead to a real profile.
+ALTER TABLE public.inspections ALTER COLUMN seller_id DROP NOT NULL;
+
+-- Rich car record persisted by the Admin CMS (photos, price breakup, inspection
+-- report, features, ...) on top of the normalized columns.
+ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 
 -- ====================================================
