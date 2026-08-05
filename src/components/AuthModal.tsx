@@ -5,7 +5,7 @@ import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
-import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -235,7 +235,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       return;
     }
 
-    const autoPassword = generateAutoPassword();
+    const autoPassword = deriveAutoPassword(demoEmail);
     localStorage.setItem(getAutoPasswordKey(demoEmail), autoPassword);
 
     try {

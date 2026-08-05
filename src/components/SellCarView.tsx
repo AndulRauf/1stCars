@@ -10,7 +10,7 @@ import { Input } from "@/src/components/ui/Input";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { toast } from "@/src/lib/toast";
-import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -945,7 +945,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // which is what left the seller unauthenticated and bounced to the login
       // popup after tapping "Go to Seller Dashboard".
       const autoPasswordKey = getAutoPasswordKey(sellerEmail);
-      const candidatePassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+      const candidatePassword = deriveAutoPassword(sellerEmail);
       localStorage.setItem(autoPasswordKey, candidatePassword);
 
 

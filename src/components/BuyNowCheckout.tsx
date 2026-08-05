@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
-import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -49,7 +49,7 @@ const processCheckout = async (
     // A hardcoded password here created accounts that SellCarView's later
     // sign-in attempt could not authenticate, leaving the seller stranded.
     const autoPasswordKey = getAutoPasswordKey(safeEmail);
-    const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+    const autoPassword = deriveAutoPassword(safeEmail);
     localStorage.setItem(autoPasswordKey, autoPassword);
     await resolveAutoSignIn(
       supabase,

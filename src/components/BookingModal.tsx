@@ -6,7 +6,7 @@ import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
-import { generateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -171,12 +171,12 @@ export function BookingModal({
       const userName = name.trim();
       const userMobile = mobile.trim();
       const userCity = city || "Surat";
-      // Reuse a previously stored auto-password for this email so repeat
-      // bookings can sign back into the SAME auto-created Buyer account.
-      // Generating a fresh password every time breaks sign-in once the account
-      // already exists (the stored credential hash no longer matches).
+      // Use a password deterministically derived from the email so repeat
+      // bookings (even from another device) can sign back into the SAME
+      // auto-created Buyer account. Random per-device passwords break sign-in
+      // once the account already exists (the stored hash no longer matches).
       const autoPasswordKey = getAutoPasswordKey(userEmail);
-      const autoPassword = localStorage.getItem(autoPasswordKey) || generateAutoPassword();
+      const autoPassword = deriveAutoPassword(userEmail);
       localStorage.setItem(autoPasswordKey, autoPassword);
 
 
