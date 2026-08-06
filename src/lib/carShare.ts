@@ -1,5 +1,5 @@
 // Shared helpers that turn a car into a rich "car card" share for WhatsApp:
-// a formatted text block (image link + title + price + specs + deep link) plus
+// a formatted text block (title + price + specs) plus a single deep link, and
 // runtime Open Graph meta injection so link previews pick up the car's photo.
 
 export interface ShareableCar {
@@ -28,12 +28,10 @@ export const carPrimaryImage = (car: ShareableCar): string => {
   return first || (isReal(car.image_url) ? car.image_url! : "");
 };
 
-// WhatsApp "car card" text block. The car's page deep link is intentionally the
-// ONLY link in the message: WhatsApp renders a rich preview card for the first
-// URL it finds, so a leading bare image link would hijack the preview and leave
-// the car page without a card. With the deep link as the only URL, WhatsApp
-// shows the first photo (via og:image) together with title, price and the link
-// in one card.
+// WhatsApp "car card" text block — deliberately contains NO link. The deep
+// link is appended once per share path: either as the `url` field of
+// navigator.share or as the single link line for wa.me. Passing the same link
+// both in `text` and `url` makes WhatsApp show it twice.
 export const buildCarShareMessage = (car: ShareableCar): string => {
   const specs = [
     car.fuel || "Petrol",
@@ -41,16 +39,21 @@ export const buildCarShareMessage = (car: ShareableCar): string => {
     car.mileage ? `${car.mileage.toLocaleString("en-IN")} km` : null,
     car.location || null,
   ].filter(Boolean).join(" • ");
-  const lines = [
+  return [
     `🚗 *${car.year} ${car.brand} ${car.model}*`,
     `💰 ${formatINR(car.price)}`,
     `✨ ${specs}`,
     ``,
     `🏅 1stCars Certified Pre-Owned`,
-    carShareLink(car),
-  ];
-  return lines.join("\n");
+  ].join("\n");
 };
+
+// Full share text with the single car page deep link appended. Used by the
+// wa.me deep-link share (which has no separate URL field) and the clipboard
+// fallback. WhatsApp collapses this one URL into its rich preview card (first
+// photo via og:image + title + price), so it appears exactly once.
+export const buildCarShareFullMessage = (car: ShareableCar): string =>
+  `${buildCarShareMessage(car)}\n\n${carShareLink(car)}`;
 
 export const buildCarOgTitle = (car: ShareableCar) =>
   `${car.year} ${car.brand} ${car.model} | 1stCars Certified`;

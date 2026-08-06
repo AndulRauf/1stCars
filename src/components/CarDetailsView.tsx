@@ -10,7 +10,7 @@ import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
-import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, carShareLink } from "@/src/lib/carShare";
+import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
 
 
 interface CarDetailsViewProps {
@@ -316,7 +316,7 @@ export function CarDetailsView({
 
             <button
               onClick={() => {
-                const message = buildCarShareMessage(car);
+                const message = buildCarShareFullMessage(car);
                 window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
               }}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#25D366] hover:bg-[#1fb457] text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#25D366]/20 cursor-pointer shrink-0 whitespace-nowrap"
@@ -329,7 +329,7 @@ export function CarDetailsView({
 
             <button
               onClick={async () => {
-                const shareUrl = `${window.location.origin}/cars/${car.id}`;
+                const shareUrl = carShareLink(car);
                 const message = buildCarShareMessage(car);
                 if (navigator.share) {
                   try {
@@ -342,7 +342,7 @@ export function CarDetailsView({
                   } catch (e) {}
                 }
                 try {
-                  await navigator.clipboard.writeText(message);
+                  await navigator.clipboard.writeText(buildCarShareFullMessage(car));
                   toast.success("Car card copied! Paste it anywhere to share.");
                 } catch (err) {
                   toast.info(`Direct link: ${shareUrl}`);

@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
-import { buildCarShareMessage, carShareLink } from "@/src/lib/carShare";
+import { buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
 
 interface CarCardProps {
   key?: string | number;
@@ -189,7 +189,7 @@ export function CarCard({
                       url: carShareLink(car)
                     }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(message).then(() => {
+                    navigator.clipboard.writeText(buildCarShareFullMessage(car)).then(() => {
                       toast.success(`Car card copied — paste it in WhatsApp!`);
                     }).catch(() => {});
                   }
