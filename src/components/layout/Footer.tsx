@@ -151,7 +151,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
             className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#2E7D32]/20 bg-white text-xs font-black uppercase tracking-widest text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white transition-colors shadow-xs cursor-pointer"
           >
             <Shield className="h-3.5 w-3.5" />
-            <span>Dealer Registration • Dealer Login • Staff Login</span>
+            <span>B2B Login</span>
             <ArrowUpRight className="h-3.5 w-3.5 opacity-70 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-transform" />
           </button>
         </div>
