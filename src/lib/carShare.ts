@@ -28,11 +28,13 @@ export const carPrimaryImage = (car: ShareableCar): string => {
   return first || (isReal(car.image_url) ? car.image_url! : "");
 };
 
-// WhatsApp "car card" text block. Includes the photo link first so WhatsApp
-// renders an image preview right inside the chat, then title, price, specs and
-// the page deep link (which gets its own card preview).
+// WhatsApp "car card" text block. The car's page deep link is intentionally the
+// ONLY link in the message: WhatsApp renders a rich preview card for the first
+// URL it finds, so a leading bare image link would hijack the preview and leave
+// the car page without a card. With the deep link as the only URL, WhatsApp
+// shows the first photo (via og:image) together with title, price and the link
+// in one card.
 export const buildCarShareMessage = (car: ShareableCar): string => {
-  const image = carPrimaryImage(car);
   const specs = [
     car.fuel || "Petrol",
     car.transmission || "Automatic",
@@ -40,8 +42,6 @@ export const buildCarShareMessage = (car: ShareableCar): string => {
     car.location || null,
   ].filter(Boolean).join(" • ");
   const lines = [
-    ...(image ? [image] : []),
-    ``,
     `🚗 *${car.year} ${car.brand} ${car.model}*`,
     `💰 ${formatINR(car.price)}`,
     `✨ ${specs}`,

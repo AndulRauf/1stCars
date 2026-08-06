@@ -606,7 +606,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         supabase.from("notifications").select(),
         supabase.from("brands").select(),
         supabase.from("pages").select(),
-        supabase.from("sales_notifications").select(),
+        supabase.from("sales_notifications").select().order("created_at", { ascending: false }),
         supabase.from("models").select(),
         supabase.from("faq").select(),
         supabase.from("testimonials").select(),
@@ -2104,9 +2104,14 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "booking_requests": {
         // Prefer Supabase sales_notifications (source of truth). Fall back to
         // the legacy localStorage leads list only when nothing came from the DB.
-        const leads = salesLeads.length > 0
+        const leads = (salesLeads.length > 0
           ? salesLeads
-          : safeParseArray(localStorage.getItem("1stcars_sales_leads"));
+          : safeParseArray(localStorage.getItem("1stcars_sales_leads")))
+          .slice()
+          .sort((a: any, b: any) =>
+            (b.created_at ? new Date(b.created_at).getTime() : 0) -
+            (a.created_at ? new Date(a.created_at).getTime() : 0)
+          );
         const isTestDrive = (lead: any) => {
           // BookingModal writes "test_drive"; legacy rows / manual admin adds
           // may store "Test Drive Request", "test drive" or "test-drive".
