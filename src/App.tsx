@@ -327,7 +327,42 @@ export default function App() {
         }
       }
 
-      // Testimonials
+      // Testimonials: Supabase `testimonials` is the source of truth (edited
+      // in Admin CMS → Reviews), so the home page and admin panel always agree.
+      const defaultTestimonials = [
+        { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche Carrera S from 1stCars was an absolute joy. The 120-point report card was extremely thorough, and they delivered the vehicle in a fully closed transport direct to my estate. Top tier service.", photo: "👤" },
+        { id: "t-2", name: "Dr. Melissa Duarte", role: "Sold: Mercedes-Benz G 63 AMG", rating: 5, content: "I was initially nervous about trade-ins, but 1stCars calculated an instant offer on my G 63, did the doorstep evaluation check next morning, and transferred funds to my Chase account that exact afternoon. Exceptional speed.", photo: "👤" },
+        { id: "t-3", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already. Sourced perfect specifications.", photo: "👤" }
+      ];
+      try {
+        const { data: tData } = await supabase.from("testimonials").select();
+        const dbRows = (tData || []).map((t: any) => ({
+          id: t.id,
+          name: t.author_name,
+          role: t.author_role || "Private Buyer",
+          rating: t.rating,
+          content: t.comment,
+          photo: t.photo || "👤"
+        }));
+        if (dbRows.length > 0) {
+          localStorage.setItem("1stcars_cms_testimonials", JSON.stringify(dbRows));
+          setTestimonials(dbRows);
+        }
+        // Best-effort: migrate any canonical review still missing from the
+        // database so the home page keeps its full set and every review stays
+        // editable from Admin CMS → Reviews. Idempotent & RLS-safe.
+        const present = new Set((tData || []).map((t: any) => String(t.author_name || "").trim().toLowerCase()));
+        const toSeed = defaultTestimonials.filter(d => !present.has(String(d.name).trim().toLowerCase()));
+        if (toSeed.length > 0) {
+          await supabase.from("testimonials").insert(
+            toSeed.map(d => ({ author_name: d.name, author_role: d.role, rating: d.rating, comment: d.content, is_featured: true }))
+          );
+        }
+      } catch (e) {
+        console.error("Failed to load testimonials from Supabase:", e);
+      }
+
+      // Fallback cache (used only while the Supabase table is empty).
       const rawTestimonials = localStorage.getItem("1stcars_cms_testimonials");
       if (rawTestimonials) {
         try {
@@ -336,11 +371,6 @@ export default function App() {
           console.error("Failed to parse testimonials", e);
         }
       } else {
-        const defaultTestimonials = [
-          { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche Carrera S from 1stCars was an absolute joy. The 120-point report card was extremely thorough, and they delivered the vehicle in a fully closed transport direct to my estate. Top tier service.", photo: "👤" },
-          { id: "t-2", name: "Dr. Melissa Duarte", role: "Sold: Mercedes-Benz G 63 AMG", rating: 5, content: "I was initially nervous about trade-ins, but 1stCars calculated an instant offer on my G 63, did the doorstep evaluation check next morning, and transferred funds to my Chase account that exact afternoon. Exceptional speed.", photo: "👤" },
-          { id: "t-3", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already. Sourced perfect specifications.", photo: "👤" }
-        ];
         setTestimonials(defaultTestimonials);
         localStorage.setItem("1stcars_cms_testimonials", JSON.stringify(defaultTestimonials));
       }
