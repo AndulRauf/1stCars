@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
+import { buildCarShareMessage, carShareLink } from "@/src/lib/carShare";
 
 interface CarCardProps {
   key?: string | number;
@@ -80,6 +81,7 @@ export function CarCard({
   isListView = false,
 }: CarCardProps) {
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
+  const touchStartX = React.useRef<number | null>(null);
   const angles = (getCarPhotos(car) || getCarAngleImages(car)) as Array<{ title: string; text: string; url?: string; bgClass?: string }>;
 
   const handleNextImage = (e: React.MouseEvent) => {
@@ -90,6 +92,22 @@ export function CarCard({
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(deltaX) < 40) return;
+    if (deltaX < 0) {
+      setActiveImageIndex((prev) => (prev + 1) % angles.length);
+    } else {
+      setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length);
+    }
   };
 
   const formattedPrice = new Intl.NumberFormat("en-IN", {
@@ -123,10 +141,14 @@ export function CarCard({
       )}
     >
       {/* Premium Image Gallery Panel */}
-      <div className={cn(
-        "relative overflow-hidden flex-shrink-0 select-none",
-        isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full aspect-[4/3]"
-      )}>
+      <div
+        className={cn(
+          "relative overflow-hidden flex-shrink-0 select-none",
+          isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full aspect-[4/3]"
+        )}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Dynamic Angle Gradient Background */}
         <div 
           className={cn(
@@ -159,16 +181,16 @@ export function CarCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const shareUrl = `${window.location.origin}/cars/${car.id}`;
+                  const message = buildCarShareMessage(car);
                   if (navigator.share) {
                     navigator.share({
                       title: `${car.brand} ${car.model} | 1stCars`,
-                      text: `Check out this 1stCars Certified ${car.year} ${car.brand} ${car.model}!`,
-                      url: shareUrl
+                      text: message,
+                      url: carShareLink(car)
                     }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                      toast.success(`Copied share link for ${car.brand} ${car.model}!`);
+                    navigator.clipboard.writeText(message).then(() => {
+                      toast.success(`Car card copied — paste it in WhatsApp!`);
                     }).catch(() => {});
                   }
                 }}

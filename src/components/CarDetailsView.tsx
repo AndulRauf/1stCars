@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon, Send } from "lucide-react";
 import { Car } from "@/src/types";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
@@ -10,6 +10,7 @@ import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
+import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, carShareLink } from "@/src/lib/carShare";
 
 
 interface CarDetailsViewProps {
@@ -84,6 +85,7 @@ export function CarDetailsView({
 
   // Gallery slider state
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
+  const touchStartX = React.useRef<number | null>(null);
   
   const getCarPhotos = (car: any) => {
     if (Array.isArray(car.images) && car.images.length > 0) {
@@ -163,6 +165,15 @@ export function CarDetailsView({
       (item) => item.id !== car.id && (item.brand === car.brand || Math.abs(item.price - car.price) <= 40000)
     ).slice(0, 2);
   }, [car, catalogCars]);
+
+  // Publish the car's photo + title + price as Open Graph meta (and restore the
+  // site defaults on unmount) so shared deep links preview like a car card in
+  // JS-rendering crawlers. Complements the serverless api/car-preview page.
+  React.useEffect(() => {
+    if (!car) return;
+    applyCarOgMeta(car);
+    return () => resetCarOgMeta();
+  }, [car]);
 
   // Format currency
   const formatMoney = (val: number) => {
@@ -304,21 +315,35 @@ export function CarDetailsView({
             </button>
 
             <button
+              onClick={() => {
+                const message = buildCarShareMessage(car);
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#25D366] hover:bg-[#1fb457] text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#25D366]/20 cursor-pointer shrink-0 whitespace-nowrap"
+              title="Share this car as a WhatsApp card"
+            >
+              <Send className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">Share on WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
+            </button>
+
+            <button
               onClick={async () => {
                 const shareUrl = `${window.location.origin}/cars/${car.id}`;
+                const message = buildCarShareMessage(car);
                 if (navigator.share) {
                   try {
                     await navigator.share({
                       title: `${car.year} ${car.brand} ${car.model} | 1stCars Certified`,
-                      text: `Check out this certified ${car.year} ${car.brand} ${car.model} (${car.fuel}, ${car.transmission}) on 1stCars!`,
+                      text: message,
                       url: shareUrl,
                     });
                     return;
                   } catch (e) {}
                 }
                 try {
-                  await navigator.clipboard.writeText(shareUrl);
-                  toast.success("Car link copied to clipboard! Share it with anyone.");
+                  await navigator.clipboard.writeText(message);
+                  toast.success("Car card copied! Paste it anywhere to share.");
                 } catch (err) {
                   toast.info(`Direct link: ${shareUrl}`);
                 }
@@ -339,7 +364,22 @@ export function CarDetailsView({
           <div className="lg:col-span-7 space-y-3">
 
             {/* Main image */}
-            <div className="bg-slate-950 rounded-2xl overflow-hidden relative shadow-md select-none" style={{aspectRatio:"4/3"}}>
+            <div
+              className="bg-slate-950 rounded-2xl overflow-hidden relative shadow-md select-none"
+              style={{aspectRatio:"4/3"}}
+              onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (touchStartX.current === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+                touchStartX.current = null;
+                if (Math.abs(deltaX) < 40) return;
+                if (deltaX < 0) {
+                  setActiveImageIndex((prev) => (prev + 1) % angles.length);
+                } else {
+                  setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length);
+                }
+              }}
+            >
               <div
                 className={cn(
                   "absolute inset-0 transition-all duration-700",
