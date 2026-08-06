@@ -381,20 +381,6 @@ export default function App() {
           localStorage.setItem("1stcars_cms_testimonials", JSON.stringify(dbRows));
           setTestimonials(dbRows);
         }
-        // Best-effort: migrate any canonical review still missing from the
-        // database so the home page keeps its full set and every review stays
-        // editable from Admin CMS → Reviews. Idempotent, RLS-safe, and skips
-        // reviews the operator has deliberately deleted.
-        const present = new Set((tData || []).map((t: any) => String(t.author_name || "").trim().toLowerCase()));
-        const toSeed = defaultTestimonials.filter(d => {
-          const norm = String(d.name).trim().toLowerCase();
-          return !present.has(norm) && !deleted.includes(norm);
-        });
-        if (toSeed.length > 0) {
-          await supabase.from("testimonials").insert(
-            toSeed.map(d => ({ author_name: d.name, author_role: d.role, rating: d.rating, comment: d.content, is_featured: true }))
-          );
-        }
       } catch (e) {
         console.error("Failed to load testimonials from Supabase:", e);
       }
