@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon, Send } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
@@ -312,19 +312,6 @@ export function CarDetailsView({
               <Heart className={cn("h-3.5 w-3.5 shrink-0", savedCars.includes(car.id) && "fill-current text-rose-500")} />
               <span className="hidden sm:inline">{savedCars.includes(car.id) ? "Saved in Shortlist" : "Save Car"}</span>
               <span className="sm:hidden">{savedCars.includes(car.id) ? "Saved" : "Save"}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                const message = buildCarShareFullMessage(car);
-                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#25D366] hover:bg-[#1fb457] text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-[#25D366]/20 cursor-pointer shrink-0 whitespace-nowrap"
-              title="Share this car as a WhatsApp card"
-            >
-              <Send className="h-3.5 w-3.5 shrink-0" />
-              <span className="hidden sm:inline">Share on WhatsApp</span>
-              <span className="sm:hidden">WhatsApp</span>
             </button>
 
             <button
