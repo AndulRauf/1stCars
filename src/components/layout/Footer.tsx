@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Mail, Phone, MapPin, ArrowUpRight, Shield } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 
 interface FooterProps {
@@ -63,6 +63,42 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     // Logic for newsletter
   };
 
+  const b2bLink = (key: string) => (
+    <li key={key}>
+      <button
+        type="button"
+        onClick={() => onAuthClick?.("login")}
+        className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+      >
+        <span>B2B Login</span>
+        <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+      </button>
+    </li>
+  );
+
+  const quickLinks: React.ReactNode[] = footerPages.length > 0
+    ? footerPages.flatMap((page, idx) => {
+        const isLast = idx === footerPages.length - 1;
+        const hasShowroom = footerPages.some((p: any) => /showroom/i.test(p.title));
+        const items: React.ReactNode[] = [
+          <li key={page.id}>
+            <button
+              type="button"
+              onClick={() => onViewChange?.("custom_page", page.id)}
+              className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+            >
+              <span>{page.title}</span>
+              <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+            </button>
+          </li>,
+        ];
+        if (/showroom/i.test(page.title) || (isLast && !hasShowroom)) {
+          items.push(b2bLink(`b2b-${page.id}`));
+        }
+        return items;
+      })
+    : [b2bLink("b2b-fallback")];
+
   return (
     <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,35 +161,11 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
                   <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
                 </button>
               </li>
-              {footerPages.map((page) => (
-                <li key={page.id}>
-                  <button
-                    type="button"
-                    onClick={() => onViewChange?.("custom_page", page.id)}
-                    className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
-                  >
-                    <span>{page.title}</span>
-                    <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
-                  </button>
-                </li>
-              ))}
+              {quickLinks}
             </ul>
           </div>
 
 
-        </div>
-
-        {/* Partner & Staff Access — single consolidated gateway link */}
-        <div className="border-t border-[#2E7D32]/10 pt-8 flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
-          <button
-            type="button"
-            onClick={() => onAuthClick?.("login")}
-            className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#2E7D32]/20 bg-white text-xs font-black uppercase tracking-widest text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white transition-colors shadow-xs cursor-pointer"
-          >
-            <Shield className="h-3.5 w-3.5" />
-            <span>B2B Login</span>
-            <ArrowUpRight className="h-3.5 w-3.5 opacity-70 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-transform" />
-          </button>
         </div>
 
         {/* Bottom Bar */}
