@@ -1663,10 +1663,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       headers = ["created_at", "name", "mobile", "city", "vehicle", "type", "preferred_date", "preferred_time", "status", "notes"];
       try {
         const allLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-        rows = allLeads.filter((lead: any) => {
-          const isTestDrive = String(lead.type || "").toLowerCase().includes("test drive");
-          return type === "test_drive_requests" ? isTestDrive : !isTestDrive;
-        });
+        const isTestDrive = (lead: any) => {
+          const norm = String(lead.type || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          return norm.includes("testdrive");
+        };
+        rows = allLeads.filter((lead: any) => type === "test_drive_requests" ? isTestDrive(lead) : !isTestDrive(lead));
       } catch (e) {
         rows = [];
       }
@@ -2106,8 +2107,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         const leads = salesLeads.length > 0
           ? salesLeads
           : safeParseArray(localStorage.getItem("1stcars_sales_leads"));
-        const isTestDrive = (lead: any) =>
-          String(lead.type || "").toLowerCase().includes("test drive");
+        const isTestDrive = (lead: any) => {
+          // BookingModal writes "test_drive"; legacy rows / manual admin adds
+          // may store "Test Drive Request", "test drive" or "test-drive".
+          // Normalize to letters+digits so every variant is matched.
+          const norm = String(lead.type || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          return norm.includes("testdrive");
+        };
         return activeModule === "test_drive_requests"
           ? leads.filter((lead: any) => isTestDrive(lead))
           : leads.filter((lead: any) => !isTestDrive(lead));
