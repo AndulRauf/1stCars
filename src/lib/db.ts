@@ -99,12 +99,34 @@ CREATE TABLE IF NOT EXISTS public.sales_notifications (
   notes TEXT
 );
 
+-- Testimonials Table (Admin CMS → Reviews; rendered on the home page)
+-- NOTE: Admin CMS manages these via Supabase. If you enabled RLS on this
+-- table but only created a SELECT policy, deletes/edits from the admin panel
+-- will silently fail. Run the two policies below (after enabling RLS) so the
+-- app (anon key) can INSERT / UPDATE / DELETE.
+CREATE TABLE IF NOT EXISTS public.testimonials (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  author_name TEXT NOT NULL,
+  author_role TEXT DEFAULT 'Private Buyer',
+  rating INTEGER DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL,
+  photo TEXT DEFAULT '👤',
+  is_featured BOOLEAN DEFAULT true
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
+
+-- Testimonials need full access for Admin CMS (edit/delete) via the anon key.
+CREATE POLICY "Public Read Testimonials" ON public.testimonials FOR SELECT USING (true);
+CREATE POLICY "Anon Manage Testimonials" ON public.testimonials
+  FOR ALL USING (true) WITH CHECK (true);
 
 -- Dynamic Security Policies Example (RLS)
 CREATE POLICY "Public Read Profiles" ON public.profiles FOR SELECT USING (true);

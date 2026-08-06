@@ -1350,7 +1350,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         if (mapData) {
           const [currentList, updateFn] = mapData;
           updateFn(currentList.filter(item => item.id !== id));
-          await deleteRecordFromSupabase(activeModule, id);
+          await deleteRecordFromSupabase(activeModule, id, currentList.find(item => item.id === id));
         }
       }
 
@@ -1362,6 +1362,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
       console.error("Error deleting from CMS:", err);
+      toast.error("Delete failed. The record could not be removed from the database — check the Supabase RLS policy for this table, then try again.");
     } finally {
       setIsLoading(false);
     }
@@ -1506,25 +1507,49 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     }
   };
 
-  const deleteRecordFromSupabase = async (module: string, id: string) => {
+  const deleteRecordFromSupabase = async (module: string, id: string, record?: any) => {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     if (!isUuid) return;
     try {
       if (module === "faqs") {
-        await supabase.from("faq").delete().eq("id", id);
+        const { error } = await supabase.from("faq").delete().eq("id", id);
+        if (error) throw error;
       } else if (module === "testimonials") {
-        await supabase.from("testimonials").delete().eq("id", id);
+        const { error } = await supabase.from("testimonials").delete().eq("id", id);
+        if (error) throw error;
+        // Remember the deleted review so the home page auto-seed never
+        // resurrects it. Keyed by normalized author name.
+        if (record?.name) {
+          const name = String(record.name).trim().toLowerCase();
+          if (name) {
+            let deleted: string[] = [];
+            try {
+              deleted = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
+            } catch (e) {
+              deleted = [];
+            }
+            if (!deleted.includes(name)) {
+              deleted.push(name);
+              localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
+            }
+          }
+        }
       } else if (module === "models") {
-        await supabase.from("models").delete().eq("id", id);
+        const { error } = await supabase.from("models").delete().eq("id", id);
+        if (error) throw error;
       } else if (module === "cities") {
-        await supabase.from("cities").delete().eq("id", id);
+        const { error } = await supabase.from("cities").delete().eq("id", id);
+        if (error) throw error;
       } else if (module === "finance") {
-        await supabase.from("finance_partners").delete().eq("id", id);
+        const { error } = await supabase.from("finance_partners").delete().eq("id", id);
+        if (error) throw error;
       } else if (module === "expenses") {
-        await supabase.from("expenses").delete().eq("id", id);
+        const { error } = await supabase.from("expenses").delete().eq("id", id);
+        if (error) throw error;
       }
     } catch (e) {
       console.error(`AdminCMS: Supabase delete failed for ${module}:`, e);
+      throw e;
     }
   };
 
