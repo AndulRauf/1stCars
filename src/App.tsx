@@ -336,14 +336,22 @@ export default function App() {
       ];
       try {
         const { data: tData } = await supabase.from("testimonials").select();
-        const dbRows = (tData || []).map((t: any) => ({
-          id: t.id,
-          name: t.author_name,
-          role: t.author_role || "Private Buyer",
-          rating: t.rating,
-          content: t.comment,
-          photo: t.photo || "👤"
-        }));
+        let deleted: string[] = [];
+        try {
+          deleted = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
+        } catch (e) {
+          deleted = [];
+        }
+        const dbRows = (tData || [])
+          .map((t: any) => ({
+            id: t.id,
+            name: t.author_name,
+            role: t.author_role || "Private Buyer",
+            rating: t.rating,
+            content: t.comment,
+            photo: t.photo || "👤"
+          }))
+          .filter((t: any) => !deleted.includes(String(t.name || "").trim().toLowerCase()));
         if (dbRows.length > 0) {
           localStorage.setItem("1stcars_cms_testimonials", JSON.stringify(dbRows));
           setTestimonials(dbRows);
@@ -353,12 +361,6 @@ export default function App() {
         // editable from Admin CMS → Reviews. Idempotent, RLS-safe, and skips
         // reviews the operator has deliberately deleted.
         const present = new Set((tData || []).map((t: any) => String(t.author_name || "").trim().toLowerCase()));
-        let deleted: string[] = [];
-        try {
-          deleted = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
-        } catch (e) {
-          deleted = [];
-        }
         const toSeed = defaultTestimonials.filter(d => {
           const norm = String(d.name).trim().toLowerCase();
           return !present.has(norm) && !deleted.includes(norm);

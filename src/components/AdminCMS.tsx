@@ -785,16 +785,21 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { id: "t-2", name: "Priyanjali Sen", role: "Private Buyer", rating: 5, content: " व्हाइट-ग्लव डिलीवरी are world class! The home inspection and evaluation made selling my Range Rover completely painless.", photo: "👤" }
       ]));
 
-      // Supabase `testimonials` is the source of truth when rows exist.
+      // Supabase `testimonials` is the source of truth when rows exist. Rows
+      // whose author name was tombstoned via delete are hidden so a delete
+      // always appears to succeed in the admin panel.
       if (tData && tData.length > 0) {
-        setTestimonials(tData.map((t: any) => ({
-          id: t.id,
-          name: t.author_name,
-          role: t.author_role || "Private Buyer",
-          rating: t.rating,
-          content: t.comment,
-          photo: t.photo || "👤"
-        })));
+        const deleted = readDeletedTestimonialNames();
+        setTestimonials(tData
+          .map((t: any) => ({
+            id: t.id,
+            name: t.author_name,
+            role: t.author_role || "Private Buyer",
+            rating: t.rating,
+            content: t.comment,
+            photo: t.photo || "👤"
+          }))
+          .filter((t: any) => !deleted.includes(String(t.name || "").trim().toLowerCase())));
       }
 
       setFinancePartners(getStored("finance", [
@@ -1349,8 +1354,25 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         const mapData = tableStateMap[activeModule];
         if (mapData) {
           const [currentList, updateFn] = mapData;
-          updateFn(currentList.filter(item => item.id !== id));
-          await deleteRecordFromSupabase(activeModule, id, currentList.find(item => item.id === id));
+          const record = currentList.find(item => item.id === id);
+          // Tombstone BEFORE touching state so any in-flight reload filters the
+          // row out — a delete can never be resurrected by a stale read.
+          if (activeModule === "testimonials" && record?.name) {
+            const name = String(record.name).trim().toLowerCase();
+            if (name) {
+              const deleted = readDeletedTestimonialNames();
+              if (!deleted.includes(name)) {
+                deleted.push(name);
+                localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
+              }
+            }
+          }
+          const nextList = currentList.filter(item => item.id !== id);
+          updateFn(nextList);
+          const { dbError } = await deleteRecordFromSupabase(activeModule, id, record);
+          if (activeModule === "testimonials" && dbError) {
+            toast.error("Review removed from this browser, but the database delete failed. Run the testimonials RLS policy in Supabase SQL Editor so it disappears for everyone.");
+          }
         }
       }
 
@@ -1425,6 +1447,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           await supabase.from("testimonials").update(row).eq("id", dbId);
         } else {
           await supabase.from("testimonials").insert([row]);
+          // A deliberately re-added review must be visible again: lift any
+          // delete tombstone keyed by the same author name.
+          const name = String(record.name || "").trim().toLowerCase();
+          if (name) {
+            const deleted = readDeletedTestimonialNames().filter((n) => n !== name);
+            localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
+          }
         }
       } else if (module === "models") {
         if (!record.brand_id && !record.brand) return;
@@ -1507,33 +1536,52 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     }
   };
 
-  const deleteRecordFromSupabase = async (module: string, id: string, record?: any) => {
+  const readDeletedTestimonialNames = (): string[] => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const deleteRecordFromSupabase = async (module: string, id: string, record?: any): Promise<{ dbError: boolean }> => {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!isUuid) return;
+    if (module === "testimonials") {
+      // Tombstone the review FIRST (by normalized author name) so it disappears
+      // from the admin list and the home page even when the DB row cannot be
+      // removed (e.g. RLS blocks DELETE). The DB delete is best-effort.
+      if (record?.name) {
+        const name = String(record.name).trim().toLowerCase();
+        if (name) {
+          const deleted = readDeletedTestimonialNames();
+          if (!deleted.includes(name)) {
+            deleted.push(name);
+            localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
+          }
+        }
+      }
+      let dbError = false;
+      if (isUuid) {
+        try {
+          const { error } = await supabase.from("testimonials").delete().eq("id", id);
+          if (error) {
+            dbError = true;
+            console.error("AdminCMS: Supabase delete failed for testimonials (check RLS policy). Review is hidden locally:", error);
+          }
+        } catch (e) {
+          dbError = true;
+          console.error("AdminCMS: Supabase delete threw for testimonials:", e);
+        }
+      }
+      return { dbError };
+    }
+
+    if (!isUuid) return { dbError: false };
     try {
       if (module === "faqs") {
         const { error } = await supabase.from("faq").delete().eq("id", id);
         if (error) throw error;
-      } else if (module === "testimonials") {
-        const { error } = await supabase.from("testimonials").delete().eq("id", id);
-        if (error) throw error;
-        // Remember the deleted review so the home page auto-seed never
-        // resurrects it. Keyed by normalized author name.
-        if (record?.name) {
-          const name = String(record.name).trim().toLowerCase();
-          if (name) {
-            let deleted: string[] = [];
-            try {
-              deleted = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
-            } catch (e) {
-              deleted = [];
-            }
-            if (!deleted.includes(name)) {
-              deleted.push(name);
-              localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
-            }
-          }
-        }
       } else if (module === "models") {
         const { error } = await supabase.from("models").delete().eq("id", id);
         if (error) throw error;
@@ -1551,6 +1599,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       console.error(`AdminCMS: Supabase delete failed for ${module}:`, e);
       throw e;
     }
+    return { dbError: false };
   };
 
   // Dealer Approval Action
