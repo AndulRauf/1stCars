@@ -2,7 +2,7 @@ import * as React from "react";
 import { 
   Car, ShieldCheck, Clock, Calendar, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Mail, Phone, 
-  MapPin, HelpCircle, FileText, ArrowRight, ClipboardCheck,
+  MapPin, FileText, ArrowRight, ClipboardCheck,
   Search, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -2142,25 +2142,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
                 Unlike primitive portals, <strong>1stCars does not use algorithmic price estimates</strong>. Auto-estimates often devalue high-spec features. Real market bidding from verified local dealers ensures you secure the actual true valuation of your car!
               </p>
-            </div>
-
-            {/* FAQ Box */}
-            <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
-              <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest text-[#2E7D32] flex items-center gap-1.5">
-                <HelpCircle className="h-4 w-4" /> Selling FAQs
-              </h3>
-              
-              <div className="space-y-3 text-xs">
-                <div>
-                  <h4 className="font-bold text-slate-800">Q: How long does the sale take?</h4>
-                  <p className="text-slate-500 mt-0.5">A: Free doorstep inspection takes 45 minutes. Live bidding auctions happen within 2 hours, and payment is instantaneous.</p>
-                </div>
-                <div className="h-px bg-slate-50" />
-                <div>
-                  <h4 className="font-bold text-slate-800">Q: Do I need to clean the car?</h4>
-                  <p className="text-slate-500 mt-0.5">A: A clean exterior helps inspectors log body health easily, which drives higher bids during competitive auctions.</p>
-                </div>
-              </div>
             </div>
 
           </div>
