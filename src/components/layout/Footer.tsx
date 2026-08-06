@@ -76,28 +76,27 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     </li>
   );
 
-  const quickLinks: React.ReactNode[] = footerPages.length > 0
-    ? footerPages.flatMap((page, idx) => {
-        const isLast = idx === footerPages.length - 1;
-        const hasShowroom = footerPages.some((p: any) => /showroom|location/i.test(p.title));
-        const items: React.ReactNode[] = [
-          <li key={page.id}>
-            <button
-              type="button"
-              onClick={() => onViewChange?.("custom_page", page.id)}
-              className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
-            >
-              <span>{/showroom/i.test(page.title) ? "Our Location" : page.title}</span>
-              <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
-            </button>
-          </li>,
-        ];
-        if (/showroom|location/i.test(page.title) || (isLast && !hasShowroom)) {
-          items.push(b2bLink(`b2b-${page.id}`));
-        }
-        return items;
-      })
-    : [b2bLink("b2b-fallback")];
+  const quickLinks: React.ReactNode[] = [];
+  let locationSeen = false;
+  footerPages.forEach((page) => {
+    const isLocationPage = /showroom|location/i.test(page.title);
+    if (isLocationPage && locationSeen) return;
+    if (isLocationPage) locationSeen = true;
+    quickLinks.push(
+      <li key={page.id}>
+        <button
+          type="button"
+          onClick={() => onViewChange?.("custom_page", page.id)}
+          className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+        >
+          <span>{/showroom/i.test(page.title) ? "Our Location" : page.title}</span>
+          <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+        </button>
+      </li>
+    );
+    if (isLocationPage) quickLinks.push(b2bLink(`b2b-${page.id}`));
+  });
+  if (!locationSeen) quickLinks.push(b2bLink("b2b-fallback"));
 
   return (
     <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-16 pb-8">
