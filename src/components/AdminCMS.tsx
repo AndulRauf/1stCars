@@ -101,7 +101,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Buy & Sell Certified Cars With Total Confidence",
-    heroSubtitle: "Inspired by rigorous standards, reimagined for ultimate convenience.",
+    heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -865,6 +865,30 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         if (webRow && webRow.value) {
           try {
             const parsed = JSON.parse(webRow.value);
+            // Normalize known demo/admin-default copy back to canonical so the
+            // admin never sees or re-saves the placeholder text.
+            const canonicalCopy: Record<string, string> = {
+              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+              highlight1Title: "Single Owned",
+              highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
+              highlight2Title: "Non Accident Trusted",
+              highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
+              highlight3Title: "Genuine KM",
+              highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
+            };
+            const nonCanonical: Record<string, string> = {
+              heroSubtitle: "Inspired by rigorous standards, reimagined for ultimate convenience.",
+              highlight1Title: "120-Point Inspection",
+              highlight2Title: "Single Owned, Non Accident Trusted*",
+              highlight3Title: "Aggregator Marketplace",
+            };
+            for (const key of Object.keys(nonCanonical)) {
+              if (parsed[key] === nonCanonical[key]) {
+                parsed[key] = canonicalCopy[key];
+                const descKey = key.replace("Title", "Desc");
+                if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
+              }
+            }
             setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           } catch (e) {

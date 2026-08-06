@@ -280,6 +280,31 @@ export default function App() {
         if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
           parsed.logoUrl = "/logo.png";
         }
+        // Restore canonical homepage copy. These exact strings are demo/admin
+        // defaults that were written to the settings row by older saves or the
+        // legacy footer migration rule; they must never render on the site.
+        const canonicalCopy: Record<string, string> = {
+          heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+          highlight1Title: "Single Owned",
+          highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
+          highlight2Title: "Non Accident Trusted",
+          highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
+          highlight3Title: "Genuine KM",
+          highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
+        };
+        const nonCanonical: Record<string, string> = {
+          heroSubtitle: "Inspired by rigorous standards, reimagined for ultimate convenience.",
+          highlight1Title: "120-Point Inspection",
+          highlight2Title: "Single Owned, Non Accident Trusted*",
+          highlight3Title: "Aggregator Marketplace",
+        };
+        for (const key of Object.keys(nonCanonical)) {
+          if (parsed[key] === nonCanonical[key]) {
+            parsed[key] = canonicalCopy[key];
+            const descKey = key.replace("Title", "Desc");
+            if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
+          }
+        }
         return parsed;
       };
       const apply = (parsed: any) => {
@@ -882,7 +907,7 @@ export default function App() {
             <div className="grid grid-cols-3 gap-6 pt-6 border-t border-slate-200/60 w-full max-w-md justify-center">
               <div className="flex flex-col items-center">
                 <span className="text-xl font-black text-[#2E7D32] tracking-tighter shrink-0">{websiteSettings.highlight1Title || "1st-Owner"}</span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight mt-0.5 text-center" title={websiteSettings.highlight1Desc}>{websiteSettings.highlight1Title || "Single Owned"}</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight mt-0.5 text-center" title={websiteSettings.highlight1Desc}>1 Premium Owner</span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-xl font-black text-[#2E7D32] tracking-tighter shrink-0">{websiteSettings.highlight2Title || "Accident-Free"}</span>

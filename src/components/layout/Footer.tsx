@@ -20,12 +20,6 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     brandSlogan: "The Luxury Pre-Owned Hub",
     brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     footerText: "© 2026 1stCars Luxury Marketplace. All rights reserved.",
-    highlight1Title: "120-Point Certificate",
-    highlight1Desc: "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.",
-    highlight2Title: "Single Owned, Non Accident Trusted*",
-    highlight2Desc: "Verified single owner history with zero chassis frame damage guarantee.",
-    highlight3Title: "Aggregator Marketplace",
-    highlight3Desc: "Connecting verified Car Buyers, Sellers, and Dealers with transparent deal mediation.",
   });
 
   React.useEffect(() => {
@@ -34,16 +28,10 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar") || (parsed.highlight2Title && parsed.highlight2Title.includes("Buyback"))) {
+          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar")) {
             parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
             parsed.supportPhone = "+91 8866377722";
             parsed.supportEmail = "support@1stcars.com";
-            parsed.highlight1Title = "120-Point Certificate";
-            parsed.highlight1Desc = "Every vehicle undergoes our rigorous mechanical & structural evaluation before listing.";
-            parsed.highlight2Title = "Single Owned, Non Accident Trusted*";
-            parsed.highlight2Desc = "Verified single owner history with zero chassis frame damage guarantee.";
-            parsed.highlight3Title = "Aggregator Marketplace";
-            parsed.highlight3Desc = "Connecting verified Car Buyers, Sellers, and Dealers with transparent deal mediation.";
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           }
           setSettings((prev) => ({ ...prev, ...parsed }));
