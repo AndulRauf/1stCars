@@ -8,7 +8,7 @@ import {
   Play, Clock, ShieldAlert, BarChart3, TrendingUp, Info, 
   Activity, Shield, Hammer, MapPin, Calendar, Heart, 
   MessageSquare, ClipboardList, BookOpen, UserCheck, Eye, 
-  Upload, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle2, ArrowDownToLine, ArrowUpFromLine,
+  Upload, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle2,
   Car, Link, Menu
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
@@ -24,6 +24,8 @@ import { Full120PointReport, Inspection120Category, INSPECTION_FORM_STORAGE_KEY,
 import { Gavel, Globe, Database } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
 import { Breadcrumb } from "./admin/Breadcrumb";
+import { AdminDashboard } from "./admin/AdminDashboard";
+import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { CMSModule } from "./admin/adminNavData";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
@@ -2176,7 +2178,10 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     const supabaseBacked: CMSModule[] = [
       "cars", "users", "inspections", "auctions", "brands", "notifications",
       "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
-      "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries"
+      "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
+      // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
+      // Associate), so they reflect shared data rather than browser-only lists.
+      "dealers", "inspectors", "sales"
     ];
     return supabaseBacked.includes(module) ? "supabase" : "local";
   };
@@ -2208,13 +2213,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // Stats calculation for the master KPI row
-  const activeAuctionsCount = auctions.filter(a => a.status === "active").length;
-  const pendingInspsCount = inspections.filter(i => i.status === "pending").length;
-  const totalCRMLeads = salesLeads.length; // CRM Open Desk queries
-  const totalExpensesLogged = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  const totalUnreadAlerts = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
@@ -2292,7 +2290,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             </span>
           )}
           {moduleSource === "local" && (
-            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="This module has no compatible Supabase table yet - changes only live in THIS browser.">
+            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="This is an editor/config panel with no dedicated Supabase table — edits live in this browser only. Data-driven modules (cars, users, auctions, expenses, etc.) sync across all devices.">
               <AlertCircle className="h-3 w-3" /> Local-only · this browser
             </span>
           )}
@@ -2302,115 +2300,18 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
         {/* 1. DASHBOARD OVERVIEW */}
         {activeModule === "dashboard" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: "Active Auctions", val: activeAuctionsCount, desc: "Dealer bidding open", color: "bg-indigo-50 border-indigo-200 text-indigo-700" },
-              { label: "Pending evaluations", val: pendingInspsCount, desc: "Awaiting inspection", color: "bg-amber-50 border-amber-200 text-amber-700" },
-              { label: "Logged Expenses", val: `₹${totalExpensesLogged.toLocaleString()}`, desc: "Ledger operating debit", color: "bg-rose-50 border-rose-200 text-rose-700" },
-              { label: "Customer Leads", val: totalCRMLeads, desc: "CRM Open Desk queries", color: "bg-emerald-50 border-emerald-200 text-emerald-700" }
-            ].map((card, i) => (
-              <div key={i} className={`p-5 rounded-2xl border text-xs font-semibold flex flex-col justify-between shadow-xs ${card.color}`}>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{card.label}</p>
-                  <p className="text-2xl font-black mt-2 leading-none">{card.val}</p>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-2 font-medium">{card.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: "Cars in Inventory", val: cars.length, desc: "Published catalog", color: "bg-sky-50 border-sky-200 text-sky-700" },
-              { label: "Registered Users", val: users.length, desc: "Total profiles", color: "bg-violet-50 border-violet-200 text-violet-700" },
-              { label: "Unread Alerts", val: totalUnreadAlerts, desc: "Notification ledger", color: "bg-orange-50 border-orange-200 text-orange-700" },
-              { label: "Live Pages", val: pages.length, desc: "Custom + footer pages", color: "bg-teal-50 border-teal-200 text-teal-700" }
-            ].map((card, i) => (
-              <div key={`row2-${i}`} className={`p-5 rounded-2xl border text-xs font-semibold flex flex-col justify-between shadow-xs ${card.color}`}>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{card.label}</p>
-                  <p className="text-2xl font-black mt-2 leading-none">{card.val}</p>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-2 font-medium">{card.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Visual Revenue Ledger Chart Mock */}
-            <div className="lg:col-span-8 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Operational Revenue vs Expense (FY 2026)</h3>
-              
-              <div className="space-y-4 pt-2">
-                {[
-                  { month: "Jan 2026", rev: 14500000, exp: 3200000 },
-                  { month: "Mar 2026", rev: 18900000, exp: 4500000 },
-                  { month: "May 2026", rev: 24500000, exp: 5800000 },
-                  { month: "Jul 2026 (Curr)", rev: 28500000, exp: totalExpensesLogged }
-                ].map((bar, idx) => {
-                  const maxVal = 30000000;
-                  const revPct = (bar.rev / maxVal) * 100;
-                  const expPct = (bar.exp / maxVal) * 100;
-                  return (
-                    <div key={idx} className="space-y-1.5 text-xs">
-                      <div className="flex justify-between font-bold">
-                        <span className="text-slate-700">{bar.month}</span>
-                        <span className="text-slate-400 font-medium">Rev: <strong className="text-emerald-600">₹{bar.rev.toLocaleString()}</strong> • Exp: <strong className="text-rose-600">₹{bar.exp.toLocaleString()}</strong></span>
-                      </div>
-                      <div className="h-6 w-full bg-slate-50 rounded-lg overflow-hidden flex flex-col gap-0.5 justify-center px-1">
-                        <div style={{ width: `${revPct}%` }} className="h-2 bg-emerald-600 rounded-full transition-all duration-500" />
-                        <div style={{ width: `${expPct}%` }} className="h-1.5 bg-rose-500 rounded-full transition-all duration-500" />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Live activity feed */}
-            <div className="lg:col-span-4 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Real-time CMS Audit Log</h3>
-                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                  {[
-                    { log: "Admin updated homepage hero typography to Inter", t: "5 mins ago", r: "Settings" },
-                    { log: "Completed report approved for Audi A6 by Vikram", t: "1 hour ago", r: "Inspections" },
-                    { log: "New dealer bid ₹1,48,50,000 placed on BMW M4", t: "2 hours ago", r: "Auctions" },
-                    { log: "Direct Cash Quote requested by Amit Verma", t: "1 day ago", r: "CRM Leads" }
-                  ].map((act, i) => (
-                    <div key={i} className="text-[11px] font-semibold text-slate-600 border-b border-slate-50 pb-2 flex gap-2 items-start">
-                      <Activity className="h-3.5 w-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-slate-800 leading-tight">{act.log}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{act.r} • {act.t}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-2">
-                <Button
-                  onClick={handleSeedDatabase}
-                  disabled={isSeeding}
-                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase tracking-wider py-2.5 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Sparkles className={`h-4 w-4 ${isSeeding ? "animate-spin" : ""}`} />
-                  {isSeeding ? "Seeding Database..." : "Seed Supabase / Mock Data"}
-                </Button>
-                <p className="text-[9px] text-center text-slate-400 font-semibold uppercase tracking-wider">
-                  Inserts 20 demo cars, 10 brands, 50 models, & 10 cities
-                </p>
-              </div>
-
-              <div className="bg-[#FAF9F6] p-3 rounded-2xl border border-slate-100 mt-2 text-[10px] font-bold text-slate-500 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Encrypted secure session with Supabase live engine</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AdminDashboard
+          cars={cars}
+          users={users}
+          auctions={auctions}
+          inspections={inspections}
+          notifications={notifications}
+          pages={pages}
+          salesLeads={salesLeads}
+          expenses={expenses}
+          isSeeding={isSeeding}
+          onSeedDatabase={handleSeedDatabase}
+        />
       )}
 
       {/* 1stMark Certifications Panel */}
@@ -3086,61 +2987,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             </div>
           </div>
 
-          {/* Bulk Spreadsheet Stock/Brand/Enquiry/Dealer Actions */}
-          {(activeModule === "cars" || activeModule === "brands" || activeModule === "test_drive_requests" || activeModule === "booking_requests" || activeModule === "seller_enquiries" || activeModule === "dealers") && (
-            <div className="p-4 bg-emerald-50/60 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-left">
-                <h4 className="font-black text-xs text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4 text-emerald-700 shrink-0" />
-                  {activeModule === "test_drive_requests" 
-                    ? "Test Drive Requests Management & Download Sheet" 
-                    : activeModule === "booking_requests" 
-                    ? "Booking Requests Management & Download Sheet" 
-                    : activeModule === "seller_enquiries" 
-                    ? "Seller Enquiries Management & Download Sheet" 
-                    : activeModule === "dealers" 
-                    ? "Dealer Verification & Application Manager" 
-                    : `Bulk spreadsheet ${activeModule} catalog manager`}
-                </h4>
-                <p className="text-[10px] text-emerald-800/80 font-bold uppercase tracking-widest mt-1">
-                  {activeModule === "test_drive_requests" 
-                    ? "Download all priority test drive bookings in a dedicated Excel/CSV sheet" 
-                    : activeModule === "booking_requests" 
-                    ? "Download all buy car / reservation requests in a dedicated Excel/CSV sheet" 
-                    : activeModule === "seller_enquiries" 
-                    ? "Download all car valuation and evaluation requests in a separate Excel/CSV sheet" 
-                    : activeModule === "dealers" 
-                    ? "Review submitted Visiting Cards and Aadhar Cards to approve dealers for live vehicle auctions" 
-                    : "Download current catalog as Excel .xls or upload bulk new listings"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2.5 shrink-0">
-                <Button
-                  onClick={() => handleExportXLS(activeModule)}
-                  className="bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-black uppercase tracking-wider h-9 px-4 rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
-                >
-                  <ArrowDownToLine className="h-3.5 w-3.5" /> Download {activeModule === "test_drive_requests" ? "Test Drive Sheet (.XLS)" : activeModule === "booking_requests" ? "Booking Sheet (.XLS)" : activeModule === "seller_enquiries" ? "Seller Sheet (.XLS)" : activeModule === "dealers" ? "Dealer Applications (.XLS)" : "Catalog XLS"}
-                </Button>
-                {(activeModule === "cars" || activeModule === "brands" || activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="bulk-xls-uploader"
-                      accept=".xls,.xlsx,.csv"
-                      onChange={(e) => handleImportXLS(activeModule as any, e)}
-                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                    />
-                    <Button
-                      variant="secondary"
-                      className="bg-white border border-emerald-200 text-emerald-900 text-[10px] font-black uppercase tracking-wider h-9 px-3.5 rounded-xl flex items-center gap-1.5 shadow-xs"
-                    >
-                      <ArrowUpFromLine className="h-3.5 w-3.5" /> Upload {activeModule === "test_drive_requests" ? "Test Drive XLS" : activeModule === "booking_requests" ? "Booking XLS" : "Bulk XLS"}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <BulkActionsBar
+            activeModule={activeModule}
+            onExport={handleExportXLS}
+            onImport={(module, e) => handleImportXLS(module, e)}
+          />
 
 
           {/* CRUD Dynamic Table Grid */}
