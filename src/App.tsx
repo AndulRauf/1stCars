@@ -250,6 +250,15 @@ export default function App() {
     sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
     sellCarFormHeading: "Get Your Car Valued",
     sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote",
+    certifiedBadgeText: "THE TRUST BLUEPRINT",
+    certifiedHeadingText: "Why Choose 1stMark Certified?",
+    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.",
+    testimonialBadgeText: "VIP CLUB FEEDBACK",
+    testimonialHeadingText: "Loved By Drivers & Collectors",
+    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
+    ctaBadgeText: "REQUEST ACCESS NOW",
+    ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
+    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.",
     otpProvider: "simulated",
     customOtpUrl: "",
     customOtpHeaders: "",
@@ -258,29 +267,61 @@ export default function App() {
 
   const [testimonials, setTestimonials] = React.useState<any[]>([]);
 
-  const loadSettingsAndCMSData = React.useCallback(() => {
+  const loadSettingsAndCMSData = React.useCallback(async () => {
     if (typeof window !== "undefined") {
+      // Normalize demo placeholders that must never render on the live site.
+      const sanitize = (parsed: any) => {
+        const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
+        if (isDemoAddress) {
+          parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
+          parsed.supportPhone = "+91 8866377722";
+          parsed.supportEmail = "support@1stcars.com";
+        }
+        if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
+          parsed.logoUrl = "/logo.png";
+        }
+        return parsed;
+      };
+      const apply = (parsed: any) => {
+        setWebsiteSettings(prev => ({ ...prev, ...parsed }));
+        if (parsed.primaryColor) {
+          document.documentElement.style.setProperty("--primary-theme-color", parsed.primaryColor);
+        }
+        if (parsed.buttonColor) {
+          document.documentElement.style.setProperty("--button-theme-color", parsed.buttonColor);
+        }
+      };
+
+      // 1. Supabase `settings` table is the source of truth (the Admin CMS Text
+      //    Editor upserts it there). Fetch it so edits made in the admin panel
+      //    appear on the live site on every device, not just the editor's
+      //    browser. Cache it in localStorage, then nudge the other components
+      //    (Navbar / Footer / BuyCarsView / SellCarView) to re-read the cache.
+      try {
+        const { data } = await supabase
+          .from("settings")
+          .select("value")
+          .eq("key", "website_settings")
+          .maybeSingle();
+        if (data?.value) {
+          const parsed = sanitize(JSON.parse(data.value));
+          const next = JSON.stringify(parsed);
+          const previous = localStorage.getItem("1stcars_cms_website_settings");
+          localStorage.setItem("1stcars_cms_website_settings", next);
+          apply(parsed);
+          if (previous !== next) {
+            window.dispatchEvent(new Event("1stcars_settings_updated"));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load website settings from Supabase:", e);
+      }
+
+      // 2. Local cache fallback (covers offline or identical-to-server reloads).
       const storedSettings = localStorage.getItem("1stcars_cms_website_settings");
       if (storedSettings) {
         try {
-          const parsed = JSON.parse(storedSettings);
-          const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
-          if (isDemoAddress) {
-            parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
-            parsed.supportPhone = "+91 8866377722";
-            parsed.supportEmail = "support@1stcars.com";
-          }
-          if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
-            parsed.logoUrl = "/logo.png";
-          }
-          localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
-          setWebsiteSettings(prev => ({ ...prev, ...parsed }));
-          if (parsed.primaryColor) {
-            document.documentElement.style.setProperty("--primary-theme-color", parsed.primaryColor);
-          }
-          if (parsed.buttonColor) {
-            document.documentElement.style.setProperty("--button-theme-color", parsed.buttonColor);
-          }
+          apply(sanitize(JSON.parse(storedSettings)));
         } catch (e) {
           console.error("Failed to parse website settings:", e);
         }
@@ -881,12 +922,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="space-y-4 max-w-2xl mx-auto">
-            <Badge variant="premium">THE TRUST BLUEPRINT</Badge>
+            <Badge variant="premium">{websiteSettings.certifiedBadgeText || "THE TRUST BLUEPRINT"}</Badge>
             <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
-              Why Choose 1stMark Certified?
+              {websiteSettings.certifiedHeadingText || "Why Choose 1stMark Certified?"}
             </h2>
             <p className="text-sm sm:text-base text-slate-500 font-medium">
-              We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.
+              {websiteSettings.certifiedSubheadingText || "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury."}
             </p>
           </div>
 
@@ -947,12 +988,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
           <div className="space-y-4 max-w-2xl mx-auto">
-            <Badge variant="secondary">VIP CLUB FEEDBACK</Badge>
+            <Badge variant="secondary">{websiteSettings.testimonialBadgeText || "VIP CLUB FEEDBACK"}</Badge>
             <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
-              Loved By Drivers & Collectors
+              {websiteSettings.testimonialHeadingText || "Loved By Drivers & Collectors"}
             </h2>
             <p className="text-sm sm:text-base text-slate-500 font-medium">
-              We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.
+              {websiteSettings.testimonialSubheadingText || "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners."}
             </p>
           </div>
 
@@ -993,13 +1034,13 @@ export default function App() {
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="premium" className="bg-[#2E7D32] text-white border-none shadow-md shadow-[#2E7D32]/25">
-              REQUEST ACCESS NOW
+              {websiteSettings.ctaBadgeText || "REQUEST ACCESS NOW"}
             </Badge>
             <h2 className="font-sans text-3xl md:text-5xl font-black tracking-tighter text-white leading-none">
-              Ready to Drive Your Certified Vehicle?
+              {websiteSettings.ctaHeadingText || "Ready to Drive Your Certified Vehicle?"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold max-w-lg mx-auto leading-relaxed">
-              Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.
+              {websiteSettings.ctaSubheadingText || "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals."}
             </p>
           </div>
 

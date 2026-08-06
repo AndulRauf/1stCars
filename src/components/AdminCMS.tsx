@@ -137,7 +137,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
     sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
     sellCarFormHeading: "Get Your Car Valued",
-    sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote"
+    sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote",
+    certifiedBadgeText: "THE TRUST BLUEPRINT",
+    certifiedHeadingText: "Why Choose 1stMark Certified?",
+    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.",
+    testimonialBadgeText: "VIP CLUB FEEDBACK",
+    testimonialHeadingText: "Loved By Drivers & Collectors",
+    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
+    ctaBadgeText: "REQUEST ACCESS NOW",
+    ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
+    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals."
   });
 
   // UPI / Payment settings
@@ -4506,6 +4515,105 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Category 7: Home Page Section Headings */}
+              <div className="p-6 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-4">
+                <h4 className="font-black text-slate-900 uppercase tracking-wider text-xs border-b border-slate-200/60 pb-2">
+                  7. Home Page Section Headings & Copy
+                </h4>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Certified Section Badge</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.certifiedBadgeText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, certifiedBadgeText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Certified Section Heading</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.certifiedHeadingText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, certifiedHeadingText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Certified Section Subtitle</label>
+                    <textarea 
+                      rows={2}
+                      value={websiteSettings.certifiedSubheadingText || ""}
+                      onChange={(e) => setWebsiteSettings({ ...websiteSettings, certifiedSubheadingText: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:ring-1 focus:ring-[#2E7D32] resize-none font-medium text-slate-700"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Testimonials Badge</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.testimonialBadgeText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, testimonialBadgeText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Testimonials Heading</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.testimonialHeadingText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, testimonialHeadingText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Testimonials Subtitle</label>
+                    <textarea 
+                      rows={2}
+                      value={websiteSettings.testimonialSubheadingText || ""}
+                      onChange={(e) => setWebsiteSettings({ ...websiteSettings, testimonialSubheadingText: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:ring-1 focus:ring-[#2E7D32] resize-none font-medium text-slate-700"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Final CTA Badge</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.ctaBadgeText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, ctaBadgeText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Final CTA Heading</label>
+                      <input 
+                        type="text" 
+                        value={websiteSettings.ctaHeadingText || ""}
+                        onChange={(e) => setWebsiteSettings({ ...websiteSettings, ctaHeadingText: e.target.value })}
+                        className="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Final CTA Subtitle</label>
+                    <textarea 
+                      rows={2}
+                      value={websiteSettings.ctaSubheadingText || ""}
+                      onChange={(e) => setWebsiteSettings({ ...websiteSettings, ctaSubheadingText: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none focus:ring-1 focus:ring-[#2E7D32] resize-none font-medium text-slate-700"
+                    />
                   </div>
                 </div>
               </div>
