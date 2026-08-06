@@ -1,5 +1,6 @@
 import * as React from "react";
 import { supabase } from "@/src/lib/supabaseClient";
+import { isHiddenPage } from "@/src/lib/utils";
 import Markdown from "react-markdown";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -30,7 +31,7 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
           .eq("id", pageId)
           .single();
 
-        if (err || !data) {
+        if (err || !data || isHiddenPage(data)) {
           setError("This page could not be located or may have been deleted.");
         } else {
           setPage(data);

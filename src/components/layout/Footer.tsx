@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
+import { isHiddenPage } from "@/src/lib/utils";
 
 interface FooterProps {
   onViewChange?: (view: any, pageId?: string) => void;
@@ -44,7 +45,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     const loadFooterPages = async () => {
       const { data } = await supabase.from("pages").select();
       if (data) {
-        setFooterPages(data.filter((p: any) => p.is_footer));
+        setFooterPages(data.filter((p: any) => p.is_footer && !isHiddenPage(p)));
       }
     };
     loadFooterPages();

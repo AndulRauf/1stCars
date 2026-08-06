@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin, Check, LocateFixed, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { cn } from "@/src/lib/utils";
+import { cn, isHiddenPage } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabaseClient";
 
 interface NavbarProps {
@@ -110,7 +110,7 @@ export function Navbar({
     const loadCustomPages = async () => {
       const { data } = await supabase.from("pages").select();
       if (data) {
-        setCustomPages(data);
+        setCustomPages(data.filter((p: any) => !isHiddenPage(p)));
       }
     };
     loadCustomPages();

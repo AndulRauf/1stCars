@@ -12,6 +12,7 @@ import {
   Car, Link, Menu
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { isHiddenPage } from "@/src/lib/utils";
 import { saveCar, deleteCar, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
@@ -2164,8 +2165,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "testimonials": return testimonials;
       case "finance": return financePartners;
       case "expenses": return expenses;
-      case "pages": return pages;
-      case "footer_links": return pages.filter(p => p.is_footer);
+      case "pages": return pages.filter((p) => !isHiddenPage(p));
+      case "footer_links": return pages.filter((p) => p.is_footer && !isHiddenPage(p));
       default: return [];
     }
   };
