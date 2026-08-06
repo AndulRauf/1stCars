@@ -2164,7 +2164,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       case "testimonials": return testimonials;
       case "finance": return financePartners;
       case "expenses": return expenses;
-      case "pages": return pages.filter(p => !p.is_footer);
+      case "pages": return pages;
       case "footer_links": return pages.filter(p => p.is_footer);
       default: return [];
     }

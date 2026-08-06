@@ -84,7 +84,7 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
   {
     title: "Site & Content",
     items: [
-      { id: "pages", label: "Custom Pages", icon: BookOpen },
+      { id: "pages", label: "Edit Pages", icon: BookOpen },
       { id: "footer_links", label: "Footer Links", icon: Link },
       { id: "settings", label: "Theme Design", icon: Palette },
       { id: "text_editor", label: "Text Editor", icon: Edit3 }
