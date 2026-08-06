@@ -35,6 +35,20 @@
   --color-success: #388E3C;
   --color-success-foreground: #FFFFFF;
 
+  /* Unified brand-green scale — every emerald-* utility resolves here
+     so all pages share one consistent, light green family. */
+  --color-emerald-50:  #F1F6F1;
+  --color-emerald-100: #E1ECE2;
+  --color-emerald-200: #C4D8C8;
+  --color-emerald-300: #9DBFA5;
+  --color-emerald-400: #6F9E7A;
+  --color-emerald-500: #4C8358;
+  --color-emerald-600: #2E7D32;
+  --color-emerald-700: #256329;
+  --color-emerald-800: #1D4F22;
+  --color-emerald-900: #16361B;
+  --color-emerald-950: #0D2311;
+
   --radius-lg: 1.5rem;
   --radius-md: 1rem;
   --radius-sm: 0.5rem;

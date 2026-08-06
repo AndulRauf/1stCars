@@ -155,33 +155,33 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#1C3E24] to-[#2E7D32] text-white rounded-3xl p-8 md:p-10 shadow-xl relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#ffffff10] via-transparent to-transparent pointer-events-none hidden md:block" />
-          <Quote className="h-10 w-10 text-emerald-300/50 mb-6" />
-          <p className="text-lg md:text-2xl font-black leading-snug tracking-tight">
+        <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] rounded-3xl p-8 md:p-10 shadow-xl relative overflow-hidden border border-[#2E7D32]/15">
+          <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#2E7D32]/10 via-transparent to-transparent pointer-events-none hidden md:block" />
+          <Quote className="h-10 w-10 text-[#2E7D32]/30 mb-6" />
+          <p className="text-lg md:text-2xl font-black leading-snug tracking-tight text-slate-900">
             "We don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable."
           </p>
           <div className="mt-8 flex items-center gap-3">
-            <div className="h-12 w-12 bg-white/15 rounded-full flex items-center justify-center">
-              <Users className="h-6 w-6 text-emerald-300" />
+            <div className="h-12 w-12 bg-[#2E7D32]/10 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-[#2E7D32]" />
             </div>
             <div>
-              <p className="text-sm font-black">The 1stCars Team</p>
-              <p className="text-xs text-emerald-200 font-semibold">Certified Inspectors • Dealers • Concierge</p>
+              <p className="text-sm font-black text-slate-900">The 1stCars Team</p>
+              <p className="text-xs text-slate-500 font-semibold">Certified Inspectors • Dealers • Concierge</p>
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-white/15 grid grid-cols-3 gap-4 text-center">
+          <div className="mt-8 pt-6 border-t border-[#2E7D32]/10 grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-black">4+</p>
-              <p className="text-[10px] uppercase tracking-widest text-emerald-200 font-bold">Active Cities</p>
+              <p className="text-2xl font-black text-slate-900">4+</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Active Cities</p>
             </div>
             <div>
-              <p className="text-2xl font-black">12</p>
-              <p className="text-[10px] uppercase tracking-widest text-emerald-200 font-bold">Inspection Categories</p>
+              <p className="text-2xl font-black text-slate-900">12</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Inspection Categories</p>
             </div>
             <div>
-              <p className="text-2xl font-black">100%</p>
-              <p className="text-[10px] uppercase tracking-widest text-emerald-200 font-bold">Verified Listings</p>
+              <p className="text-2xl font-black text-slate-900">100%</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Verified Listings</p>
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
 
       {/* Certification highlight */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-        <div className="bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-950 text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="space-y-4">
@@ -252,7 +252,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
               <h2 className="text-3xl md:text-4xl font-black tracking-tighter leading-tight">
                 Every Car Passes Our <span className="text-[#2E7D32]">120-Point</span> Inspection
               </h2>
-              <p className="text-sm text-slate-300 font-medium leading-relaxed">
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
                 From chassis integrity and odometer verification to engine diagnostics and electronics, each vehicle is graded across 12 vital categories before it ever reaches our showroom floor.
               </p>
               <ul className="space-y-2.5">
@@ -262,7 +262,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
                   "Mechanical, structural & electronics assessment",
                   "Transparent A+, A, B+, B, C vehicle grading"
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-slate-200 font-medium">
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-slate-600 font-medium">
                     <CheckCircle2 className="h-4.5 w-4.5 text-[#2E7D32] shrink-0 mt-0.5" />
                     {item}
                   </li>
@@ -278,10 +278,10 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
               ].map((b) => {
                 const Icon = b.icon;
                 return (
-                  <div key={b.title} className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm text-center space-y-1">
+                  <div key={b.title} className="bg-white border border-[#2E7D32]/10 rounded-2xl p-5 backdrop-blur-sm text-center space-y-1">
                     <Icon className="h-6 w-6 text-[#2E7D32] mx-auto" />
-                    <p className="text-lg font-black tracking-tight">{b.title}</p>
-                    <p className="text-[11px] text-slate-300 font-bold uppercase tracking-wider">{b.desc}</p>
+                    <p className="text-lg font-black text-slate-900 tracking-tight">{b.title}</p>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{b.desc}</p>
                   </div>
                 );
               })}

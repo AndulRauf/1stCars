@@ -430,27 +430,27 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
     >
       <div className="bg-white w-full max-w-4xl rounded-3xl border border-[#2E7D32]/20 shadow-2xl overflow-hidden max-h-[94vh] flex flex-col my-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1C3E24] to-[#2E7D32] text-white p-5 md:p-6 border-b border-emerald-500/20 shrink-0">
+        <div className="bg-gradient-to-r from-[#F1F6F1] to-[#E4EEE6] p-5 md:p-6 border-b border-[#2E7D32]/15 shrink-0">
           <div className="flex justify-between items-start gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-white/15 text-white border-none text-[9px] font-black uppercase tracking-widest px-2.5">
+                <Badge className="bg-[#2E7D32] text-white border-none text-[9px] font-black uppercase tracking-widest px-2.5">
                   Create New Car
                 </Badge>
                 <Badge className={`${getGradeBadgeColor(reportData.grade)} text-[10px] font-extrabold px-2 py-0.5`}>
                   Inspection Grade {reportData.grade} ({reportData.overallScorePercent}%)
                 </Badge>
               </div>
-              <h2 className="text-xl md:text-2xl font-black tracking-tight text-white mt-1">
+              <h2 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 mt-1">
                 {selectedBrand ? `${selectedBrand} ${selectedModel || ""}`.trim() : "New Car Listing"}
               </h2>
-              <p className="text-xs text-emerald-100 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Sell-car style wizard • KM & Price text boxes • 120-Point Certified Inspection
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 border border-white/20 rounded-xl hover:bg-white/10 text-white transition-colors cursor-pointer"
+              className="p-2 border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1053,35 +1053,35 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
 
               {inspTab === "overview" && (
                 <div className="space-y-5">
-                  <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white p-6 rounded-2xl space-y-5 border border-emerald-500/20">
+                  <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] p-6 rounded-2xl space-y-5 border border-[#2E7D32]/15">
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">1stCars 120-Point Official Grade</span>
-                        <h3 className="text-2xl font-black text-white">Vehicle Certification Breakdown</h3>
-                        <p className="text-xs text-slate-300">Passed {reportData.totalPassedPoints} of {reportData.totalPoints} Checkpoints</p>
+                        <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">1stCars 120-Point Official Grade</span>
+                        <h3 className="text-2xl font-black text-slate-900">Vehicle Certification Breakdown</h3>
+                        <p className="text-xs text-slate-500">Passed {reportData.totalPassedPoints} of {reportData.totalPoints} Checkpoints</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="text-center px-4 py-2 bg-white/10 rounded-2xl border border-white/10">
-                          <p className="text-[10px] text-emerald-400 font-extrabold uppercase">Grade</p>
-                          <p className="text-3xl font-black text-white">{reportData.grade}</p>
+                        <div className="text-center px-4 py-2 bg-white rounded-2xl border border-[#2E7D32]/10">
+                          <p className="text-[10px] text-[#2E7D32] font-extrabold uppercase">Grade</p>
+                          <p className="text-3xl font-black text-slate-900">{reportData.grade}</p>
                         </div>
-                        <div className="text-center px-4 py-2 bg-white/10 rounded-2xl border border-white/10">
-                          <p className="text-[10px] text-emerald-400 font-extrabold uppercase">Score</p>
-                          <p className="text-3xl font-black text-emerald-400">{reportData.overallScorePercent}%</p>
+                        <div className="text-center px-4 py-2 bg-white rounded-2xl border border-[#2E7D32]/10">
+                          <p className="text-[10px] text-[#2E7D32] font-extrabold uppercase">Score</p>
+                          <p className="text-3xl font-black text-[#2E7D32]">{reportData.overallScorePercent}%</p>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl text-xs space-y-2 border border-white/10">
-                      <p className="font-bold text-emerald-300">Grade Matrix Reference:</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold text-slate-300">
-                        <span className="p-1.5 bg-emerald-950/60 rounded border border-emerald-500/30">Grade A+ (95-100%)</span>
-                        <span className="p-1.5 bg-emerald-900/60 rounded border border-emerald-500/30">Grade A (90-94%)</span>
-                        <span className="p-1.5 bg-amber-950/60 rounded border border-amber-500/30">Grade B+ (85-89%)</span>
-                        <span className="p-1.5 bg-amber-900/60 rounded border border-amber-500/30">Grade B (80-84%)</span>
-                        <span className="p-1.5 bg-rose-950/60 rounded border border-rose-500/30">Grade C (&lt;80% Not Certified)</span>
+                    <div className="bg-white p-4 rounded-xl text-xs space-y-2 border border-[#2E7D32]/10">
+                      <p className="font-bold text-[#2E7D32]">Grade Matrix Reference:</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold text-slate-600">
+                        <span className="p-1.5 bg-emerald-50 rounded border border-emerald-200">Grade A+ (95-100%)</span>
+                        <span className="p-1.5 bg-emerald-50 rounded border border-emerald-200">Grade A (90-94%)</span>
+                        <span className="p-1.5 bg-amber-50 rounded border border-amber-200">Grade B+ (85-89%)</span>
+                        <span className="p-1.5 bg-amber-50 rounded border border-amber-200">Grade B (80-84%)</span>
+                        <span className="p-1.5 bg-rose-50 rounded border border-rose-200">Grade C (&lt;80% Not Certified)</span>
                       </div>
                     </div>
-                    <label className="flex items-center space-x-3 cursor-pointer p-3 bg-white/5 rounded-xl border border-white/10">
+                    <label className="flex items-center space-x-3 cursor-pointer p-3 bg-white rounded-xl border border-[#2E7D32]/10">
                       <input
                         type="checkbox"
                         checked={reportData.isCertified}
@@ -1089,8 +1089,8 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
                         className="w-5 h-5 accent-[#2E7D32] rounded cursor-pointer"
                       />
                       <div>
-                        <p className="text-xs font-black text-white">Issue 1stMark Certified Certificate</p>
-                        <p className="text-[10px] text-emerald-300">Unlocks certified badge on the 1stCars marketplace listing</p>
+                        <p className="text-xs font-black text-slate-800">Issue 1stMark Certified Certificate</p>
+                        <p className="text-[10px] text-emerald-700">Unlocks certified badge on the 1stCars marketplace listing</p>
                       </div>
                     </label>
                   </div>

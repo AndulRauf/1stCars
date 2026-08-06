@@ -684,27 +684,27 @@ export function CarDetailsView({
                 {activeTab === "inspection" && (
                   <div className="space-y-6">
                     {/* Top Certificate Header Banner */}
-                    <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-black text-white p-5 rounded-2xl shadow-md border border-emerald-500/20 space-y-4">
+                    <div className="bg-gradient-to-r from-[#F1F6F1] to-white p-5 rounded-2xl shadow-md border border-[#2E7D32]/15 space-y-4">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="space-y-1">
                           <div className="flex items-center space-x-2">
-                            <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest">
+                            <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 text-[9px] font-black uppercase tracking-widest">
                               Official 120-Point Certified Report
                             </Badge>
-                            <span className="text-xs font-mono text-emerald-400">CERT-120P-GJ-2026</span>
+                            <span className="text-xs font-mono text-[#2E7D32]">CERT-120P-GJ-2026</span>
                           </div>
-                          <h3 className="text-xl font-black text-white tracking-tight pt-1">
+                          <h3 className="text-xl font-black text-slate-900 tracking-tight pt-1">
                             1stCars 120-Point Certified Inspection & Structural Audit
                           </h3>
-                          <p className="text-xs text-slate-300">
-                            Executed at <strong className="text-emerald-300">{car.location}</strong> • Certified Inspector ID: <strong className="text-white">INS-120-GJ-8842 (Vikram Rathore)</strong>
+                          <p className="text-xs text-slate-500">
+                            Executed at <strong className="text-[#2E7D32]">{car.location}</strong> • Certified Inspector ID: <strong className="text-slate-800">INS-120-GJ-8842 (Vikram Rathore)</strong>
                           </p>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right">
-                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Vehicle Grade</p>
-                            <p className="text-3xl font-black text-white">Grade A+ <span className="text-xs text-[#2E7D32] bg-white px-1.5 py-0.5 rounded font-bold">Pristine</span></p>
+                            <p className="text-[10px] font-bold text-[#2E7D32] uppercase tracking-widest">Vehicle Grade</p>
+                            <p className="text-3xl font-black text-slate-900">Grade A+ <span className="text-xs text-white bg-[#2E7D32] px-1.5 py-0.5 rounded font-bold">Pristine</span></p>
                           </div>
                           <div className="w-16 h-16 bg-[#2E7D32] text-white font-black rounded-2xl flex flex-col items-center justify-center text-center p-1 leading-none shadow-lg shadow-[#2E7D32]/30">
                             <span className="text-sm font-black">{passed120Points}/{total120Points}</span>
@@ -713,10 +713,10 @@ export function CarDetailsView({
                         </div>
                       </div>
 
-                      <div className="h-px bg-white/10 my-2" />
+                      <div className="h-px bg-[#2E7D32]/10 my-2" />
 
                       <div className="flex flex-wrap items-center justify-between text-xs gap-3">
-                        <div className="flex items-center space-x-4 text-emerald-200 text-[11px] font-medium">
+                        <div className="flex items-center space-x-4 text-emerald-800 text-[11px] font-medium">
                           <span>✓ 100% Non-Accident Frame</span>
                           <span>✓ Authentic Odometer</span>
                           <span>✓ Flood Free Guarantee</span>

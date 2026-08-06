@@ -170,7 +170,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
       <div className="bg-white w-full max-w-4xl rounded-3xl border border-[#2E7D32]/20 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto">
         
         {/* Header Banner */}
-        <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white p-5 md:p-6 border-b border-emerald-500/20 shrink-0">
+        <div className="bg-gradient-to-r from-[#F1F6F1] to-[#E4EEE6] p-5 md:p-6 border-b border-[#2E7D32]/15 shrink-0">
           <div className="flex justify-between items-start gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -180,26 +180,26 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                 <Badge className={`${getGradeBadgeColor(reportData.grade)} text-[10px] font-extrabold px-2 py-0.5`}>
                   Grade {reportData.grade} ({reportData.overallScorePercent}%)
                 </Badge>
-                <span className="text-xs text-emerald-400 font-mono font-bold">REG: {inspection.reg_number || "GJ05-ER-4050"}</span>
+                <span className="text-xs text-[#2E7D32] font-mono font-bold">REG: {inspection.reg_number || "GJ05-ER-4050"}</span>
               </div>
-              <h2 className="text-xl md:text-2xl font-black tracking-tight text-white mt-1">
+              <h2 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 mt-1">
                 {inspection.year} {inspection.brand} {inspection.model}
               </h2>
-              <p className="text-xs text-slate-300 font-medium mt-0.5">
-                Variant: <strong className="text-white">{inspection.variant || "XZ+ Lux / ZX"}</strong> • Seller: {inspection.seller_name} ({inspection.seller_mobile}) • City: {inspection.city}
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Variant: <strong className="text-slate-800">{inspection.variant || "XZ+ Lux / ZX"}</strong> • Seller: {inspection.seller_name} ({inspection.seller_mobile}) • City: {inspection.city}
               </p>
             </div>
 
             <button 
               onClick={onClose}
-              className="p-2 border border-slate-700/60 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="p-2 border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Tab Selection Navigation */}
-          <div className="flex flex-wrap items-center gap-2 mt-5 pt-3 border-t border-white/10 text-xs">
+          <div className="flex flex-wrap items-center gap-2 mt-5 pt-3 border-t border-[#2E7D32]/10 text-xs">
             {[
               { id: "checklist", label: "120-Point Checklist", icon: ShieldCheck },
               { id: "workflow", label: "Marketplace Workflow", icon: ArrowRight },
@@ -215,8 +215,8 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                     isActive 
-                      ? "bg-[#2E7D32] text-white shadow-md shadow-emerald-900/40" 
-                      : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      ? "bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/20" 
+                      : "bg-white text-slate-500 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32]"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -517,44 +517,44 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
           {/* TAB 5: OVERVIEW & GRADE BREAKDOWN */}
           {activeTab === "overview" && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white p-6 rounded-2xl space-y-5 border border-emerald-500/20">
+              <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] p-6 rounded-2xl space-y-5 border border-[#2E7D32]/15">
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">1stCars 120-Point Official Grade</span>
-                    <h3 className="text-2xl font-black text-white">Vehicle Certification Breakdown</h3>
-                    <p className="text-xs text-slate-300">
+                    <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">1stCars 120-Point Official Grade</span>
+                    <h3 className="text-2xl font-black text-slate-900">Vehicle Certification Breakdown</h3>
+                    <p className="text-xs text-slate-500">
                       Passed {reportData.totalPassedPoints} of {reportData.totalPoints} Checkpoints
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="text-center px-4 py-2 bg-white/10 rounded-2xl border border-white/10">
-                      <p className="text-[10px] text-emerald-400 font-extrabold uppercase">Grade</p>
-                      <p className="text-3xl font-black text-white">{reportData.grade}</p>
+                    <div className="text-center px-4 py-2 bg-white rounded-2xl border border-[#2E7D32]/10">
+                      <p className="text-[10px] text-[#2E7D32] font-extrabold uppercase">Grade</p>
+                      <p className="text-3xl font-black text-slate-900">{reportData.grade}</p>
                     </div>
-                    <div className="text-center px-4 py-2 bg-white/10 rounded-2xl border border-white/10">
-                      <p className="text-[10px] text-emerald-400 font-extrabold uppercase">Score</p>
-                      <p className="text-3xl font-black text-emerald-400">{reportData.overallScorePercent}%</p>
+                    <div className="text-center px-4 py-2 bg-white rounded-2xl border border-[#2E7D32]/10">
+                      <p className="text-[10px] text-[#2E7D32] font-extrabold uppercase">Score</p>
+                      <p className="text-3xl font-black text-[#2E7D32]">{reportData.overallScorePercent}%</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Grade matrix reference */}
-                <div className="bg-white/5 p-4 rounded-xl text-xs space-y-2 border border-white/10">
-                  <p className="font-bold text-emerald-300">Grade Matrix Reference:</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold text-slate-300">
-                    <span className="p-1.5 bg-emerald-950/60 rounded border border-emerald-500/30">Grade A+ (95-100%)</span>
-                    <span className="p-1.5 bg-emerald-900/60 rounded border border-emerald-500/30">Grade A (90-94%)</span>
-                    <span className="p-1.5 bg-amber-950/60 rounded border border-amber-500/30">Grade B+ (85-89%)</span>
-                    <span className="p-1.5 bg-amber-900/60 rounded border border-amber-500/30">Grade B (80-84%)</span>
-                    <span className="p-1.5 bg-rose-950/60 rounded border border-rose-500/30">Grade C (&lt;80% Not Certified)</span>
+                <div className="bg-white p-4 rounded-xl text-xs space-y-2 border border-[#2E7D32]/10">
+                  <p className="font-bold text-[#2E7D32]">Grade Matrix Reference:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] font-semibold text-slate-600">
+                    <span className="p-1.5 bg-emerald-50 rounded border border-emerald-200">Grade A+ (95-100%)</span>
+                    <span className="p-1.5 bg-emerald-50 rounded border border-emerald-200">Grade A (90-94%)</span>
+                    <span className="p-1.5 bg-amber-50 rounded border border-amber-200">Grade B+ (85-89%)</span>
+                    <span className="p-1.5 bg-amber-50 rounded border border-amber-200">Grade B (80-84%)</span>
+                    <span className="p-1.5 bg-rose-50 rounded border border-rose-200">Grade C (&lt;80% Not Certified)</span>
                   </div>
                 </div>
 
-                <div className="h-px bg-white/10" />
+                <div className="h-px bg-[#2E7D32]/10" />
 
                 {/* 1stMark Certification Checkbox */}
-                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-white/5 rounded-xl border border-white/10">
+                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-white rounded-xl border border-[#2E7D32]/10">
                   <input
                     type="checkbox"
                     checked={reportData.isCertified}
@@ -562,8 +562,8 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                     className="w-5 h-5 accent-[#2E7D32] rounded cursor-pointer"
                   />
                   <div>
-                    <p className="text-xs font-black text-white">Issue 1stMark Certified Certificate</p>
-                    <p className="text-[10px] text-emerald-300">Unlocks publishing on 1stCars marketplace</p>
+                    <p className="text-xs font-black text-slate-800">Issue 1stMark Certified Certificate</p>
+                    <p className="text-[10px] text-emerald-700">Unlocks publishing on 1stCars marketplace</p>
                   </div>
                 </label>
               </div>
