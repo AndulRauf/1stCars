@@ -75,8 +75,30 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] pt-20 pb-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F6F0] pb-16">
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+          <div className="inline-flex">
+            <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
+              <FileText className="h-4 w-4" /> 1STCARS
+            </span>
+          </div>
+          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
+            {page.title}
+          </h1>
+          {page.meta_description && (
+            <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
+              {page.meta_description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* Back Link */}
         <button
@@ -86,24 +108,6 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
           <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
           Back to Marketplace
         </button>
-
-        {/* Hero Section Container */}
-        <div className="bg-white border border-slate-100 rounded-[32px] p-6 md:p-10 shadow-xl shadow-slate-200/50 relative overflow-hidden mb-8">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 space-y-4">
-            <h1 className="font-sans text-3xl md:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-              {page.title}
-            </h1>
-
-            {page.meta_description && (
-              <p className="text-sm md:text-base text-slate-500 font-semibold leading-relaxed border-l-4 border-emerald-600/30 pl-4 py-1 italic">
-                {page.meta_description}
-              </p>
-            )}
-          </div>
-        </div>
 
         {/* Dynamic Rich Text Body */}
         <div className="bg-white border border-slate-100 rounded-[32px] p-6 md:p-10 shadow-lg shadow-slate-200/30">

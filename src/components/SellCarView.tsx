@@ -3,7 +3,7 @@ import {
   Car, ShieldCheck, Clock, Calendar, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Mail, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
-  Search, ArrowLeft
+  Search, ArrowLeft, Tag
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -1138,23 +1138,28 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-20 text-left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Banner Section */}
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 text-slate-900 rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden mb-10">
-          <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#2E7D32]/15 via-transparent to-transparent pointer-events-none hidden md:block" />
-          
-          <div className="max-w-2xl space-y-4">
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none">
-              {settings.sellCarBannerTitle}
-            </h1>
-            <p className="text-sm md:text-base text-slate-600 max-w-xl font-medium leading-relaxed">
-              {settings.sellCarBannerDesc}
-            </p>
+    <div className="bg-[#FAF9F6] min-h-screen pb-20 text-left">
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+          <div className="inline-flex">
+            <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
+              <Tag className="h-4 w-4" /> SELL YOUR CAR
+            </span>
           </div>
+          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
+            {settings.sellCarBannerTitle}
+          </h1>
+          <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
+            {settings.sellCarBannerDesc}
+          </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* Sell or Trade-In In 3 Simple Steps section - MOVED TO TOP */}
         <div className="mb-12 bg-white p-6 sm:p-8 md:p-10 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-8">

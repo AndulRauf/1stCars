@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronRight, Fuel, ShieldAlert, Check, Share2, X } from "lucide-react";
+import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronRight, Fuel, ShieldAlert, Check, Share2, X, Award } from "lucide-react";
 import { Car, FilterState } from "@/src/types";
 import { FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
 import { CarCard } from "./CarCard";
@@ -290,22 +290,28 @@ export function BuyCarsView({
   }, [filters.budgetMin, filters.budgetMax]);
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Title Header */}
-        <div className="mb-10 text-center md:text-left">
-          <p className="text-xs font-black tracking-widest text-[#2E7D32] uppercase mb-2">
-            1stCars Curated Collection
-          </p>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+    <div className="bg-[#FAF9F6] min-h-screen pb-20">
+      
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+          <div className="inline-flex">
+            <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
+              <Award className="h-4 w-4" /> 1STCARS CERTIFIED COLLECTION
+            </span>
+          </div>
+          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
             {settings.buyCarsHeadingText || "Explore Our Handpicked Certified Fleet"}
           </h1>
-          <p className="text-sm text-slate-500 mt-2 max-w-2xl">
+          <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
             {settings.buyCarsSubheadingText || "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification."}
           </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* Global Toolbar */}
         <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           
