@@ -881,8 +881,7 @@ export default function App() {
                 }}
                 className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold px-8 py-4 text-xs tracking-wider uppercase shadow-xl shadow-[#2E7D32]/25 group flex items-center justify-center rounded-full w-full sm:w-auto"
               >
-                {websiteSettings.buyButtonText || "Buy Certified Cars"} 
-                <ArrowRight className="h-4.5 w-4.5 ml-2.5 transition-transform group-hover:translate-x-1" />
+                {websiteSettings.buyButtonText || "Buy Certified Cars"}
               </Button>
               <Button 
                 variant="secondary"
