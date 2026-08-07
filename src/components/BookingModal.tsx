@@ -398,7 +398,7 @@ export function BookingModal({
               </div>
               <div>
                 <h3 className="font-black text-lg text-slate-900 tracking-tight">
-                  {bookingType === "test_drive" ? "Book Priority Test Drive" : "Acquire Vehicle (Buy Now)"}
+                  {bookingType === "test_drive" ? "Book Test Drive" : "Acquire Vehicle (Buy Now)"}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   1stCars Concierge Doorstep & Showroom Experience
@@ -433,7 +433,7 @@ export function BookingModal({
             {/* Header: Test Drive only */}
             <div className="flex items-center gap-2 bg-[#2E7D32]/10 border border-[#2E7D32]/20 px-4 py-2.5 rounded-2xl">
               <Calendar className="h-4 w-4 text-[#2E7D32]" />
-              <span className="text-xs font-black text-[#2E7D32] uppercase tracking-wider">Book Priority Test Drive</span>
+              <span className="text-xs font-black text-[#2E7D32] uppercase tracking-wider">Book Test Drive</span>
             </div>
 
 
@@ -456,7 +456,7 @@ export function BookingModal({
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                  <Phone className="h-3 w-3 text-[#2E7D32]" /> Mobile Number (For Verification OTP) *
+                  <Phone className="h-3 w-3 text-[#2E7D32]" /> Mobile Number *
                 </label>
                 {isOtpVerified && (
                   <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
@@ -531,7 +531,7 @@ export function BookingModal({
             {/* Input 3: Gmail / Email Address */}
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                <Mail className="h-3 w-3 text-[#2E7D32]" /> Gmail / Email Address *
+                <Mail className="h-3 w-3 text-[#2E7D32]" /> Email Address *
               </label>
               <Input
                 type="email"

@@ -805,7 +805,7 @@ export function CarDetailsView({
                           className="w-full h-1.5 bg-slate-200 rounded-lg accent-[#2E7D32] cursor-pointer"
                         />
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <span>Min $10k</span>
+                          <span>Min ₹10k</span>
                           <span>Max {formatMoney(car.price - 10000)}</span>
                         </div>
                       </div>
