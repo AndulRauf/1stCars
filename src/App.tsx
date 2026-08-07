@@ -214,7 +214,7 @@ export default function App() {
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Certified Cars",
-    heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+          heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -284,7 +284,7 @@ export default function App() {
         // defaults that were written to the settings row by older saves or the
         // legacy footer migration rule; they must never render on the site.
         const canonicalCopy: Record<string, string> = {
-          heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+    heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
           highlight1Title: "Single Owned",
           highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
           highlight2Title: "Non Accident Trusted",
@@ -305,9 +305,10 @@ export default function App() {
             if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
           }
         }
-        // Lock the hero heading to the canonical "Buy & Sell Certified Cars
-        // With Total Confidence." copy regardless of stored DB/CMS values.
+        // Lock the hero heading and subtitle to the canonical copy regardless
+        // of stored DB/CMS values.
         parsed.heroTitle = "Certified Cars";
+        parsed.heroSubtitle = "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.";
         return parsed;
       };
       const apply = (parsed: any) => {
@@ -870,7 +871,7 @@ export default function App() {
             </h1>
             
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium text-center">
-              {websiteSettings.heroSubtitle || "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification."}
+              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">

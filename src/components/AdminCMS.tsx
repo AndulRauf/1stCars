@@ -104,7 +104,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Buy & Sell Certified Cars With Total Confidence",
-    heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+              heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -871,7 +871,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             // Normalize known demo/admin-default copy back to canonical so the
             // admin never sees or re-saves the placeholder text.
             const canonicalCopy: Record<string, string> = {
-              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+    heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
               highlight1Title: "Single Owned",
               highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
               highlight2Title: "Non Accident Trusted",
@@ -880,7 +880,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
             };
             const nonCanonical: Record<string, string> = {
-              heroSubtitle: "Inspired by rigorous standards, reimagined for ultimate convenience.",
+              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
               highlight1Title: "120-Point Inspection",
               highlight2Title: "Single Owned, Non Accident Trusted*",
               highlight3Title: "Aggregator Marketplace",
