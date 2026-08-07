@@ -305,6 +305,9 @@ export default function App() {
             if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
           }
         }
+        // Lock the hero heading to the canonical "Buy & Sell Certified Cars
+        // With Total Confidence." copy regardless of stored DB/CMS values.
+        parsed.heroTitle = "Certified Cars";
         return parsed;
       };
       const apply = (parsed: any) => {
