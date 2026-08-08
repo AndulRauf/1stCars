@@ -2215,17 +2215,19 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     currentPage * itemsPerPage
   );
 
+  // Navigate to a module and reset list state (optionally pre-filtering by status)
+  const handleNavigateToModule = (mod: CMSModule, status: string = "all") => {
+    setActiveModule(mod);
+    setCurrentPage(1);
+    setSearchQuery("");
+    setStatusFilter(status);
+  };
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         activeModule={activeModule}
-        onSelectModule={(mod) => {
-          setActiveModule(mod);
-          setCurrentPage(1);
-          setSearchQuery("");
-          setStatusFilter("all");
-        }}
+        onSelectModule={(mod) => handleNavigateToModule(mod, "all")}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         onReloadData={loadCMSData}
@@ -2312,6 +2314,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           expenses={expenses}
           isSeeding={isSeeding}
           onSeedDatabase={handleSeedDatabase}
+          onNavigate={handleNavigateToModule}
         />
       )}
 
