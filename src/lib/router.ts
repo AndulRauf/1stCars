@@ -241,7 +241,7 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
 
   switch (view) {
     case "home":
-      return `1stCars | Certified Premium Used Cars & Pre-Owned Luxury`;
+      return `1stCars | Certified Premium Pre-Owned Cars`;
     case "sell_car":
       return `Sell Your Car Instantly From Home | 1stCars Free Home Inspection`;
     case "buy_cars":

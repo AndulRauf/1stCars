@@ -124,6 +124,7 @@ export function Navbar({
           if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
             parsed.logoUrl = "/logo.svg";
           }
+          parsed.brandSlogan = "Premium Selection";
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {
           console.error("Failed to parse website settings in Navbar", e);
@@ -140,6 +141,7 @@ export function Navbar({
           if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
             parsed.logoUrl = "/logo.svg";
           }
+          parsed.brandSlogan = "Premium Selection";
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {}
       }

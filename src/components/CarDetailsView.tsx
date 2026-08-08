@@ -659,7 +659,7 @@ export function CarDetailsView({
                 {/* 2. Key Features Tab */}
                 {activeTab === "features" && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Installed Luxury & Performance Options</h3>
+                    <h3 className="text-lg font-black text-slate-900 tracking-tight">Installed Premium & Performance Options</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">
                       Custom configured options installed on this particular vehicle from the factory.
                     </p>
@@ -668,7 +668,7 @@ export function CarDetailsView({
                         "Premium Aero Pack",
                         "High fidelity Surround Audio",
                         "Dynamic Dampening active suspension",
-                        "Nappa luxury leather seating",
+                        "Nappa leather seating",
                         "Advanced ADAS Safety Suite"
                       ]).map((feat, i) => (
                         <div key={i} className="flex items-center space-x-3 p-3 bg-[#2E7D32]/5 rounded-xl border border-[#2E7D32]/10">

@@ -104,12 +104,12 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Buy & Sell Certified Cars With Total Confidence",
-              heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+              heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
     showTestimonials: true,
-    footerText: "© 2026 1stCars Luxury Marketplace. All rights reserved.",
+    footerText: "© 2026 1stCars Marketplace. All rights reserved.",
     facebook: "https://facebook.com/1stcars",
     instagram: "https://instagram.com/1stcars",
     twitter: "https://twitter.com/1stcars",
@@ -117,16 +117,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
-    brandSlogan: "The Luxury Pre-Owned Hub",
-    brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
+    brandSlogan: "The Premium Pre-Owned Hub",
+    brandDescription: "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
     highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
     highlight3Title: "Genuine KM",
     highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
-    seoTitle: "1stCars - Certified Luxury Car Marketplace",
-    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 120-Point Certificate.",
+    seoTitle: "1stCars - Certified Car Marketplace",
+    seoDescription: "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",
     googleAnalyticsId: "G-1STCARS2026",
     buyButtonText: "Buy Certified Cars",
     sellButtonText: "Sell Your Car",
@@ -143,13 +143,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote",
     certifiedBadgeText: "THE TRUST BLUEPRINT",
     certifiedHeadingText: "Why Choose 1stMark Certified?",
-    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.",
+    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
     testimonialBadgeText: "VIP CLUB FEEDBACK",
     testimonialHeadingText: "Loved By Drivers & Collectors",
-    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
+    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals."
+    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals."
   });
 
   // UPI / Payment settings
@@ -871,7 +871,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             // Normalize known demo/admin-default copy back to canonical so the
             // admin never sees or re-saves the placeholder text.
             const canonicalCopy: Record<string, string> = {
-    heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
               highlight1Title: "Single Owned",
               highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
               highlight2Title: "Non Accident Trusted",
@@ -880,7 +880,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
             };
             const nonCanonical: Record<string, string> = {
-              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for ultimate luxury. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for the ultimate experience. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
               highlight1Title: "120-Point Inspection",
               highlight2Title: "Single Owned, Non Accident Trusted*",
               highlight3Title: "Aggregator Marketplace",
@@ -892,6 +892,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                 if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
               }
             }
+            // Force canonical marketing copy so legacy stored values can never
+            // re-introduce the "luxury" wording on the live site.
+            parsed.heroSubtitle = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
+            parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
+            parsed.brandSlogan = "The Premium Pre-Owned Hub";
+            parsed.brandDescription = "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.";
+            parsed.seoTitle = "1stCars - Certified Car Marketplace";
+            parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
+            parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
+            parsed.testimonialSubheadingText = "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.";
+            parsed.ctaSubheadingText = "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.";
             setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           } catch (e) {
@@ -2371,7 +2382,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                     <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#ff5a07]/10 text-[#ff5a07] border border-[#ff5a07]/20">
                       1stMark Certified
                     </span>
-                    <h5 className="font-extrabold text-sm text-slate-900 mt-1">{insp.car_title || "Verified Luxury Vehicle"}</h5>
+                    <h5 className="font-extrabold text-sm text-slate-900 mt-1">{insp.car_title || "Verified Vehicle"}</h5>
                     <p className="text-[11px] text-slate-500 font-medium mt-0.5">Seller: {insp.seller_name} • City: {insp.city}</p>
                   </div>
                   <Button

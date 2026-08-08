@@ -346,7 +346,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
               <h3 className="text-sm font-black uppercase tracking-wider text-white">Buy 1stMark Certified Cars</h3>
             </div>
             <p className="text-xs text-slate-300 font-semibold leading-relaxed">
-              Explore our handpicked inventory of 120-Point Inspected luxury cars with verified mileage, non-accident guarantee, and complete inspection reports.
+              Explore our handpicked inventory of 120-Point Inspected cars with verified mileage, non-accident guarantee, and complete inspection reports.
             </p>
 
             <Button

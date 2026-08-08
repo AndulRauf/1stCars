@@ -41,7 +41,7 @@ const getCarAngleImages = (car: Car) => {
       text: `${car.brand} ${car.model} — Sleek Rear Fastback View`
     },
     {
-      title: "Luxury Cabin Interior",
+      title: "Premium Cabin Interior",
       bgClass: `bg-gradient-to-b ${gradient}`,
       text: `${car.brand} ${car.model} — Cockpit & Premium Infotainment`
     }

@@ -215,28 +215,28 @@ export default function App() {
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Certified Cars",
-          heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+          heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
     showTestimonials: true,
-    footerText: "© 2026 1stCars Luxury Marketplace. All rights reserved.",
+    footerText: "© 2026 1stCars Marketplace. All rights reserved.",
     facebook: "https://facebook.com/1stcars",
     instagram: "https://instagram.com/1stcars",
     youtube: "https://youtube.com/1stcars",
     supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
-    brandSlogan: "The Luxury Pre-Owned Hub",
-    brandDescription: "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
+    brandSlogan: "The Premium Pre-Owned Hub",
+    brandDescription: "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
     highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
     highlight3Title: "Genuine KM",
     highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
-    seoTitle: "1stCars - Certified Luxury Car Marketplace",
-    seoDescription: "The premier platform to buy and sell certified luxury pre-owned vehicles with a 120-Point Certificate.",
+    seoTitle: "1stCars - Certified Car Marketplace",
+    seoDescription: "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",
     googleAnalyticsId: "G-1STCARS2026",
     buyButtonText: "Buy Certified Cars",
     sellButtonText: "Sell Your Car",
@@ -253,13 +253,13 @@ export default function App() {
     sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote",
     certifiedBadgeText: "THE TRUST BLUEPRINT",
     certifiedHeadingText: "Why Choose 1stMark Certified?",
-    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.",
+    certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
     testimonialBadgeText: "VIP CLUB FEEDBACK",
     testimonialHeadingText: "Loved By Drivers & Collectors",
-    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
+    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.",
+    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.",
     otpProvider: "simulated",
     customOtpUrl: "",
     customOtpHeaders: "",
@@ -285,7 +285,7 @@ export default function App() {
         // defaults that were written to the settings row by older saves or the
         // legacy footer migration rule; they must never render on the site.
         const canonicalCopy: Record<string, string> = {
-    heroSubtitle: "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
           highlight1Title: "Single Owned",
           highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
           highlight2Title: "Non Accident Trusted",
@@ -309,7 +309,17 @@ export default function App() {
         // Lock the hero heading and subtitle to the canonical copy regardless
         // of stored DB/CMS values.
         parsed.heroTitle = "Certified Cars";
-        parsed.heroSubtitle = "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
+        parsed.heroSubtitle = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
+        // Force canonical marketing copy so legacy stored values can never
+        // re-introduce the "luxury" wording on the live site.
+        parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
+        parsed.brandSlogan = "The Premium Pre-Owned Hub";
+        parsed.brandDescription = "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.";
+        parsed.seoTitle = "1stCars - Certified Car Marketplace";
+        parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
+        parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
+        parsed.testimonialSubheadingText = "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.";
+        parsed.ctaSubheadingText = "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.";
         return parsed;
       };
       const apply = (parsed: any) => {
@@ -872,7 +882,7 @@ export default function App() {
             </h1>
             
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium text-center">
-              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km."}
+              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">
@@ -984,7 +994,7 @@ export default function App() {
               {websiteSettings.certifiedHeadingText || "Why Choose 1stMark Certified?"}
             </h2>
             <p className="text-sm sm:text-base text-slate-500 font-medium">
-              {websiteSettings.certifiedSubheadingText || "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury."}
+              {websiteSettings.certifiedSubheadingText || "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars."}
             </p>
           </div>
 
@@ -1050,7 +1060,7 @@ export default function App() {
               {websiteSettings.testimonialHeadingText || "Loved By Drivers & Collectors"}
             </h2>
             <p className="text-sm sm:text-base text-slate-500 font-medium">
-              {websiteSettings.testimonialSubheadingText || "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners."}
+              {websiteSettings.testimonialSubheadingText || "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners."}
             </p>
           </div>
 
@@ -1097,7 +1107,7 @@ export default function App() {
               {websiteSettings.ctaHeadingText || "Ready to Drive Your Certified Vehicle?"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold max-w-lg mx-auto leading-relaxed">
-              {websiteSettings.ctaSubheadingText || "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals."}
+              {websiteSettings.ctaSubheadingText || "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals."}
             </p>
           </div>
 

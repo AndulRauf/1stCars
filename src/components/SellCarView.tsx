@@ -1184,7 +1184,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-2 flex-grow">
                 <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Book Free Online or Doorstep Inspection</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Fill out our micro evaluation form below. Select your preferred date, time slot, and location (home, office, or our luxury inspection center).
+                  Fill out our micro evaluation form below. Select your preferred date, time slot, and location (home, office, or our inspection center).
                 </p>
               </div>
             </div>
