@@ -1,12 +1,27 @@
 import * as React from "react";
-import { MessageCircle } from "lucide-react";
+import { ViewType } from "@/src/lib/router";
 
-export function WhatsAppFloatingButton() {
+interface WhatsAppFloatingButtonProps {
+  view?: ViewType;
+}
+
+function getWhatsAppMessage(view?: ViewType): string {
+  switch (view) {
+    case "buy_cars":
+      return "hi i want to buy car";
+    case "sell_car":
+      return "hi i want to sell car";
+    case "car_details":
+      return "hi i am intrested in this car";
+    default:
+      return "Hello 1stCars! I would like to inquire about buying or selling a car.";
+  }
+}
+
+export function WhatsAppFloatingButton({ view }: WhatsAppFloatingButtonProps) {
   const phoneNumber = "918866377722";
   const formattedPhone = "+91 88663 77722";
-  const defaultMessage = encodeURIComponent(
-    "Hello 1stCars! I would like to inquire about buying or selling a car."
-  );
+  const defaultMessage = encodeURIComponent(getWhatsAppMessage(view));
 
   const handleClick = () => {
     window.open(`https://wa.me/${phoneNumber}?text=${defaultMessage}`, "_blank");

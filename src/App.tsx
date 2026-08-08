@@ -4,6 +4,7 @@ import { Navbar } from "@/src/components/layout/Navbar";
 import { CarCard } from "@/src/components/CarCard";
 import { cn } from "@/src/lib/utils";
 import { Footer } from "@/src/components/layout/Footer";
+import { WhatsAppFloatingButton } from "@/src/components/WhatsAppFloatingButton";
 import { Button } from "@/src/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
@@ -1153,6 +1154,9 @@ export default function App() {
           setAuthModal({ isOpen: true, mode });
         }}
       />
+
+      {/* Floating WhatsApp Widget with page-aware greeting */}
+      <WhatsAppFloatingButton view={currentView} />
 
     </div>
   );
