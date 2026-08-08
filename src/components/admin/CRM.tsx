@@ -109,6 +109,7 @@ interface CrmItem {
   ownerId?: string;
   mobile?: string;
   assignee?: string;
+  assigneeId?: string;
   image?: string;
 }
 
@@ -150,6 +151,7 @@ export function CRM({
   const [kindFilter, setKindFilter] = React.useState<CrmRecordKind | "all">("all");
   const [stageFilter, setStageFilter] = React.useState<Stage | "all">("all");
   const [cityFilter, setCityFilter] = React.useState("all");
+  const [assigneeFilter, setAssigneeFilter] = React.useState("all");
   const [saving, setSaving] = React.useState<{ table: string; id: string } | null>(null);
 
   const isAdmin = !currentUser || currentUser.role === "Admin";
@@ -169,13 +171,14 @@ export function CRM({
 
     salesLeads.forEach((l) => {
       const p = profileByMobile(l.mobile);
+      const sa = profileById(l.assigned_to);
       list.push({
         kind: "buyer_lead", id: l.id, record: l,
         stage: String(l.status || "").toLowerCase() === "resolved" ? "deals" : "leads",
         title: `${l.car_brand || ""} ${l.car_model || ""}`.trim() || "Buyer enquiry",
         subtitle: `${l.name || "Unknown"}${l.mobile ? " · " + l.mobile : ""}`,
         city: l.city, ts: l.created_at, status: l.status || "pending",
-        ownerId: p?.id, mobile: l.mobile
+        ownerId: p?.id, mobile: l.mobile, assignee: sa?.name, assigneeId: l.assigned_to
       });
     });
 
@@ -287,14 +290,18 @@ export function CRM({
       if (kindFilter !== "all" && i.kind !== kindFilter) return false;
       if (stageFilter !== "all" && i.stage !== stageFilter) return false;
       if (cityFilter !== "all" && (i.city || "") !== cityFilter) return false;
+      if (assigneeFilter !== "all") {
+        if (i.kind !== "buyer_lead") return false;
+        if (assigneeFilter === "unassigned" ? Boolean(i.record?.assigned_to) : i.record?.assigned_to !== assigneeFilter) return false;
+      }
       if (q) {
-        const hay = [i.title, i.subtitle, i.city, i.status, i.mobile, i.record?.reg_number]
+        const hay = [i.title, i.subtitle, i.city, i.status, i.mobile, i.assignee, i.record?.reg_number]
           .filter(Boolean).join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [items, search, kindFilter, stageFilter, cityFilter]);
+  }, [items, search, kindFilter, stageFilter, cityFilter, assigneeFilter]);
 
   const stageCounts = React.useMemo(() => {
     const counts: Record<Stage, number> = { leads: 0, inspection: 0, valuation: 0, bidding: 0, deals: 0 };
@@ -436,6 +443,10 @@ export function CRM({
     updateRow("inspections", item.id, { status: "assigned", inspector_id: inspectorId }, "Inspection");
   };
 
+  const handleAssignSales = (item: CrmItem, salesId: string) => {
+    updateRow("sales_notifications", item.id, { assigned_to: salesId || null }, "Lead");
+  };
+
   const handleAcceptOffer = async (item: CrmItem) => {
     const ok = await updateRow("offers", item.id, { status: "accepted" }, "Offer");
     if (ok && item.record?.inspection_id) {
@@ -471,7 +482,7 @@ export function CRM({
     add("Preferred Time", r.preferred_time);
     add("Address", r.address);
     add("Score", r.overall_score != null ? `${r.overall_score}/10` : undefined, BadgeCheck);
-    add("Assigned Inspector", item.assignee, UserCheck);
+    add(item.kind === "inspection" ? "Assigned Inspector" : "Assigned To", item.assignee, UserCheck);
     add("Notes", r.notes);
     return rows;
   };
@@ -586,6 +597,19 @@ export function CRM({
             <option key={k} value={k}>{KIND_META[k as CrmRecordKind].label}</option>
           ))}
         </select>
+        {kindFilter === "buyer_lead" && (
+          <select
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+            className="px-2.5 py-2 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 outline-none bg-white"
+          >
+            <option value="all">All assignees</option>
+            <option value="unassigned">Unassigned</option>
+            {salesAssociates.map((sa) => (
+              <option key={sa.id} value={sa.id}>{sa.name}</option>
+            ))}
+          </select>
+        )}
         <select
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
@@ -1048,6 +1072,34 @@ export function CRM({
                   <ShieldCheck className="h-4 w-4 text-[#ff5a07]" /> Actions
                 </h4>
                 <div className="space-y-2.5">
+                  {item.kind === "buyer_lead" && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Assign Sales Associate</label>
+                        <select
+                          value={item.record?.assigned_to || ""}
+                          disabled={saving?.table === "sales_notifications"}
+                          onChange={(e) => e.target.value && handleAssignSales(item, e.target.value)}
+                          className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 outline-none bg-white disabled:opacity-60"
+                        >
+                          <option value="">— Unassigned —</option>
+                          {salesAssociates.map((x) => (
+                            <option key={x.id} value={x.id}>{x.name}{x.city ? ` (${x.city})` : ""}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {item.record?.assigned_to && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={saving?.table === "sales_notifications"}
+                          onClick={() => handleAssignSales(item, "")}
+                        >
+                          <UserCheck className="h-4 w-4 mr-1" /> Unassign
+                        </Button>
+                      )}
+                    </>
+                  )}
                   {item.kind === "inspection" && (
                     <div className="flex flex-col gap-2">
                       <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Assign Inspector</label>
