@@ -78,7 +78,7 @@ export function AdminDashboard({
     { label: "Active Auctions", val: activeAuctionsCount, desc: "Dealer bidding open", color: "bg-indigo-50 border-indigo-200 text-indigo-700", mod: "auctions" as CMSModule, status: "active" },
     { label: "Pending evaluations", val: pendingInspsCount, desc: "Awaiting inspection", color: "bg-amber-50 border-amber-200 text-amber-700", mod: "inspections" as CMSModule, status: "pending" },
     { label: "Logged Expenses", val: `₹${totalExpensesLogged.toLocaleString()}`, desc: "Ledger operating debit", color: "bg-rose-50 border-rose-200 text-rose-700", mod: "expenses" as CMSModule, status: "all" },
-    { label: "Customer Leads", val: leads.length, desc: "CRM Open Desk queries", color: "bg-emerald-50 border-emerald-200 text-emerald-700", mod: "buyer_enquiries" as CMSModule, status: "all" },
+    { label: "Customer Leads", val: leads.length, desc: "Open CRM desk enquiries", color: "bg-emerald-50 border-emerald-200 text-emerald-700", mod: "crm" as CMSModule, status: "all" },
     { label: "Cars in Inventory", val: cars.length, desc: "Published catalog", color: "bg-sky-50 border-sky-200 text-sky-700", mod: "cars" as CMSModule, status: "all" },
     { label: "Registered Users", val: users.length, desc: "Total profiles", color: "bg-violet-50 border-violet-200 text-violet-700", mod: "users" as CMSModule, status: "all" },
     { label: "Unread Alerts", val: totalUnreadAlerts, desc: "Notification ledger", color: "bg-orange-50 border-orange-200 text-orange-700", mod: "notifications" as CMSModule, status: "all" },

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 export type CMSModule = 
-  | "dashboard" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
+  | "dashboard" | "crm" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
 
   | "inspections" | "certifications" | "auctions" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
@@ -31,6 +31,12 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     title: "Overview",
     items: [
       { id: "dashboard", label: "Dashboard", icon: BarChart3 }
+    ]
+  },
+  {
+    title: "CRM",
+    items: [
+      { id: "crm", label: "CRM", icon: Users, badge: "360" }
     ]
   },
   {

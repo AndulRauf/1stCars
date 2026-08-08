@@ -26,6 +26,7 @@ import { Gavel, Globe, Database } from "lucide-react";
 import { Sidebar } from "./admin/Sidebar";
 import { Breadcrumb } from "./admin/Breadcrumb";
 import { AdminDashboard } from "./admin/AdminDashboard";
+import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { CMSModule } from "./admin/adminNavData";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
@@ -84,6 +85,14 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   // sales_notifications — the source of truth written by BookingModal /
   // BuyNowCheckout. localStorage is only a fallback for demo/mock mode.
   const [salesLeads, setSalesLeads] = React.useState<any[]>([]);
+
+  // CRM tables — the existing business tables powering the unified CRM view.
+  const [offers, setOffers] = React.useState<any[]>([]);
+  const [sellRequests, setSellRequests] = React.useState<any[]>([]);
+  const [inspectionReports, setInspectionReports] = React.useState<any[]>([]);
+  const [dealerBids, setDealerBids] = React.useState<any[]>([]);
+  const [parkSell, setParkSell] = React.useState<any[]>([]);
+  const [carImages, setCarImages] = React.useState<any[]>([]);
   
   // Custom mock/localStorage tables for the other modules requested
   const [dealers, setDealers] = React.useState<any[]>([]);
@@ -600,7 +609,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         { data: dlrData },
         { data: ctData },
         { data: fData },
-        { data: exData }
+        { data: exData },
+        { data: ofData },
+        { data: srData },
+        { data: irData },
+        { data: dbData },
+        { data: psData },
+        { data: ciData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -617,7 +632,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         supabase.from("dealers").select(),
         supabase.from("cities").select(),
         supabase.from("finance_partners").select(),
-        supabase.from("expenses").select()
+        supabase.from("expenses").select(),
+        supabase.from("offers").select(),
+        supabase.from("sell_requests").select(),
+        supabase.from("inspection_reports").select(),
+        supabase.from("dealer_bids").select(),
+        supabase.from("park_sell").select(),
+        supabase.from("car_images").select()
       ]);
 
       if (cData) setCars(cData);
@@ -628,6 +649,13 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       if (bData) setBrands(bData);
       if (pData) setPages(pData);
       if (lData && lData.length > 0) setSalesLeads(lData);
+
+      if (ofData) setOffers(ofData);
+      if (srData) setSellRequests(srData);
+      if (irData) setInspectionReports(irData);
+      if (dbData) setDealerBids(dbData);
+      if (psData) setParkSell(psData);
+      if (ciData) setCarImages(ciData);
 
       // Load local-storage metadata schemas for extra requested modules
       const getStored = (key: string, def: any[]) => {
@@ -942,6 +970,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     // Set realistic default template keys based on current module
     const defaultTemplates: Record<CMSModule, any> = {
       dashboard: {},
+      crm: {},
       cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
         { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
         { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
@@ -2191,6 +2220,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       "cars", "users", "inspections", "auctions", "brands", "notifications",
       "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
       "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
+      "crm",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
       // Associate), so they reflect shared data rather than browser-only lists.
       "dealers", "inspectors", "sales"
@@ -2326,6 +2356,25 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           isSeeding={isSeeding}
           onSeedDatabase={handleSeedDatabase}
           onNavigate={handleNavigateToModule}
+        />
+      )}
+
+      {/* CRM CENTER (unified customer/pipeline view over existing tables) */}
+      {activeModule === "crm" && (
+        <CRM
+          profiles={users}
+          cars={cars}
+          inspections={inspections}
+          auctions={auctions}
+          notifications={notifications}
+          salesLeads={salesLeads}
+          offers={offers}
+          sellRequests={sellRequests}
+          inspectionReports={inspectionReports}
+          dealerBids={dealerBids}
+          parkSell={parkSell}
+          carImages={carImages}
+          onRefresh={loadCMSData}
         />
       )}
 
@@ -2947,7 +2996,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       )}
 
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
-      {activeModule !== "dashboard" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && (
+      {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
