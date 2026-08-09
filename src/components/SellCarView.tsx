@@ -77,6 +77,14 @@ export const BRAND_LOGOS: { [brand: string]: string } = {
   "Maybach": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Maybach_logo.svg"
 };
 
+// The first tiles shown on the Sell Car form. These mass-market brands always
+// come first (in this exact order); every other brand follows in its existing
+// order so nothing is hidden.
+export const SELL_BRAND_PRIORITY = [
+  "Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota",
+  "Ford", "Fiat", "Nissan", "Renault"
+];
+
 
 // Extensive brand model database for interactive auto-suggestions
 export const brandData: {
@@ -848,10 +856,21 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   // even if they still exist in the Supabase `brands` table (which is shared with
   // the Buy-side catalog and therefore not deleted when removed from the sell form).
   const removedSellBrands = getStoredSellCatalog()?.removed || [];
+  const brandRank = (name: string) => {
+    const lower = String(name).toLowerCase();
+    return SELL_BRAND_PRIORITY.findIndex((p) => p.toLowerCase() === lower);
+  };
   const allBrands = Array.from(new Set([
     ...dbBrandNames.filter(b => !removedSellBrands.includes(b)),
     ...Object.keys(sellCatalog)
-  ])).filter(Boolean);
+  ])).filter(Boolean).sort((a, b) => {
+    const ra = brandRank(a);
+    const rb = brandRank(b);
+    if (ra !== -1 && rb !== -1) return ra - rb;
+    if (ra !== -1) return -1;
+    if (rb !== -1) return 1;
+    return 0;
+  });
 
   // Filter lists based on search
   const filteredBrands = allBrands.filter(b => 
