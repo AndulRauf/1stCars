@@ -311,13 +311,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         </div>
 
         {/* LOADING STATE */}
-        {isLoading ? (
-          <div className="bg-white border border-slate-100 rounded-3xl p-24 text-center">
-            <RefreshCw className="h-10 w-10 text-[#2E7D32] animate-spin mx-auto mb-4" />
-            <h3 className="font-black text-slate-800 tracking-tight text-lg">Querying Database...</h3>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Row Level Security policy checks active</p>
-          </div>
-        ) : (
+        <div className="relative">
           <div className="space-y-8">
             {/* Live System Alerts Feed (Rule 1-6 Alerts Hub) */}
             {userNotifs.length > 0 && (
@@ -1105,8 +1099,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </div>
           </div>
         </div>
-        )}
 
+          {isLoading && (
+            <div className="absolute inset-0 z-40 bg-[#FAF9F6]/85 rounded-3xl flex items-start justify-center pt-24">
+              <div className="bg-white border border-slate-100 rounded-3xl p-24 text-center shadow-sm">
+                <RefreshCw className="h-10 w-10 text-[#2E7D32] animate-spin mx-auto mb-4" />
+                <h3 className="font-black text-slate-800 tracking-tight text-lg">Querying Database...</h3>
+                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Row Level Security policy checks active</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
