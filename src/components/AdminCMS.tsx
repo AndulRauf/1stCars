@@ -2342,25 +2342,44 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
 
         {/* RENDER ACTIVE MODULE AREA */}
 
-        {/* 1. DASHBOARD OVERVIEW */}
+        {/* 1. MERGED DASHBOARD OVERVIEW (legacy admin dashboard + CRM center) */}
         {activeModule === "dashboard" && (
-        <AdminDashboard
-          cars={cars}
-          users={users}
-          auctions={auctions}
-          inspections={inspections}
-          notifications={notifications}
-          pages={pages}
-          salesLeads={salesLeads}
-          expenses={expenses}
-          isSeeding={isSeeding}
-          onSeedDatabase={handleSeedDatabase}
-          onNavigate={handleNavigateToModule}
-        />
-      )}
+          <div className="space-y-6">
+            <AdminDashboard
+              cars={cars}
+              users={users}
+              auctions={auctions}
+              inspections={inspections}
+              notifications={notifications}
+              pages={pages}
+              salesLeads={salesLeads}
+              expenses={expenses}
+              isSeeding={isSeeding}
+              onSeedDatabase={handleSeedDatabase}
+              onNavigate={handleNavigateToModule}
+            />
 
-      {/* CRM CENTER (unified customer/pipeline view over existing tables) */}
-      {activeModule === "crm" && (
+            {/* CRM CENTER merged into the single dashboard */}
+            <CRM
+              profiles={users}
+              cars={cars}
+              inspections={inspections}
+              auctions={auctions}
+              notifications={notifications}
+              salesLeads={salesLeads}
+              offers={offers}
+              sellRequests={sellRequests}
+              inspectionReports={inspectionReports}
+              dealerBids={dealerBids}
+              parkSell={parkSell}
+              carImages={carImages}
+              onRefresh={loadCMSData}
+            />
+          </div>
+        )}
+
+        {/* CRM CENTER (kept as its own module for pipeline deep-dive) */}
+        {activeModule === "crm" && (
         <CRM
           profiles={users}
           cars={cars}
