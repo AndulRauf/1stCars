@@ -1,6 +1,4 @@
 import * as React from "react";
-import { Sparkles, ShieldCheck } from "lucide-react";
-import { Button } from "@/src/components/ui/Button";
 import { CMSModule } from "./adminNavData";
 
 interface AdminDashboardProps {
@@ -12,8 +10,6 @@ interface AdminDashboardProps {
   pages: any[];
   salesLeads: any[];
   expenses: any[];
-  isSeeding: boolean;
-  onSeedDatabase: () => void;
   onNavigate: (mod: CMSModule, status?: string) => void;
 }
 
@@ -26,8 +22,6 @@ export function AdminDashboard({
   pages,
   salesLeads,
   expenses,
-  isSeeding,
-  onSeedDatabase,
   onNavigate
 }: AdminDashboardProps) {
   // CRM leads fall back to the legacy localStorage list (matches the lead
@@ -92,27 +86,6 @@ export function AdminDashboard({
             <p className="text-[10px] text-slate-400 mt-2 font-medium">{card.desc}</p>
           </button>
         ))}
-      </div>
-
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-        <div className="space-y-2">
-          <Button
-            onClick={onSeedDatabase}
-            disabled={isSeeding}
-            className="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase tracking-wider py-2.5 rounded-xl flex items-center justify-center gap-2"
-          >
-            <Sparkles className={`h-4 w-4 ${isSeeding ? "animate-spin" : ""}`} />
-            {isSeeding ? "Seeding Database..." : "Seed Supabase / Mock Data"}
-          </Button>
-          <p className="text-[9px] text-center text-slate-400 font-semibold uppercase tracking-wider">
-            Inserts 20 demo cars, 10 brands, 50 models, &amp; 10 cities
-          </p>
-        </div>
-
-        <div className="bg-[#FAF9F6] p-3 rounded-2xl border border-slate-100 mt-2 text-[10px] font-bold text-slate-500 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>Encrypted secure session with Supabase live engine</span>
-        </div>
       </div>
     </div>
   );

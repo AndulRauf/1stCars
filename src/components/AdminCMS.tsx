@@ -17,7 +17,6 @@ import { saveCar, deleteCar, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
-import { seedSupabaseDatabase } from "@/src/lib/seeder";
 import { toast } from "@/src/lib/toast";
 import { Inspection120FormModal } from "./Inspection120FormModal";
 import { CreateCarWizard } from "./CreateCarWizard";
@@ -565,27 +564,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [multiUploadStatus, setMultiUploadStatus] = React.useState("");
-
-  // Database Seeding state & trigger
-  const [isSeeding, setIsSeeding] = React.useState(false);
-  const handleSeedDatabase = async () => {
-    setIsSeeding(true);
-    toast.info("Database seeding in progress...");
-    try {
-      const res = await seedSupabaseDatabase();
-      if (res.success) {
-        toast.success(res.message || "Seeding completed successfully!");
-        await loadCMSData();
-        if (onReloadAllData) onReloadAllData();
-      } else {
-        toast.error("Seeding failed: " + res.error);
-      }
-    } catch (err: any) {
-      toast.error("Seeding error: " + (err.message || String(err)));
-    } finally {
-      setIsSeeding(false);
-    }
-  };
 
   // Load all system state
   const loadCMSData = async () => {
@@ -2353,8 +2331,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               pages={pages}
               salesLeads={salesLeads}
               expenses={expenses}
-              isSeeding={isSeeding}
-              onSeedDatabase={handleSeedDatabase}
               onNavigate={handleNavigateToModule}
             />
 
