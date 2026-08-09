@@ -2220,7 +2220,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       "cars", "users", "inspections", "auctions", "brands", "notifications",
       "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
       "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
-      "crm",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
       // Associate), so they reflect shared data rather than browser-only lists.
       "dealers", "inspectors", "sales"
@@ -2378,24 +2377,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           </div>
         )}
 
-        {/* CRM CENTER (kept as its own module for pipeline deep-dive) */}
-        {activeModule === "crm" && (
-        <CRM
-          profiles={users}
-          cars={cars}
-          inspections={inspections}
-          auctions={auctions}
-          notifications={notifications}
-          salesLeads={salesLeads}
-          offers={offers}
-          sellRequests={sellRequests}
-          inspectionReports={inspectionReports}
-          dealerBids={dealerBids}
-          parkSell={parkSell}
-          carImages={carImages}
-          onRefresh={loadCMSData}
-        />
-      )}
+        {/* CRM CENTER is merged into the single Dashboard above — no separate module */}
+
 
       {/* 1stMark Certifications Panel */}
       {activeModule === "certifications" && (

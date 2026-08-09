@@ -34,12 +34,6 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     ]
   },
   {
-    title: "CRM",
-    items: [
-      { id: "crm", label: "CRM", icon: Users, badge: "360" }
-    ]
-  },
-  {
     title: "Inventory",
     items: [
       { id: "cars", label: "Cars Catalog", icon: Car },
