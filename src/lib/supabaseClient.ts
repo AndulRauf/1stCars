@@ -11,6 +11,25 @@ const useMockOverride = typeof window !== "undefined" && localStorage.getItem("1
 
 export const isRealSupabase = Boolean(supabaseUrl && supabaseAnonKey) && !useMockOverride;
 
+// Explicit environment validation: production must never silently fall back to
+// the local mock database. Log a loud, actionable error when it would.
+// @ts-ignore
+if (typeof window !== "undefined" && import.meta.env.PROD) {
+  const missing = !supabaseUrl || !supabaseAnonKey;
+  if (missing) {
+    console.error(
+      "[1stCars] PRODUCTION MISCONFIGURATION: VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are missing. " +
+      "The app will fall back to the LOCAL MOCK database, which is NOT production data. " +
+      "Set both env vars for the deployed build."
+    );
+  } else if (useMockOverride) {
+    console.warn(
+      "[1stCars] The local mock database override (1stcars_use_mock_db=true) is active in production. " +
+      "This is intended for development/testing only."
+    );
+  }
+}
+
 // High-fidelity local database mock for a robust preview experience
 class SupabaseMockClient {
   private getStorage<T>(key: string, defaultData: T[]): T[] {

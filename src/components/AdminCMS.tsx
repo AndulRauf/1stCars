@@ -28,6 +28,7 @@ import { AdminDashboard } from "./admin/AdminDashboard";
 import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { AutomationControlCenter } from "./admin/AutomationControlCenter";
+import { automationService } from "@/src/lib/automation";
 import { CMSModule } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
@@ -1799,6 +1800,17 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             { id: dealerItem.id, company_name: dealerItem.name || dealerItem.company_name || "Dealer", is_verified: true }
           ]);
         }
+        // Record the automation event (the AFTER UPDATE trigger covers the live
+        // DB; this also drives the local engine for mock/pre-migration databases).
+        void automationService.emitEvent({
+          type: "dealer.approved",
+          sourceTable: "dealers",
+          sourceId: dealerItem.id,
+          payload: {
+            dealer_id: dealerItem.id,
+            company_name: dealerItem.name || dealerItem.company_name || "Dealer"
+          }
+        }).catch((err) => console.warn("Automation event emission failed:", err));
       } catch (e) {}
     }
 

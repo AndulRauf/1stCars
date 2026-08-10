@@ -14,6 +14,7 @@ import {
 } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
+import { automationService } from "@/src/lib/automation";
 import { AdminCMS } from "./AdminCMS";
 import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
@@ -205,6 +206,22 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         bidAmount: amount,
         inspectionId: targetInsp.id
       });
+
+      // Record the automation event (idempotent; the live DB trigger covers
+      // inserts, the local engine handles mock/pre-migration databases).
+      void automationService.emitEvent({
+        type: "offer.created",
+        sourceTable: "offers",
+        sourceId: String(existingOffer?.id || amount + "-" + targetInsp.id),
+        payload: {
+          offer_id: existingOffer?.id,
+          inspection_id: targetInsp.id,
+          dealer_id: currentUser.id,
+          dealer_name: currentUser.name,
+          offer_amount: amount,
+          car: auction.car_title
+        }
+      }).catch((err) => console.warn("Automation event emission failed:", err));
     }
 
     // Reset input

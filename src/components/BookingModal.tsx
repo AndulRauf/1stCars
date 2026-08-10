@@ -6,6 +6,7 @@ import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
+import { automationService } from "@/src/lib/automation";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface BookingModalProps {
@@ -255,6 +256,26 @@ export function BookingModal({
         // The lead did NOT reach the Sales desk — surface a real failure instead of a false success.
         throw new Error(insertError.message || "Could not save your request to the database.");
       }
+
+      // Record the automation event (idempotent; on the live DB the AFTER INSERT
+      // trigger already recorded it, so the RPC is a no-op and only the local
+      // engine consumes this for mock/pre-migration databases).
+      void automationService.emitEvent({
+        type: "lead.created",
+        sourceTable: "sales_notifications",
+        sourceId: refId,
+        payload: {
+          lead_id: refId,
+          name: name.trim(),
+          mobile: mobile.trim(),
+          city: city || "Surat",
+          type: bookingType,
+          car_brand: car?.brand,
+          car_model: car?.model,
+          preferred_date: preferredDate,
+          preferred_time: preferredTime
+        }
+      }).catch((err) => console.warn("Automation event emission failed:", err));
 
 
       // 4. Trigger system notifications

@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
   Zap, RefreshCw, Play, Check, X, AlertCircle, Info,
-  ListTodo, Activity, FileClock, CheckCircle2, Clock, ShieldCheck
+  ListTodo, Activity, FileClock, CheckCircle2, Clock, ShieldCheck, PhoneCall, FlaskConical
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
@@ -12,10 +12,12 @@ import {
   AutomationEvent,
   AutomationJob,
   AutomationLog,
+  FollowUp,
+  AuditEntry,
   Task
 } from "@/src/lib/automation";
 
-type TabKey = "events" | "tasks" | "logs" | "jobs";
+type TabKey = "events" | "tasks" | "logs" | "jobs" | "followups" | "audit";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-50 border-amber-200 text-amber-700",
@@ -58,30 +60,43 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [logs, setLogs] = React.useState<AutomationLog[]>([]);
   const [jobs, setJobs] = React.useState<AutomationJob[]>([]);
+  const [followUps, setFollowUps] = React.useState<FollowUp[]>([]);
+  const [audit, setAudit] = React.useState<AuditEntry[]>([]);
+  const [isAdmin, setIsAdmin] = React.useState(false);
   const [profileNames, setProfileNames] = React.useState<Record<string, string>>({});
   const [loading, setLoading] = React.useState(true);
   const [running, setRunning] = React.useState(false);
+  const [testing, setTesting] = React.useState<string | null>(null);
 
   const loadAll = React.useCallback(async () => {
     setLoading(true);
-    const [cfg, evts, tks, lgs, jbs, profiles] = await Promise.all([
+    const [cfg, evts, tks, lgs, jbs, fus, aud, profiles, session] = await Promise.all([
       automationService.loadConfig(),
       automationService.getEvents(),
       automationService.getTasks(),
       automationService.getLogs(),
       automationService.getJobs(),
-      supabase.from("profiles").select("id, name").then((r) => r.data || [])
+      automationService.getFollowUps(),
+      automationService.getAudit(),
+      supabase.from("profiles").select("id, name").then((r) => r.data || []),
+      supabase.auth.getUser().then((r) => r.data?.user || null)
     ]);
     setConfig(cfg);
     setEvents(evts);
     setTasks(tks);
     setLogs(lgs);
     setJobs(jbs);
+    setFollowUps(fus);
+    setAudit(aud);
     const nameMap: Record<string, string> = {};
     (profiles as any[]).forEach((p) => {
       nameMap[p.id] = p.name;
     });
     setProfileNames(nameMap);
+    if (session) {
+      const { data: me } = await supabase.from("profiles").select("role").eq("id", session.id).maybeSingle();
+      setIsAdmin(me?.role === "Admin");
+    }
     setLoading(false);
   }, []);
 
@@ -127,6 +142,63 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
     if (ok) toast.success(`Task marked ${status}.`);
     else toast.error("Could not update task status.");
     loadAll();
+  };
+
+  const handleFollowUpStatus = async (id: string, status: string) => {
+    const ok = await automationService.updateFollowUpStatus(id, status);
+    if (ok) toast.success(`Follow-up marked ${status}.`);
+    else toast.error("Could not update follow-up.");
+    loadAll();
+  };
+
+  const handleTestEvent = async (kind: string) => {
+    setTesting(kind);
+    try {
+      const key = `test-${kind}-${Date.now()}`;
+      const payload: Record<string, any> = { test: true, key };
+      if (kind === "seller_inquiry") {
+        await automationService.emitEvent({
+          type: "inspection.created",
+          sourceTable: "inspections",
+          sourceId: key,
+          payload: { ...payload, inspection_id: key, city: "Surat", brand: "Honda", model: "City", variant: "ZX CVT", year: 2021, km_driven: 22000, seller_name: "Test Seller", seller_mobile: "9000000000", preferred_date: new Date().toISOString().split("T")[0] }
+        });
+      } else if (kind === "test_drive") {
+        await automationService.emitEvent({
+          type: "lead.created",
+          sourceTable: "sales_notifications",
+          sourceId: key,
+          payload: { ...payload, lead_id: key, name: "Test Buyer", mobile: "9000000001", city: "Surat", type: "test_drive", car_brand: "BMW", car_model: "X5" }
+        });
+      } else if (kind === "offer") {
+        await automationService.emitEvent({
+          type: "offer.created",
+          sourceTable: "offers",
+          sourceId: key,
+          payload: { ...payload, offer_id: key, inspection_id: key, dealer_name: "Test Dealer", offer_amount: 1450000, car: "Honda City" }
+        });
+      } else if (kind === "booking") {
+        await automationService.emitEvent({
+          type: "lead.created",
+          sourceTable: "sales_notifications",
+          sourceId: key,
+          payload: { ...payload, lead_id: key, name: "Test Buyer", mobile: "9000000002", city: "Surat", type: "buy_now", car_brand: "Mercedes", car_model: "C200" }
+        });
+      } else if (kind === "inspection_complete") {
+        await automationService.emitEvent({
+          type: "inspection.completed",
+          sourceTable: "inspections",
+          sourceId: key,
+          payload: { ...payload, inspection_id: key, city: "Surat", brand: "Honda", model: "City", overall_score: 8.5 }
+        });
+      }
+      toast.success("Test event emitted and processed by the engine.");
+      loadAll();
+    } catch (err) {
+      toast.error("Test event failed: " + String(err));
+    } finally {
+      setTesting(null);
+    }
   };
 
   const pendingCount = events.filter((e) => e.status === "pending").length;
@@ -246,14 +318,53 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
         </div>
       </div>
 
+      {/* Test mode (admin only) */}
+      {isAdmin && (
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
+            <FlaskConical className="h-4 w-4 text-amber-600" />
+            <div>
+              <h4 className="font-black text-sm text-slate-900 uppercase tracking-wider">Automation Test Mode</h4>
+              <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                Emit synthetic events to exercise the engine end-to-end. Visible only to admins.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {([
+              { key: "seller_inquiry", label: "Test Seller Inquiry", icon: PhoneCall },
+              { key: "inspection_complete", label: "Test Inspection Done", icon: CheckCircle2 },
+              { key: "test_drive", label: "Test Test-Drive Lead", icon: Clock },
+              { key: "offer", label: "Test Offer", icon: Zap },
+              { key: "booking", label: "Test Booking Lead", icon: Play }
+            ] as { key: string; label: string; icon: any }[]).map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  disabled={testing !== null}
+                  onClick={() => handleTestEvent(t.key)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 disabled:opacity-50 cursor-pointer"
+                >
+                  <Icon className="h-3.5 w-3.5" /> {testing === t.key ? "Running..." : t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Data tabs */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4 mb-5">
           {([
             { key: "events", label: "Events", icon: Activity },
             { key: "tasks", label: "Tasks", icon: ListTodo },
+            { key: "followups", label: "Follow-ups", icon: Clock },
             { key: "logs", label: "Logs", icon: FileClock },
-            { key: "jobs", label: "Jobs", icon: Info }
+            { key: "jobs", label: "Jobs", icon: Info },
+            { key: "audit", label: "Audit", icon: ShieldCheck }
           ] as { key: TabKey; label: string; icon: any }[]).map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
@@ -371,6 +482,75 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
                             Reopen
                           </button>
                         )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {tab === "followups" && (
+              <div className="space-y-3">
+                {followUps.length === 0 ? (
+                  <EmptyState text="No follow-ups yet. New inspections, leads, and valuations create follow-ups automatically." />
+                ) : (
+                  followUps.map((f) => (
+                    <div key={f.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center flex-wrap gap-2">
+                          <span className="font-black text-xs text-slate-900">{f.follow_up_type.replace("_", " ")}</span>
+                          <StatusBadge status={f.status} />
+                          <span className="text-[9px] text-slate-400 font-bold">due {fmtTime(f.due_at)}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                          {profileNames[f.assignee_id || ""] || "Unassigned"} · {f.related_table ? `${f.related_table} #${f.related_id}` : "no source"}
+                        </p>
+                        {f.notes && <p className="text-[10px] text-slate-500 font-semibold mt-1">{f.notes}</p>}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {["open", "overdue"].includes(f.status) && (
+                          <button
+                            type="button"
+                            onClick={() => handleFollowUpStatus(f.id, "completed")}
+                            className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-[#2E7D32] text-white hover:bg-[#25632a] cursor-pointer"
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Complete
+                          </button>
+                        )}
+                        {f.status === "open" && (
+                          <button
+                            type="button"
+                            onClick={() => handleFollowUpStatus(f.id, "in_progress")}
+                            className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-sky-500 text-white hover:bg-sky-600 cursor-pointer"
+                          >
+                            Start
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {tab === "audit" && (
+              <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
+                {audit.length === 0 ? (
+                  <EmptyState text="No audit entries yet. Status changes on inspections, offers, cars, and leads are recorded here." />
+                ) : (
+                  audit.map((a) => (
+                    <div key={a.id} className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/70">
+                      <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">{fmtTime(a.created_at)}</span>
+                          <span className="text-[9px] font-black uppercase tracking-wider text-[#2E7D32]">{a.action}</span>
+                          <span className="text-[9px] font-mono text-slate-400">{a.entity_type}#{a.entity_id || ""}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
+                          {a.old_status || "—"} → {a.new_status || "—"}
+                          {a.actor_role ? ` · by ${a.actor_role}` : ""}
+                        </p>
                       </div>
                     </div>
                   ))

@@ -28,7 +28,6 @@ export default defineConfig(() => {
               return 'vendor-markdown';
             }
             if (id.includes('/motion/') || id.includes('framer-motion')) return 'vendor-motion';
-            if (id.includes('@google/genai')) return 'vendor-genai';
             return 'vendor';
           },
         },

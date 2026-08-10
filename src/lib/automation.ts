@@ -20,6 +20,11 @@ export type AutomationEventType =
   | "inspection.completed"
   | "lead.created"
   | "auction.ended"
+  | "offer.created"
+  | "offer.accepted"
+  | "offer.rejected"
+  | "offer.expired"
+  | "dealer.approved"
   | "car.status_changed";
 
 export interface AutomationEvent {
@@ -83,6 +88,35 @@ export interface AutomationConfig {
   autoAssignSales: boolean;
   reminders: boolean;
   pollerInterval: number; // seconds; 0 disables the in-app poller
+}
+
+export interface FollowUp {
+  id: string;
+  related_table?: string;
+  related_id?: string;
+  assignee_id?: string;
+  assigned_role?: string;
+  follow_up_type: string;
+  priority: string;
+  status: string;
+  due_at?: string;
+  notes?: string;
+  completed_at?: string;
+  created_at: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  actor_user_id?: string;
+  actor_role?: string;
+  action: string;
+  entity_type: string;
+  entity_id?: string;
+  old_status?: string;
+  new_status?: string;
+  reason?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
 }
 
 const EVENTS_KEY = "1stcars_sb_automation_events";
@@ -270,6 +304,12 @@ export const automationService = {
         } else if (ev.event_type === "lead.created" && config.autoAssignSales) {
           const id = await this.assignSalesLocal(ev);
           if (id) assignedSalesId = id;
+        } else if (ev.event_type === "offer.created") {
+          await this.handleOfferCreatedLocal(ev);
+        } else if (ev.event_type === "dealer.approved") {
+          await this.handleDealerApprovedLocal(ev);
+        } else if (ev.event_type === "car.status_changed") {
+          await this.handleCarStatusChangedLocal(ev);
         }
         this.markEventStatus(ev.id, "processed");
       } catch (err) {
@@ -278,6 +318,84 @@ export const automationService = {
       }
     }
     return { assignedInspectorId, assignedSalesId };
+  },
+
+  async handleOfferCreatedLocal(ev: AutomationEvent): Promise<void> {
+    const inspectionId = (ev.payload?.inspection_id as string) || "";
+    const vehicle = `${ev.payload?.car || ""}`.trim() || "vehicle";
+    const amount = Number(ev.payload?.offer_amount || 0);
+    const dealerName = String(ev.payload?.dealer_name || "A dealer");
+    const sales = await this.firstApprovedStaff("Sales Associate");
+    if (sales) {
+      await this.createTask({
+        assigneeId: sales.id,
+        taskType: "offer_review",
+        title: `Review offer for ${vehicle}`,
+        description: `Dealer ${dealerName} offered ₹${amount.toLocaleString("en-IN")} — validate and route to the seller.`,
+        priority: "high",
+        dueAt: new Date(Date.now() + 86400000).toISOString(),
+        sourceTable: "offers",
+        sourceId: String(ev.payload?.offer_id || inspectionId)
+      });
+      await notificationService.createNotification({
+        recipientId: sales.id,
+        title: "Offer Received",
+        message: `New offer of ₹${amount.toLocaleString("en-IN")} from ${dealerName} on ${vehicle}.`,
+        type: "action",
+        metadata: { offer_id: ev.payload?.offer_id, inspection_id: inspectionId }
+      });
+    }
+    this.appendLog("info", "offer-created", `Offer recorded for ${vehicle} (₹${amount})`);
+  },
+
+  async handleDealerApprovedLocal(ev: AutomationEvent): Promise<void> {
+    const dealerId = String(ev.payload?.dealer_id || "");
+    const company = String(ev.payload?.company_name || "Your");
+    if (dealerId) {
+      await notificationService.createNotification({
+        recipientId: dealerId,
+        title: "Dealer Account Approved",
+        message: `Congratulations! Your 1stCars dealer account is approved. You can now browse inventory and participate in dealer auctions.`,
+        type: "success",
+        metadata: { dealer_id: dealerId }
+      });
+    }
+    this.appendLog("info", "dealer-approved", `Dealer ${company} approved`);
+  },
+
+  async handleCarStatusChangedLocal(ev: AutomationEvent): Promise<void> {
+    const title = String(ev.payload?.title || "Vehicle");
+    const oldStatus = String(ev.payload?.old_status || "");
+    const newStatus = String(ev.payload?.new_status || "");
+    const ownerId = String(ev.payload?.created_by || "");
+    if (newStatus === "reserved" && ownerId) {
+      await notificationService.createNotification({
+        recipientId: ownerId,
+        title: "Vehicle Reserved",
+        message: `Your ${title} has been reserved by a buyer.`,
+        type: "action",
+        metadata: { car_id: ev.payload?.car_id }
+      });
+    } else if (newStatus === "sold" && ownerId) {
+      await notificationService.createNotification({
+        recipientId: ownerId,
+        title: "Vehicle Sold",
+        message: `Your ${title} has been sold. Delivery workflow starts now.`,
+        type: "success",
+        metadata: { car_id: ev.payload?.car_id }
+      });
+    }
+    this.appendLog("info", "vehicle-status", `Vehicle ${title}: ${oldStatus} -> ${newStatus}`);
+  },
+
+  async firstApprovedStaff(role: string): Promise<{ id: string; name: string } | null> {
+    try {
+      const { data } = await supabase.from("profiles").select("*").eq("role", role);
+      const pool = (data || []).filter((p: any) => p.is_approved !== false);
+      return pool[0] || null;
+    } catch {
+      return null;
+    }
   },
 
   async assignInspectorLocal(ev: AutomationEvent): Promise<string | undefined> {
@@ -457,6 +575,134 @@ export const automationService = {
       this.appendLog("info", "overdue-checks", `Local overdue pass: ${overdueInspections} inspections, ${taskReminders} task reminders`);
     }
     return { overdueInspections, taskReminders };
+  },
+
+  // ==========================================
+  // FOLLOW-UPS + AUDIT (DB-first, local fallback)
+  // ==========================================
+
+  async getFollowUps(limit = 200): Promise<FollowUp[]> {
+    try {
+      const { data, error } = await supabase
+        .from("follow_ups")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (!error && data) return data;
+    } catch {
+      // fall through
+    }
+    return readLocal<FollowUp[]>("1stcars_sb_follow_ups", []).slice(0, limit);
+  },
+
+  async createFollowUp(input: {
+    relatedTable?: string;
+    relatedId?: string;
+    assigneeId?: string;
+    followUpType: string;
+    priority?: string;
+    dueAt?: string;
+    notes?: string;
+  }): Promise<FollowUp | null> {
+    try {
+      const { data, error } = await supabase.from("follow_ups").insert([{
+        related_table: input.relatedTable || null,
+        related_id: input.relatedId || null,
+        assignee_id: input.assigneeId || null,
+        follow_up_type: input.followUpType,
+        priority: input.priority || "medium",
+        status: "open",
+        due_at: input.dueAt || null,
+        notes: input.notes || null
+      }]).select();
+      if (!error && data) return Array.isArray(data) ? (data[0] as FollowUp) : (data as FollowUp);
+    } catch (err) {
+      console.warn("[automation] createFollowUp failed:", err);
+    }
+    const entry: FollowUp = {
+      id: newId("fu"),
+      related_table: input.relatedTable,
+      related_id: input.relatedId,
+      assignee_id: input.assigneeId,
+      follow_up_type: input.followUpType,
+      priority: input.priority || "medium",
+      status: "open",
+      due_at: input.dueAt,
+      notes: input.notes,
+      created_at: new Date().toISOString()
+    };
+    writeLocal("1stcars_sb_follow_ups", [entry, ...readLocal<FollowUp[]>("1stcars_sb_follow_ups", [])]);
+    return entry;
+  },
+
+  async updateFollowUpStatus(id: string, status: string): Promise<boolean> {
+    const patch: Record<string, any> = { status };
+    if (status === "completed") patch.completed_at = new Date().toISOString();
+    try {
+      const { error } = await supabase.from("follow_ups").update(patch).eq("id", id);
+      if (!error) return true;
+    } catch {
+      // fall through
+    }
+    const list = readLocal<FollowUp[]>("1stcars_sb_follow_ups", []);
+    writeLocal("1stcars_sb_follow_ups", list.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+    return true;
+  },
+
+  async getAudit(limit = 200): Promise<AuditEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from("audit_trail")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (!error && data) return data;
+    } catch {
+      // fall through
+    }
+    return readLocal<AuditEntry[]>("1stcars_sb_audit_trail", []).slice(0, limit);
+  },
+
+  async recordAudit(input: {
+    action: string;
+    entityType: string;
+    entityId?: string;
+    oldStatus?: string;
+    newStatus?: string;
+    metadata?: Record<string, any>;
+  }): Promise<void> {
+    let actorId: string | null = null;
+    try {
+      const res = await (supabase as any).auth.getUser();
+      actorId = res?.data?.user?.id ?? null;
+    } catch {
+      actorId = null;
+    }
+    try {
+      const { error } = await supabase.from("audit_trail").insert([{
+        actor_user_id: actorId,
+        action: input.action,
+        entity_type: input.entityType,
+        entity_id: input.entityId || null,
+        old_status: input.oldStatus || null,
+        new_status: input.newStatus || null,
+        metadata: input.metadata || {}
+      }]);
+      if (!error) return;
+    } catch {
+      // fall through
+    }
+    const entry: AuditEntry = {
+      id: newId("aud"),
+      action: input.action,
+      entity_type: input.entityType,
+      entity_id: input.entityId,
+      old_status: input.oldStatus,
+      new_status: input.newStatus,
+      metadata: input.metadata,
+      created_at: new Date().toISOString()
+    };
+    writeLocal("1stcars_sb_audit_trail", [entry, ...readLocal<AuditEntry[]>("1stcars_sb_audit_trail", [])]);
   },
 
   // ==========================================

@@ -1,4 +1,4 @@
-import{r as a,j as e}from"./vendor-react-BPYgrMta.js";import{B as n,c as i,i as u,s as E}from"./index-J2vMirW_.js";import{D as b,R as L,M as I,P as R,c as _,A as v,V as D,z as C,b as y,I as k}from"./vendor-icons-B0_I8m7Y.js";import"./vendor-CYRyQfiU.js";import"./vendor-supabase-CVqQCYBu.js";const h=`-- Custom User Profiles & Roles Table
+import{r as a,j as e}from"./vendor-react-BPYgrMta.js";import{B as n,c as i,i as u,s as E}from"./index-CFIMSden.js";import{D as b,R as L,M as I,P as R,c as _,A as v,V as D,z as C,b as y,I as k}from"./vendor-icons-Pl_EaRIu.js";import"./vendor-CYRyQfiU.js";import"./vendor-supabase-DtC9jAym.js";const h=`-- Custom User Profiles & Roles Table
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
