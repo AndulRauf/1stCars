@@ -584,7 +584,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
               </div>
 
               {/* Admin Workflows Header */}
-              {userRole === "Admin" && (
+              {userRole === "Admin" && (onStartAuction || onPublishToWebsite) && (
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                   <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider">Admin Action Center</h4>
                   <p className="text-xs text-slate-500 font-medium">

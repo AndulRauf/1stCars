@@ -541,6 +541,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
   // 120-Point Inspection Modal state
   const [selected120Inspection, setSelected120Inspection] = React.useState<any | null>(null);
 
+  // 120-Point Inspection Report editor inside the Car edit modal
+  const [isCar120ModalOpen, setIsCar120ModalOpen] = React.useState(false);
+
   const handleSave120Report = async (inspectionId: string, reportData: Full120PointReport) => {
     await supabase.from("inspections").update({
       overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
@@ -641,6 +644,37 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     setSelected120Inspection(null);
     loadCMSData();
     if (onReloadAllData) onReloadAllData();
+  };
+
+  // Applies an edited 120-Point report to the car currently being edited in
+  // the CMS form (updates formData only; "Save Record" persists it via saveCar).
+  const handleSaveCar120Report = (reportData: Full120PointReport) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      report_120_json: JSON.stringify(reportData),
+      report_150_json: JSON.stringify(reportData),
+      is_certified: reportData.isCertified,
+      certified: reportData.isCertified,
+      overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
+      specifications: [
+        reportData.specs.engine,
+        reportData.specs.maxPower,
+        reportData.specs.peakTorque,
+        reportData.specs.transmission,
+        reportData.specs.araiMileage
+      ],
+      features: reportData.keyFeatures,
+      inspectionSummary: {
+        overallScore: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
+        engine: reportData.categories[0]?.summary || "100% Pass",
+        exterior: reportData.categories[1]?.summary || "100% Pass",
+        brakes: reportData.categories[2]?.summary || "100% Pass",
+        electronics: reportData.categories[3]?.summary || "100% Pass",
+        interior: reportData.categories[5]?.summary || "100% Pass"
+      }
+    }));
+    setIsCar120ModalOpen(false);
+    toast.success("120-Point Inspection Report updated. Click Save Record to persist changes.");
   };
 
   // Image Uploading mockup
@@ -5017,13 +5051,22 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
               {/* Editable 120-Point Inspection Report for Cars */}
               {activeModule === "cars" && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
-                      120-Point Inspection Report
-                    </label>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      Edit the certified inspection summaries shown in the "120-Point Inspection Report" tab
-                    </p>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
+                        120-Point Inspection Report
+                      </label>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        Edit the certified inspection summaries shown in the "120-Point Inspection Report" tab
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCar120ModalOpen(true)}
+                      className="bg-indigo-900 hover:bg-indigo-800 text-white text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-lg flex items-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" /> Edit Full 120-Point Report
+                    </button>
                   </div>
                   {(["engine", "exterior", "brakes", "electronics", "interior"] as const).map((field) => (
                     <div key={field}>
@@ -5359,6 +5402,30 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           onSubmitReport={(id, data) => handleSave120Report(id, data)}
           onStartAuction={(insp, data) => handleStartAuction(insp, data)}
           onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
+          userRole="Admin"
+        />
+      )}
+
+      {/* 120-Point Inspection Report Editor inside the Car edit modal */}
+      {isCar120ModalOpen && (
+        <Inspection120FormModal
+          inspection={{
+            id: editingId || "car-120",
+            brand: formData.brand,
+            model: formData.model,
+            variant: formData.variant || formData.model,
+            year: formData.year,
+            city: formData.location || formData.city || "Surat",
+            reg_number: formData.reg_number || formData.rtoCode || "GJ05-ER-4050",
+            seller_name: "1stCars Certified Inventory",
+            seller_mobile: "—",
+            report_120_json: formData.report_120_json,
+            report_150_json: formData.report_150_json,
+            notes: formData.notes
+          }}
+          isOpen={isCar120ModalOpen}
+          onClose={() => setIsCar120ModalOpen(false)}
+          onSubmitReport={(_, data) => handleSaveCar120Report(data)}
           userRole="Admin"
         />
       )}
