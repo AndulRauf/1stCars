@@ -3,7 +3,7 @@ import {
   ClipboardList, FileText, Gavel, Users, UserCheck, 
   ShieldCheck, Shield, Star, HelpCircle, DollarSign, 
   Bell, TrendingUp, BookOpen, Link, Palette, Edit3,
-  Sparkles, Calendar, QrCode, ClipboardEdit
+  Sparkles, Calendar, QrCode, ClipboardEdit, Zap
 } from "lucide-react";
 
 export type CMSModule = 
@@ -12,7 +12,7 @@ export type CMSModule =
   | "inspections" | "certifications" | "auctions" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
   | "reports" | "pages" | "footer_links" | "settings" | "text_editor" | "payment_settings"
-  | "sell_form";
+  | "sell_form" | "automation";
 
 export interface NavItem {
   id: CMSModule;
@@ -88,6 +88,12 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
       { id: "footer_links", label: "Footer Links", icon: Link },
       { id: "settings", label: "Theme Design", icon: Palette },
       { id: "text_editor", label: "Text Editor", icon: Edit3 }
+    ]
+  },
+  {
+    title: "Automation",
+    items: [
+      { id: "automation", label: "Automation Center", icon: Zap }
     ]
   }
 ];

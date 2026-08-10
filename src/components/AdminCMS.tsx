@@ -27,6 +27,7 @@ import { Breadcrumb } from "./admin/Breadcrumb";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
+import { AutomationControlCenter } from "./admin/AutomationControlCenter";
 import { CMSModule } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
@@ -1096,7 +1097,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       settings: {},
       text_editor: {},
       payment_settings: {},
-      sell_form: {}
+      sell_form: {},
+      automation: {}
     };
 
     setFormData(defaultTemplates[activeModule] || {});
@@ -3099,8 +3101,11 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         />
       )}
 
+      {/* 1.6. AUTOMATION CENTER (Admin CMS → Automation Center) */}
+      {activeModule === "automation" && <AutomationControlCenter onRefreshAll={loadCMSData} />}
+
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
-      {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && (
+      {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && activeModule !== "automation" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>

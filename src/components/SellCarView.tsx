@@ -9,6 +9,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
+import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { Profile } from "@/src/lib/db";
@@ -1121,6 +1122,30 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         city: resolvedCity,
         preferred_date: finalDate
       }).catch((err) => console.warn("Background inspection notification failed:", err));
+
+      // Record the event for the automation engine (idempotent). On the live
+      // DB the AFTER INSERT trigger records it server-side, so the RPC is a
+      // no-op; the local engine (mock / pre-migration databases) executes the
+      // same rules client-side.
+      void automationService.emitEvent({
+        type: "inspection.created",
+        sourceTable: "inspections",
+        sourceId: inserted?.id,
+        payload: {
+          inspection_id: inserted?.id,
+          city: resolvedCity,
+          brand: selectedBrand,
+          model: selectedModel,
+          variant: selectedVariant,
+          year: selectedYear,
+          km_driven: computedKms,
+          seller_name: finalName,
+          seller_mobile: mobile,
+          seller_email: finalEmail,
+          preferred_date: finalDate,
+          preferred_time: finalTime
+        }
+      }).catch((err) => console.warn("Automation event emission failed:", err));
 
       // Redirect to seller dashboard after 3 seconds. Navigation is always
       // attempted (not gated on the initial auto-sign-in) because the sign-in
