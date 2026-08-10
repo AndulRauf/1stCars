@@ -45,24 +45,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     }
   };
 
-  // Mobile OTP States
-  const [loginMobile, setLoginMobile] = React.useState("");
-  const [otpSent, setOtpSent] = React.useState(false);
-  const [generatedOtp, setGeneratedOtp] = React.useState("");
-  const [enteredOtp, setEnteredOtp] = React.useState("");
-  const [countdown, setCountdown] = React.useState(0);
-
-  // Login method tabs: Mobile OTP (customers) vs Email & Password (staff/admin)
-  const [loginMethod, setLoginMethod] = React.useState<"otp" | "password">("otp");
   const [loginEmail, setLoginEmail] = React.useState("");
   const [loginPassword, setLoginPassword] = React.useState("");
 
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-
-  // Simulated SMS Notification banner state
-  const [simulatedSms, setSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
 
   // @ts-ignore
   const hasSupabaseKeys = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
@@ -72,39 +60,15 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const isRealSupabase = hasSupabaseKeys && !isUsingMock;
 
   // Reset form state each time the modal opens. When an initialEmail is
-  // provided (e.g. "Go to Seller Dashboard") the login tab is pre-filled with
-  // it and switched to the password method so the user only enters their
-  // password — the reset below and the prefill must never fight each other.
+  // provided (e.g. "Go to Seller Dashboard") the login email is pre-filled so
+  // the user only enters their password.
   React.useEffect(() => {
     setMode(initialMode);
     setError("");
     setSuccess("");
-    setLoginMobile("");
-    setOtpSent(false);
-    setGeneratedOtp("");
-    setEnteredOtp("");
-    setCountdown(0);
-    setLoginMethod("otp");
     setLoginEmail(initialEmail || "");
     setLoginPassword("");
-    if (initialEmail) {
-      setLoginMethod("password");
-    }
   }, [initialMode, isOpen]);
-
-  // Resolve which OTP delivery engine is active.
-  // On a real Supabase backend the default/simulated mode becomes REAL native
-  // phone OTP (Supabase generates + verifies the code server-side via your SMS
-  // provider). An explicit Admin override is still respected.
-  const resolveOtpProvider = (): string => {
-    if (!isRealSupabase) return "simulated";
-    let provider = "simulated";
-    try {
-      const stored = localStorage.getItem("1stcars_cms_website_settings");
-      if (stored) provider = JSON.parse(stored).otpProvider || "simulated";
-    } catch (e) {}
-    return provider === "simulated" ? "supabase_native" : provider;
-  };
 
   const handleCopySQL = async () => {
     try {
@@ -134,15 +98,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     }, 1000);
   };
 
-  // OTP Resend Countdown
-  React.useEffect(() => {
-    let timer: any;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
   // ESC key listener to close modal
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -154,32 +109,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Listen to global autofill events
-  React.useEffect(() => {
-    const handleAutofill = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail && customEvent.detail.code) {
-        setEnteredOtp(customEvent.detail.code);
-        setOtpSent(true); // Ensure OTP inputs are active
-        toast.success("Secure OTP autofilled from active gateway!");
-      }
-    };
-    window.addEventListener("1stcars_autofill_otp", handleAutofill);
-    return () => {
-      window.removeEventListener("1stcars_autofill_otp", handleAutofill);
-    };
-  }, []);
-
   React.useEffect(() => {
     setMode(initialMode);
     setError("");
     setSuccess("");
-    setLoginMobile("");
-    setOtpSent(false);
-    setGeneratedOtp("");
-    setEnteredOtp("");
-    setCountdown(0);
-    setLoginMethod("otp");
     setLoginEmail("");
     setLoginPassword("");
   }, [initialMode, isOpen]);
@@ -187,11 +120,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   React.useEffect(() => {
     setError("");
     setSuccess("");
-    setLoginMobile("");
-    setOtpSent(false);
-    setGeneratedOtp("");
-    setEnteredOtp("");
-    setCountdown(0);
   }, [mode]);
 
   // Demo account click logs in instantly
@@ -315,136 +243,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     }
   };
 
-  const sendOtpCode = async (mobile: string, code: string) => {
-    const otpProvider = resolveOtpProvider();
-    let customUrl = "";
-    let customHeaders = "";
-    let customPayload = "";
-
-    try {
-      const stored = localStorage.getItem("1stcars_cms_website_settings");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        customUrl = parsed.customOtpUrl || "";
-        customHeaders = parsed.customOtpHeaders || "";
-        customPayload = parsed.customOtpPayload || "";
-      }
-    } catch (e) {}
-
-    if (otpProvider === "supabase_native") {
-      // Supabase native SMS OTP
-      const cleanMobile = mobile.startsWith("+") ? mobile : `+91${mobile}`;
-      const { error: authErr } = await supabase.auth.signInWithOtp({
-        phone: cleanMobile
-      });
-      if (authErr) {
-        throw new Error(authErr.message || "Failed to send Supabase Native SMS OTP.");
-      }
-      return { success: true, native: true };
-    } else if (otpProvider === "custom_gateway") {
-      // Custom HTTP REST SMS API
-      if (!customUrl) {
-        throw new Error("Custom SMS Gateway URL is not configured. Please set it in Admin Panel -> Website Settings.");
-      }
-      
-      const cleanMobile = mobile.startsWith("+91") ? mobile.replace("+91", "") : mobile;
-      
-      // Interpolate values
-      const interpolatedUrl = customUrl
-        .replace(/{otp}/g, code)
-        .replace(/{mobile}/g, cleanMobile);
-
-      let headersObj: Record<string, string> = {
-        "Content-Type": "application/json"
-      };
-
-      if (customHeaders) {
-        try {
-          headersObj = { ...headersObj, ...JSON.parse(customHeaders) };
-        } catch (e) {
-          throw new Error("Failed to parse Custom SMS Gateway headers. Ensure they are in valid JSON format.");
-        }
-      }
-
-      let payloadObj: any = null;
-      if (customPayload) {
-        try {
-          const interpolatedPayload = customPayload
-            .replace(/{otp}/g, code)
-            .replace(/{mobile}/g, cleanMobile);
-          payloadObj = JSON.parse(interpolatedPayload);
-        } catch (e) {
-          payloadObj = customPayload
-            .replace(/{otp}/g, code)
-            .replace(/{mobile}/g, cleanMobile);
-        }
-      }
-
-      const method = payloadObj ? "POST" : "GET";
-      
-      // Use standard fetch
-      const response = await fetch(interpolatedUrl, {
-        method,
-        headers: headersObj,
-        body: payloadObj ? (typeof payloadObj === "string" ? payloadObj : JSON.stringify(payloadObj)) : undefined
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`SMS Gateway returned status ${response.status}: ${text || "Unknown error"}`);
-      }
-
-      return { success: true, custom: true };
-    } else {
-      // Simulated OTP (Default)
-      triggerSmsNotification(mobile, code);
-      return { success: true, simulated: true };
-    }
-  };
-
-  const triggerSmsNotification = (mobile: string, code: string) => {
-    setSimulatedSms({
-      mobile,
-      body: `[1stCars] Your premium selection gateway secure login OTP is ${code}. Please do not share this with anyone. Valid for 5 minutes.`,
-      code
-    });
-    
-    // Let's also trigger the global event so anyone can capture it
-    const event = new CustomEvent("1stcars_simulate_sms", {
-      detail: { mobile, code }
-    });
-    window.dispatchEvent(event);
-
-    // Auto-dismiss after 15 seconds
-    setTimeout(() => {
-      setSimulatedSms(null);
-    }, 15000);
-  };
-
-  const handleResendOtp = async () => {
-    setError("");
-    setSuccess("");
-    setLoading(true);
-    try {
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(otpCode);
-      setCountdown(30);
-      
-      const res = await sendOtpCode(loginMobile, otpCode);
-      if (res.simulated) {
-        toast.success(`🔑 SMS Gateway: New verification code is ${otpCode}`);
-        setSuccess(`New simulated OTP sent! Code is ${otpCode}. See virtual screen banner.`);
-      } else {
-        toast.success("🔑 OTP code sent successfully to your device!");
-        setSuccess(`A new verification code has been dispatched to +91 ${loginMobile}.`);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to resend verification code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -452,248 +250,58 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
     setLoading(true);
 
     if (mode === "login") {
-      // Staff / Admin Email + Password Login
-      if (loginMethod === "password") {
-        if (!loginEmail.trim() || !loginPassword) {
-          setError("Please enter your email and password.");
-          setLoading(false);
-          return;
-        }
-        try {
-          const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-            email: loginEmail.trim(),
-            password: loginPassword
-          });
-
-          if (signInErr) {
-            setError(signInErr.message || "Invalid email or password.");
-            setLoading(false);
-            return;
-          }
-          if (!data?.user) {
-            setError("No account found for this email. Contact the administrator.");
-            setLoading(false);
-            return;
-          }
-
-          let profile: any = null;
-          try {
-            const { data: profileData } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", data.user.id)
-              .maybeSingle();
-            profile = profileData || null;
-          } catch (e) {}
-
-          const resolvedUser = profile || {
-            id: data.user.id,
-            name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "User",
-            email: data.user.email || loginEmail.trim(),
-            role: (data.user.user_metadata?.role as UserRole) || "Buyer",
-            city: data.user.user_metadata?.city || "Mumbai",
-            mobile: data.user.user_metadata?.mobile || ""
-          };
-
-          setSuccess(`Welcome back, ${resolvedUser.name}!`);
-          setTimeout(() => {
-            onLoginSuccess(resolvedUser);
-            onClose();
-          }, 700);
-        } catch (err: any) {
-          setError(err.message || "Failed to sign in. Please try again.");
-        } finally {
-          setLoading(false);
-        }
+      if (!loginEmail.trim() || !loginPassword) {
+        setError("Please enter your email and password.");
+        setLoading(false);
         return;
       }
+      try {
+        const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: loginEmail.trim(),
+          password: loginPassword
+        });
 
-      // Mobile OTP Login Flow
-      if (!otpSent) {
-        if (!loginMobile || loginMobile.length !== 10 || !/^\d+$/.test(loginMobile)) {
-          setError("Please enter a valid 10-digit mobile number.");
+        if (signInErr) {
+          setError(signInErr.message || "Invalid email or password.");
+          setLoading(false);
+          return;
+        }
+        if (!data?.user) {
+          setError("No account found for this email. Contact the administrator.");
           setLoading(false);
           return;
         }
 
+        let profile: any = null;
         try {
-          const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-          setGeneratedOtp(otpCode);
-          setOtpSent(true);
-          setCountdown(30);
-
-          if (!isUsingMock) {
-            const { data: profiles } = await supabase
-              .from("profiles")
-              .select("*")
-              .in("mobile", [loginMobile, `+91${loginMobile}`, `91${loginMobile}`]);
-
-            if (!profiles || profiles.length === 0) {
-              toast.info("New mobile number — your Buyer account will be created automatically on verification!");
-            }
-          }
-          
-          const result = await sendOtpCode(loginMobile, otpCode);
-          if (result.simulated) {
-            toast.success(`🔑 SMS Gateway: Verification code is ${otpCode}`);
-            setSuccess(`OTP sent successfully to +91 ${loginMobile}! Check notifications.`);
-          } else {
-            toast.success("🔑 OTP sent successfully!");
-            setSuccess(`A secure OTP has been dispatched to +91 ${loginMobile}.`);
-          }
-        } catch (err: any) {
-          setError(err.message || "Failed to send OTP.");
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        // Step 2: Verify OTP
-        const otpProvider = resolveOtpProvider();
-
-        if (isUsingMock) {
-          if (enteredOtp !== generatedOtp) {
-            setError("Incorrect OTP code. Please try again.");
-            setLoading(false);
-            return;
-          }
-
-          const finalUser = {
-            id: "user-" + loginMobile,
-            name: "Customer " + loginMobile.slice(-4),
-            email: `${loginMobile}@1stcars.com`,
-            mobile: loginMobile,
-            role: "Buyer" as UserRole,
-            city: "Mumbai"
-          };
-
-          setSuccess("OTP verified successfully! Welcome...");
-          setTimeout(() => {
-            onLoginSuccess(finalUser);
-            onClose();
-          }, 800);
-          setLoading(false);
-          return;
-        }
-
-        if (otpProvider === "supabase_native") {
-          try {
-            const cleanMobile = loginMobile.startsWith("+") ? loginMobile : `+91${loginMobile}`;
-            const { data, error: verifyErr } = await supabase.auth.verifyOtp({
-              phone: cleanMobile,
-              token: enteredOtp,
-              type: "sms"
-            });
-
-            if (verifyErr) {
-              setError(verifyErr.message || "Invalid OTP code.");
-              setLoading(false);
-              return;
-            }
-
-            if (data.user) {
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", data.user.id)
-                .maybeSingle();
-
-              // Phone-OTP users may have no profile row yet (e.g. trigger ran
-              // before the schema patch). Create one so the rest of the app
-              // works; the row is linked to this authenticated user.
-              let finalProfile = profile || null;
-              if (!finalProfile) {
-                const syntheticProfile = {
-                  id: data.user.id,
-                  name: data.user.user_metadata?.name || "Customer " + loginMobile.slice(-4),
-                  email: data.user.email || `${loginMobile}@1stcars.com`,
-                  mobile: loginMobile,
-                  role: "Buyer",
-                  city: "Mumbai"
-                };
-                try {
-                  const { data: inserted } = await supabase
-                    .from("profiles")
-                    .upsert(syntheticProfile)
-                    .select("*")
-                    .maybeSingle();
-                  finalProfile = inserted || syntheticProfile;
-                } catch (e) {
-                  finalProfile = syntheticProfile;
-                }
-              }
-
-              const finalUser = finalProfile || {
-                id: data.user.id,
-                name: "Customer " + loginMobile.slice(-4),
-                email: `${loginMobile}@1stcars.com`,
-                mobile: loginMobile,
-                role: "Buyer",
-                city: "Mumbai"
-              };
-              setSuccess("OTP verified natively! Welcome to 1stCars...");
-              setTimeout(() => {
-                onLoginSuccess(finalUser);
-                onClose();
-              }, 800);
-            }
-          } catch (err: any) {
-            setError(err.message || "Authentication error.");
-          } finally {
-            setLoading(false);
-          }
-          return;
-        }
-
-        // Custom SMS Gateway or Simulated OTP verification
-        if (enteredOtp !== generatedOtp) {
-          setError("Incorrect OTP verification code. Please try again.");
-          setLoading(false);
-          return;
-        }
-
-        try {
-          // Attempt to find existing profile in Supabase
-          const { data: profiles } = await supabase
+          const { data: profileData } = await supabase
             .from("profiles")
             .select("*")
-            .eq("mobile", loginMobile);
+            .eq("id", data.user.id)
+            .maybeSingle();
+          profile = profileData || null;
+        } catch (e) {}
 
-          if (profiles && profiles.length > 0) {
-            setSuccess("OTP verified! Welcome back...");
-            setTimeout(() => {
-              onLoginSuccess(profiles[0]);
-              onClose();
-            }, 800);
-            return;
-          }
+        const resolvedUser = profile || {
+          id: data.user.id,
+          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "User",
+          email: data.user.email || loginEmail.trim(),
+          role: (data.user.user_metadata?.role as UserRole) || "Buyer",
+          city: data.user.user_metadata?.city || "Mumbai",
+          mobile: data.user.user_metadata?.mobile || ""
+        };
 
-          // If no profile exists yet in Supabase, create one or return user session
-          const newUserId = "usr_" + loginMobile;
-          const newUser = {
-            id: newUserId,
-            name: "Customer " + loginMobile.slice(-4),
-            email: `${loginMobile}@1stcars.com`,
-            mobile: loginMobile,
-            role: "Buyer",
-            city: "Mumbai"
-          };
-
-          // Try inserting into profiles table if table exists
-          try {
-            await supabase.from("profiles").upsert(newUser);
-          } catch (e) {}
-
-          setSuccess("OTP verified! Welcome to 1stCars...");
-          setTimeout(() => {
-            onLoginSuccess(newUser);
-            onClose();
-          }, 800);
-        } catch (err: any) {
-          setError(err.message || "Error logging in.");
-        } finally {
-          setLoading(false);
-        }
+        setSuccess(`Welcome back, ${resolvedUser.name}!`);
+        setTimeout(() => {
+          onLoginSuccess(resolvedUser);
+          onClose();
+        }, 700);
+      } catch (err: any) {
+        setError(err.message || "Failed to sign in. Please try again.");
+      } finally {
+        setLoading(false);
       }
+      return;
     } else if (mode === "register") {
       if (!regName || !email || !regMobile) {
         setError("Please enter your Full Name, Mobile Number, and Email Address.");
@@ -794,38 +402,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
     >
-      
-      {/* Simulated SMS Notification Banner */}
-      {simulatedSms && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4">
-          <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20 flex flex-col gap-2 animate-bounce">
-            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-              <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 uppercase tracking-wider">
-                💬 Messages • Live Notification
-              </span>
-              <button 
-                onClick={() => setSimulatedSms(null)}
-                className="text-white/40 hover:text-white/80 text-xs font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="text-[11px] leading-relaxed font-semibold text-slate-100">
-              <strong className="text-white">+91 {simulatedSms.mobile}</strong>: {simulatedSms.body}
-            </div>
-            <button
-              onClick={() => {
-                setEnteredOtp(simulatedSms.code);
-                toast.success("OTP code autofilled! Click Verify to login.");
-                setSimulatedSms(null);
-              }}
-              className="mt-1 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg py-2 transition-all cursor-pointer shadow-lg shadow-[#2E7D32]/20"
-            >
-              ⚡ Autofill OTP: {simulatedSms.code}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Modal Box */}
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 flex flex-col my-auto max-h-[90vh] relative overflow-hidden text-left">
@@ -1112,42 +688,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
 
           {mode === "login" ? (
             <div className="space-y-3">
-              {/* Login Method Tabs */}
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMethod("otp");
-                    setOtpSent(false);
-                    setEnteredOtp("");
-                    setError("");
-                  }}
-                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-                    loginMethod === "otp"
-                      ? "bg-white text-[#2E7D32] shadow-sm"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  <Phone className="h-3 w-3 inline mr-1 -mt-0.5" /> Mobile OTP
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMethod("password");
-                    setOtpSent(false);
-                    setEnteredOtp("");
-                    setError("");
-                  }}
-                  className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
-                    loginMethod === "password"
-                      ? "bg-white text-[#2E7D32] shadow-sm"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  <Mail className="h-3 w-3 inline mr-1 -mt-0.5" /> Staff Email Login
-                </button>
-              </div>
-
               {!isRealSupabase && (
                 <div className="pt-1 space-y-1.5">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Demo Accounts</p>
@@ -1168,113 +708,42 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 </div>
               )}
 
-              {loginMethod === "password" ? (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="email"
+                    placeholder="e.g. you@company.com"
+                    value={loginEmail}
+                    onChange={(e) => {
+                      setLoginEmail(e.target.value);
+                      setError("");
+                    }}
+                    required
+                    className="h-11 pl-10 rounded-xl"
+                  />
+                </div>
+
+                <div className="pt-1.5 space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                    <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                     <Input
-                      type="email"
-                      placeholder="e.g. you@company.com"
-                      value={loginEmail}
+                      type="password"
+                      placeholder="Enter your password"
+                      value={loginPassword}
                       onChange={(e) => {
-                        setLoginEmail(e.target.value);
+                        setLoginPassword(e.target.value);
                         setError("");
                       }}
                       required
                       className="h-11 pl-10 rounded-xl"
                     />
                   </div>
-
-                  <div className="pt-1.5 space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password *</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        value={loginPassword}
-                        onChange={(e) => {
-                          setLoginPassword(e.target.value);
-                          setError("");
-                        }}
-                        required
-                        className="h-11 pl-10 rounded-xl"
-                      />
-                    </div>
-                    <p className="text-[9px] text-slate-400 font-semibold">Staff & administrators sign in with their registered email and password.</p>
-                  </div>
+                  <p className="text-[9px] text-slate-400 font-semibold">B2B dealers, staff & administrators sign in with their registered email and password.</p>
                 </div>
-              ) : (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mobile Number *</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                    <Input
-                      type="tel"
-                      placeholder="10-digit mobile number"
-                      value={loginMobile}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-                        setLoginMobile(digits);
-                        if (!otpSent) {
-                          setEnteredOtp("");
-                          setError("");
-                        }
-                      }}
-                      disabled={otpSent}
-                      required
-                      className="h-11 pl-10 rounded-xl disabled:bg-slate-50 disabled:text-slate-500"
-                    />
-                  </div>
-                  <p className="text-[9px] text-slate-400 font-semibold">We'll send a secure 6-digit OTP via SMS using Supabase Auth.</p>
-                </div>
-              )}
-
-              {otpSent && (
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enter 6-Digit OTP</label>
-                  <div className="relative">
-                    <ShieldCheck className="absolute left-3.5 top-3.5 h-4 w-4 text-[#2E7D32]" />
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder={`OTP sent to +91 ${loginMobile}`}
-                      value={enteredOtp}
-                      onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      required
-                      className="h-11 pl-10 rounded-xl tracking-[0.3em] font-black text-center"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between pt-1">
-                    {countdown > 0 ? (
-                      <span className="text-[10px] font-bold text-slate-400">Resend available in {countdown}s</span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleResendOtp}
-                        disabled={loading}
-                        className="text-[10px] font-black text-[#2E7D32] hover:underline cursor-pointer disabled:opacity-50"
-                      >
-                        ↻ Resend OTP
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOtpSent(false);
-                        setEnteredOtp("");
-                        setGeneratedOtp("");
-                        setCountdown(0);
-                        setError("");
-                      }}
-                      className="text-[10px] font-black text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      ✕ Change number
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           ) : mode === "forgot" ? (
             <div className="space-y-1">
@@ -1318,9 +787,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
               {loading
                 ? "Processing Application..."
                 : mode === "login"
-                  ? loginMethod === "password"
-                    ? "Sign In"
-                    : otpSent ? "Verify & Sign In" : "Send OTP"
+                  ? "Sign In"
                   : mode === "register"
                     ? "Submit Dealer Application for Admin Review"
                     : "Send Reset Instructions"}
