@@ -666,9 +666,9 @@ BEGIN
       FROM cron.job
      WHERE jobname IN ('automation-inspection-overdue', 'automation-task-reminders');
     PERFORM cron.schedule('automation-inspection-overdue', '0 9 * * *',
-      $$SELECT public.automation_inspection_overdue()$$);
+      $cmd$SELECT public.automation_inspection_overdue()$cmd$);
     PERFORM cron.schedule('automation-task-reminders', '0 * * * *',
-      $$SELECT public.automation_task_reminders()$$);
+      $cmd$SELECT public.automation_task_reminders()$cmd$);
   END IF;
 END $$;
 
