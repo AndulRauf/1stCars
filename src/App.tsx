@@ -69,6 +69,7 @@ const RoleDashboards = React.lazy(() => import("@/src/components/RoleDashboards"
 const FirstMarkCertification = React.lazy(() => import("@/src/components/FirstMarkCertification").then(m => ({ default: m.FirstMarkCertification })));
 const CustomPageView = React.lazy(() => import("@/src/components/CustomPageView").then(m => ({ default: m.CustomPageView })));
 const AboutUsView = React.lazy(() => import("@/src/components/AboutUsView").then(m => ({ default: m.AboutUsView })));
+const FAQView = React.lazy(() => import("@/src/components/FAQView").then(m => ({ default: m.FAQView })));
 
 
 // Lightweight fallback shown while a lazily-loaded view chunk is downloading.
@@ -840,6 +841,15 @@ export default function App() {
         />
       ) : currentView === "about" ? (
         <AboutUsView
+          onBackToHome={() => {
+            handleNavigate("home");
+          }}
+          onNavigateToInventory={() => {
+            handleNavigate("buy_cars");
+          }}
+        />
+      ) : currentView === "faq" ? (
+        <FAQView
           onBackToHome={() => {
             handleNavigate("home");
           }}

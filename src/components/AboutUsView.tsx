@@ -5,70 +5,62 @@ import {
   FileCheck, Gauge, Clock, Star, Quote
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
 
 interface AboutUsViewProps {
   onBackToHome: () => void;
   onNavigateToInventory: () => void;
 }
 
-const VALUES = [
-  {
-    icon: ShieldCheck,
-    title: "Total Transparency",
-    desc: "Every car is listed with its complete inspection report, genuine odometer reading, and honest ownership history. No hidden surprises, ever."
-  },
-  {
-    icon: BadgeCheck,
-    title: "Certified Quality",
-    desc: "Every vehicle passes our rigorous 120-Point Certification across 12 vital mechanical and structural categories before it earns a listing."
-  },
-  {
-    icon: Handshake,
-    title: "Fair Deal Mediation",
-    desc: "We connect verified buyers, sellers, and elite dealers through transparent, competitive bidding with zero high-pressure sales."
-  },
-  {
-    icon: Heart,
-    title: "Customer First",
-    desc: "From doorstep inspections to doorstep delivery, every process is designed around your convenience and peace of mind."
+// Split a heading around the first occurrence of a highlight phrase so the
+// highlighted phrase can be wrapped in the brand-green span (with fallback).
+function renderHighlighted(text: string, highlight: string, className = "text-[#2E7D32]") {
+  if (!highlight || !text.toLowerCase().includes(highlight.toLowerCase())) {
+    return <>{text}</>;
   }
-];
-
-const MILESTONES = [
-  { stat: "120", label: "Point Inspection" },
-  { stat: "1000+", label: "Elite Dealer Network" },
-  { stat: "0", label: "Hidden Fees" },
-  { stat: "24Hr", label: "Inspection Turnaround" }
-];
-
-const WORKFLOW = [
-  {
-    step: "01",
-    icon: FileCheck,
-    title: "Doorstep Inspection",
-    desc: "A certified 1stCars inspector visits your location, photographs the vehicle, and runs the full 120-point mechanical & structural checklist."
-  },
-  {
-    step: "02",
-    icon: Gauge,
-    title: "Genuine Odometer & Docs",
-    desc: "We verify the true odometer reading, RC papers, insurance validity, and ownership chain so every listing is fully trustworthy."
-  },
-  {
-    step: "03",
-    icon: Sparkles,
-    title: "Live Dealer Bidding",
-    desc: "Verified elite dealers compete in live, time-boxed auctions to give you the best possible value for your car."
-  },
-  {
-    step: "04",
-    icon: Handshake,
-    title: "Safe & Fast Handover",
-    desc: "Transparent deal closure with quick payment, complete documentation, and a hassle-free handover experience."
-  }
-];
+  const idx = text.toLowerCase().indexOf(highlight.toLowerCase());
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + highlight.length);
+  const after = text.slice(idx + highlight.length);
+  return (
+    <>
+      {before}
+      <span className={className}>{match}</span>
+      {after}
+    </>
+  );
+}
 
 export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsViewProps) {
+  const [s, setS] = React.useState<Record<string, string>>(PAGE_CONTENT_DEFAULTS);
+
+  React.useEffect(() => {
+    const apply = () => setS(getPageContent());
+    apply();
+    window.addEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+    return () => window.removeEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+  }, []);
+
+  const VALUES = [
+    { icon: ShieldCheck, title: s.aboutValue1Title, desc: s.aboutValue1Desc },
+    { icon: BadgeCheck, title: s.aboutValue2Title, desc: s.aboutValue2Desc },
+    { icon: Handshake, title: s.aboutValue3Title, desc: s.aboutValue3Desc },
+    { icon: Heart, title: s.aboutValue4Title, desc: s.aboutValue4Desc }
+  ];
+
+  const MILESTONES = [
+    { stat: s.aboutM1Value, label: s.aboutM1Label },
+    { stat: s.aboutM2Value, label: s.aboutM2Label },
+    { stat: s.aboutM3Value, label: s.aboutM3Label },
+    { stat: s.aboutM4Value, label: s.aboutM4Label }
+  ];
+
+  const WORKFLOW = [
+    { step: "01", icon: FileCheck, title: s.aboutStep1Title, desc: s.aboutStep1Desc },
+    { step: "02", icon: Sparkles, title: s.aboutStep2Title, desc: s.aboutStep2Desc },
+    { step: "03", icon: Handshake, title: s.aboutStep3Title, desc: s.aboutStep3Desc }
+  ];
+
   return (
     <div className="bg-[#FAF9F6] min-h-screen text-slate-900 pb-20">
 
@@ -79,28 +71,28 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
           <div className="inline-flex">
             <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
-              <Award className="h-4 w-4" /> ABOUT 1STCARS
+              <Award className="h-4 w-4" /> {s.aboutHeroBadge}
             </span>
           </div>
           <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
-            Your Trusted <span className="text-[#2E7D32]">Pre-Owned</span> Marketplace
+            {renderHighlighted(s.aboutHeroHeading, s.aboutHeroHighlight)}
           </h1>
           <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
-            1stCars is Gujarat's modern hub for buying and selling certified pre-owned vehicles. We combine rigorous 120-point inspections, transparent pricing, and an elite dealer network to make every transaction simple, safe, and fair.
+            {s.aboutHeroSubtitle}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <Button
               onClick={onNavigateToInventory}
               className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full shadow-lg shadow-[#2E7D32]/25 cursor-pointer"
             >
-              Browse Certified Cars <ArrowRight className="h-4 w-4 ml-2" />
+              {s.aboutBrowseButton} <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button
               variant="outline"
               onClick={onBackToHome}
               className="bg-white/60 hover:bg-white/80 border border-[#2E7D32]/20 text-[#2E7D32] font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
             >
-              Back to Home
+              {s.aboutBackButton}
             </Button>
           </div>
         </div>
@@ -122,16 +114,16 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <div className="space-y-4">
           <span className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#2E7D32]/10 text-[#2E7D32] rounded-full text-[11px] font-black uppercase tracking-widest">
-            <Target className="h-4 w-4" /> OUR STORY
+            <Target className="h-4 w-4" /> {s.aboutStoryBadge}
           </span>
           <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 leading-tight">
-            Built on a simple belief — <span className="text-[#2E7D32]">buying a used car should feel safe.</span>
+            {renderHighlighted(s.aboutStoryHeading, s.aboutStoryHighlight)}
           </h2>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            1stCars was founded to solve a very real problem: pre-owned car shopping is full of hidden defects, inflated prices, and shady strangers. We set out to change that with a marketplace that puts verification, transparency, and the customer first.
+            {s.aboutStoryPara1}
           </p>
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            Today, we operate across Gujarat with doorstep inspections, certified vehicle grading, and an elite network of verified dealers who compete transparently for your business. Every listing is owned and backed by 1stCars — so you always know exactly what you're getting.
+            {s.aboutStoryPara2}
           </p>
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="flex items-start gap-3">
@@ -139,8 +131,8 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
                 <Eye className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-900">Our Vision</p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Become India's most trusted destination for certified pre-owned vehicles.</p>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-900">{s.aboutVisionTitle}</p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">{s.aboutVisionText}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -148,8 +140,8 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
                 <Target className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-900">Our Mission</p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">Bridge pristine engineering with absolute service through verified, transparent car deals.</p>
+                <p className="text-xs font-black uppercase tracking-wider text-slate-900">{s.aboutMissionTitle}</p>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">{s.aboutMissionText}</p>
               </div>
             </div>
           </div>
@@ -159,29 +151,29 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
           <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#2E7D32]/10 via-transparent to-transparent pointer-events-none hidden md:block" />
           <Quote className="h-10 w-10 text-[#2E7D32]/30 mb-6" />
           <p className="text-lg md:text-2xl font-black leading-snug tracking-tight text-slate-900">
-            "We don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable."
+            {s.aboutQuoteText}
           </p>
           <div className="mt-8 flex items-center gap-3">
             <div className="h-12 w-12 bg-[#2E7D32]/10 rounded-full flex items-center justify-center">
               <Users className="h-6 w-6 text-[#2E7D32]" />
             </div>
             <div>
-              <p className="text-sm font-black text-slate-900">The 1stCars Team</p>
-              <p className="text-xs text-slate-500 font-semibold">Certified Inspectors • Dealers • Concierge</p>
+              <p className="text-sm font-black text-slate-900">{s.aboutTeamLabel}</p>
+              <p className="text-xs text-slate-500 font-semibold">{s.aboutTeamSubtitle}</p>
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-[#2E7D32]/10 grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-black text-slate-900">4+</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Active Cities</p>
+              <p className="text-2xl font-black text-slate-900">{s.aboutStat1Value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{s.aboutStat1Label}</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">12</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Inspection Categories</p>
+              <p className="text-2xl font-black text-slate-900">{s.aboutStat2Value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{s.aboutStat2Label}</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">100%</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Verified Listings</p>
+              <p className="text-2xl font-black text-slate-900">{s.aboutStat3Value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{s.aboutStat3Label}</p>
             </div>
           </div>
         </div>
@@ -295,10 +287,10 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
         <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-10 shadow-xs">
           <div className="text-center space-y-3 max-w-xl mx-auto mb-8">
             <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 leading-none">
-              Talk To The <span className="text-[#2E7D32]">1stCars</span> Team
+              {s.aboutContactHeading}
             </h2>
             <p className="text-sm text-slate-500 font-medium">
-              Have a question about buying, selling, or our certification process? We're here to help — no pressure, just answers.
+              {s.aboutContactSubtitle}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -308,7 +300,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
               </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-wider text-slate-900">Call Us</p>
-                <p className="text-sm text-slate-600 font-medium">+91 8866377722</p>
+                <p className="text-sm text-slate-600 font-medium">{s.aboutContactPhone}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -317,7 +309,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
               </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-wider text-slate-900">Email Us</p>
-                <p className="text-sm text-slate-600 font-medium">support@1stcars.com</p>
+                <p className="text-sm text-slate-600 font-medium">{s.aboutContactEmail}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -326,7 +318,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
               </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-wider text-slate-900">Visit Us</p>
-                <p className="text-sm text-slate-600 font-medium">1stCars Seller Hub, Surat, Gujarat</p>
+                <p className="text-sm text-slate-600 font-medium">{s.aboutContactAddress}</p>
               </div>
             </div>
           </div>

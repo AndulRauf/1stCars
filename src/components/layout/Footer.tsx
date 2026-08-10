@@ -166,6 +166,16 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
                   <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
                 </button>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => onViewChange?.("faq")}
+                  className="hover:text-primary transition-colors flex items-center group text-left cursor-pointer"
+                >
+                  <span>FAQ</span>
+                  <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+                </button>
+              </li>
               {quickLinks}
             </ul>
           </div>

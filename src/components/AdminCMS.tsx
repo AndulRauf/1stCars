@@ -28,6 +28,8 @@ import { AdminDashboard } from "./admin/AdminDashboard";
 import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { CMSModule } from "./admin/adminNavData";
+import { PageEditor } from "./admin/PageEditor";
+import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
   SellCatalog, SellBrandEntry, SellModel, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -40,6 +42,86 @@ const DEFAULT_SELL_CATALOG = catalogFromLegacy(defaultBrandData, defaultBrandLog
 
 const isLogoImageUrl = (url: string) =>
   !!url && url !== "⭐" && (url.startsWith("http") || url.startsWith("/") || url.startsWith("data:"));
+
+// Reusable add/edit/delete editor for string-array fields (specifications,
+// key features, ...) used in the Car edit modal.
+function StringListEditor({
+  items,
+  onChange,
+  addPlaceholder,
+  addLabel,
+  emptyText,
+}: {
+  items?: string[];
+  onChange: (next: string[]) => void;
+  addPlaceholder: string;
+  addLabel: string;
+  emptyText: string;
+}) {
+  const [draft, setDraft] = React.useState("");
+  const list = Array.isArray(items) ? items : [];
+  const addItem = () => {
+    if (!draft.trim()) return;
+    onChange([...list, draft.trim()]);
+    setDraft("");
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={draft}
+          placeholder={addPlaceholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addItem();
+            }
+          }}
+          className="flex-1 h-9 bg-white border border-slate-200 rounded-lg px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32]"
+        />
+        <button
+          type="button"
+          onClick={addItem}
+          className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer shrink-0"
+        >
+          <Plus className="h-3 w-3" /> {addLabel}
+        </button>
+      </div>
+      {list.length === 0 ? (
+        <p className="text-[10px] text-slate-400 italic text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          {emptyText}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {list.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2">
+              <input
+                type="text"
+                value={item || ""}
+                onChange={(e) => {
+                  const next = [...list];
+                  next[idx] = e.target.value;
+                  onChange(next);
+                }}
+                className="flex-1 h-8 bg-white border border-slate-200 rounded-lg px-2 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32]"
+              />
+              <button
+                type="button"
+                onClick={() => onChange(list.filter((_, i) => i !== idx))}
+                className="p-1.5 rounded-lg border border-slate-200 hover:border-rose-500 hover:text-rose-500 text-slate-400 bg-white cursor-pointer"
+                title="Delete item"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface AdminCMSProps {
   onReloadAllData?: () => void;
@@ -157,7 +239,8 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
     testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals."
+    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.",
+    ...PAGE_CONTENT_DEFAULTS
   });
 
   // UPI / Payment settings
@@ -2973,6 +3056,15 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
         </div>
       )}
 
+      {/* 1.5. SYSTEM PAGE EDITOR (Admin CMS → Edit Pages) */}
+      {activeModule === "pages" && (
+        <PageEditor
+          websiteSettings={websiteSettings}
+          setWebsiteSettings={setWebsiteSettings}
+          onSave={handleSaveWebsiteSettings}
+        />
+      )}
+
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
       {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
@@ -4876,6 +4968,105 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                         No extra charges. Only the base price will be shown. Click "Add Row" to add charges like RC transfer, insurance, etc.
                       </p>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Editable Specifications for Cars */}
+              {activeModule === "cars" && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
+                      Specifications
+                    </label>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      Edit the mechanical &amp; structural specifications shown in the "Specifications" tab
+                    </p>
+                  </div>
+                  <StringListEditor
+                    items={formData.specifications}
+                    onChange={(next) => setFormData((prev: any) => ({ ...prev, specifications: next }))}
+                    addPlaceholder="e.g. Safety Suite: 6 Airbags, ABS with EBD, ESP"
+                    addLabel="Add Spec"
+                    emptyText="No specifications yet. Add the first spec above."
+                  />
+                </div>
+              )}
+
+              {/* Editable Key Features for Cars */}
+              {activeModule === "cars" && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
+                      Key Features
+                    </label>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      Edit the installed premium &amp; performance options shown in the "Key Features" tab
+                    </p>
+                  </div>
+                  <StringListEditor
+                    items={formData.features}
+                    onChange={(next) => setFormData((prev: any) => ({ ...prev, features: next }))}
+                    addPlaceholder="e.g. Electric Sunroof with One-Touch Operation"
+                    addLabel="Add Feature"
+                    emptyText="No key features yet. Add the first feature above."
+                  />
+                </div>
+              )}
+
+              {/* Editable 120-Point Inspection Report for Cars */}
+              {activeModule === "cars" && (
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
+                      120-Point Inspection Report
+                    </label>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      Edit the certified inspection summaries shown in the "120-Point Inspection Report" tab
+                    </p>
+                  </div>
+                  {(["engine", "exterior", "brakes", "electronics", "interior"] as const).map((field) => (
+                    <div key={field}>
+                      <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
+                        {field}
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={(formData.inspectionSummary || {})[field] || ""}
+                        onChange={(e) =>
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            inspectionSummary: {
+                              ...((prev.inspectionSummary as any) || {}),
+                              [field]: e.target.value,
+                            },
+                          }))
+                        }
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32] resize-none"
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">
+                      Overall Score (0 - 10)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={0.1}
+                      value={(formData.inspectionSummary as any)?.overallScore ?? 9.5}
+                      onChange={(e) =>
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          inspectionSummary: {
+                            ...((prev.inspectionSummary as any) || {}),
+                            overallScore: Number(e.target.value),
+                          },
+                        }))
+                      }
+                      className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-[#2E7D32]"
+                    />
                   </div>
                 </div>
               )}

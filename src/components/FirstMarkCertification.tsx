@@ -9,6 +9,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { toast } from "@/src/lib/toast";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
+import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
 
 interface FirstMarkCertificationProps {
   onBackToHome: () => void;
@@ -16,6 +17,15 @@ interface FirstMarkCertificationProps {
 }
 
 export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: FirstMarkCertificationProps) {
+  const [s, setS] = React.useState<Record<string, string>>(PAGE_CONTENT_DEFAULTS);
+
+  React.useEffect(() => {
+    const apply = () => setS(getPageContent());
+    apply();
+    window.addEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+    return () => window.removeEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+  }, []);
+
   // Navigation tabs or active subsection
   const [activeTab, setActiveTab] = React.useState<"chassis" | "odometer" | "120point" | "warranty" | "workflow">("chassis");
 
@@ -88,15 +98,15 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
           <div className="inline-flex">
             <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
-              <Award className="h-4 w-4" /> OFFICIAL 120-POINT CERTIFIED STANDARD
+              <Award className="h-4 w-4" /> {s.certHeroBadge}
             </span>
           </div>
 
           <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
-            1stMark <span className="text-[#2E7D32]">Certification</span>
+            {s.certHeroHeadingA} <span className="text-[#2E7D32]">{s.certHeroHeadingHighlight}</span>
           </h1>
           <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
-            The ultimate benchmark for pre-owned car certification. Every vehicle undergoes our rigorous 120-Point Inspection across 12 vital mechanical and structural categories to assign an official Vehicle Grade (A+, A, B+, B, C).
+            {s.certHeroSubheading}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -104,13 +114,13 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
               onClick={onNavigateToInventory}
               className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full shadow-lg shadow-[#2E7D32]/25 cursor-pointer"
             >
-              Browse 120-Point Inspected Cars
+              {s.certBrowseButton}
             </Button>
             <a
               href="#inspection-checklist"
               className="bg-white/60 hover:bg-white/80 border border-[#2E7D32]/20 text-[#2E7D32] font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
             >
-              Explore 120 Checklist Items
+              {s.certChecklistButton}
             </a>
           </div>
         </div>
@@ -124,8 +134,8 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
           {/* Main 3 Pillars Navigation */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
             <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Our 120-Point Verification Pillars</h2>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Strict, meticulous checks conducted by master inspectors</p>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">{s.certPillarsTitle}</h2>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{s.certPillarsSubtitle}</p>
             </div>
 
             <div className="grid grid-cols-3 gap-2 bg-slate-50 p-1 rounded-2xl">
@@ -286,9 +296,9 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
           {/* Interactive 120-Point Checklist Directory Explorer */}
           <div id="inspection-checklist" className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-6 text-left">
             <div>
-              <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Full Transparent Protocol</span>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Interactive 120-Point Inspection Directory</h2>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Select a category to view all verified checkpoints</p>
+              <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">{s.certChecklistLabel}</span>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">{s.certChecklistTitle}</h2>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{s.certChecklistSubtitle}</p>
             </div>
 
             {/* Checklist Category Selector Pills */}
