@@ -99,6 +99,19 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
 export const PAGE_CONTENT_STORAGE_KEY = "1stcars_cms_website_settings";
 export const PAGE_CONTENT_UPDATED_EVENT = "1stcars_settings_updated";
 
+export interface FaqItem {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+}
+
+// Default FAQ entries shared by the public /faq page and the Admin FAQ editor.
+export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
+  { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
+  { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars: Single Owned, Non-Accident Trusted, and Genuine KM verified through OBD diagnostics and service log sweeps." }
+];
+
 export function getPageContent(overrides?: Record<string, string | undefined>): Record<string, string> {
   const merged: Record<string, string> = { ...PAGE_CONTENT_DEFAULTS };
   if (typeof window !== "undefined") {

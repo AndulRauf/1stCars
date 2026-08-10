@@ -1,25 +1,13 @@
 import * as React from "react";
 import { HelpCircle, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
-import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
+import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT, FaqItem, DEFAULT_FAQ_ITEMS } from "@/src/lib/pageContentDefaults";
 import { cn } from "@/src/lib/utils";
 
 interface FAQViewProps {
   onBackToHome: () => void;
   onNavigateToInventory: () => void;
 }
-
-interface FaqItem {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-}
-
-const DEFAULT_FAQS: FaqItem[] = [
-  { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
-  { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars: Single Owned, Non-Accident Trusted, and Genuine KM verified through OBD diagnostics and service log sweeps." }
-];
 
 function loadFaqs(): FaqItem[] {
   try {
@@ -28,8 +16,10 @@ function loadFaqs(): FaqItem[] {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (e) {}
-  return DEFAULT_FAQS;
+  } catch (e) {
+    console.error("Failed to parse FAQ items from storage", e);
+  }
+  return DEFAULT_FAQ_ITEMS;
 }
 
 export function FAQView({ onBackToHome, onNavigateToInventory }: FAQViewProps) {

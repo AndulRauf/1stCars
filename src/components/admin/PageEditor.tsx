@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Edit3, Home as HomeIcon, Car, Tag, Award, Users, HelpCircle, Plus, Trash2, Check, Save, RotateCcw } from "lucide-react";
+import { Edit3, Home as HomeIcon, Car, Tag, Award, Users, HelpCircle, Plus, Trash2, Check, Save, RotateCcw, type LucideIcon } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { supabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
-import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
+import { PAGE_CONTENT_DEFAULTS, FaqItem, DEFAULT_FAQ_ITEMS } from "@/src/lib/pageContentDefaults";
 
 interface PageEditorProps {
   websiteSettings: any;
@@ -13,7 +13,7 @@ interface PageEditorProps {
 
 type PageTab = "home" | "buy" | "sell" | "certification" | "about" | "faq";
 
-const TABS: { id: PageTab; label: string; icon: any; hint: string }[] = [
+const TABS: { id: PageTab; label: string; icon: LucideIcon; hint: string }[] = [
   { id: "home", label: "Home Page", icon: HomeIcon, hint: "Hero, trust points, fleet, certified & testimonial sections" },
   { id: "buy", label: "Buy Cars", icon: Car, hint: "Inventory page hero, filters & CTA labels" },
   { id: "sell", label: "Sell Car", icon: Tag, hint: "Sell page banner, valuation form & CTA labels" },
@@ -135,12 +135,14 @@ const TEXT_FIELDS: { key: string; label: string; textarea?: boolean; full?: bool
   ]
 ];
 
-interface FaqItem {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-}
+// Text-field group index per page tab (matches the TEXT_FIELDS array order).
+const TEXT_FIELDS_BY_TAB: Record<Exclude<PageTab, "faq">, number> = {
+  home: 0,
+  buy: 1,
+  sell: 2,
+  certification: 3,
+  about: 4
+};
 
 function Field({
   label,
@@ -188,23 +190,24 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
   React.useEffect(() => {
     let disposed = false;
     (async () => {
-      let items: FaqItem[] = [
-        { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
-        { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars: Single Owned, Non-Accident Trusted, and Genuine KM verified through OBD diagnostics and service log sweeps." }
-      ];
+      let items: FaqItem[] = [...DEFAULT_FAQ_ITEMS];
       try {
         const raw = localStorage.getItem("1stcars_cms_faqs");
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) items = parsed;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("Failed to parse FAQ items from storage", e);
+      }
       try {
         const { data } = await supabase.from("faq").select();
         if (data && data.length > 0) {
           items = data.map((q: any) => ({ id: q.id, category: q.category || "General", question: q.question, answer: q.answer }));
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("Failed to load FAQ items from database", e);
+      }
       if (disposed) return;
       setFaqItems(items);
       setFaqLoaded(true);
@@ -308,7 +311,7 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
               <RotateCcw className="h-3.5 w-3.5" /> Reset Page to Defaults
             </button>
           </div>
-          {renderFields(TEXT_FIELDS[activeTab === "home" ? 0 : activeTab === "buy" ? 1 : activeTab === "sell" ? 2 : activeTab === "certification" ? 3 : 4])}
+          {renderFields(TEXT_FIELDS[TEXT_FIELDS_BY_TAB[activeTab as Exclude<PageTab, "faq">]])}
         </div>
       )}
 
