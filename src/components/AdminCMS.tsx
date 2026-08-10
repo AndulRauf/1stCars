@@ -4754,9 +4754,9 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsFormOpen(false);
           }}
-          className="fixed inset-0 bg-[#2E7D32]/20 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+          className={`fixed inset-0 bg-[#2E7D32]/20 backdrop-blur-xs z-50 flex items-center justify-center ${activeModule === "cars" ? "p-0" : "p-4"} overflow-y-auto`}
         >
-          <div className="bg-white border border-slate-100 rounded-[32px] max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto relative text-left">
+          <div className={`bg-white border border-slate-100 ${activeModule === "cars" ? "w-full h-full max-w-none max-h-none rounded-none p-6 md:p-10" : "rounded-[32px] max-w-2xl w-full p-6 md:p-8 max-h-[90vh]"} space-y-6 shadow-2xl overflow-y-auto relative text-left`}>
             <button
               onClick={() => setIsFormOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full border border-slate-100 hover:bg-slate-50 cursor-pointer"
@@ -4772,7 +4772,7 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
             <form onSubmit={handleSubmitForm} className="space-y-4 text-xs font-semibold">
               
               {/* Dynamic form inputs based on active module fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 ${activeModule === "cars" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2"} gap-4`}>
                 
                 {Object.keys(formData).map((key) => {
                   if (key === "id" || key === "created_at" || key === "created_by" || key === "updated_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup") return null;
