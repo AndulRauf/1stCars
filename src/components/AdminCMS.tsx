@@ -1075,7 +1075,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
         { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance" }
       ] },
-      users: { name: "", email: "", mobile: "", role: "Buyer", city: "Mumbai" },
+      users: { name: "", email: "", mobile: "", password: "", role: "Buyer", city: "Mumbai" },
       test_drive_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Test Drive Request", preferred_date: "", preferred_time: "Morning", notes: "" },
       booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
 
@@ -1324,10 +1324,47 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         const { error } = await saveCar(currentRecord, formMode === "add" ? null : editingId);
         if (error) throw error;
       } else if (activeModule === "users") {
+        // `password` is a login credential — never store it on the public profile.
+        const { password, ...profileRecord } = currentRecord;
+
         if (formMode === "add") {
-          await supabase.from("profiles").insert([currentRecord]);
+          if (isRealSupabase) {
+            // Real Supabase: login only works if the user exists in Auth
+            // (auth.users). Inserting a profile row alone is not enough.
+            const email = String(profileRecord.email || "").trim().toLowerCase();
+            if (!password) {
+              throw new Error("Password is required to create a login for the new user.");
+            }
+            const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  name: profileRecord.name || email.split("@")[0],
+                  role: profileRecord.role || "Buyer",
+                  city: profileRecord.city || "Mumbai",
+                  mobile: profileRecord.mobile || ""
+                }
+              }
+            });
+            if (signUpErr) {
+              throw new Error(
+                (signUpErr.message || "").toLowerCase().includes("already")
+                  ? `An auth account already exists for ${email}. Use Edit to update its profile, or reset the password from Supabase > Authentication.`
+                  : `Failed to create auth user: ${signUpErr.message}`
+              );
+            }
+            if (!signUpData?.user) {
+              throw new Error(
+                "Sign-up did not return a user. If 'Confirm email' is enabled in Supabase Auth settings, the user must confirm their email before they can log in."
+              );
+            }
+            await supabase.from("profiles").insert([{ ...profileRecord, id: signUpData.user.id }]);
+          } else {
+            await supabase.from("profiles").insert([profileRecord]);
+          }
         } else {
-          await supabase.from("profiles").update(currentRecord).eq("id", editingId);
+          await supabase.from("profiles").update(profileRecord).eq("id", editingId);
         }
       } else if (activeModule === "inspections") {
         if (formMode === "add") {
@@ -4832,7 +4869,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
                         </select>
-                      ) : key === "role" && activeModule === "staff" ? (
+                      ) : key === "role" && (activeModule === "staff" || activeModule === "users") ? (
                         <select
                           value={formData[key] || "Inspector"}
                           onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
@@ -4881,6 +4918,14 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
                           className="w-full min-h-36 bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none font-mono text-xs"
                           required
+                        />
+                      ) : key === "password" ? (
+                        <input
+                          type="password"
+                          value={formData[key] || ""}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          placeholder="Set login password (required for new users)"
+                          className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2.5 outline-none"
                         />
                       ) : (
                         <input
