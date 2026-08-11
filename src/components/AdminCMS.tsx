@@ -32,6 +32,7 @@ import { automationService } from "@/src/lib/automation";
 import { CMSModule } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
+import { AdminAuctions } from "./auctions/AdminAuctions";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
   SellCatalog, SellBrandEntry, SellModel, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -126,11 +127,12 @@ function StringListEditor({
 }
 
 interface AdminCMSProps {
+  currentUser?: { id: string; name?: string; role: string };
   onReloadAllData?: () => void;
   onNavigateToInventory?: () => void;
 }
 
-export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSProps) {
+export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }: AdminCMSProps) {
   // Active sub-module within Admin CMS
   const [activeModule, setActiveModule] = React.useState<CMSModule>("dashboard");
 
@@ -3116,8 +3118,16 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
       {/* 1.6. AUTOMATION CENTER (Admin CMS → Automation Center) */}
       {activeModule === "automation" && <AutomationControlCenter onRefreshAll={loadCMSData} />}
 
+      {/* 1.7. DEALER AUCTION ENGINE (Admin CMS → Auctions) */}
+      {activeModule === "auctions" && (
+        <AdminAuctions
+          currentUser={currentUser || { id: "admin", name: "Admin", role: "Admin" }}
+          onReloadAllData={loadCMSData}
+        />
+      )}
+
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
-      {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && activeModule !== "automation" && (
+      {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && activeModule !== "automation" && activeModule !== "auctions" && (
         <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
@@ -3235,12 +3245,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Seller: {item.seller_name} ({item.seller_mobile})</p>
                         </div>
                       )}
-                      {activeModule === "auctions" && (
-                        <div>
-                          <p className="font-black text-slate-800">{item.car_title}</p>
-                          <p className="text-[10px] text-indigo-600 font-black uppercase tracking-wider mt-0.5">High Bidder: {item.highest_bidder_name || "No bids placed yet"}</p>
-                        </div>
-                      )}
                       {(activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
                         <div>
                           <p className="font-black text-slate-800">{item.name || (activeModule === "test_drive_requests" ? "Test Drive Request" : "Booking Request")} ({item.mobile || "N/A"})</p>
@@ -3350,12 +3354,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.category}</p>
                         </div>
                       )}
-                      {activeModule === "auctions" && (
-                        <div>
-                          <p className="font-black text-indigo-600">₹{(item.current_bid || item.base_price).toLocaleString()}</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Time: {item.time_remaining || "Ended"}</p>
-                        </div>
-                      )}
                       {(activeModule === "pages" || activeModule === "footer_links") && (
                         <div>
                           <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
@@ -3416,31 +3414,6 @@ export function AdminCMS({ onReloadAllData, onNavigateToInventory }: AdminCMSPro
                               </button>
                             )}
                           </>
-                        )}
-                        {activeModule === "auctions" && (
-                          <button
-                            onClick={() => {
-                              const matchingInsp = inspections.find(i => i.id === item.inspection_id || (i.brand + " " + i.model === item.car_title));
-                              const inspObj = matchingInsp || {
-                                id: item.inspection_id || item.id,
-                                brand: item.brand || item.car_title?.split(" ")[0] || "Luxury",
-                                model: item.model || item.car_title?.split(" ").slice(1).join(" ") || "Vehicle",
-                                year: item.year || 2022,
-                                km_driven: item.km_driven || 25000,
-                                fuel: item.fuel || "Petrol",
-                                transmission: item.transmission || "Automatic",
-                                city: item.city || "Gujarat",
-                                report_120_json: item.report_120_json,
-                                seller_name: item.seller_name || "B2B Dealer Auction Stock"
-                              };
-                              setSelected120Inspection(inspObj);
-                            }}
-                            className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                            title="View / Edit 120-Point Vehicle Inspection Report"
-                          >
-                            <ClipboardList className="h-3 w-3" />
-                            120-Pt Report
-                          </button>
                         )}
                         {activeModule === "seller_enquiries" && (
                           <button

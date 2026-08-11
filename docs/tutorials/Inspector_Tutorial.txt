@@ -1,0 +1,228 @@
+================================================================
+1stCARS - INSPECTOR OPERATIONS TUTORIAL
+Website Operating Guide for Newly Hired Inspectors
+================================================================
+
+CONTENTS
+1. Your Role & What You Own
+2. Getting Started: Login & First Look
+3. Your Worklist (Assigned Field Checklist)
+4. Preparing for a Doorstep Inspection
+5. The 120-Point Inspection Report
+6. Submitting the Report Card
+7. What Happens After You Submit
+8. Statuses & Terminology
+9. Quality Rules
+10. Trouble & Help
+
+
+----------------------------------------------------------------
+1. YOUR ROLE & WHAT YOU OWN
+----------------------------------------------------------------
+You are the quality backbone of 1stCars. Every car listed for
+sale is only trusted because it passed YOUR 120-point inspection.
+
+Your responsibilities:
+  - Conduct doorstep inspections of seller vehicles
+  - Complete the 120-point report honestly and fully
+  - Produce the overall vehicle score
+  - Hand over the completed report so the vehicle can be certified
+    and auctioned / published to the website
+
+IMPORTANT: The Automation Center AUTO-ASSIGNS new inspection
+requests to the inspector with the lowest current workload
+(preference is given to an inspector in the same city). You do
+not pick your own jobs - you work the jobs assigned to you.
+
+
+----------------------------------------------------------------
+2. GETTING STARTED: LOGIN & FIRST LOOK
+----------------------------------------------------------------
+1. Open the 1stCars website.
+2. Click "Login" and sign in with your work email and password.
+   Only an administrator can create an account with the
+   "Inspector" role. Signing up on your own gives the "Buyer"
+   role and will NOT show you inspections.
+3. You land on "My Portal & Dashboards" with the "Assigned Field
+   Checklist" tab open by default.
+
+NOTE ON TEST/DEMO ACCOUNTS
+For training, the team can provide a demo inspector account.
+Use demo accounts only for practice, never on the live site.
+
+WHAT YOU SHOULD SEE
+  - "Welcome back, <your name>"
+  - "Profile Role: Inspector Dashboard • Location: <city>"
+  - "My Doorstep Inspection Worklist"
+  - A button "Upload Report Card" on each assigned inspection
+  - Buttons: Refresh, Logout
+
+
+----------------------------------------------------------------
+3. YOUR WORKLIST (ASSIGNED FIELD CHECKLIST)
+----------------------------------------------------------------
+Each assigned inspection card shows:
+  - Inspection / lead ID
+  - Seller name and mobile number
+  - Vehicle brand, model, variant, year
+  - Fuel and transmission
+  - KM driven
+  - City and full address (doorstep location)
+  - Preferred date and time slot
+  - Any seller notes
+  - Status badge (see section 8)
+
+Workflow:
+1. Open "My Doorstep Inspection Worklist".
+2. Review each assigned inspection's date, time and address.
+3. Call the seller to confirm the appointment.
+4. Plan your route so you are on time.
+5. After the physical inspection, press "Upload Report Card".
+
+
+----------------------------------------------------------------
+4. PREPARING FOR A DOORSTEP INSPECTION
+----------------------------------------------------------------
+Before you leave:
+  - Confirm the address and slot with the seller by phone.
+  - Carry your device to fill the report (app/website) and take
+    photos.
+  - Know the vehicle basics: brand, model, year, variant, fuel,
+    transmission, odometer reading.
+
+During the visit:
+  - Greet the seller, check the RC/ownership documents.
+  - Physically inspect EVERY section - do not guess.
+  - If something is damaged or modified, record it honestly.
+  - Note the odometer reading and cross-check condition vs KM.
+
+If the seller is not reachable or the address is wrong:
+  - Do NOT submit a fake report.
+  - Contact the admin/sales team and note the issue.
+
+
+----------------------------------------------------------------
+5. THE 120-POINT INSPECTION REPORT
+----------------------------------------------------------------
+"Upload Report Card" opens the 120-Point Inspection form. It is a
+structured checklist with these major sections:
+
+  - Engine
+  - Exterior
+  - Interior
+  - Electrical
+  - Tyres
+  - Underbody
+  - Scorecard
+
+For each section you evaluate individual checklist points and mark
+the condition found. The form automatically computes the OVERALL
+SCORE at the end (out of 10 / percentage).
+
+Scoring guidance:
+  - Be consistent. The score directly affects whether the vehicle
+    gets the "1st Mark" certification badge.
+  - A low score is not a failure - it is an honest valuation.
+    Dealers and buyers rely on your accuracy.
+  - Do not inflate scores to please sellers or dealers. Your
+    signature on the report is the company's reputation.
+
+
+----------------------------------------------------------------
+6. SUBMITTING THE REPORT CARD
+----------------------------------------------------------------
+1. Open the report from your worklist.
+2. Fill every section completely. Leave nothing blank.
+3. Check the overall score is computed.
+4. Review the whole report once before saving.
+5. Submit / save the report card.
+
+NOTE: Once submitted, the report is final unless an admin asks
+you to correct it. Take your time BEFORE you submit.
+
+
+----------------------------------------------------------------
+7. WHAT HAPPENS AFTER YOU SUBMIT
+----------------------------------------------------------------
+When you submit a completed inspection report, the system does the
+following automatically:
+
+  1. The inspection status changes to "completed".
+  2. The admin is notified that the report is ready.
+  3. The vehicle becomes eligible to be published to the website
+     as a certified car.
+  4. The vehicle becomes eligible to enter the dealer auction
+     (a base starting price is suggested based on the car's age).
+  5. The customer (seller) sees the inspection result and score in
+     their "Inspection Status" tab.
+
+So a good, complete report directly keeps the sales engine
+running. A late or incomplete report blocks listings and auctions.
+
+Follow-up:
+  - If the admin requests a re-inspection or fixes, update the
+    report promptly.
+  - If the seller asks questions about the score, explain how the
+    points add up - do not change the score to satisfy them.
+
+
+----------------------------------------------------------------
+8. STATUSES & TERMINOLOGY
+----------------------------------------------------------------
+Inspection statuses:
+  - pending     : request received, not yet assigned
+  - assigned    : assigned to you, not yet inspected
+  - completed   : 120-point report submitted
+  - offered     : vehicle has been valued/offered
+  - sold        : vehicle sold
+
+Vehicle statuses you will see:
+  - available : live on the website for buyers
+  - listed    : ready for listing
+  - bidding   : currently in a dealer auction
+  - sold      : purchased
+  - reserved  : on hold
+
+Terms:
+  - 120-Point Inspection : the full certification checklist
+  - 1st Mark / Certified : badge a vehicle earns after passing
+  - Overall Score        : the computed vehicle scorecard
+  - Doorstep inspection  : inspection done at the seller's address
+  - OBD / chassis check  : on-board diagnostics / chassis number
+                           verification used during certification
+
+
+----------------------------------------------------------------
+9. QUALITY RULES
+----------------------------------------------------------------
+1. NEVER submit a report for a car you did not physically inspect.
+2. Fill all 120 points - partial reports are not accepted.
+3. Be accurate, not generous. The score is a business-critical
+   valuation used by dealers to bid.
+4. Confirm appointments by phone; if you are going to be late,
+   call the seller.
+5. Keep vehicle/seller data private - never share it.
+6. Report damage, accidents, repainting, mileage doubts and any
+   red flags explicitly in the notes.
+7. If you cannot complete a visit, escalate to admin - never fake
+   a visit.
+8. Keep photos and records consistent with the report.
+
+
+----------------------------------------------------------------
+10. TROUBLE & HELP
+----------------------------------------------------------------
+- No inspections assigned: press Refresh. Confirm your profile
+  role is "Inspector" and your city is set correctly - automation
+  prefers same-city inspectors.
+- Can't open the report form: refresh the page and try again.
+- Wrong address/slot: call the seller, confirm, and update admin.
+- Car doesn't match the request (wrong model/reg): STOP, do not
+  inspect a different car than assigned; report to admin.
+- Website shows "Mock Browser DB": app is in offline/demo mode,
+  data is local only - tell your admin.
+
+For further help contact your Inspection Manager or Admin team.
+================================================================
+End of Inspector Tutorial
+================================================================

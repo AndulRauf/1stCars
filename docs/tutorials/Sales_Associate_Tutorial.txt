@@ -1,0 +1,259 @@
+================================================================
+1stCARS - SALES ASSOCIATE OPERATIONS TUTORIAL
+Website & CRM Operating Guide for Newly Hired Sales Associates
+================================================================
+
+CONTENTS
+1. Your Role & What You Own
+2. Getting Started: Login & First Look
+3. Your Dashboard (Role Hub)
+4. Test Drive Requests (Customer Requests Log)
+5. CRM Customer Leads Desk
+6. Sales Portal Console (Advanced)
+7. Notifications & Alerts
+8. Everyday Workflows (Step by Step)
+9. Lead Statuses & Terminology
+10. Rules to Always Follow
+11. Trouble & Help
+
+
+----------------------------------------------------------------
+1. YOUR ROLE & WHAT YOU OWN
+----------------------------------------------------------------
+As a Sales Associate you are the bridge between customers and the
+1stCars marketplace. Your day-to-day work covers:
+
+  - Test drive / virtual tour requests from customers
+  - Buy-now enquiries, WhatsApp callbacks, cash-quote bookings
+  - Follow-ups with leads until they are closed (won or lost)
+  - Routing leads to the right people (inspectors, admin)
+
+The system AUTO-ROUTES new leads to the sales associate with the
+lowest current load and creates a follow-up task for you (due
+within 24 hours). This is done by the Automation Center - you do
+not need to "claim" leads manually, but you must act on them fast.
+
+
+----------------------------------------------------------------
+2. GETTING STARTED: LOGIN & FIRST LOOK
+----------------------------------------------------------------
+1. Open the 1stCars website.
+2. Click "Login" (top right).
+3. Sign in with your work email and password. If you do not have
+   an account yet, an administrator must create you one with the
+   "Sales Associate" role - sign up on your own defaults to the
+   "Buyer" role and will NOT give you staff access.
+4. After login you are taken to "My Portal & Dashboards".
+
+NOTE ON TEST/DEMO ACCOUNTS
+For practice, the development team can provide demo accounts
+(example: sales@1stcars.test, password Test@12345). Use them only
+for training - never on the live site.
+
+WHAT YOU SHOULD SEE
+  - "Welcome back, <your name>"
+  - "Profile Role: Sales Associate Dashboard • Location: <city>"
+  - A "Dashboard Hub" on the left with two tabs:
+        * Customer Requests Log
+        * CRM Active Leads Desk
+  - A "Live System Alerts Hub" area on the right
+  - Buttons: Refresh (reload data), Logout
+
+
+----------------------------------------------------------------
+3. YOUR DASHBOARD (ROLE HUB)
+----------------------------------------------------------------
+Default tab when you log in: "Customer Requests Log".
+
+Left hub tabs:
+  - Customer Requests Log (test drive requests)
+  - CRM Active Leads Desk (buy leads)
+
+Right panel:
+  - Live System Alerts Hub
+      - Shows unread notification badges
+      - "Mark all as read" button
+      - Each alert has a "Dismiss Alert" action
+
+You can always press "Refresh" to pull the latest data from the
+database. If anything looks missing, refresh before assuming a
+lead is gone.
+
+
+----------------------------------------------------------------
+4. TEST DRIVE REQUESTS (CUSTOMER REQUESTS LOG)
+----------------------------------------------------------------
+What they are: customers who want a test drive / virtual tour of
+a specific car.
+
+Each request card shows:
+  - Lead ID and customer name + mobile number
+  - "Target Vehicle: <brand> <model>"
+  - "Prefer Slot: <date and time>"
+  - Status badge
+
+Actions available on each card:
+  - "Contacted"  -> marks the lead as contacted
+  - "Resolve"    -> closes the request as handled
+
+STEP-BY-STEP:
+1. Open "Customer Requests Log".
+2. Work through the NEWEST requests first (or highest priority).
+3. Call the customer using the number shown.
+4. Confirm the test drive slot or arrange a virtual tour.
+5. Press "Contacted" after you have reached the customer.
+6. After the test drive/tour happens, press "Resolve".
+7. Log any important notes so the next person has context.
+
+
+----------------------------------------------------------------
+5. CRM ACTIVE LEADS DESK
+----------------------------------------------------------------
+What they are: general buy queries, WhatsApp callbacks and
+cash-quote bookings that are not tied to a test drive slot.
+
+Each lead card shows:
+  - Type badge: test drive (green), buy now (amber), other (sky)
+  - Status pill: pending / contacted / resolved
+  - Lead ID and creation date
+  - Customer name, mobile, location/city
+  - Preferred date and time
+  - Target car (if any) and notes
+
+Action available:
+  - "Mark Solved" -> closes the lead
+
+STEP-BY-STEP:
+1. Open "CRM Active Customer Leads".
+2. Sort/read the lead card - note the type and status.
+3. Contact the customer (call or WhatsApp).
+4. Qualify the enquiry: are they serious? Which car? Budget?
+5. After the conversation, update the lead:
+      - Still talking/negotiating? Keep it open, follow up later.
+      - Convinced / bought / requested test drive? Mark Solved.
+6. If the customer wants a test drive, that request appears in the
+   "Customer Requests Log" as well - handle it there too.
+
+
+----------------------------------------------------------------
+6. SALES PORTAL CONSOLE (ADVANCED)
+----------------------------------------------------------------
+There is a dedicated sales screen at the path /sales-portal
+("CRM Sales Desk Console"). Use it for a fuller picture of your
+pipeline.
+
+It shows:
+  - KPI metrics: Total Leads, Pending Review, In Discussion,
+    Acquired / Closed
+  - Filter tabs: All Database Leads, Pending, Contacted, Resolved
+  - The same lead cards with more detail and notes
+  - "Browse Inventory" button to look at cars while talking to a
+    customer
+
+Actions here (in addition to those on the dashboard):
+  - "Mark In Discussion"  -> lead is being actively negotiated
+  - "Mark Closed"         -> completed
+  - "Delete Lead"         -> removes the lead permanently
+       (only when truly a duplicate/junk - you will be asked to
+        confirm before deletion)
+
+TIP: Use "Mark In Discussion" when a deal is progressing so the
+admin dashboard reflects real pipeline health.
+
+
+----------------------------------------------------------------
+7. NOTIFICATIONS & ALERTS
+----------------------------------------------------------------
+The system pushes notifications when:
+  - A new test drive request is routed to you
+  - A new buy-now / cash-quote lead is routed to you
+  - A follow-up task is created (due in 24 hours)
+  - An inspection on one of your deals is completed
+  - An auction related to your lead ends
+
+Workflow:
+  1. Keep the "Live System Alerts Hub" open.
+  2. Check unread badges first thing in the morning.
+  3. Handle alerts in order of priority (urgent > high > normal).
+  4. Dismiss only after you have acted on the alert.
+
+
+----------------------------------------------------------------
+8. EVERYDAY WORKFLOWS (STEP BY STEP)
+----------------------------------------------------------------
+WORKFLOW A: NEW TEST DRIVE REQUEST
+  1. Alert appears in the Alerts Hub / request in the log.
+  2. Call the customer within 24 hours (automation expects this).
+  3. Confirm the preferred slot and vehicle.
+  4. Click "Contacted".
+  5. After the visit/tour, click "Resolve".
+
+WORKFLOW B: NEW BUY LEAD
+  1. Lead appears in CRM Active Leads Desk.
+  2. Call/WhatsApp, qualify budget + target car.
+  3. If they want a test drive, direct them to the request flow.
+  4. Update status as you go (Pending -> Contacted -> In
+     Discussion -> Resolved).
+  5. Hand over to admin to complete sale/payment once decided.
+
+WORKFLOW C: FOLLOW-UP DUE
+  1. The Automation Center creates a follow-up task for you.
+  2. Complete the task with the outcome.
+  3. If unresolved, schedule the next follow-up so nothing drops.
+
+
+----------------------------------------------------------------
+9. LEAD STATUSES & TERMINOLOGY
+----------------------------------------------------------------
+Lead types:
+  - test drive  : customer wants to drive/tour a car
+  - buy now     : customer wants to buy immediately / cash quote
+  - other       : general enquiry (WhatsApp, form, etc.)
+
+Statuses:
+  - pending         : new, not yet contacted
+  - contacted       : you have reached the customer
+  - in discussion   : deal is being negotiated
+  - resolved/closed : completed (won or lost)
+  - assigned        : routed to a sales associate
+
+Other terms you will see:
+  - CRM        : Customer Relationship Management (lead tracking)
+  - Lead       : a customer enquiry in the system
+  - Assignee   : the staff member responsible for the lead
+  - Follow-up  : a scheduled reminder/task to re-contact a lead
+
+
+----------------------------------------------------------------
+10. RULES TO ALWAYS FOLLOW
+----------------------------------------------------------------
+1. Act on new leads within 24 hours - automation assigns them to
+   you precisely so they are handled fast.
+2. Never delete a lead unless it is clearly a duplicate or junk.
+3. Keep statuses truthful: don't mark "Resolved" before the
+   customer is actually handled.
+4. Never share customer mobile numbers outside the company system.
+5. If a lead mentions an inspection or auction, involve the
+   appropriate staff (inspector / admin) and note it.
+6. Use "Refresh" before making decisions on stale-looking data.
+7. Escalate any customer who is unhappy - do not let issues sit.
+
+
+----------------------------------------------------------------
+11. TROUBLE & HELP
+----------------------------------------------------------------
+- I can't see a lead: press Refresh. Check the filter tabs
+  (Pending/Contacted/Resolved) - it may be in another tab.
+- Login fails: contact your admin to confirm your account role is
+  "Sales Associate" and your email is correct.
+- Duplicate lead: mark one Solved with a note; do not delete both.
+- Unsure about a customer's request: ask in the notes field so
+  the next handler has full context.
+- If the website shows "Mock Browser DB" instead of "Live
+  Supabase", the app is running in demo/offline mode - data is
+  only on that device and not shared.
+
+For further help contact your Sales Manager or the Admin team.
+================================================================
+End of Sales Associate Tutorial
+================================================================

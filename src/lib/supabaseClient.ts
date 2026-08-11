@@ -114,9 +114,11 @@ class SupabaseMockClient {
         return [
           { id: "u-buyer", name: "Rahul Sharma", email: "buyer@1stcars.com", mobile: "9876543210", role: "Buyer", city: "Mumbai", created_at: new Date().toISOString() },
           { id: "u-seller", name: "Amit Verma", email: "seller@1stcars.com", mobile: "9123456789", role: "Seller", city: "Delhi NCR", created_at: new Date().toISOString() },
-          { id: "u-dealer", name: "Elite Motors Dealer", email: "dealer@1stcars.com", mobile: "9234567890", role: "Dealer", city: "Bangalore", created_at: new Date().toISOString() },
+          { id: "u-dealer", name: "Elite Motors Dealer", email: "dealer@1stcars.com", mobile: "9234567890", role: "Dealer", city: "Bangalore", is_verified: true, is_approved: true, created_at: new Date().toISOString() },
+          { id: "u-dealer2", name: "Express Wheels Ltd", email: "dealer2@1stcars.com", mobile: "9234567891", role: "Dealer", city: "Mumbai", is_verified: true, is_approved: true, created_at: new Date().toISOString() },
           { id: "u-inspector", name: "Vikram Rathore", email: "inspector@1stcars.com", mobile: "9345678901", role: "Inspector", city: "Mumbai", created_at: new Date().toISOString() },
-          { id: "u-sales", name: "Sneha Patel", email: "sales@1stcars.com", mobile: "9456789012", role: "Sales Associate", city: "Delhi NCR", created_at: new Date().toISOString() }
+          { id: "u-sales", name: "Sneha Patel", email: "sales@1stcars.com", mobile: "9456789012", role: "Sales Associate", city: "Delhi NCR", created_at: new Date().toISOString() },
+          { id: "u-admin", name: "Arjun Desai", email: "admin@1stcars.com", mobile: "9567890123", role: "Admin", city: "Surat", created_at: new Date().toISOString() }
         ];
       case "brands":
         return [
@@ -270,53 +272,40 @@ class SupabaseMockClient {
           }
         ];
       case "auctions":
+        // Auction engine V1 uses a structured schema (see public/auction_engine.sql).
+        // The mock table starts empty and the auction service seeds a live demo
+        // auction on first use. Legacy "car_title" rows are ignored by the service.
+        return [];
+      case "auction_status_flow":
         return [
-          {
-            id: "auc-1",
-            created_at: new Date().toISOString(),
-            car_title: "Maruti Suzuki Swift ZXI Plus",
-            year: 2019,
-            km_driven: 54000,
-            fuel: "Petrol",
-            transmission: "Manual",
-            city: "Delhi NCR",
-            base_price: 450000,
-            current_bid: 485000,
-            highest_bidder_name: "Elite Motors Dealer",
-            ends_at: new Date(Date.now() + 3600000 * 4).toISOString(),
-            status: "active"
-          },
-          {
-            id: "auc-2",
-            created_at: new Date().toISOString(),
-            car_title: "Hyundai Creta SX Executive",
-            year: 2022,
-            km_driven: 21000,
-            fuel: "Diesel",
-            transmission: "Automatic",
-            city: "Bangalore",
-            base_price: 1380000,
-            current_bid: 1450000,
-            highest_bidder_name: "Elite Motors Dealer",
-            ends_at: new Date(Date.now() + 3600000 * 24).toISOString(),
-            status: "active"
-          },
-          {
-            id: "auc-3",
-            created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-            car_title: "Honda City V",
-            year: 2018,
-            km_driven: 68000,
-            fuel: "Petrol",
-            transmission: "Manual",
-            city: "Mumbai",
-            base_price: 500000,
-            current_bid: 535000,
-            highest_bidder_name: "Express Wheels Ltd",
-            ends_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-            status: "ended"
-          }
+          { from_status: "DRAFT", to_status: "DRAFT" }, { from_status: "DRAFT", to_status: "READY" },
+          { from_status: "DRAFT", to_status: "SCHEDULED" }, { from_status: "DRAFT", to_status: "CANCELLED" },
+          { from_status: "READY", to_status: "READY" }, { from_status: "READY", to_status: "SCHEDULED" },
+          { from_status: "READY", to_status: "LIVE" }, { from_status: "READY", to_status: "CANCELLED" },
+          { from_status: "SCHEDULED", to_status: "SCHEDULED" }, { from_status: "SCHEDULED", to_status: "LIVE" },
+          { from_status: "SCHEDULED", to_status: "CANCELLED" }, { from_status: "SCHEDULED", to_status: "DRAFT" },
+          { from_status: "LIVE", to_status: "LIVE" }, { from_status: "LIVE", to_status: "EXTENDED" },
+          { from_status: "LIVE", to_status: "CLOSING" }, { from_status: "LIVE", to_status: "CANCELLED" },
+          { from_status: "EXTENDED", to_status: "EXTENDED" }, { from_status: "EXTENDED", to_status: "CLOSING" },
+          { from_status: "EXTENDED", to_status: "CANCELLED" },
+          { from_status: "CLOSING", to_status: "CLOSING" }, { from_status: "CLOSING", to_status: "CLOSED" },
+          { from_status: "CLOSING", to_status: "SELLER_REVIEW" }, { from_status: "CLOSING", to_status: "EXPIRED" },
+          { from_status: "CLOSING", to_status: "CANCELLED" },
+          { from_status: "CLOSED", to_status: "SELLER_REVIEW" }, { from_status: "CLOSED", to_status: "ACCEPTED" },
+          { from_status: "CLOSED", to_status: "REJECTED" },
+          { from_status: "SELLER_REVIEW", to_status: "SELLER_REVIEW" }, { from_status: "SELLER_REVIEW", to_status: "ACCEPTED" },
+          { from_status: "SELLER_REVIEW", to_status: "REJECTED" }, { from_status: "SELLER_REVIEW", to_status: "CANCELLED" },
+          { from_status: "ACCEPTED", to_status: "ACCEPTED" },
+          { from_status: "REJECTED", to_status: "REJECTED" },
+          { from_status: "EXPIRED", to_status: "EXPIRED" },
+          { from_status: "CANCELLED", to_status: "CANCELLED" }
         ];
+      case "auction_bids":
+        return [];
+      case "auction_dealer_eligibility":
+        return [];
+      case "auction_payments":
+        return [];
       case "sales_notifications":
         return [
           {

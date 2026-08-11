@@ -1,0 +1,261 @@
+================================================================
+1stCARS - DEALER OPERATIONS TUTORIAL
+Auction & Bidding Operating Guide for Dealers
+================================================================
+
+CONTENTS
+1. Your Role on 1stCars
+2. Getting Started: Account & Login
+3. Eligibility & Verification
+4. The Live Auctions Arena
+5. How Bidding Works (Rules)
+6. Anti-Sniping & Extensions (Read Carefully)
+7. Bids, Outbids & Notifications
+8. Winning an Auction & Payment
+9. My Purchased Stock
+10. Auction Statuses Explained
+11. Auction Etiquette & Rules
+12. Trouble & Help
+
+
+----------------------------------------------------------------
+1. YOUR ROLE ON 1stCars
+----------------------------------------------------------------
+1stCars auctions certified, 120-point-inspected cars to verified
+dealers. You buy vehicles through LIVE dealer auctions at
+wholesale-level starting prices.
+
+To participate you must:
+  - Have a Dealer account
+  - Be VERIFIED (your dealer verification approved by admin)
+  - Be added/eligible for each auction's dealer pool
+
+Only eligible, verified dealers can see and bid on an auction.
+
+
+----------------------------------------------------------------
+2. GETTING STARTED: ACCOUNT & LOGIN
+----------------------------------------------------------------
+1. Contact the 1stCars admin team to create your dealer account.
+   Your profile role must be "Dealer" and your dealer verification
+   must be approved, or you cannot bid.
+2. Log in on the website.
+3. You land on "My Portal & Dashboards" with the "Live Auctions
+   Arena" tab open by default.
+
+WHAT YOU SHOULD SEE
+  - Welcome message with your profile role
+  - "Live Auctions Arena" - the list of auctions you are eligible for
+  - "My Purchased Stock" - cars you have won and bought
+  - Live countdown timers for each auction
+  - Buttons: Refresh, Logout
+
+NOTE ON TEST/DEMO ACCOUNTS
+For practice, the team can provide demo dealer accounts (for
+example dealer1@1stcars.test / dealer2@1stcars.test, password
+Test@12345). Use demo accounts only for training.
+
+
+----------------------------------------------------------------
+3. ELIGIBILITY & VERIFICATION
+----------------------------------------------------------------
+The admin decides which dealers are eligible for each auction.
+Your eligibility goes through stages:
+
+  INVITED  ->  ELIGIBLE  ->  VIEWED  ->  BIDDED
+
+  - INVITED    : admin has invited you to this auction
+  - ELIGIBLE   : you are confirmed to bid
+  - VIEWED     : you have opened/viewed the auction
+  - BIDDED     : you have placed a bid
+  - DISQUALIFIED : admin removed you from this auction
+
+How to become eligible:
+  1. Complete your dealer verification (admin side) - your account
+     must show as verified.
+  2. Admin adds you to the eligible dealer pool for the auction.
+  3. Open the auction page - you will be marked as "viewed".
+
+If you see no auctions, either your account is not verified yet or
+you are not in any auction's eligible pool. Contact admin.
+
+
+----------------------------------------------------------------
+4. THE LIVE AUCTIONS ARENA
+----------------------------------------------------------------
+This is your home screen. It shows all auctions you are eligible
+for, with:
+  - Car details (brand, model, year, KM, fuel, transmission)
+  - The inspection score (120-point report)
+  - Starting bid and current highest bid
+  - Minimum increment (how much each bid must go up)
+  - A live countdown to the auction end
+  - Reserve price indicator (if the reserve is met)
+
+Before bidding, open the car and review the full 120-point
+inspection report and photos. Bid only on cars you have studied.
+
+
+----------------------------------------------------------------
+5. HOW BIDDING WORKS (RULES)
+----------------------------------------------------------------
+1. Your bid must be at least the starting bid when there are no
+   bids yet.
+2. Once a bid exists, your bid must be at least:
+       current highest bid + minimum increment
+   Example: current bid Rs 10,00,000, increment Rs 50,000,
+   your minimum bid is Rs 10,50,000.
+3. Bids below the minimum are rejected by the system.
+4. Only verified dealers in the eligible pool can bid.
+5. A bid is binding. Winning is the start of a purchase, not an
+   enquiry.
+6. You cannot bid on an auction that has not started or has ended.
+
+PLACING A BID (STEP BY STEP)
+  1. In "Live Auctions Arena", open the auction you want.
+  2. Review the car and inspection report.
+  3. Enter your bid amount in the bid box.
+  4. Confirm. The system checks eligibility, verification, minimum
+     amount and the auction time window before accepting.
+  5. A confirmation shows your bid was accepted and whether it
+     extended the auction clock.
+
+SAFETY (IMPORTANT)
+  - Every bid you send has a unique request ID behind the scenes.
+    If your internet fails and you retry, the system recognises
+    the retry and does NOT place a double bid. Do not panic-click;
+    the first successful bid is what counts.
+  - Double-clicking the bid button does not double your bid.
+
+
+----------------------------------------------------------------
+6. ANTI-SNIPING & EXTENSIONS (READ CAREFULLY)
+----------------------------------------------------------------
+1stCars uses anti-sniping: if a bid is placed in the LAST 120
+seconds of an auction, the clock EXTENDS by 120 seconds so other
+dealers get a fair chance to respond.
+
+Rules:
+  - Each extension adds 120 seconds to the end time.
+  - A limited number of extensions are allowed per auction
+    (the admin configures this; default is up to 5).
+  - When an extension happens, the auction status changes from
+    LIVE to EXTENDED.
+  - Keep bidding to the very end - a last-second bid does not lock
+    the deal; it keeps the auction alive.
+
+Strategy tip: decide your maximum price BEFORE the auction ends.
+Chasing an ever-extending clock without a budget is how deals
+become unprofitable.
+
+
+----------------------------------------------------------------
+7. BIDS, OUTBIDS & NOTIFICATIONS
+----------------------------------------------------------------
+You get automatic notifications:
+  - "Auction Live"  : an auction you are eligible for has started
+  - "You have been outbid" : someone placed a higher bid than
+    your winning bid. You must bid again to stay in the race.
+  - "Auction Won"   : you have the winning bid when it closes
+  - "Payment Required" : the seller accepted; pay to complete
+
+Bid history is shown in a MASKED format to everyone - you see the
+amounts and timings, but never the other dealer's identity. You
+can always recognise YOUR OWN bid (marked as yours).
+
+If you are outbid:
+  - Decide within the remaining time whether to place a new bid.
+  - Remember the minimum: highest bid + increment.
+
+
+----------------------------------------------------------------
+8. WINNING AN AUCTION & PAYMENT
+----------------------------------------------------------------
+When an auction ends, it goes to the seller for review:
+
+  Auction ends -> SELLER_REVIEW -> Seller ACCEPTS
+               -> You are notified "Payment Required"
+               -> Payment record created (PENDING)
+
+Flow after you win:
+  1. You receive the "Auction Won" notification.
+  2. The seller reviews the result (they may accept or reject it).
+  3. If the seller accepts, a payment is due for your winning bid
+     amount. You are notified with the amount.
+  4. Complete payment with the 1stCars team (the system tracks the
+     payment as PENDING -> RECEIVED).
+  5. Vehicle transfer is arranged; the car appears in your
+     "My Purchased Stock".
+
+If the seller REJECTS the result (reserve not met or seller
+declines), you are notified and your winning bid is released - no
+charges apply to you.
+
+IMPORTANT: The highest bidder is not final until the seller
+accepts. Do not resell or promise the car before payment is done.
+
+
+----------------------------------------------------------------
+9. MY PURCHASED STOCK
+----------------------------------------------------------------
+This tab shows the vehicles you have won and paid for. Treat this
+as your showroom stock ledger:
+  - Check it after every auction to confirm new purchases appear.
+  - Keep your contact details current so dispatch can reach you.
+  - Once delivered, you can list/resell those vehicles outside the
+    auction platform.
+
+
+----------------------------------------------------------------
+10. AUCTION STATUSES EXPLAINED
+----------------------------------------------------------------
+  DRAFT         : being prepared by admin, not visible to dealers
+  READY         : finalised, waiting to go live
+  SCHEDULED     : a start/end time is set
+  LIVE          : OPEN - you can bid now
+  EXTENDED      : still open - the clock was extended by a late bid
+  CLOSING       : being finalised by the system
+  CLOSED        : finished
+  SELLER_REVIEW : finished; seller deciding to accept/reject
+  ACCEPTED      : seller accepted - payment due from winner
+  REJECTED      : seller declined - winner released
+  EXPIRED       : ended with no bids; vehicle returned to inventory
+  CANCELLED     : admin cancelled it
+
+You can ONLY bid on LIVE and EXTENDED auctions.
+
+
+----------------------------------------------------------------
+11. AUCTION ETIQUETTE & RULES
+----------------------------------------------------------------
+1. Only bid on cars you genuinely want - winning is binding.
+2. Respect your maximum price. Do not overbid in the heat of the
+   moment.
+3. Never collude with other dealers to keep prices low - this gets
+   all involved dealers banned.
+4. Pay on time after the seller accepts. Repeated non-payment
+   leads to suspension.
+5. If your verification is pending, do not attempt to bid - fix
+   verification with admin first.
+6. Report technical issues (timer not moving, bid rejected
+   wrongly) to admin immediately with the auction ID.
+
+
+----------------------------------------------------------------
+12. TROUBLE & HELP
+----------------------------------------------------------------
+- I can't see any auctions: your account may not be verified or
+  you are not in an eligible pool. Contact admin.
+- My bid was rejected: check the minimum (current + increment),
+  whether the auction is LIVE/EXTENDED, and your verification.
+- "Auction has ended" when I bid: the clock genuinely finished -
+  the sale moves to seller review.
+- Duplicate-looking bid after network error: it is NOT doubled;
+  the retry returns your original bid. Check "My bids".
+- Website shows "Mock Browser DB": the app is in demo/offline
+  mode - bids there are NOT real. Contact admin before bidding.
+
+For further help contact the Auction/Dealer support team.
+================================================================
+End of Dealer Tutorial
+================================================================

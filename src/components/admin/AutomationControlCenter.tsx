@@ -53,6 +53,27 @@ function fmtTime(iso?: string) {
   }
 }
 
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  "auction.published": "Auction Published",
+  "auction.scheduled": "Auction Scheduled",
+  "auction.started": "Auction Started (Live)",
+  "auction.closed": "Auction Closed",
+  "auction.winner_selected": "Winner Selected",
+  "auction.ended": "Auction Ended",
+  "auction.cancelled": "Auction Cancelled",
+  "auction.seller_accepted": "Seller Accepted Result",
+  "auction.seller_rejected": "Seller Rejected Result",
+  "auction.vehicle_sold": "Vehicle Sold"
+};
+
+function prettyEventType(type: string): string {
+  if (EVENT_TYPE_LABELS[type]) return EVENT_TYPE_LABELS[type];
+  const parts = type.split(".");
+  return parts
+    .map((p) => p.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "))
+    .join(" · ");
+}
+
 export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () => void }) {
   const [tab, setTab] = React.useState<TabKey>("events");
   const [config, setConfig] = React.useState<AutomationConfig | null>(null);
@@ -398,7 +419,8 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
                     <div key={ev.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center flex-wrap gap-2">
-                          <span className="font-black text-xs text-slate-900 font-mono">{ev.event_type}</span>
+                          <span className="font-black text-xs text-slate-900">{prettyEventType(ev.event_type)}</span>
+                          <span className="font-mono text-[9px] text-slate-400">{ev.event_type}</span>
                           <StatusBadge status={ev.status} />
                           <span className="text-[9px] text-slate-400 font-bold">{fmtTime(ev.created_at)}</span>
                         </div>

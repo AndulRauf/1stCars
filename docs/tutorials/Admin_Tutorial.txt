@@ -1,0 +1,482 @@
+================================================================
+1stCARS - ADMIN OPERATIONS TUTORIAL
+Master Admin Panel & Operations Guide
+================================================================
+
+CONTENTS
+1. Your Role: The Command Centre
+2. Login & First Look
+3. The Sidebar (25 Modules, Grouped)
+4. Dashboard (KPI Cards)
+5. Inventory Management (Cars, Brands, Cities)
+6. Leads & Sales (Test Drives, Bookings, Seller Enquiries, Auctions)
+7. People & Access (Users, Staff, Dealers, Inspectors, Associates)
+8. Quality & Trust (Inspections, Certification, Reviews, FAQs)
+9. Finance & Operations (Finance, UPI, Ledger, Alerts, Reports)
+10. Site & Content (Pages, Theme, Text, SEO)
+11. CRM Center (Overview + Pipeline)
+12. Automation Center
+13. The Dealer Auction Engine (Create to Settle)
+14. Bulk Tools (Import / Export)
+15. Admin Daily Checklist
+16. Troubleshooting & Support
+
+
+----------------------------------------------------------------
+1. YOUR ROLE: THE COMMAND CENTRE
+----------------------------------------------------------------
+As an Admin you control the whole 1stCars operation:
+  - Inventory (what is listed and sold)
+  - Staff (inspectors, sales associates, dealers) and approvals
+  - Quality (120-point inspections, certification)
+  - Auctions (create, schedule, run, settle)
+  - Sales pipeline (leads, test drives, bookings)
+  - Finance (payments, ledger, reports)
+  - The website itself (pages, design, text, SEO)
+  - Automation (rules, jobs, tasks, follow-ups, audit trail)
+
+Everything a customer, dealer, seller, inspector or sales
+associate does flows back through this panel. Use it to keep the
+whole machine running.
+
+
+----------------------------------------------------------------
+2. LOGIN & FIRST LOOK
+----------------------------------------------------------------
+1. Log in with your admin account (created only by the company).
+2. You are taken to the "1STCARS MASTER ADMIN CMS".
+   Subtitle: "Control center for 25 modules, styling theme & SEO
+   values dynamically".
+3. Top bar shows status pills:
+     - "Live Supabase · N cars in DB"  (real data, shared)
+     - OR "Mock Browser DB · not reaching Supabase" (demo/offline)
+     - "Super Admin Active"
+     - "Reload Engine" button - press if data looks stale.
+4. Breadcrumb shows: Admin -> Section -> Module.
+
+NOTE ON DEMO ACCOUNTS
+Training accounts can be provided by the development team.
+Use them only for practice.
+
+
+----------------------------------------------------------------
+3. THE SIDEBAR (25 MODULES, GROUPED)
+----------------------------------------------------------------
+   OVERVIEW
+     - Dashboard
+   INVENTORY
+     - Cars Catalog
+     - Brands & Models
+     - Cities
+   LEADS & SALES
+     - Test Drive Requests
+     - Booking Requests
+     - Seller Enquiries
+     - Live Auctions   (has a "LIVE" badge)
+   PEOPLE & ACCESS
+     - Users
+     - Staff
+     - Dealers & Approvals
+     - Inspectors
+     - Sales Associates
+   QUALITY & TRUST
+     - 120-Pt Inspections
+     - 1st Mark Certification
+     - Reviews (Testimonials)
+     - FAQs
+     - Sell Form & Brands
+   FINANCE & OPERATIONS
+     - Finance (partners)
+     - UPI Payments
+     - Ledger (expenses)
+     - Alerts Core (notifications)
+     - Reports
+   SITE & CONTENT
+     - Edit Pages
+     - Footer Links
+     - Theme Design
+     - Text Editor
+   AUTOMATION
+     - Automation Center
+
+Use the sidebar search box ("Search modules...") to jump to any
+module quickly. Section states are remembered per browser.
+
+
+----------------------------------------------------------------
+4. DASHBOARD (KPI CARDS)
+----------------------------------------------------------------
+The Dashboard shows 8 clickable KPI cards. Clicking one opens the
+relevant module pre-filtered:
+  - Active Auctions      : dealer bidding open right now
+  - Pending evaluations  : inspections awaiting an inspector
+  - Logged Expenses      : operating ledger debits
+  - Customer Leads       : open CRM desk enquiries
+  - Cars in Inventory    : published catalog
+  - Registered Users     : total profiles
+  - Unread Alerts        : notification ledger
+  - Live Pages           : custom + footer pages
+
+Review this dashboard first thing every morning.
+
+
+----------------------------------------------------------------
+5. INVENTORY MANAGEMENT (CARS, BRANDS, CITIES)
+----------------------------------------------------------------
+CARS CATALOG
+  - List/search all cars with status filters
+    (available / reserved / sold / bidding).
+  - "Add New Record" to create a car, or use the 9-step
+    Create Car Wizard for a guided full entry (details -> brand/
+    model/variant -> year -> KM/fuel/transmission -> color ->
+    documents -> features -> pricing -> media -> review & submit).
+  - Edit inline fields, manage images, attach 120-point reports.
+  - Status flow matters: only "available"/"listed" cars can enter
+    an auction; "sold" cars leave the catalog.
+
+BRANDS & MODELS
+  - Manage the brand list, logos, popular flags.
+  - Manage models with body type under each brand.
+
+CITIES
+  - Add/update operating cities and their branch manager /
+    support number, and toggle active status.
+
+
+----------------------------------------------------------------
+6. LEADS & SALES (TEST DRIVES, BOOKINGS, ENQUIRIES, AUCTIONS)
+----------------------------------------------------------------
+TEST DRIVE REQUESTS
+  - See every customer test drive request.
+  - Assign/route to sales associates (or let automation do it).
+  - Track status: pending -> contacted -> resolved.
+
+BOOKING REQUESTS
+  - Customer buy bookings with payment submission.
+  - Payments the customer submits log here with "Payment
+    Submitted" status. Verify before dispatch.
+
+SELLER ENQUIRIES
+  - Customers who want to sell their car.
+  - Assign inspectors, schedule the doorstep inspection,
+    track the sale.
+
+LIVE AUCTIONS
+  - Jump to the Auction Engine (section 13).
+
+
+----------------------------------------------------------------
+7. PEOPLE & ACCESS (USERS, STAFF, DEALERS, INSPECTORS, ASSOCIATES)
+----------------------------------------------------------------
+USERS
+  - Full profile list with roles
+    (Buyer / Seller / Dealer / Inspector / Sales Associate / Admin).
+  - Approve/verify accounts. Roles drive what people can do.
+
+STAFF
+  - Manage internal staff records.
+
+DEALERS & APPROVALS
+  - Review and VERIFY dealer applications. Dealers who are not
+    verified CANNOT bid in auctions. This is one of the most
+    important approval steps.
+  - Manage dealer details, license, commission/earnings.
+
+INSPECTORS
+  - Manage inspector profiles and workload. Automation assigns
+    new inspections to the lowest-load inspector (same city
+    preferred) - check workloads here.
+
+SALES ASSOCIATES
+  - Manage sales staff. Automation routes test-drive and buy-now
+    leads to the lowest-load associate with a 24h follow-up task.
+
+
+----------------------------------------------------------------
+8. QUALITY & TRUST (INSPECTIONS, CERTIFICATION, REVIEWS, FAQS)
+----------------------------------------------------------------
+120-PT INSPECTIONS
+  - All inspection requests.
+  - Assign an inspector, set status
+    (pending -> assigned -> completed -> offered -> sold).
+  - Open the 120-point report from here.
+  - After a completed inspection you can:
+      * Publish the car to the website (certified listing)
+      * Start an auction for the car
+
+1ST MARK CERTIFICATION
+  - Verify chassis/OBD details and issue the 120-point
+    certification badge.
+  - Button "Issue 120-Pt Inspection" to trigger the form.
+
+REVIEWS (TESTIMONIALS) & FAQS
+  - Approve/manage customer testimonials shown on the site.
+  - Manage FAQ questions/answers.
+
+SELL FORM & BRANDS
+  - Configure the sell-intake form: brands, models, variants,
+    logos and the 120-point checklist content. "Auto-save on"
+    shows your edits are saved automatically.
+
+
+----------------------------------------------------------------
+9. FINANCE & OPERATIONS (FINANCE, UPI, LEDGER, ALERTS, REPORTS)
+----------------------------------------------------------------
+FINANCE
+  - Manage finance/loan partners (rates, tenure, max funding,
+    approval hours) shown to buyers.
+
+UPI PAYMENTS
+  - Configure the business UPI ID, payee/merchant name, payment
+    instructions and QR upload. Button: "Save UPI Payment
+    Settings". Buyer payments flow into Booking Requests.
+
+LEDGER (EXPENSES)
+  - Log all operating expenses (title, category, amount, date).
+
+ALERTS CORE (NOTIFICATIONS)
+  - Central notification ledger. View unread, resolve/dismiss.
+  - Alerts are generated automatically (auction started, lead
+    assigned, inspection done, etc.).
+
+REPORTS
+  - "Operational Summary & Audit Analytics": Fleet Capital Value,
+    Sales Funnel Conversion, and more.
+  - Use "Print Live CMS Report & Financial Ledger" for a physical
+    record.
+
+
+----------------------------------------------------------------
+10. SITE & CONTENT (PAGES, THEME, TEXT, SEO)
+----------------------------------------------------------------
+EDIT PAGES
+  - Custom page builder for about, contact, static content.
+  - Manage footer links.
+
+THEME DESIGN (SETTINGS)
+  - Brand colours, fonts, logo upload (Supabase storage).
+  - "Live SMS & Secure OTP Gateway Hub".
+  - SEO metadata and analytics indexes.
+  - Homepage buttons & headings customizer, with live preview.
+  - Save with "Save & Apply Dynamic Website Settings".
+
+TEXT EDITOR
+  - Complete website copy customizer (hero section, slogans,
+    button labels, nav labels, etc.), numbered categories.
+  - Save with "Save & Apply Dynamic Website Copy".
+
+
+----------------------------------------------------------------
+11. CRM CENTER (OVERVIEW + PIPELINE)
+----------------------------------------------------------------
+View toggle: Overview / Pipeline.
+
+OVERVIEW
+  - KPI cards: New Leads, Inspections, Bidding, Closed Deals,
+    Customers, Inventory, Active Auctions, Pipeline Value.
+  - "CRM Pipeline Funnel": Lead -> Inspection -> Valuation ->
+    Bidding -> Closed deal (clickable).
+  - Recent Activity feed and Customers snapshot.
+
+PIPELINE
+  - Stage chips: New Leads, Inspection, Valuation, Bidding &
+    Offers, Closed Deals - a 5-column board with counts.
+  - Record types: Buyer Leads, Sell Requests, Inspections,
+    Parked Vehicles, Dealer Offers, Dealer Bids, Auctions,
+    Inventory, Customers.
+  - Filters: search, type, assignee (including "Unassigned"),
+    city.
+
+DETAIL / ACTIONS (Admin-only)
+  - Assign Sales Associate / Unassign
+  - Assign Inspector / "Mark Assigned"
+  - "Accept Offer & Mark Sold"
+  - "Mark as Sold"
+  - Customer 360: full journey, activity timeline, stats.
+Changes write straight to the existing tables; analytics and
+webhooks pick them up automatically.
+
+
+----------------------------------------------------------------
+12. AUTOMATION CENTER
+----------------------------------------------------------------
+Header "Automation Center" - the self-operating engine.
+Buttons: "Run Checks Now", Refresh. Engine pill shows
+"Supabase engine + pg_cron" (real) or "In-app engine" (demo).
+
+Stats: Pending Events, Failed Events, Open Tasks, Total Jobs.
+
+AUTOMATION RULES (toggle switches + Save Rules):
+  - Auto-assign Inspectors   : new inspections go to the
+    lowest-load inspector, same city preferred.
+  - Auto-assign Sales Associates : test-drive & buy-now leads
+    route to lowest-load associate with a 24h follow-up task.
+  - Overdue + Reminder Jobs  : escalate overdue inspections,
+    flip expired tasks to overdue.
+  - In-app poller interval   : seconds between engine checks
+    (0 disables in-app polling; pg_cron still covers the DB).
+
+AUTOMATION TEST MODE (admin-only):
+  - Test Seller Inquiry / Test Inspection Done / Test Test-Drive
+    Lead / Test Offer / Test Booking Lead - emits synthetic events
+    to verify the engine end to end.
+
+TABS:
+  - Events     : every automation event (Auction Published,
+                 Auction Ended, Winner Selected, Vehicle Sold...).
+                Retry failed events, mark pending done.
+  - Tasks      : follow-up/task list; Start / Complete / Reopen;
+                priorities urgent / high / medium.
+  - Follow-ups : Start / Complete.
+  - Logs       : engine logs with error/warn/info levels.
+  - Jobs       : scheduled jobs, status, attempts, job key.
+  - Audit      : "old_status -> new_status · by <role>" trail.
+
+Routine: check the Automation Center for FAILED events every
+morning; retry them before doing manual work.
+
+
+----------------------------------------------------------------
+13. THE DEALER AUCTION ENGINE (CREATE TO SETTLE)
+----------------------------------------------------------------
+The full auction lifecycle and what you control at each step:
+
+  1. CREATE (DRAFT)
+     From a completed, certified inspection, create the auction:
+       - Pick the car + inspection
+       - Set starting bid, reserve price, minimum increment
+       - Set start/end times, extension seconds (default 120),
+         max extensions (default 5)
+       - Optionally pre-select eligible dealers
+     Car must be "available"/"listed"; inspection must have a
+     score.
+
+  2. PUBLISH (DRAFT -> READY)
+     Finalise parameters. "Publish".
+
+  3. SCHEDULE (READY -> SCHEDULED)
+     Set an explicit start/end time window. Or START directly.
+
+  4. START (READY/SCHEDULED -> LIVE)
+     The auction opens, the car flips to "bidding", and eligible
+     dealers get "Auction Live" notifications.
+
+  5. ELIGIBLE DEALERS
+     - "Set eligible dealers" adds/refreshes the eligible pool.
+     - "Disqualify dealer" removes a dealer from a specific
+       auction (cannot remove someone who already bid).
+     - Dealers see the auction ONLY if they are eligible.
+
+  6. DURING LIVE
+     Dealers place bids. System enforces:
+       - min bid = starting bid (first bid)
+       - min bid = current highest + increment (after that)
+       - only verified, eligible dealers
+       - bids in the last 120s EXTEND the auction clock
+     Idempotent bidding: retries cannot create double bids.
+
+  7. CLOSE
+     - Manual: "Admin close".
+     - Automatic: "Run maintenance" / the poller auto-closes
+       when time expires (auction_run_maintenance).
+     - With bids -> status becomes SELLER_REVIEW; winner and
+       seller are notified; a staff follow-up task is created.
+     - Without bids -> EXPIRED; car returns to inventory.
+
+  8. SELLER DECISION
+     The seller accepts or rejects the result.
+     - ACCEPT  -> auction ACCEPTED; car -> sold; a payment row is
+                  created (PENDING) for the winner; admin task
+                  "Collect dealer payment" is created.
+     - REJECT  -> auction REJECTED; car -> available; winner is
+                  released and notified.
+     If the seller is unreachable, you can use the ADMIN OVERRIDE
+     decision (Accept/Reject) - use this only as a last resort and
+     document the reason.
+
+  9. CANCELLATION
+     Cancel DRAFT/READY/SCHEDULED/LIVE/EXTENDED auctions; the car
+     returns to available and participating dealers are notified.
+
+MAINTENANCE (pg_cron / poller)
+  - Auto-starts SCHEDULED auctions whose start time has passed.
+  - Auto-closes LIVE/EXTENDED auctions whose end time has passed.
+  - Keep it scheduled; if it stops, auctions will NOT move by
+    themselves. "Run Checks Now" / maintenance covers it manually.
+
+AUCTION STATUS MAP (for reference)
+  DRAFT -> READY / SCHEDULED / CANCELLED
+  READY -> SCHEDULED / LIVE / CANCELLED
+  SCHEDULED -> LIVE / DRAFT / CANCELLED
+  LIVE -> EXTENDED / CLOSING / CANCELLED
+  EXTENDED -> CLOSING / CANCELLED
+  CLOSING -> CLOSED / SELLER_REVIEW / EXPIRED / CANCELLED
+  CLOSED / SELLER_REVIEW -> ACCEPTED / REJECTED / CANCELLED
+  ACCEPTED / REJECTED / EXPIRED / CANCELLED = terminal
+
+
+----------------------------------------------------------------
+14. BULK TOOLS (IMPORT / EXPORT)
+----------------------------------------------------------------
+Modules supporting spreadsheet tools:
+  - Export to spreadsheet (XLS): cars, brands, test drive
+    requests, booking requests, seller enquiries, dealers.
+  - Import from spreadsheet: cars, brands, test drive requests,
+    booking requests.
+
+Use bulk import carefully - validate the file first. A bad import
+can overwrite catalog data. Prefer "Add New Record" for one-off
+entries.
+
+
+----------------------------------------------------------------
+15. ADMIN DAILY CHECKLIST
+----------------------------------------------------------------
+MORNING (10 min)
+  1. Dashboard KPI cards - spot anything unusual.
+  2. Automation Center - retry any FAILED events.
+  3. Pending evaluations - any inspection waiting too long?
+  4. Pending dealer verifications - approve before auction time.
+
+DURING THE DAY
+  5. Check LIVE auctions are healthy (no stuck statuses).
+  6. Review seller/booking requests and route them.
+  7. Approve testimonials, FAQs and content edits.
+  8. Log any operating expenses in the Ledger.
+
+EVENING (10 min)
+  9. Check closed auctions: did any reach SELLER_REVIEW/ACCEPTED?
+     Did the winning dealer get a payment task?
+  10. Verify no car is stuck in "bidding" after an auction ended.
+  11. Run "Reload Engine" if any screen shows stale data.
+
+WEEKLY
+  12. Review Reports (fleet value, conversion).
+  13. Clean up junk/duplicate leads.
+  14. Test the automation engine once via Test Mode.
+  15. Verify UPI settings and finance partners are current.
+
+
+----------------------------------------------------------------
+16. TROUBLESHOOTING & SUPPORT
+----------------------------------------------------------------
+- "Mock Browser DB" pill: app is in offline/demo mode. Data is
+  local only and shared with nobody. Do not run real operations
+  in this mode.
+- Stuck auction status: use maintenance/"Run Checks Now". If a
+  status is illegal, the status guard blocks invalid transitions
+  - use the correct path (e.g. close, then decide).
+- Dealer can't see an auction: check they are VERIFIED and in the
+  auction's eligible dealer list.
+- Automation not running: verify the poller interval and that
+  pg_cron jobs exist; use Test Mode to reproduce.
+- Failed events: retry them in the Automation Center Events tab.
+- Payment not recorded: check Booking Requests and the payment
+  status; verify UPI settings are saved.
+- If the website content looks wrong: Theme Design / Text Editor
+  saved values drive the pages - re-save and reload.
+
+For platform-level issues contact the development team.
+================================================================
+End of Admin Tutorial
+================================================================

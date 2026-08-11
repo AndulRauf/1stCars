@@ -3,7 +3,7 @@ import {
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
   Trash2, ArrowRight, DollarSign, Hammer, 
   Upload, Check, 
-  RefreshCw, ClipboardList, Car, Bell
+  RefreshCw, ClipboardList, Car, Bell, Gavel
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -16,6 +16,8 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { AdminCMS } from "./AdminCMS";
+import { DealerAuctions } from "./auctions/DealerAuctions";
+import { SellerAuctions } from "./auctions/SellerAuctions";
 import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { Inspection120FormModal } from "./Inspection120FormModal";
@@ -426,6 +428,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   <>
                     {[
                       { id: "inspections", label: "Inspection Status", icon: ClipboardList },
+                      { id: "auctions", label: "My Car Auctions", icon: Gavel },
                       { id: "offers", label: "Dealer Offers Bids", icon: DollarSign }
                     ].map(tab => (
                       <button
@@ -667,6 +670,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   2. SELLER DASHBOARD TABS
                   ======================================================= */}
               
+              {/* My Car Auctions (live bidding + settle results) */}
+              {currentUser.role === "Seller" && activeTab === "auctions" && (
+                <SellerAuctions currentUser={currentUser} />
+              )}
+
               {/* Inspection Status */}
               {currentUser.role === "Seller" && activeTab === "inspections" && (
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
@@ -797,94 +805,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               
               {/* Live Auctions */}
               {currentUser.role === "Dealer" && activeTab === "auctions" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">Dealer Bidding Arena</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Compete with other certified dealerships on newly certified inspected cars.</p>
-                  </div>
-
-                  {auctions.filter(a => a.status === "active").length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {auctions.filter(a => a.status === "active").map(auc => (
-                        <div key={auc.id} className="border border-[#2E7D32]/10 rounded-2xl p-5 bg-[#FAF9F6] space-y-4 text-left shadow-sm">
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                                Live Auction
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-400">Ends: {new Date(auc.ends_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                            </div>
-                            <h4 className="font-black text-slate-900 text-base mt-1.5">{auc.year} {auc.car_title}</h4>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{auc.km_driven.toLocaleString()} KM • {auc.fuel} • {auc.transmission}</p>
-                          </div>
-
-                          <div className="h-px bg-slate-200/50" />
-
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-white border border-slate-100 p-2.5 rounded-xl">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Starting Bid</p>
-                              <p className="text-sm font-black text-slate-800 mt-1">₹{auc.base_price.toLocaleString()}</p>
-                            </div>
-                            <div className="bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
-                              <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest leading-none">Current High Bid</p>
-                              <p className="text-sm font-black text-[#2E7D32] mt-1">₹{auc.current_bid.toLocaleString()}</p>
-                            </div>
-                          </div>
-
-                          <p className="text-[10px] font-bold text-slate-500">
-                            🏆 High Bidder: <strong className="text-[#2E7D32]">{auc.highest_bidder_name || "Starting Bid"}</strong>
-                          </p>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const matchingInsp = inspections.find(i => i.id === (auc as any).inspection_id || (i.brand + " " + i.model === auc.car_title));
-                              const inspObj = matchingInsp || {
-                                id: auc.id || `auc-${Date.now()}`,
-                                brand: (auc as any).brand || auc.car_title?.split(" ")[0] || "Luxury",
-                                model: (auc as any).model || auc.car_title?.split(" ").slice(1).join(" ") || "Vehicle",
-                                year: auc.year || 2022,
-                                km_driven: auc.km_driven || 25000,
-                                fuel: auc.fuel || "Petrol",
-                                transmission: auc.transmission || "Automatic",
-                                city: auc.city || "Gujarat",
-                                report_120_json: (auc as any).report_120_json,
-                                seller_name: (auc as any).seller_name || "1stCars Certified B2B Stock"
-                              };
-                              setSelectedDealerReport(inspObj);
-                            }}
-                            className="w-full bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-black text-[10px] uppercase tracking-wider h-9 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                          >
-                            <ClipboardList className="h-3.5 w-3.5 text-indigo-600" />
-                            <span>View 120-Point Inspection Report</span>
-                          </Button>
-
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="₹ Enter higher bid"
-                              type="number"
-                              value={bidAmount[auc.id] || ""}
-                              onChange={(e) => setBidAmount(prev => ({ ...prev, [auc.id]: e.target.value }))}
-                              className="h-10 text-xs rounded-xl flex-1 bg-white"
-                            />
-                            <Button
-                              onClick={() => handlePlaceBid(auc.id)}
-                              className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-bold uppercase tracking-wider px-4 rounded-xl h-10"
-                            >
-                              Place Bid
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
-                      <Hammer className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-bold">No active auctions found at this moment.</p>
-                    </div>
-                  )}
-                </div>
+                <DealerAuctions currentUser={currentUser} />
               )}
 
               {/* Purchased Stock */}
@@ -1108,6 +1029,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               
               {currentUser.role === "Admin" && (
                 <AdminCMS 
+                  currentUser={currentUser}
                   onReloadAllData={reloadAllData} 
                   onNavigateToInventory={onNavigateToInventory} 
                 />
