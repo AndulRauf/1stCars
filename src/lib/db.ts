@@ -65,22 +65,14 @@ CREATE TABLE IF NOT EXISTS public.offers (
   status TEXT DEFAULT 'pending' NOT NULL -- 'pending' | 'accepted' | 'rejected'
 );
 
--- Active Auctions Table (Dealer Bidding Arena)
-CREATE TABLE IF NOT EXISTS public.auctions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  car_title TEXT NOT NULL,
-  year INTEGER NOT NULL,
-  km_driven INTEGER NOT NULL,
-  fuel TEXT NOT NULL,
-  transmission TEXT NOT NULL,
-  city TEXT NOT NULL,
-  base_price INTEGER NOT NULL,
-  current_bid INTEGER NOT NULL,
-  highest_bidder_name TEXT,
-  ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  status TEXT DEFAULT 'active' NOT NULL -- 'active' | 'ended'
-);
+-- Dealer Auction Engine (canonical)
+-- The auctions table, its status state-machine (DRAFT → READY → SCHEDULED →
+-- LIVE → EXTENDED → CLOSING → CLOSED → SELLER_REVIEW → ACCEPTED/REJECTED/
+-- EXPIRED/CANCELLED), CHECK constraints, RLS, SECURITY DEFINER RPCs, atomic
+-- bidding, anti-sniping and automation triggers are defined canonically in
+-- public/auction_engine.sql. Run that file to provision the auction schema.
+-- The legacy flat "auctions" table (car_title/base_price/current_bid/status
+-- 'active') has been retired — it conflicted with the canonical engine.
 
 -- Bookings / Sales Leads table
 CREATE TABLE IF NOT EXISTS public.sales_notifications (
@@ -119,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.testimonials (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
+-- (public.auctions RLS is provisioned canonically in public/auction_engine.sql)
 ALTER TABLE public.sales_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
 
@@ -196,21 +188,10 @@ export interface Offer {
   status: "pending" | "accepted" | "rejected";
 }
 
-export interface Auction {
-  id: string;
-  created_at: string;
-  car_title: string;
-  year: number;
-  km_driven: number;
-  fuel: string;
-  transmission: string;
-  city: string;
-  base_price: number;
-  current_bid: number;
-  highest_bidder_name?: string;
-  ends_at: string;
-  status: "active" | "ended";
-}
+// NOTE: The canonical auction record type is `AuctionRecord` (with the
+// canonical `AuctionStatus` union) exported from `@/src/lib/auctions`. The
+// legacy flat `Auction` interface (status "active" | "ended") was retired to
+// remove the conflicting auction schema — import `AuctionRecord` instead.
 
 export interface SalesNotification {
   id: string;

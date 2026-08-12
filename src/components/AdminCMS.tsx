@@ -568,33 +568,11 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     if (onReloadAllData) onReloadAllData();
   };
 
-  const handleStartAuction = async (inspection: any, reportData: Full120PointReport) => {
-    const auctionRecord = {
-      car_title: `${inspection.brand} ${inspection.model}`,
-      year: inspection.year,
-      km_driven: inspection.km_driven,
-      fuel: inspection.fuel,
-      transmission: inspection.transmission,
-      city: inspection.city,
-      base_price: inspection.year > 2020 ? 800000 : 400000,
-      current_bid: inspection.year > 2020 ? 810000 : 410000,
-      highest_bidder_name: "Starting Bid Base",
-      ends_at: new Date(Date.now() + 3600000 * 24).toISOString(),
-      status: "active"
-    };
-
-    await supabase.from("auctions").insert([auctionRecord]);
-    await supabase.from("inspections").update({ 
-      status: "auctioned",
-      report_120_json: JSON.stringify(reportData),
-      report_150_json: JSON.stringify(reportData)
-    }).eq("id", inspection.id);
-
-    toast.success(`Live B2B Dealer Auction successfully launched for ${inspection.brand} ${inspection.model}!`);
-    setSelected120Inspection(null);
-    loadCMSData();
-    if (onReloadAllData) onReloadAllData();
-  };
+  // NOTE: The old "Start Auction" shortcut (direct INSERT into auctions with
+  // the legacy flat schema + status "active") was removed. Auction creation is
+  // owned by the canonical engine — Admin drives it from Admin CMS → Live
+  // Auctions (auctionService.createAuction → auction_create_auction, then
+  // publish → schedule → start).
 
   const handlePublishToWebsite = async (inspection: any, reportData: Full120PointReport) => {
     const carRecord = {
@@ -1086,7 +1064,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       sales: { name: "", email: "", active_leads: 0, closed_deals: 0, performance_score: 10.0 },
       inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Mumbai", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
       certifications: {},
-      auctions: { car_title: "", base_price: 1500000, current_bid: 1500000, time_remaining: "24 Hours", total_bids: 0, status: "active" },
+      auctions: { starting_bid: 100000, reserve_price: 0, minimum_increment: 5000, extension_seconds: 120, max_extension_count: 5, starts_at: "", ends_at: "" },
       brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
       cities: { name: "", state: "", branch_manager: "", support_number: "" },
       faqs: { category: "General", question: "", answer: "" },
@@ -1373,11 +1351,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           await supabase.from("inspections").update(currentRecord).eq("id", editingId);
         }
       } else if (activeModule === "auctions") {
-        if (formMode === "add") {
-          await supabase.from("auctions").insert([currentRecord]);
-        } else {
-          await supabase.from("auctions").update(currentRecord).eq("id", editingId);
-        }
+        // Auctions are lifecycle-managed by the canonical engine (RPCs in
+        // public/auction_engine.sql). Never write the table directly here —
+        // direct writes would bypass the status guard, RLS and RPC validation.
+        throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Use the New Auction / lifecycle buttons there.");
       } else if (activeModule === "brands") {
         // 1. Save or update the Brand record in Supabase
         const logoUrlToSave = currentRecord.logo_url || currentRecord.logo || currentRecord.image_url || currentRecord.photo || "⭐";
@@ -1525,7 +1502,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       } else if (activeModule === "inspections") {
         await supabase.from("inspections").delete().eq("id", id);
       } else if (activeModule === "auctions") {
-        await supabase.from("auctions").delete().eq("id", id);
+        throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Cancel or close auctions from there instead.");
       } else if (activeModule === "brands") {
         // If it's a model in our local list, delete from models
         const isModel = models.some(m => m.id === id);
@@ -3578,7 +3555,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               </div>
               <div className="flex justify-between font-bold">
                 <span>Total Live Auction Bids:</span>
-                <span className="text-indigo-600 font-black">{auctions.reduce((acc, current) => acc + (current.total_bids || 2), 0)} placed</span>
+                <span className="text-indigo-600 font-black">{auctions.reduce((acc, current) => acc + (current.total_bids || 0), 0)} placed</span>
               </div>
               <div className="flex justify-between font-bold">
                 <span>CRM Open Leads Desk:</span>
@@ -5435,7 +5412,6 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           isOpen={!!selected120Inspection}
           onClose={() => setSelected120Inspection(null)}
           onSubmitReport={(id, data) => handleSave120Report(id, data)}
-          onStartAuction={(insp, data) => handleStartAuction(insp, data)}
           onPublishToWebsite={(insp, data) => handlePublishToWebsite(insp, data)}
           userRole="Admin"
         />

@@ -1253,6 +1253,14 @@ GRANT EXECUTE ON FUNCTION public.auction_public_bid_history(uuid) TO authenticat
 GRANT EXECUTE ON FUNCTION public.seller_auction_decision(uuid, text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.auction_run_maintenance() TO authenticated;
 
+-- auction_close_if_ended is an internal engine step: it is invoked only from
+-- auction_admin_close (staff role-checked) and auction_run_maintenance
+-- (time-based cron/auto pass). PostgreSQL defaults EXECUTE to PUBLIC, so
+-- without this REVOKE any unauthenticated caller could force-close a LIVE
+-- auction early (bypassing the end-time window). It is intentionally NOT
+-- granted to authenticated — the frontend uses auction_admin_close instead.
+REVOKE EXECUTE ON FUNCTION public.auction_close_if_ended(uuid) FROM PUBLIC;
+
 -- ============================================================
 -- 10. REALTIME PUBLICATION
 -- ============================================================

@@ -526,27 +526,14 @@ CREATE TRIGGER automation_inspection_completed
   AFTER UPDATE OF status ON public.inspections
   FOR EACH ROW EXECUTE FUNCTION public.on_inspection_completed();
 
--- 5.4 Auction ended -> event (downstream: winner notification / car status).
-CREATE OR REPLACE FUNCTION public.on_auction_ended()
-RETURNS trigger
-LANGUAGE plpgsql SECURITY DEFINER
-AS $$
-BEGIN
-  IF NEW.status = 'ended' AND OLD.status IS DISTINCT FROM 'ended' THEN
-    PERFORM public.automation_record_event(
-      'auction.ended', 'auctions', NEW.id::text,
-      jsonb_build_object('auction_id', NEW.id, 'car_title', NEW.car_title,
-        'current_bid', NEW.current_bid, 'highest_bidder_name', NEW.highest_bidder_name, 'ends_at', NEW.ends_at)
-    );
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS automation_auction_ended ON public.auctions;
-CREATE TRIGGER automation_auction_ended
-  AFTER UPDATE OF status ON public.auctions
-  FOR EACH ROW EXECUTE FUNCTION public.on_auction_ended();
+-- 5.4 Auction lifecycle events are owned by the canonical engine
+-- (public/auction_engine.sql). The engine's lifecycle RPCs write their own
+-- events via public.automation_record_event with proper payloads, so the old
+-- AFTER UPDATE trigger on the legacy flat auctions.status column
+-- (on_auction_ended) is not created here anymore. If a legacy deployment
+-- applied this trigger before auction_engine.sql, it moves with the table to
+-- public.auctions_legacy during the engine migration — it can be dropped
+-- there (DROP TRIGGER automation_auction_ended ON public.auctions_legacy).
 
 
 -- ====================================================

@@ -248,13 +248,26 @@ export function CRM({
     });
 
     auctions.forEach((a) => {
+      // Canonical AuctionRecord (public/auction_engine.sql): vehicle identity
+      // comes from the linked inspection/car, the money from starting_bid /
+      // current_highest_bid, and the status from the canonical status machine.
+      const insp = inspections.find((x) => x.id === a.inspection_id);
+      const car = cars.find((x) => x.id === a.car_id);
+      const s = String(a.status || "").toLowerCase();
+      const title = insp
+        ? `${insp.brand || ""} ${insp.model || ""}`.trim()
+        : car
+          ? `${car.brand || ""} ${car.model || ""}`.trim()
+          : "Auction";
       list.push({
         kind: "auction", id: a.id, record: a,
-        stage: String(a.status || "").toLowerCase() === "ended" ? "deals" : "bidding",
-        title: a.car_title || "Auction",
-        subtitle: a.highest_bidder_name ? `High: ${a.highest_bidder_name}` : "No bids yet",
-        city: a.city, value: a.current_bid || a.base_price, ts: a.created_at,
-        status: a.status || "active"
+        stage: ["accepted", "rejected", "expired", "cancelled"].includes(s) ? "deals" : "bidding",
+        title,
+        subtitle: a.current_highest_bid != null ? `High: ${INR(a.current_highest_bid)}` : "No bids yet",
+        city: insp?.city || car?.city,
+        value: a.current_highest_bid ?? a.starting_bid,
+        ts: a.created_at,
+        status: a.status || "DRAFT"
       });
     });
 
@@ -415,7 +428,9 @@ export function CRM({
     parked: ["pending", "approved", "rejected", "completed"],
     offer: ["pending", "accepted", "rejected"],
     dealer_bid: ["pending", "accepted", "rejected"],
-    auction: ["active", "ended"],
+    // Auction status is owned by the engine's state machine (RPCs + status
+    // guard trigger) — never edited from the CRM dropdown.
+    auction: [],
     car: ["available", "reserved", "sold"],
     customer: []
   };
@@ -436,6 +451,10 @@ export function CRM({
   const salesAssociates = React.useMemo(() => profiles.filter((p) => p.role === "Sales Associate"), [profiles]);
 
   const handleStatusChange = (item: CrmItem, next: string) => {
+    if (item.kind === "auction") {
+      toast.error("Auction status is owned by the Auction Engine state machine — change it from Admin CMS → Live Auctions.");
+      return;
+    }
     updateRow(statusTable[item.kind], item.id, { status: next }, KIND_META[item.kind].label);
   };
 
@@ -477,7 +496,7 @@ export function CRM({
     add("Fuel", r.fuel);
     add("Transmission", r.transmission);
     add("Variant", r.variant);
-    add("Value", item.value ? INR(item.value) : r.price ? INR(r.price) : r.offer_amount ? INR(r.offer_amount) : r.expected_price ? INR(r.expected_price) : r.bid_amount ? INR(r.bid_amount) : r.current_bid ? INR(r.current_bid) : undefined, DollarSign);
+    add("Value", item.value ? INR(item.value) : r.price ? INR(r.price) : r.offer_amount ? INR(r.offer_amount) : r.expected_price ? INR(r.expected_price) : r.bid_amount ? INR(r.bid_amount) : r.current_highest_bid ? INR(r.current_highest_bid) : r.current_bid ? INR(r.current_bid) : undefined, DollarSign);
     add("Preferred Date", r.preferred_date ? fDate(r.preferred_date) : undefined, Calendar);
     add("Preferred Time", r.preferred_time);
     add("Address", r.address);
@@ -654,7 +673,7 @@ export function CRM({
           { label: "Closed Deals", val: stageCounts.deals, desc: "Sold & resolved", tone: "bg-emerald-50 border-emerald-200 text-emerald-700", mod: "deals" as Stage },
           { label: "Customers", val: profiles.length, desc: "Registered profiles", tone: "bg-violet-50 border-violet-200 text-violet-700", mod: "customer" },
           { label: "Inventory", val: cars.length, desc: "Cars in catalog", tone: "bg-amber-50 border-amber-200 text-amber-700", mod: "car" },
-          { label: "Active Auctions", val: auctions.filter((a) => a.status === "active").length, desc: "Live dealer bidding", tone: "bg-rose-50 border-rose-200 text-rose-700", mod: "auction" },
+          { label: "Active Auctions", val: auctions.filter((a) => ["LIVE", "EXTENDED", "CLOSING"].includes(a.status)).length, desc: "Live dealer bidding", tone: "bg-rose-50 border-rose-200 text-rose-700", mod: "auction" },
           { label: "Pipeline Value", val: "₹" + pipelineValue.toLocaleString("en-IN"), desc: "Valuation + bidding", tone: "bg-emerald-50 border-emerald-200 text-emerald-700", mod: "bidding" }
         ].map((kpi) => (
           <button

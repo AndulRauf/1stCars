@@ -601,38 +601,16 @@ CREATE POLICY "Staff delete offers" ON public.offers FOR DELETE USING (
 
 
 -- 21. AUCTIONS TABLE
-CREATE TABLE IF NOT EXISTS public.auctions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  car_title TEXT NOT NULL,
-  year INTEGER NOT NULL,
-  km_driven INTEGER NOT NULL,
-  fuel TEXT NOT NULL,
-  transmission TEXT NOT NULL,
-  city TEXT NOT NULL,
-  base_price INTEGER NOT NULL,
-  current_bid INTEGER NOT NULL,
-  highest_bidder_name TEXT,
-  ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  status TEXT DEFAULT 'active' NOT NULL
-);
-
-ALTER TABLE public.auctions ENABLE ROW LEVEL SECURITY;
--- Anyone may view auctions (public listings); only dealers may bid on
--- ACTIVE ones; staff and inspectors manage them.
-DROP POLICY IF EXISTS "Anyone reads auctions" ON public.auctions;
-CREATE POLICY "Anyone reads auctions" ON public.auctions FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Anyone manages auctions" ON public.auctions;
-DROP POLICY IF EXISTS "Dealers bid on active auctions" ON public.auctions;
-DROP POLICY IF EXISTS "Staff and inspectors manage auctions" ON public.auctions;
-CREATE POLICY "Dealers bid on active auctions" ON public.auctions FOR UPDATE USING (
-  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
-) WITH CHECK (
-  public.get_auth_user_role() = 'Dealer'::public.user_role AND status = 'active'
-);
-CREATE POLICY "Staff and inspectors manage auctions" ON public.auctions FOR ALL USING (
-  public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
-);
+-- NOTE: The legacy flat "auctions" table (car_title/year/km_driven/fuel/
+-- transmission/city/base_price/current_bid/highest_bidder_name/ends_at/
+-- status='active') is NOT defined here anymore. The canonical table
+-- (public.auctions with status machine, RLS, status guard trigger and
+-- lifecycle RPCs) is created by public/auction_engine.sql — apply that file
+-- after this one for the auctions module. auction_engine.sql retires any
+-- leftover legacy table to public.auctions_legacy (data kept; drop it manually
+-- only when you are sure no historical reference needs it). All app code
+-- (auctionService, AdminCMS Live Auctions, Dealer Auction Center, CRM auction
+-- rows) reads/writes only the canonical engine.
 
 
 -- 22. SALES NOTIFICATIONS TABLE

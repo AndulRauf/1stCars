@@ -355,16 +355,18 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                   <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-black flex items-center justify-center text-xs">2</div>
                   <h4 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider">2. Admin Approves</h4>
                   <p className="text-[11px] text-slate-600 font-medium">Admin reviews 120-point report & approves for dealer live auction.</p>
-                  <Button 
-                    type="button" 
-                    onClick={() => {
-                      if (onStartAuction) onStartAuction(inspection, reportData);
-                      toast.success("Inspection Approved! Vehicle listed in Dealer Auction.");
-                    }}
-                    className="bg-indigo-900 hover:bg-indigo-800 text-white text-[10px] py-1 px-2.5 h-auto rounded-lg font-bold w-full mt-1 cursor-pointer"
-                  >
-                    Approve for Auction
-                  </Button>
+                  {onStartAuction && (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        onStartAuction(inspection, reportData);
+                        toast.success("Inspection Approved! Vehicle listed in Dealer Auction.");
+                      }}
+                      className="bg-indigo-900 hover:bg-indigo-800 text-white text-[10px] py-1 px-2.5 h-auto rounded-lg font-bold w-full mt-1 cursor-pointer"
+                    >
+                      Approve for Auction
+                    </Button>
+                  )}
                 </div>
 
                 {/* Step 3 */}
@@ -588,23 +590,23 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                   <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider">Admin Action Center</h4>
                   <p className="text-xs text-slate-500 font-medium">
-                    As an Administrator, you can save report changes, start a B2B live auction with dealers, or publish this 1stMark Certified car directly to the retail website.
+                    As an Administrator, you can save report changes{onStartAuction ? ", start a B2B live auction with dealers," : ""} or publish this 1stMark Certified car directly to the retail website.
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onStartAuction) {
+                    {onStartAuction && (
+                      <button
+                        type="button"
+                        onClick={() => {
                           onStartAuction(inspection, reportData);
                           onClose();
-                        }
-                      }}
-                      className="p-3 bg-indigo-900 hover:bg-indigo-800 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
-                    >
-                      <Gavel className="h-4 w-4 text-indigo-300" />
-                      <span>Start Auction with Dealers</span>
-                    </button>
+                        }}
+                        className="p-3 bg-indigo-900 hover:bg-indigo-800 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                      >
+                        <Gavel className="h-4 w-4 text-indigo-300" />
+                        <span>Start Auction with Dealers</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"

@@ -10,11 +10,10 @@ import { Input } from "@/src/components/ui/Input";
 import { Badge } from "@/src/components/ui/Badge";
 import { 
   Profile, Inspection, 
-  Offer, Auction, SalesNotification
+  Offer, SalesNotification
 } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
-import { automationService } from "@/src/lib/automation";
 import { AdminCMS } from "./AdminCMS";
 import { DealerAuctions } from "./auctions/DealerAuctions";
 import { SellerAuctions } from "./auctions/SellerAuctions";
@@ -41,7 +40,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [inspections, setInspections] = React.useState<Inspection[]>([]);
   const [offers, setOffers] = React.useState<Offer[]>([]);
-  const [auctions, setAuctions] = React.useState<Auction[]>([]);
   const [leads, setLeads] = React.useState<SalesNotification[]>([]);
   
   // Buyer-specific states
@@ -65,21 +63,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     notes: "Superb luxury segment car, highly recommended for dealer bidding."
   });
 
-  const [bidAmount, setBidAmount] = React.useState<{ [aucId: string]: string }>({});
-
   const reloadAllData = async () => {
     setIsLoading(true);
     try {
       const { data: profs } = await supabase.from("profiles").select();
       const { data: insps } = await supabase.from("inspections").select();
       const { data: offs } = await supabase.from("offers").select();
-      const { data: aucs } = await supabase.from("auctions").select();
       const { data: lds } = await supabase.from("sales_notifications").select();
 
       if (profs) setProfiles(profs);
       if (insps) setInspections(insps);
       if (offs) setOffers(offs);
-      if (aucs) setAuctions(aucs);
       if (lds) setLeads(lds);
 
       // Buyer collections
@@ -161,76 +155,12 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
   };
 
-  // Handle Dealer: Place Bid on live auction
-  const handlePlaceBid = async (auctionId: string) => {
-    const amountStr = bidAmount[auctionId];
-    if (!amountStr) {
-      toast.error("Please enter a valid bid amount.");
-      return;
-    }
-    const amount = parseInt(amountStr);
-    const auction = auctions.find(a => a.id === auctionId);
-
-    if (!auction) return;
-    if (amount <= auction.current_bid) {
-      toast.error(`Your bid must be strictly higher than the current bid of ₹${auction.current_bid.toLocaleString()}`);
-      return;
-    }
-
-    // Place the bid
-    await supabase.from("auctions").update({
-      current_bid: amount,
-      highest_bidder_name: currentUser.name
-    }).eq("id", auctionId);
-
-    // Also trigger/update any pending offers to match
-    const targetInsp = inspections.find(i => `${i.brand} ${i.model}`.toLowerCase() === auction.car_title.toLowerCase());
-    if (targetInsp) {
-      // Check if existing pending offers exist, otherwise insert
-      const existingOffer = offers.find(o => o.inspection_id === targetInsp.id && o.dealer_id === currentUser.id);
-      if (existingOffer) {
-        await supabase.from("offers").update({ offer_amount: amount }).eq("id", existingOffer.id);
-      } else {
-        await supabase.from("offers").insert([{
-          inspection_id: targetInsp.id,
-          dealer_id: currentUser.id,
-          dealer_name: currentUser.name,
-          offer_amount: amount,
-          status: "pending"
-        }]);
-      }
-
-      // Rule 6: Dealer places bid → Notify Seller and Admin.
-      await notificationService.triggerBidPlaced({
-        sellerId: targetInsp.seller_id || "",
-        dealerName: currentUser.name,
-        carTitle: auction.car_title,
-        bidAmount: amount,
-        inspectionId: targetInsp.id
-      });
-
-      // Record the automation event (idempotent; the live DB trigger covers
-      // inserts, the local engine handles mock/pre-migration databases).
-      void automationService.emitEvent({
-        type: "offer.created",
-        sourceTable: "offers",
-        sourceId: String(existingOffer?.id || amount + "-" + targetInsp.id),
-        payload: {
-          offer_id: existingOffer?.id,
-          inspection_id: targetInsp.id,
-          dealer_id: currentUser.id,
-          dealer_name: currentUser.name,
-          offer_amount: amount,
-          car: auction.car_title
-        }
-      }).catch((err) => console.warn("Automation event emission failed:", err));
-    }
-
-    // Reset input
-    setBidAmount(prev => ({ ...prev, [auctionId]: "" }));
-    toast.success("Congratulations! Your premium bid was updated successfully in the Supabase live table, and notifications have been sent.");
-    reloadAllData();
-  };
+  // NOTE: Dealer bid placement now lives entirely in <DealerAuctions />, which
+  // routes through the canonical secure bid RPC (auctionService.placeBid →
+  // place_auction_bid) with atomic locking, minimum-increment + dealer
+  // eligibility validation and anti-sniping extensions. The old raw
+  // `supabase.from("auctions").update(...)` bid path was removed to keep a
+  // single canonical auction lifecycle.
 
   // Handle Inspector: Upload 120-Point Report Checklist
   const handleUploadReport = async (inspectionId: string, reportData: Full120PointReport) => {
@@ -251,25 +181,14 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       is_certified: reportData.isCertified
     }).eq("id", inspectionId);
 
-    // 2. Automagically list this car in live Dealer Auctions table to simulate full flow
+    // 2. Completing a certified inspection makes the vehicle READY FOR AUCTION.
+    // It does NOT create the auction directly — auction creation is owned by the
+    // canonical engine (auctionService.createAuction → auction_create_auction),
+    // which Admin drives from Admin CMS → Auctions (create → publish → schedule
+    // → start). This keeps a single canonical auction lifecycle and avoids a
+    // second, competing "active" auction row. We simply notify Admin that a
+    // certified vehicle is ready to be put up for auction.
     if (targetInsp) {
-      const auctionRecord = {
-        car_title: `${targetInsp.brand} ${targetInsp.model}`,
-        year: targetInsp.year,
-        km_driven: targetInsp.km_driven,
-        fuel: targetInsp.fuel,
-        transmission: targetInsp.transmission,
-        city: targetInsp.city,
-        base_price: targetInsp.year > 2020 ? 800000 : 400000,
-        current_bid: targetInsp.year > 2020 ? 810000 : 410000,
-        highest_bidder_name: "Starting Bid Base",
-        ends_at: new Date(Date.now() + 3600000 * 24).toISOString(), // 24 hours
-        status: "active"
-      };
-
-      await supabase.from("auctions").insert([auctionRecord]);
-
-      // Notify Admin
       await notificationService.triggerReportSubmitted({
         inspectionId: targetInsp.id,
         inspectorName: currentUser.name,
@@ -279,7 +198,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       });
     }
 
-    toast.success("120-Point Certified Inspection Report uploaded! Vehicle submitted to Admin review and Live Dealer Auctions.");
+    toast.success("120-Point Certified Inspection Report uploaded! Vehicle is now certified and ready for Admin to put up for auction.");
     setSelectedInspection(null);
     reloadAllData();
   };

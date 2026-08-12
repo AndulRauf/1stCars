@@ -38,13 +38,13 @@ export function AdminDashboard({
     return [];
   }, [salesLeads]);
 
-  const activeAuctionsCount = auctions.filter((a) => a.status === "active").length;
+  const activeAuctionsCount = auctions.filter((a) => ["LIVE", "EXTENDED", "CLOSING"].includes(a.status)).length;
   const pendingInspsCount = inspections.filter((i) => i.status === "pending").length;
   const totalExpensesLogged = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const totalUnreadAlerts = notifications.filter((n) => !n.is_read).length;
 
   const kpiCards = [
-    { label: "Active Auctions", val: activeAuctionsCount, desc: "Dealer bidding open", color: "bg-indigo-50 border-indigo-200 text-indigo-700", mod: "auctions" as CMSModule, status: "active" },
+    { label: "Active Auctions", val: activeAuctionsCount, desc: "Dealer bidding open", color: "bg-indigo-50 border-indigo-200 text-indigo-700", mod: "auctions" as CMSModule, status: "live" },
     { label: "Pending evaluations", val: pendingInspsCount, desc: "Awaiting inspection", color: "bg-amber-50 border-amber-200 text-amber-700", mod: "inspections" as CMSModule, status: "pending" },
     { label: "Logged Expenses", val: `₹${totalExpensesLogged.toLocaleString()}`, desc: "Ledger operating debit", color: "bg-rose-50 border-rose-200 text-rose-700", mod: "expenses" as CMSModule, status: "all" },
     { label: "Customer Leads", val: leads.length, desc: "Open CRM desk enquiries", color: "bg-emerald-50 border-emerald-200 text-emerald-700", mod: "dashboard" as CMSModule, status: "all" },
