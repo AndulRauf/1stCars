@@ -1175,8 +1175,10 @@ export default function App() {
         }}
       />
 
-      {/* Floating WhatsApp Widget with page-aware greeting */}
-      <WhatsAppFloatingButton view={currentView} />
+      {/* Floating WhatsApp Widget with page-aware greeting (hidden in Admin panel) */}
+      {!(currentView === "role_dashboards" && currentUser?.role === "Admin") && (
+        <WhatsAppFloatingButton view={currentView} />
+      )}
 
     </div>
   );
