@@ -533,7 +533,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   // SMS Gateway testing hooks
   const [testMobile, setTestMobile] = React.useState("");
