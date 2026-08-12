@@ -2321,7 +2321,25 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       case "auctions": return auctions;
       case "brands": return getCombinedBrandsModels();
       case "notifications": return notifications;
-      case "staff": return getStoredMockList("staff");
+      case "staff": {
+        // Real profiles with staff roles are the source of truth; merge them
+        // with any legacy local-only staff rows so signups show up here.
+        const localStaff = getStoredMockList("staff");
+        const dbStaff = (users || [])
+          .filter((p: any) => ["Admin", "Sales Associate", "Inspector"].includes(p.role))
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email || "",
+            role: p.role || "Staff",
+            region: p.city || "",
+            status: p.is_approved === false ? "Inactive" : "Active"
+          }));
+        return [
+          ...dbStaff,
+          ...localStaff.filter((ls: any) => !dbStaff.some((ds: any) => ds.id === ls.id))
+        ];
+      }
       case "dealers": return dealers;
       case "inspectors": return inspectors;
       case "sales": return salesAssociates;
@@ -2346,8 +2364,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
       "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
-      // Associate), so they reflect shared data rather than browser-only lists.
-      "dealers", "inspectors", "sales"
+      // Associate/Admin), so they reflect shared data rather than browser-only lists.
+      "dealers", "inspectors", "sales", "staff"
     ];
     return supabaseBacked.includes(module) ? "supabase" : "local";
   };
