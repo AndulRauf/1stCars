@@ -1208,7 +1208,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         <div className="mb-12 bg-white p-6 sm:p-8 md:p-10 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-8">
             <span className="inline-block bg-[#2E7D32]/10 text-[#2E7D32] px-3.5 py-1 text-[11px] font-black tracking-widest uppercase rounded-full">
-              SELL YOUR VEHICLE
+              SELL YOUR CAR
             </span>
             <h2 className="font-sans text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter text-slate-900 leading-none">
               Sell or Trade-In In 3 Simple Steps
