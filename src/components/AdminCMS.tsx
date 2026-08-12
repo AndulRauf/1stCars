@@ -1058,7 +1058,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
 
       seller_enquiries: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", year: 2022, km_driven: 25000, city: "Surat", address: "", status: "pending", notes: "" },
-      staff: { name: "", email: "", role: "Inspector", region: "Surat", shift: "Morning", status: "Active" },
+      staff: { name: "", email: "", role: "Inspector", region: "Surat", status: "Active" },
       dealers: { name: "", manager: "", rating: 5.0, city: "Mumbai", credits: 500000, active_bids: 0 },
       inspectors: { name: "", email: "", certified_level: "Senior", region: "Surat", total_inspections: 0 },
       sales: { name: "", email: "", active_leads: 0, closed_deals: 0, performance_score: 10.0 },
@@ -4813,7 +4813,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               <div className={`grid grid-cols-1 ${activeModule === "cars" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2"} gap-4`}>
                 
                 {Object.keys(formData).map((key) => {
-                  if (key === "id" || key === "created_at" || key === "created_by" || key === "updated_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup") return null;
+                  if (key === "id" || key === "created_at" || key === "created_by" || key === "updated_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup" || key === "shift") return null;
                   
                   const value = formData[key];
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
