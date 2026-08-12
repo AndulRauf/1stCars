@@ -634,7 +634,7 @@ export function BuyNowCheckout({
               </div>
               <span className="text-sm font-black text-slate-900">{fmt(bookingToken)}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5 ml-8">1% of car value (min ₹3,000, max ₹10,000). Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
+            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
 
           </div>
 
