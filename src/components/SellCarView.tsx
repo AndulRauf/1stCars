@@ -1214,7 +1214,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               Sell or Trade-In In 3 Simple Steps
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              We leverage professional evaluators and an elite 1000+ dealer network. No listing hassle, no shady strangers, complete transparency.
+              We leverage professional evaluators and an elite 180+ dealer network. No listing hassle, no shady strangers, complete transparency.
             </p>
           </div>
 
