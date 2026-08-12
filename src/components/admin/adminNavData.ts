@@ -8,6 +8,7 @@ import {
 
 export type CMSModule = 
   | "dashboard" | "crm" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
+  | "test_drives" | "purchases" | "crm_activities"
 
   | "inspections" | "certifications" | "auctions" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
@@ -45,7 +46,10 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     title: "Leads & Sales",
     items: [
       { id: "test_drive_requests", label: "Test Drive Requests", icon: Calendar },
-      { id: "booking_requests", label: "Booking Requests", icon: ClipboardList },
+      { id: "test_drives", label: "Test Drives Log", icon: ClipboardList },
+      { id: "booking_requests", label: "Booking Requests", icon: Calendar },
+      { id: "purchases", label: "Purchases & Orders", icon: QrCode },
+      { id: "crm_activities", label: "CRM Activity Log", icon: ClipboardEdit },
       { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
 
       { id: "auctions", label: "Live Auctions", icon: Gavel, badge: "LIVE" }

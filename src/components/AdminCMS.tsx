@@ -179,6 +179,11 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [parkSell, setParkSell] = React.useState<any[]>([]);
   const [carImages, setCarImages] = React.useState<any[]>([]);
   
+  // Newly wired Supabase tables: test drives, purchases & CRM activity log.
+  const [testDrives, setTestDrives] = React.useState<any[]>([]);
+  const [purchases, setPurchases] = React.useState<any[]>([]);
+  const [crmActivities, setCrmActivities] = React.useState<any[]>([]);
+  
   // Custom mock/localStorage tables for the other modules requested
   const [dealers, setDealers] = React.useState<any[]>([]);
   const [inspectors, setInspectors] = React.useState<any[]>([]);
@@ -692,7 +697,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { data: irData },
         { data: dbData },
         { data: psData },
-        { data: ciData }
+        { data: ciData },
+        { data: tdData },
+        { data: puData },
+        { data: caData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -715,7 +723,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         supabase.from("inspection_reports").select(),
         supabase.from("dealer_bids").select(),
         supabase.from("park_sell").select(),
-        supabase.from("car_images").select()
+        supabase.from("car_images").select(),
+        supabase.from("test_drives").select(),
+        supabase.from("purchases").select(),
+        supabase.from("crm_activities").select()
       ]);
 
       if (cData) setCars(cData);
@@ -732,6 +743,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       if (irData) setInspectionReports(irData);
       if (dbData) setDealerBids(dbData);
       if (psData) setParkSell(psData);
+      if (tdData) setTestDrives(tdData);
+      if (puData) setPurchases(puData);
+      if (caData) setCrmActivities(caData);
       if (ciData) setCarImages(ciData);
 
       // Load local-storage metadata schemas for extra requested modules
@@ -1079,7 +1093,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       text_editor: {},
       payment_settings: {},
       sell_form: {},
-      automation: {}
+      automation: {},
+      test_drives: { buyer_id: "", car_id: "", sales_associate_id: "", preferred_date: new Date().toISOString().split("T")[0], preferred_time: "10:00 AM - 12:00 PM", status: "pending", feedback: "" },
+      purchases: { buyer_id: "", car_id: "", sales_associate_id: "", amount_paid: 0, payment_method: "UPI", payment_status: "pending", delivery_status: "pending" },
+      crm_activities: { customer_id: "", staff_id: "", activity_type: "note", subject: "", detail: "" }
     };
 
     setFormData(defaultTemplates[activeModule] || {});
@@ -1350,6 +1367,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         } else {
           await supabase.from("inspections").update(currentRecord).eq("id", editingId);
         }
+      } else if (activeModule === "test_drives" || activeModule === "purchases" || activeModule === "crm_activities") {
+        if (formMode === "add") {
+          await supabase.from(activeModule).insert([currentRecord]);
+        } else {
+          await supabase.from(activeModule).update(currentRecord).eq("id", editingId);
+        }
       } else if (activeModule === "auctions") {
         // Auctions are lifecycle-managed by the canonical engine (RPCs in
         // public/auction_engine.sql). Never write the table directly here —
@@ -1501,6 +1524,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         await supabase.from("profiles").delete().eq("id", id);
       } else if (activeModule === "inspections") {
         await supabase.from("inspections").delete().eq("id", id);
+      } else if (activeModule === "test_drives" || activeModule === "purchases" || activeModule === "crm_activities") {
+        await supabase.from(activeModule).delete().eq("id", id);
       } else if (activeModule === "auctions") {
         throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Cancel or close auctions from there instead.");
       } else if (activeModule === "brands") {
@@ -2321,6 +2346,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       case "auctions": return auctions;
       case "brands": return getCombinedBrandsModels();
       case "notifications": return notifications;
+      case "test_drives": return testDrives;
+      case "purchases": return purchases;
+      case "crm_activities": return crmActivities;
       case "staff": {
         // Real profiles with staff roles are the source of truth; merge them
         // with any legacy local-only staff rows so signups show up here.
@@ -2365,7 +2393,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
       // Associate/Admin), so they reflect shared data rather than browser-only lists.
-      "dealers", "inspectors", "sales", "staff"
+      "dealers", "inspectors", "sales", "staff", "test_drives", "purchases", "crm_activities"
     ];
     return supabaseBacked.includes(module) ? "supabase" : "local";
   };
@@ -2437,7 +2465,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 <ShieldCheck className="h-5 w-5 text-[#ff5a07]" /> 1STCARS MASTER ADMIN CMS
               </h2>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                Control center for 25 modules, styling theme & SEO values dynamically
+                Control center for 28 modules, styling theme & SEO values dynamically
               </p>
             </div>
           </div>
