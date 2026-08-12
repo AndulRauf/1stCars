@@ -5484,6 +5484,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           onClose={() => setIsCar120ModalOpen(false)}
           onSubmitReport={(_, data) => handleSaveCar120Report(data)}
           userRole="Admin"
+          fullScreen
         />
       )}
 
