@@ -2,7 +2,7 @@ import * as React from "react";
 import { toast } from "@/src/lib/toast";
 import { Navbar } from "@/src/components/layout/Navbar";
 import { CarCard } from "@/src/components/CarCard";
-import { cn } from "@/src/lib/utils";
+import { cn, sanitizeSettings } from "@/src/lib/utils";
 import { Footer } from "@/src/components/layout/Footer";
 import { WhatsAppFloatingButton } from "@/src/components/WhatsAppFloatingButton";
 import { Button } from "@/src/components/ui/Button";
@@ -273,6 +273,9 @@ export default function App() {
     if (typeof window !== "undefined") {
       // Normalize demo placeholders that must never render on the live site.
       const sanitize = (parsed: any) => {
+        // Strip retired marketing phrases from stored CMS copy
+        // (e.g. "standard buyback guarantee") so they never render.
+        parsed = sanitizeSettings(parsed);
         const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
         if (isDemoAddress) {
           parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";

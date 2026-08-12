@@ -5,7 +5,7 @@ import { FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
 import { CarCard } from "./CarCard";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
-import { cn } from "@/src/lib/utils";
+import { cn, sanitizeSettings } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 
@@ -45,7 +45,7 @@ export function BuyCarsView({
       const stored = localStorage.getItem("1stcars_cms_website_settings");
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = sanitizeSettings(JSON.parse(stored));
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {
           console.error("Failed to parse website settings in BuyCarsView", e);
@@ -57,7 +57,7 @@ export function BuyCarsView({
       const stored = localStorage.getItem("1stcars_cms_website_settings");
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = sanitizeSettings(JSON.parse(stored));
           setSettings(prev => ({ ...prev, ...parsed }));
         } catch (e) {}
       }
