@@ -538,7 +538,7 @@ export function CarDetailsView({
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters & Heritage</h3>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters</h3>
                 </div>
               </div>
 
