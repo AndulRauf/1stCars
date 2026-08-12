@@ -538,12 +538,8 @@ export function CarDetailsView({
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                  <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Complete Car Overview</span>
                   <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters & Heritage</h3>
                 </div>
-                <Badge className="bg-emerald-50 text-[#2E7D32] border border-emerald-200 font-bold text-[10px] uppercase tracking-wider">
-                  Verified Heritage Data
-                </Badge>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
