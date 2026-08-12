@@ -1226,9 +1226,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 01
               </div>
               <div className="space-y-2 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Book Free Online or Doorstep Inspection</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Book Free Inspection</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Fill out our micro evaluation form below. Select your preferred date, time slot, and location (home, office, or our inspection center).
+                  Complete our quick form and choose your preferred date, time &amp; location home, office, or inspection center.
                 </p>
               </div>
             </div>
@@ -1240,25 +1240,19 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 02
               </div>
               <div className="space-y-1 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Choose Your Sale Program</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Select your preferred way to sell:
-                </p>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Choose How to Sell</h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs font-bold">
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 1</span>
                     <span className="text-slate-800 block font-black">Instant Offer</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Direct cash purchase by 1stCars.</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Get a direct cash offer from 1stCars.</span>
                   </li>
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 2</span>
                     <span className="text-slate-800 block font-black">Dealer Auction</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">1,000+ premium dealers bid live.</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">180+ dealers compete for your car.</span>
                   </li>
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-[#2E7D32] uppercase text-[10px] tracking-widest block mb-1 font-black">OPTION 3</span>
                     <span className="text-slate-800 block font-black">Direct Deal</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Sell your car direct to end user.</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Sell directly to an end customer.</span>
                   </li>
                 </ul>
               </div>
@@ -1271,9 +1265,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 03
               </div>
               <div className="space-y-1 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Get Paid Instantly & Same-Day</h3>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Get Paid Same Day</h3>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Once evaluation checks complete, you receive instant bank transfer, full loan settlement service, and zero liability transfer. We handle all complex DMV transfer paperwork free of charge!
+                  Get instant bank transfer, loan settlement support, and zero-hassle ownership transfer. We handle the paperwork for you.
                 </p>
               </div>
             </div>
