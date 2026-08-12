@@ -26,13 +26,12 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutStoryHeading: "Built on a simple belief — buying a used car should feel safe.",
   aboutStoryHighlight: "buying a used car should feel safe.",
   aboutStoryPara1:
-    "1stCars was founded to solve a very real problem: pre-owned car shopping is full of hidden defects, inflated prices, and shady strangers. We set out to change that with a marketplace that puts verification, transparency, and the customer first.",
-  aboutStoryPara2:
-    "Today, we operate across Gujarat with doorstep inspections, certified vehicle grading, and an elite network of verified dealers who compete transparently for your business. Every listing is owned and backed by 1stCars — so you always know exactly what you're getting.",
+    "1stCars makes pre-owned car buying simple, transparent, and trustworthy. With doorstep inspections, certified vehicle grading, and a network of verified dealers, we help customers buy and sell with confidence.",
+  aboutStoryPara2: "",
   aboutVisionTitle: "Our Vision",
   aboutVisionText: "Become India's most trusted destination for certified pre-owned vehicles.",
   aboutMissionTitle: "Our Mission",
-  aboutMissionText: "Bridge pristine engineering with absolute service through verified, transparent car deals.",
+  aboutMissionText: "To combine engineering excellence with transparent deals and exceptional customer service.",
 
   aboutQuoteText:
     "\u201cWe don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",

@@ -122,9 +122,11 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory }: AboutUsView
           <p className="text-sm text-slate-600 leading-relaxed font-medium">
             {s.aboutStoryPara1}
           </p>
-          <p className="text-sm text-slate-600 leading-relaxed font-medium">
-            {s.aboutStoryPara2}
-          </p>
+          {s.aboutStoryPara2 && (
+            <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              {s.aboutStoryPara2}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="flex items-start gap-3">
               <div className="p-2.5 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] shrink-0">
