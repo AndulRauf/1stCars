@@ -997,6 +997,47 @@ export default function App() {
 
 
 
+      {/* 5. REQUEST CALL BACK */}
+      <Section id="request-callback" bg="white" padding="lg" className="border-t border-slate-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <Badge variant="premium">{websiteSettings.ctaBadgeText || "1STCARS CONCIERGE"}</Badge>
+            <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
+              REQUEST CALL BACK
+            </h2>
+            <p className="text-sm sm:text-base text-slate-500 font-medium">
+              Our concierge specialist will call you back within 10 minutes to assist with your car-buying or selling needs.
+            </p>
+          </div>
+
+          <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 max-w-2xl mx-auto text-left shadow-lg shadow-slate-200/40">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                triggerToast("Call-back request received! Specialist will contact you within 10 minutes.");
+              }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
+              <input
+                type="text"
+                placeholder="Full Name"
+                className="bg-[#FAF9F6] border border-slate-200 text-slate-900 text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                required
+              />
+              <input
+                type="tel"
+                placeholder="Mobile Number"
+                className="bg-[#FAF9F6] border border-slate-200 text-slate-900 text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                required
+              />
+              <Button type="submit" className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase py-3 rounded-xl shadow-lg shadow-[#2E7D32]/20">
+                Call Me Back
+              </Button>
+            </form>
+          </div>
+        </div>
+      </Section>
+
       {/* 6. TESTIMONIALS */}
       <Section bg="muted" padding="lg" className="border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
