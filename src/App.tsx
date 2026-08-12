@@ -229,7 +229,7 @@ export default function App() {
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Premium Pre-Owned Hub",
-    brandDescription: "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -318,7 +318,7 @@ export default function App() {
         // re-introduce the "luxury" wording on the live site.
         parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
         parsed.brandSlogan = "The Premium Pre-Owned Hub";
-        parsed.brandDescription = "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.";
+        parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
         parsed.seoTitle = "1stCars - Certified Car Marketplace";
         parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
         parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";

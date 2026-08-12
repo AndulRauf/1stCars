@@ -19,7 +19,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Premium Pre-Owned Hub",
-    brandDescription: "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     footerText: "© 2026 1stCars Marketplace. All rights reserved.",
   });
 
@@ -38,7 +38,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
           // Force canonical marketing copy so stale cached values can never
           // re-introduce the "luxury" wording in the footer.
           parsed.brandSlogan = "The Premium Pre-Owned Hub";
-          parsed.brandDescription = "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.";
+          parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
           parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
           setSettings((prev) => ({ ...prev, ...parsed }));
         } catch (e) {
