@@ -10,6 +10,7 @@ import { Badge } from "@/src/components/ui/Badge";
 import { toast } from "@/src/lib/toast";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 interface FirstMarkCertificationProps {
   onBackToHome: () => void;
@@ -57,6 +58,10 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
     }
     setIsBooked(true);
     toast.success("120-Point Inspection booking received! Our inspector will contact you.");
+    trackMetaEvent("Lead", {
+      content_name: bookingForm.vehicleModel,
+      content_category: "120-Point Certification Inspection"
+    });
   };
 
   // Pricing calculation logic for the interactive 120-point certification package

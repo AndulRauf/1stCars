@@ -6,6 +6,7 @@ import { toast } from "@/src/lib/toast";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -107,6 +108,24 @@ const processCheckout = async (
   }]);
 
   if (insertError) throw new Error(insertError.message);
+
+  trackMetaEvent("Lead", {
+    content_name: vehicleTitle,
+    content_category: "Buy Now",
+    value: car.price,
+    currency: "INR",
+    num_items: 1
+  });
+
+  if (paymentStatus === "Payment Submitted") {
+    trackMetaEvent("Purchase", {
+      content_name: vehicleTitle,
+      content_category: "Buy Now",
+      value: totalPrice,
+      currency: "INR",
+      num_items: 1
+    });
+  }
 
   // Lead is persisted — the caller shows the confirmation immediately. The
   // auto sign-in and staff notifications run in the background so the

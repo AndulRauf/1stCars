@@ -8,6 +8,7 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -239,6 +240,14 @@ export function BookingModal({
       // background so the submit never blocks on extra network round-trips.
       setIsSubmitted(true);
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
+
+      trackMetaEvent(bookingType === "test_drive" ? "Lead" : "InitiateCheckout", {
+        content_name: vehicleTitle,
+        content_category: "Test Drive",
+        value: car?.price || 0,
+        currency: "INR",
+        num_items: 1
+      });
 
       void (async () => {
         try {

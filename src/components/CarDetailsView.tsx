@@ -11,6 +11,7 @@ import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 
 interface CarDetailsViewProps {
@@ -131,6 +132,18 @@ export function CarDetailsView({
 
   // Buy Now / Reserve checkout sheet state
   const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!car) return;
+    trackMetaEvent("ViewContent", {
+      content_name: `${car.brand} ${car.model} (${car.year})`,
+      content_category: "Car Listing",
+      content_ids: [car.id],
+      value: car.price,
+      currency: "INR",
+      num_items: 1
+    });
+  }, [car]);
 
 
   // Finance slider state

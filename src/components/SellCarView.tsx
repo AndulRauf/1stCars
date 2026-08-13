@@ -12,6 +12,7 @@ import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -1112,6 +1113,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // notification dispatch (inspector alerts). Fire-and-forget so the UI is snappy.
       setFormStep("success");
       toast.success("Your inspection will contact you shortly!");
+
+      trackMetaEvent("Lead", {
+        content_name: `${selectedBrand} ${selectedModel}`,
+        content_category: "Sell Car / Inspection"
+      });
 
       // Trigger inspector notifications in the background (non-blocking).
       void notificationService.triggerInspectionSubmitted({
