@@ -51,20 +51,6 @@ const processCheckout = async (
     const autoPasswordKey = getAutoPasswordKey(safeEmail);
     const autoPassword = deriveAutoPassword(safeEmail);
     localStorage.setItem(autoPasswordKey, autoPassword);
-    await resolveAutoSignIn(
-      supabase,
-      safeEmail,
-      autoPassword,
-      {
-        data: {
-          name: buyerName.trim(),
-          email: safeEmail,
-          mobile: buyerMobile.trim(),
-          role: "Buyer",
-          city: selectedCity || car.cities?.[0] || car.location || "Surat",
-        },
-      }
-    );
   } catch (authErr) {
     console.warn("Auto sign in error during checkout:", authErr);
   }
@@ -122,11 +108,39 @@ const processCheckout = async (
 
   if (insertError) throw new Error(insertError.message);
 
-  await notificationService.triggerCarReserved({
-    buyerName: buyerName.trim(),
-    carTitle: vehicleTitle,
-    price: car.price,
-  });
+  // Lead is persisted — the caller shows the confirmation immediately. The
+  // auto sign-in and staff notifications run in the background so the
+  // checkout never blocks on extra network round-trips.
+  void (async () => {
+    try {
+      await resolveAutoSignIn(
+        supabase,
+        safeEmail,
+        deriveAutoPassword(safeEmail),
+        {
+          data: {
+            name: buyerName.trim(),
+            email: safeEmail,
+            mobile: buyerMobile.trim(),
+            role: "Buyer",
+            city: selectedCity || car.cities?.[0] || car.location || "Surat",
+          },
+        }
+      );
+    } catch (authErr) {
+      console.warn("Auto sign in error during checkout:", authErr);
+    }
+
+    try {
+      await notificationService.triggerCarReserved({
+        buyerName: buyerName.trim(),
+        carTitle: vehicleTitle,
+        price: car.price,
+      });
+    } catch (notifErr) {
+      console.warn("Background reservation notification failed:", notifErr);
+    }
+  })();
 };
 
 export function BuyNowCheckout({

@@ -180,29 +180,6 @@ export function BookingModal({
       const autoPassword = deriveAutoPassword(userEmail);
       localStorage.setItem(autoPasswordKey, autoPassword);
 
-
-      try {
-        const { user, error: authError } = await resolveAutoSignIn(
-          supabase,
-          userEmail,
-          autoPassword,
-          {
-            data: {
-              name: userName,
-              mobile: userMobile,
-              role: "Buyer",
-              city: userCity,
-            },
-          }
-        );
-
-        if (authError) {
-          console.warn("Auto sign in error during booking:", authError);
-        }
-      } catch (authErr) {
-        console.warn("Auto sign in error during booking:", authErr);
-      }
-
       // Automatically add vehicle to favorite/saved cars list
       if (car?.id) {
         const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
@@ -257,45 +234,75 @@ export function BookingModal({
         throw new Error(insertError.message || "Could not save your request to the database.");
       }
 
-      // Record the automation event (idempotent; on the live DB the AFTER INSERT
-      // trigger already recorded it, so the RPC is a no-op and only the local
-      // engine consumes this for mock/pre-migration databases).
-      void automationService.emitEvent({
-        type: "lead.created",
-        sourceTable: "sales_notifications",
-        sourceId: refId,
-        payload: {
-          lead_id: refId,
-          name: name.trim(),
-          mobile: mobile.trim(),
-          city: city || "Surat",
-          type: bookingType,
-          car_brand: car?.brand,
-          car_model: car?.model,
-          preferred_date: preferredDate,
-          preferred_time: preferredTime
-        }
-      }).catch((err) => console.warn("Automation event emission failed:", err));
-
-
-      // 4. Trigger system notifications
-      if (bookingType === "test_drive") {
-        await notificationService.triggerTestDriveBooked({
-          buyerName: name.trim(),
-          carTitle: vehicleTitle,
-          preferredDate: preferredDate,
-          preferredTime: preferredTime
-        });
-      } else {
-        await notificationService.triggerCarReserved({
-          buyerName: name.trim(),
-          carTitle: vehicleTitle,
-          price: car?.price || 0
-        });
-      }
-
+      // Lead is persisted — show the confirmation immediately. Everything
+      // below (auto sign-in, automation event, notifications) runs in the
+      // background so the submit never blocks on extra network round-trips.
       setIsSubmitted(true);
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
+
+      void (async () => {
+        try {
+          const { error: authError } = await resolveAutoSignIn(
+            supabase,
+            userEmail,
+            autoPassword,
+            {
+              data: {
+                name: userName,
+                mobile: userMobile,
+                role: "Buyer",
+                city: userCity,
+              },
+            }
+          );
+
+          if (authError) {
+            console.warn("Auto sign in error during booking:", authError);
+          }
+        } catch (authErr) {
+          console.warn("Auto sign in error during booking:", authErr);
+        }
+
+        // Record the automation event (idempotent; on the live DB the AFTER INSERT
+        // trigger already recorded it, so the RPC is a no-op and only the local
+        // engine consumes this for mock/pre-migration databases).
+        void automationService.emitEvent({
+          type: "lead.created",
+          sourceTable: "sales_notifications",
+          sourceId: refId,
+          payload: {
+            lead_id: refId,
+            name: name.trim(),
+            mobile: mobile.trim(),
+            city: city || "Surat",
+            type: bookingType,
+            car_brand: car?.brand,
+            car_model: car?.model,
+            preferred_date: preferredDate,
+            preferred_time: preferredTime
+          }
+        }).catch((err) => console.warn("Automation event emission failed:", err));
+
+        // Trigger system notifications
+        try {
+          if (bookingType === "test_drive") {
+            await notificationService.triggerTestDriveBooked({
+              buyerName: name.trim(),
+              carTitle: vehicleTitle,
+              preferredDate: preferredDate,
+              preferredTime: preferredTime
+            });
+          } else {
+            await notificationService.triggerCarReserved({
+              buyerName: name.trim(),
+              carTitle: vehicleTitle,
+              price: car?.price || 0
+            });
+          }
+        } catch (notifErr) {
+          console.warn("Background booking notification failed:", notifErr);
+        }
+      })();
     } catch (err) {
       console.error("Booking submission error:", err);
       const message = err instanceof Error ? err.message : "Something went wrong while submitting your request.";

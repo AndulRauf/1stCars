@@ -326,15 +326,19 @@ export const notificationService = {
 
     const staffList = associates || [{ id: "u-sales" }];
 
-    for (const staff of staffList) {
-      await this.createNotification({
-        recipientId: staff.id,
-        title: "Test Drive Request Scheduled",
-        message: `${booking.buyerName} requested a doorstep test drive for the ${booking.carTitle} on ${booking.preferredDate} at ${booking.preferredTime}.`,
-        type: "action",
-        metadata: { car_title: booking.carTitle, date: booking.preferredDate }
-      });
-    }
+    // Dispatch notifications to all staff in parallel (much faster than
+    // awaiting each insert sequentially).
+    await Promise.all(
+      staffList.map((staff: { id: string }) =>
+        this.createNotification({
+          recipientId: staff.id,
+          title: "Test Drive Request Scheduled",
+          message: `${booking.buyerName} requested a doorstep test drive for the ${booking.carTitle} on ${booking.preferredDate} at ${booking.preferredTime}.`,
+          type: "action",
+          metadata: { car_title: booking.carTitle, date: booking.preferredDate }
+        })
+      )
+    );
   },
 
   /**
@@ -353,15 +357,19 @@ export const notificationService = {
 
     const staffList = associates || [{ id: "u-sales" }];
 
-    for (const staff of staffList) {
-      await this.createNotification({
-        recipientId: staff.id,
-        title: "Premium Vehicle Reserved! 🔥",
-        message: `${reservation.buyerName} has reserved the ${reservation.carTitle} (₹${reservation.price.toLocaleString("en-IN")}). Please initiate contact to draft elite financing documentation.`,
-        type: "success",
-        metadata: { car_title: reservation.carTitle, amount: reservation.price }
-      });
-    }
+    // Dispatch notifications to all staff in parallel (much faster than
+    // awaiting each insert sequentially).
+    await Promise.all(
+      staffList.map((staff: { id: string }) =>
+        this.createNotification({
+          recipientId: staff.id,
+          title: "Premium Vehicle Reserved! 🔥",
+          message: `${reservation.buyerName} has reserved the ${reservation.carTitle} (₹${reservation.price.toLocaleString("en-IN")}). Please initiate contact to draft elite financing documentation.`,
+          type: "success",
+          metadata: { car_title: reservation.carTitle, amount: reservation.price }
+        })
+      )
+    );
   },
 
   /**
