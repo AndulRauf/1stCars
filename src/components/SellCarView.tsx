@@ -930,6 +930,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   // Submit flow
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // prevent double-submission / duplicate conversion events
     if (!name.trim()) {
       toast.error("Please enter your full name.");
       return;
@@ -1120,7 +1121,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       setFormStep("success");
       toast.success("Your inspection will contact you shortly!");
 
-      console.log("Lead event fired");
+      // Meta conversion — fires ONLY after the Supabase insert succeeds. No PII.
       trackMetaEvent("Lead", {
         content_name: `${selectedBrand} ${selectedModel}`,
         content_category: "Sell Car / Inspection"

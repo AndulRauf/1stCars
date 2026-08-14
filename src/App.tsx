@@ -51,6 +51,7 @@ import { AuthModal } from "@/src/components/AuthModal";
 import { supabase } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
 import { captureUtm, trackPageView } from "@/src/lib/analytics";
+import { trackMetaPageView } from "@/src/lib/metaPixel";
 import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 // ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
@@ -160,6 +161,7 @@ export default function App() {
     const handleHistory = () => {
       captureUtm();
       trackPageView();
+      trackMetaPageView();
     };
 
     // pushState/replaceState don't fire popstate, so hook the router's history

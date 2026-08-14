@@ -2,7 +2,10 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { initMetaPixel } from './lib/metaPixel';
 import './index.css';
+
+initMetaPixel();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -11,4 +14,3 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
-

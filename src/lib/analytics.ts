@@ -12,6 +12,13 @@ const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "ut
 
 type UtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 
+// Known placeholder values that must never be treated as a real GA4 ID.
+const PLACEHOLDER_GA4_IDS = new Set(["G-1STCARS2026", "G-XXXXXXXXXX", "G-XXXXXXXXXXX"]);
+
+// A real GA4 Measurement ID looks like G- followed by exactly 10 alphanumerics
+// (e.g. G-ABCDE12345).
+const GA4_ID_PATTERN = /^G-[A-Z0-9]{10}$/i;
+
 declare global {
   interface Window {
     dataLayer?: unknown[];
@@ -20,6 +27,20 @@ declare global {
 }
 
 let ga4Initialized = false;
+
+// Logs analytics debug output only in development builds so production stays clean.
+function debugLog(...args: unknown[]): void {
+  if (typeof import.meta !== "undefined" && import.meta.env?.DEV) {
+    console.log("[Analytics]", ...args);
+  }
+}
+
+export function isValidGa4Id(id: string): boolean {
+  if (!id) return false;
+  const trimmed = id.trim();
+  if (PLACEHOLDER_GA4_IDS.has(trimmed.toUpperCase())) return false;
+  return GA4_ID_PATTERN.test(trimmed);
+}
 
 function readSettingsGa4Id(): string {
   try {
@@ -36,20 +57,37 @@ function readSettingsGa4Id(): string {
 // Resolve the GA4 Measurement ID. Priority:
 //   1. VITE_GA4_MEASUREMENT_ID env var (recommended for production builds)
 //   2. The CMS "googleAnalyticsId" website setting (editable in AdminCMS without code)
+// Only valid IDs are accepted; placeholders such as G-1STCARS2026 are ignored.
 export function getGa4MeasurementId(): string {
-  const envId = (import.meta.env.VITE_GA4_MEASUREMENT_ID as string) || "";
-  if (envId) return envId;
-  return readSettingsGa4Id();
+  const envId = ((import.meta.env?.VITE_GA4_MEASUREMENT_ID as string) || "").trim();
+  if (isValidGa4Id(envId)) return envId;
+  if (envId) {
+    console.warn(
+      "[Analytics] VITE_GA4_MEASUREMENT_ID is invalid or a placeholder — ignoring it.",
+      envId
+    );
+  }
+  const settingsId = readSettingsGa4Id();
+  if (isValidGa4Id(settingsId)) return settingsId;
+  if (settingsId) {
+    console.warn(
+      "[Analytics] AdminCMS googleAnalyticsId is invalid or a placeholder — GA4 disabled.",
+      settingsId
+    );
+  }
+  return "";
 }
 
 // Inject the gtag.js loader exactly once and configure GA4. Reuses an existing
-// window.gtag if one is already present (no duplicate initialization).
+// window.gtag if one is already present (no duplicate initialization). Safe to
+// call repeatedly — no-ops when no valid Measurement ID is configured.
 export function initGA4(): void {
   if (typeof window === "undefined" || ga4Initialized) return;
   const id = getGa4MeasurementId();
   if (!id) return;
 
   ga4Initialized = true;
+  debugLog("initialized with Measurement ID", id);
   window.dataLayer = window.dataLayer || [];
   if (typeof window.gtag !== "function") {
     window.gtag = function (...args: unknown[]) {
@@ -76,6 +114,7 @@ export function trackGA4(event: string, params: Record<string, unknown> = {}): v
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   try {
     window.gtag("event", event, params);
+    debugLog(`event: ${event}`, params);
   } catch (e) {
     console.warn("GA4 event failed:", e);
   }
@@ -96,7 +135,7 @@ function readUtmFromUrl(): UtmParams {
   return utm;
 }
 
-function readStorage(key: string, storage: Storage): UtmParams {
+function readUtmStorage(storage: Storage, key: string): UtmParams {
   try {
     const raw = storage.getItem(key);
     if (!raw) return {};
@@ -107,23 +146,34 @@ function readStorage(key: string, storage: Storage): UtmParams {
 }
 
 // Capture UTMs from the current URL. Latest-touch always overwrites session
-// storage; first-touch is only written once (persistent across sessions).
+// storage; first-touch is only written once (persistent across sessions). UTM
+// values are stored as both a compact JSON object and flat first_utm_* /
+// latest_utm_* keys so campaign attribution survives SPA navigation.
 export function captureUtm(): void {
   if (typeof window === "undefined") return;
   const utm = readUtmFromUrl();
   if (Object.keys(utm).length === 0) return;
   try {
     sessionStorage.setItem(GA4_STORAGE_LATEST, JSON.stringify(utm));
+    for (const key of UTM_KEYS) {
+      const value = utm[key];
+      if (value) sessionStorage.setItem(`latest_${key}`, value);
+    }
   } catch {
     /* ignore quota/security errors */
   }
   try {
     if (!localStorage.getItem(GA4_STORAGE_FIRST)) {
       localStorage.setItem(GA4_STORAGE_FIRST, JSON.stringify(utm));
+      for (const key of UTM_KEYS) {
+        const value = utm[key];
+        if (value) localStorage.setItem(`first_${key}`, value);
+      }
     }
   } catch {
     /* ignore quota/security errors */
   }
+  debugLog("captured UTM", utm);
 }
 
 // Campaign params for event reporting. First-touch identifies the campaign that
@@ -131,9 +181,9 @@ export function captureUtm(): void {
 // the page the user is currently on. We prefer first-touch.
 export function getUtmParams(): UtmParams {
   if (typeof window === "undefined") return {};
-  const first = readStorage(GA4_STORAGE_FIRST, localStorage);
+  const first = readUtmStorage(localStorage, GA4_STORAGE_FIRST);
   if (Object.keys(first).length) return first;
-  return readStorage(GA4_STORAGE_LATEST, sessionStorage);
+  return readUtmStorage(sessionStorage, GA4_STORAGE_LATEST);
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +253,7 @@ export function trackSellerLeadSubmit(): void {
   trackGA4("seller_lead_submit", {
     lead_type: "seller",
     page_location: window.location.href,
+    page_path: window.location.pathname,
     utm_source: utm.utm_source || undefined,
     utm_medium: utm.utm_medium || undefined,
     utm_campaign: utm.utm_campaign || undefined,
