@@ -1114,6 +1114,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       setFormStep("success");
       toast.success("Your inspection will contact you shortly!");
 
+      console.log("Lead event fired");
       trackMetaEvent("Lead", {
         content_name: `${selectedBrand} ${selectedModel}`,
         content_category: "Sell Car / Inspection"
