@@ -13,6 +13,7 @@ import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -517,6 +518,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         window.clearTimeout(redirectTimerRef.current);
       }
     };
+  }, []);
+
+  // GA4 funnel — Event 1: user reached the Sell Car page. Fires once per page load.
+  React.useEffect(() => {
+    trackViewSellCar();
   }, []);
 
   const navigateToSellerDashboard = React.useCallback(async () => {
@@ -1120,6 +1126,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         content_category: "Sell Car / Inspection"
       });
 
+      // GA4 conversion — MOST IMPORTANT event. Fires only after the Supabase
+      // insert succeeds, alongside the Meta Lead. No PII is sent to GA4.
+      trackSellerLeadSubmit();
+
       // Trigger inspector notifications in the background (non-blocking).
       void notificationService.triggerInspectionSubmitted({
         id: inserted?.id || "insp-temp-id",
@@ -1356,7 +1366,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       <Input
                         placeholder="Search brand"
                         value={brandSearch}
-                        onChange={(e) => setBrandSearch(e.target.value)}
+                        onChange={(e) => { trackSellerFormStart(); setBrandSearch(e.target.value); }}
                         className="h-12 rounded-xl pl-10 border-slate-200 focus:border-[#2E7D32] text-sm"
                       />
                     </div>
@@ -1378,6 +1388,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             key={b}
                             type="button"
                             onClick={() => {
+                              trackSellerFormStart();
                               setSelectedBrand(b);
                               setSelectedModel("");
                               setWizardStep(2);

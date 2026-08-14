@@ -50,6 +50,7 @@ import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
 import { supabase } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+import { captureUtm, trackPageView } from "@/src/lib/analytics";
 import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 // ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
@@ -144,6 +145,41 @@ export default function App() {
     window.addEventListener("popstate", syncRouteFromUrl);
     return () => {
       window.removeEventListener("popstate", syncRouteFromUrl);
+    };
+  }, []);
+
+  // GA4 + UTM tracking: capture campaign params on arrival, then emit exactly
+  // one page_view per SPA route change (pushState navigation, back/forward, and
+  // direct URL loads). captureUtm() reads any utm_* params from the URL and
+  // persists first-touch (localStorage) / latest-touch (sessionStorage) so the
+  // campaign attribution survives in-app navigation.
+  React.useEffect(() => {
+    captureUtm();
+    trackPageView();
+
+    const handleHistory = () => {
+      captureUtm();
+      trackPageView();
+    };
+
+    // pushState/replaceState don't fire popstate, so hook the router's history
+    // writes and treat each as a route change for analytics.
+    const patchHistory = (method: "pushState" | "replaceState") => {
+      const original = window.history[method].bind(window.history);
+      window.history[method] = function (...args: any[]) {
+        const result = original(...args);
+        window.dispatchEvent(new Event("1stcars:routechange"));
+        return result;
+      };
+    };
+    patchHistory("pushState");
+    patchHistory("replaceState");
+
+    window.addEventListener("1stcars:routechange", handleHistory);
+    window.addEventListener("popstate", handleHistory);
+    return () => {
+      window.removeEventListener("1stcars:routechange", handleHistory);
+      window.removeEventListener("popstate", handleHistory);
     };
   }, []);
 
