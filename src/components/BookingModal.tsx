@@ -9,6 +9,7 @@ import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -148,7 +149,7 @@ export function BookingModal({
 
     const vehicleTitle = car ? `${car.brand} ${car.model} (${car.year})` : "General Vehicle Inquiry";
 
-    const leadRecord = {
+    const leadRecord: Record<string, any> = {
       id: refId,
       created_at: new Date().toISOString(),
       name: name.trim(),
@@ -213,22 +214,30 @@ export function BookingModal({
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
+      // 2. Auto-assign the lead to the Sales Associate who uploaded this car
+      //    (leads for admin-published/demo cars stay in the shared pool).
+      const owner = await resolveLeadOwner(car);
+      if (owner) {
+        leadRecord.assigned_to = owner.id;
+        leadRecord.assigned_to_name = owner.name || "";
+      }
+
       // 3. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
-      const { error: insertError } = await supabase.from("sales_notifications").insert([
-        {
-          name: name.trim(),
-          mobile: mobile.trim(),
-          city: city || "Surat",
-          preferred_date: preferredDate,
-          preferred_time: preferredTime,
-          car_id: car?.id,
-          car_brand: car?.brand,
-          car_model: car?.model,
-          type: bookingType,
-          status: "pending",
-          notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
-        }
-      ]);
+      const { error: insertError } = await insertLeadWithAssignment({
+        name: name.trim(),
+        mobile: mobile.trim(),
+        city: city || "Surat",
+        preferred_date: preferredDate,
+        preferred_time: preferredTime,
+        car_id: car?.id,
+        car_brand: car?.brand,
+        car_model: car?.model,
+        type: bookingType,
+        status: "pending",
+        assigned_to: owner?.id || null,
+        assigned_to_name: owner?.name || null,
+        notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
+      });
 
       if (insertError) {
         // The lead did NOT reach the Sales desk — surface a real failure instead of a false success.

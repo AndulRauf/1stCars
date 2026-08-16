@@ -7,6 +7,7 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -64,7 +65,7 @@ const processCheckout = async (
     if (onSaveToggle && !existingSaved.includes(car.id)) onSaveToggle(car.id, car.model);
   }
 
-  const leadRecord = {
+  const leadRecord: Record<string, any> = {
     id: refId,
     created_at: new Date().toISOString(),
     name: buyerName.trim(),
@@ -91,7 +92,15 @@ const processCheckout = async (
   const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
   localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-  const { error: insertError } = await supabase.from("sales_notifications").insert([{
+  // Auto-assign the lead to the Sales Associate who uploaded this car
+  // (leads for admin-published/demo cars stay in the shared pool).
+  const owner = await resolveLeadOwner(car);
+  if (owner) {
+    leadRecord.assigned_to = owner.id;
+    leadRecord.assigned_to_name = owner.name || "";
+  }
+
+  const { error: insertError } = await insertLeadWithAssignment({
     name: buyerName.trim() || "Buyer (Checkout)",
     mobile: buyerMobile.trim(),
     city: selectedCity || car.cities?.[0] || car.location || "Surat",
@@ -102,10 +111,12 @@ const processCheckout = async (
     car_model: car.model,
     type: "buy_now",
     status: paymentStatus === "Payment Submitted" ? "payment_submitted" : "pending",
+    assigned_to: owner?.id || null,
+    assigned_to_name: owner?.name || null,
     notes: paymentStatus === "Payment Submitted"
       ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
       : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
-  }]);
+  });
 
   if (insertError) throw new Error(insertError.message);
 

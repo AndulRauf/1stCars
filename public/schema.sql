@@ -709,6 +709,12 @@ ALTER TABLE public.inspections ALTER COLUMN seller_id DROP NOT NULL;
 -- report, features, ...) on top of the normalized columns.
 ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}'::jsonb;
 
+-- Lead auto-assignment: every lead (test drive / buy-now) for a car uploaded
+-- by a Sales Associate is routed to that associate's CRM desk only. The column
+-- is nullable so legacy/portal leads stay in the shared pool.
+ALTER TABLE public.sales_notifications ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE public.sales_notifications ADD COLUMN IF NOT EXISTS assigned_to_name TEXT;
+
 
 -- ====================================================
 -- STORAGE BUCKETS CONFIGURATION

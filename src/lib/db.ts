@@ -207,6 +207,9 @@ export interface SalesNotification {
   type: "test_drive" | "buy_now" | "whatsapp" | "call_request";
   status: "pending" | "contacted" | "resolved";
   notes?: string;
+  // Auto-assignment: the Sales Associate who uploaded the target car.
+  assigned_to?: string;
+  assigned_to_name?: string;
 }
 
 // Seed other core collections if not present in localStorage
