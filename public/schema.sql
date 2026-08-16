@@ -517,6 +517,7 @@ CREATE POLICY "System/Staff inserts notifications" ON public.notifications FOR I
 DROP POLICY IF EXISTS "Staff read all notifications" ON public.notifications;
 CREATE POLICY "Staff read all notifications" ON public.notifications FOR SELECT USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role));
 DROP POLICY IF EXISTS "Staff manage all notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Admin manages all notifications" ON public.notifications;
 CREATE POLICY "Admin manages all notifications" ON public.notifications FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role) WITH CHECK (true);
 DROP POLICY IF EXISTS "Sales Associate updates notifications" ON public.notifications;
 CREATE POLICY "Sales Associate updates notifications" ON public.notifications FOR UPDATE USING (public.get_auth_user_role() = 'Sales Associate'::public.user_role);
