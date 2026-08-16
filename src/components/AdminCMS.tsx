@@ -1150,6 +1150,36 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     }
   };
 
+  // Approve a car submitted by a Sales Associate: flips status from "pending"
+  // to "available" so it appears live in the public catalog, and alerts the
+  // associate who uploaded it.
+  const handleApproveCar = async (item: any) => {
+    if (!window.confirm(`Approve ${item.brand || ""} ${item.model || "this car"} and publish it live on the 1stCars website?`)) return;
+    try {
+      const { error } = await supabase.from("cars").update({ status: "available" }).eq("id", item.id);
+      if (error) throw error;
+
+      const creatorId = item.created_by || item.payload?.created_by;
+      if (creatorId) {
+        await notificationService.createNotification({
+          recipientId: creatorId,
+          senderId: "u-admin",
+          title: "Your Car Is Now Live! 🎉",
+          message: `Great news! The ${item.brand || ""} ${item.model || "car"} you uploaded has been approved and is now live on the 1stCars website for buyers.`,
+          type: "success",
+          metadata: { car_id: item.id, status: "available" }
+        });
+      }
+
+      toast.success(`${item.brand || ""} ${item.model || "Car"} approved & published to the website!`);
+      loadCMSData();
+      if (onReloadAllData) onReloadAllData();
+      setTimeout(() => window.dispatchEvent(new Event("1stcars_settings_updated")), 0);
+    } catch (err) {
+      toast.error("Failed to approve car: " + errorMessage(err));
+    }
+  };
+
   // Mock Storage Upload function
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -3512,6 +3542,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                               Review &amp; Publish
                             </button>
                           </>
+                        )}
+                        {activeModule === "cars" && String(item.status || "").toLowerCase() === "pending" && (
+                          <button
+                            onClick={() => handleApproveCar(item)}
+                            className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-sm transition-all cursor-pointer flex items-center gap-1"
+                            title="Approve this car and publish it live on the website for buyers"
+                          >
+                            <Check className="h-3 w-3" /> Approve &amp; Publish
+                          </button>
                         )}
                         <button
                           onClick={() => openEditModal(item)}

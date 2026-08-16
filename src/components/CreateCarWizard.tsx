@@ -20,6 +20,10 @@ interface CreateCarWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (record: any) => Promise<void>;
+  // Status the record is saved with. Admin CMS publishes straight away
+  // ("available"); Sales Associates submit "pending" so the admin can review
+  // the listing before it goes live on the website.
+  submitStatus?: string;
 }
 
 const gujaratRTOs = [
@@ -101,7 +105,7 @@ const getGradeBadgeColor = (grade: string) => {
 const isImageUrl = (url: string) =>
   !!url && url !== "⭐" && (url.startsWith("http") || url.startsWith("/") || url.startsWith("data:"));
 
-export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: CreateCarWizardProps) {
+export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submitStatus = "available" }: CreateCarWizardProps) {
   const [step, setStep] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -338,7 +342,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
         insurance_type: "Comprehensive",
         bodyType,
         overall_score: overallScore,
-        status: "available",
+        status: submitStatus,
         certified: reportData.isCertified,
         is_certified: reportData.isCertified,
         featured: true,
@@ -1136,7 +1140,11 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
                   <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedCarLabel}</span>
                 </div>
                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Photos &amp; final review</h3>
-                <p className="text-xs text-slate-400 font-semibold">Upload up to 15 photos, then publish the listing</p>
+                <p className="text-xs text-slate-400 font-semibold">
+                  {submitStatus === "pending"
+                    ? "Upload up to 15 photos, then submit for admin review"
+                    : "Upload up to 15 photos, then publish the listing"}
+                </p>
               </div>
 
               {/* Review summary */}
@@ -1260,7 +1268,11 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit }: Crea
                   className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-black uppercase tracking-wider h-11 rounded-xl shadow-md"
                 >
                   <Camera className="h-4 w-4 mr-1.5" />
-                  {isSubmitting ? "Creating Listing..." : "Create & Publish Car"}
+                  {isSubmitting
+                    ? "Creating Listing..."
+                    : submitStatus === "pending"
+                      ? "Submit for Admin Review"
+                      : "Create & Publish Car"}
                 </Button>
               </div>
               <div className="text-slate-400 text-xs font-bold text-right">Step 9 of {WIZARD_STEPS.length}</div>

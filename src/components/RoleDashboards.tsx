@@ -2,7 +2,7 @@ import * as React from "react";
 import { 
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
   Trash2, ArrowRight, DollarSign, Hammer, 
-  Upload, Check, 
+Upload, Check, Pencil, Eye, X,
   RefreshCw, ClipboardList, Car, Bell, Gavel
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -21,6 +21,12 @@ import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { Inspection120FormModal } from "./Inspection120FormModal";
 import { Full120PointReport } from "@/src/data/inspection120Data";
+import { CreateCarWizard } from "./CreateCarWizard";
+import { saveCar, errorMessage } from "@/src/lib/carPersistence";
+import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
+import {
+  SellCatalog, catalogFromLegacy, mergeCatalog, getStoredSellCatalog, DEFAULT_POPULAR_SELL_BRANDS
+} from "@/src/lib/sellFormData";
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -41,6 +47,27 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [inspections, setInspections] = React.useState<Inspection[]>([]);
   const [offers, setOffers] = React.useState<Offer[]>([]);
   const [leads, setLeads] = React.useState<SalesNotification[]>([]);
+
+  // Raw cars table rows (includes pending/unpublished records so Sales
+  // Associates can manage the listings they uploaded, even before admin review)
+  const [carRows, setCarRows] = React.useState<any[]>([]);
+
+  // Sales Associate car upload wizard + own-listing edit state
+  const [isCarWizardOpen, setIsCarWizardOpen] = React.useState(false);
+  const [editingOwnCar, setEditingOwnCar] = React.useState<any | null>(null);
+  const [ownCarDraft, setOwnCarDraft] = React.useState<Record<string, string | number>>({});
+  const [isSavingOwnCar, setIsSavingOwnCar] = React.useState(false);
+
+  // Sell-form-style catalog (brands/models/variants) shared with the admin
+  // editor so Sales Associates upload with the exact same choices.
+  const sellCatalog = React.useMemo<SellCatalog>(() => {
+    const stored = getStoredSellCatalog();
+    return mergeCatalog(
+      catalogFromLegacy(defaultBrandData, defaultBrandLogos, DEFAULT_POPULAR_SELL_BRANDS),
+      stored?.brands,
+      stored?.removed
+    );
+  }, []);
   
   // Buyer-specific states
   const [savedCars, setSavedCars] = React.useState<string[]>([]);
@@ -70,11 +97,13 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       const { data: insps } = await supabase.from("inspections").select();
       const { data: offs } = await supabase.from("offers").select();
       const { data: lds } = await supabase.from("sales_notifications").select();
+      const { data: crs } = await supabase.from("cars").select();
 
       if (profs) setProfiles(profs);
       if (insps) setInspections(insps);
       if (offs) setOffers(offs);
       if (lds) setLeads(lds);
+      if (Array.isArray(crs)) setCarRows(crs);
 
       // Buyer collections
       const saved = localStorage.getItem("1stcars_saved_cars");
@@ -207,6 +236,107 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const handleLeadStatus = async (id: string, newStatus: "contacted" | "resolved") => {
     await supabase.from("sales_notifications").update({ status: newStatus }).eq("id", id);
     reloadAllData();
+  };
+
+  // Sales Associate uploads a new car -> saved as "pending" so it stays hidden
+  // from the public website until an admin approves it.
+  const handleSalesUploadCar = async (record: any) => {
+    const finalRecord = {
+      ...record,
+      status: "pending",
+      created_by: currentUser.id,
+      created_by_name: currentUser.name,
+      created_at: new Date().toISOString()
+    };
+    const { error } = await saveCar(finalRecord);
+    if (error) throw error;
+
+    // Alert every admin profile so the review desk knows a listing is waiting.
+    const { data: admins } = await supabase.from("profiles").select("id").eq("role", "Admin");
+    const adminList = admins || [{ id: "u-admin" }];
+    await Promise.all(adminList.map((admin: { id: string }) =>
+      notificationService.createNotification({
+        recipientId: admin.id,
+        senderId: currentUser.id,
+        title: "New Car Awaits Approval",
+        message: `Sales Associate ${currentUser.name} uploaded ${record.brand} ${record.model} (${record.year}) at ₹${Number(record.price).toLocaleString("en-IN")}. Review it in Admin CMS > Cars to publish it live.`,
+        type: "action",
+        metadata: { car_title: `${record.brand} ${record.model}`, status: "pending" }
+      })
+    ));
+
+    setIsCarWizardOpen(false);
+    toast.success(`${record.brand} ${record.model} submitted to Admin for review. It will go live on the website after approval.`);
+    setActiveTab("my_cars");
+    reloadAllData();
+    setTimeout(() => window.dispatchEvent(new Event("1stcars_settings_updated")), 0);
+  };
+
+  // Cars uploaded by THIS associate (never other associates' listings).
+  const myCars = React.useMemo(() => {
+    return carRows.filter((c) => {
+      const owner = c.created_by || c.payload?.created_by;
+      return owner && String(owner) === String(currentUser.id);
+    });
+  }, [carRows, currentUser.id]);
+
+  const openEditOwnCar = (car: any) => {
+    const data = { ...(car.payload || {}), ...car };
+    setEditingOwnCar(car);
+    setOwnCarDraft({
+      variant: data.variant || "",
+      color: data.color || "",
+      price: data.price ?? "",
+      km_driven: data.km_driven ?? data.mileage ?? "",
+      fuel: data.fuel || "Petrol",
+      transmission: data.transmission || "Automatic",
+      bodyType: data.bodyType || "Sedan",
+      city: data.city || "Surat",
+      reg_number: data.reg_number || ""
+    });
+  };
+
+  const handleSaveOwnCar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOwnCar) return;
+    const draft = { ...ownCarDraft };
+    const price = Number(draft.price);
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid selling price.");
+      return;
+    }
+    const kmDriven = Number(draft.km_driven);
+    if (isNaN(kmDriven) || kmDriven <= 0) {
+      toast.error("Please enter a valid KM driven.");
+      return;
+    }
+
+    setIsSavingOwnCar(true);
+    try {
+      const current = { ...(editingOwnCar.payload || {}), ...editingOwnCar };
+      const mergedRecord = {
+        ...current,
+        ...draft,
+        price,
+        km_driven: kmDriven,
+        mileage: kmDriven,
+        emi: Math.round(price / 60),
+        id: editingOwnCar.id,
+        created_by: current.created_by || currentUser.id,
+        created_by_name: current.created_by_name || currentUser.name
+      };
+      const { error } = await saveCar(mergedRecord, editingOwnCar.id);
+      if (error) throw error;
+
+      setEditingOwnCar(null);
+      toast.success("Your car listing has been updated.");
+      reloadAllData();
+      setTimeout(() => window.dispatchEvent(new Event("1stcars_settings_updated")), 0);
+    } catch (err) {
+      toast.error("Failed to update car: " + errorMessage(err));
+    } finally {
+      setIsSavingOwnCar(false);
+    }
   };
 
   // Offers placed on THIS seller's own inspected cars (never other sellers').
@@ -416,7 +546,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   <>
                     {[
                       { id: "test_drives", label: "Customer Requests Log", icon: Calendar },
-                      { id: "leads", label: "CRM Active Leads Desk", icon: ClipboardList }
+                      { id: "leads", label: "CRM Active Leads Desk", icon: ClipboardList },
+                      { id: "upload_car", label: "Upload New Car", icon: Upload },
+                      { id: "my_cars", label: "My Car Listings", icon: Car }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -849,9 +981,12 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <p className="text-xs text-slate-400 mt-0.5">Manage virtual tour requests and customer driving schedules.</p>
                   </div>
 
-                  {leads.filter(l => l.type === "test_drive").length > 0 ? (
+                  {/* Sales Associates only see leads assigned to them (their uploaded cars)
+                    or unassigned leads from the shared pool — never leads assigned
+                    to another associate. */}
+                  {leads.filter(l => l.type === "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).length > 0 ? (
                     <div className="space-y-3">
-                      {leads.filter(l => l.type === "test_drive").map(lead => (
+                      {leads.filter(l => l.type === "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).map(lead => (
                         <div key={lead.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -859,6 +994,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                                 {lead.status}
                               </Badge>
                               <span className="text-[9px] font-mono text-slate-400">ID: {lead.id}</span>
+                              {lead.assigned_to === currentUser.id && (
+                                <span className="text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20">
+                                  Auto-assigned to you
+                                </span>
+                              )}
                             </div>
                             <h4 className="font-black text-slate-900 text-base mt-1">{lead.name} • {lead.mobile}</h4>
                             <p className="text-xs text-slate-600 font-bold uppercase tracking-wider">
@@ -904,9 +1044,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <p className="text-xs text-slate-400 mt-0.5">General buy queries, WhatsApp callbacks, and cash-quote bookings.</p>
                   </div>
 
-                  {leads.filter(l => l.type !== "test_drive").length > 0 ? (
+                  {leads.filter(l => l.type !== "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).length > 0 ? (
                     <div className="space-y-3">
-                      {leads.filter(l => l.type !== "test_drive").map(lead => (
+                      {leads.filter(l => l.type !== "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).map(lead => (
                         <div key={lead.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -942,6 +1082,110 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 </div>
               )}
 
+              {/* Upload New Car */}
+              {currentUser.role === "Sales Associate" && activeTab === "upload_car" && (
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                  <div className="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-black text-xl text-slate-900 tracking-tight">Upload a New Car</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Fill the listing wizard below. Your car is saved as <strong className="text-amber-600">Pending Review</strong> — an admin must approve it before it goes live on the website.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => setIsCarWizardOpen(true)}
+                      className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-10 px-4 rounded-xl flex items-center gap-2 shrink-0"
+                    >
+                      <Upload className="h-4 w-4" /> Open Car Upload Wizard
+                    </Button>
+                  </div>
+
+                  <div className="p-6 bg-[#FAF9F6] border border-slate-100 rounded-2xl text-center space-y-2">
+                    <Car className="h-10 w-10 text-[#2E7D32] mx-auto" />
+                    <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Launch the 9-step wizard to list a vehicle</p>
+                    <p className="text-[11px] text-slate-400 font-semibold max-w-md mx-auto leading-relaxed">
+                      Brand, model, variant, year, fuel &amp; gear, RTO / city, KM &amp; price, 120-point inspection, and photos — then submit for admin review.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* My Car Listings */}
+              {currentUser.role === "Sales Associate" && activeTab === "my_cars" && (
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                  <div className="border-b border-slate-100 pb-4">
+                    <h3 className="font-black text-xl text-slate-900 tracking-tight">My Car Listings</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Cars uploaded by you ({myCars.length}). You can edit your own listings; vehicles published by other team members are managed by the Admin.
+                    </p>
+                  </div>
+
+                  {myCars.length > 0 ? (
+                    <div className="space-y-4">
+                      {myCars.map(car => {
+                        const data = { ...(car.payload || {}), ...car };
+                        const isLive = !car.status || car.status === "available";
+                        return (
+                          <div key={car.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full ${
+                                  isLive
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : car.status === "pending"
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-indigo-100 text-indigo-700"
+                                }`}>
+                                  {isLive ? "Live on Website" : String(car.status || "pending").replace("_", " ")}
+                                </span>
+                                <span className="text-[9px] font-mono text-slate-400">ID: {car.id}</span>
+                              </div>
+                              <h4 className="font-black text-slate-900 text-base">{data.brand} {data.model} ({data.year})</h4>
+                              <p className="text-[11px] text-slate-500 font-bold">
+                                {data.variant || "—"} • {data.fuel} • {data.transmission} • {Number(data.km_driven || data.mileage || 0).toLocaleString()} km • {data.city || "Surat"}
+                              </p>
+                              <p className="text-sm font-black text-[#2E7D32]">₹{Number(data.price || 0).toLocaleString("en-IN")}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                              {isLive && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={onNavigateToInventory}
+                                  className="border-slate-200 bg-white text-slate-600 text-[9px] font-black uppercase tracking-wider h-8 rounded-lg px-2.5 flex items-center gap-1"
+                                >
+                                  <Eye className="h-3.5 w-3.5" /> View on Site
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                onClick={() => openEditOwnCar(car)}
+                                className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[9px] font-black uppercase tracking-wider h-8 rounded-lg px-2.5 flex items-center gap-1"
+                              >
+                                <Pencil className="h-3.5 w-3.5" /> Edit Listing
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
+                      <Car className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-xs text-slate-500 font-bold">You haven't uploaded any cars yet.</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Use the "Upload New Car" tab to create your first listing.</p>
+                      <Button
+                        onClick={() => setActiveTab("upload_car")}
+                        className="mt-4 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-9 px-4 rounded-xl"
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload New Car
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* =======================================================
                   6. ADMIN DASHBOARD TABS
                   ======================================================= */}
@@ -958,7 +1202,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           </div>
         </div>
 
-          {isLoading && (
+{isLoading && (
             <div className="absolute inset-0 z-40 bg-[#FAF9F6]/85 rounded-3xl flex items-start justify-center pt-24">
               <div className="bg-white border border-slate-100 rounded-3xl p-24 text-center shadow-sm">
                 <RefreshCw className="h-10 w-10 text-[#2E7D32] animate-spin mx-auto mb-4" />
@@ -968,6 +1212,149 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </div>
           )}
         </div>
+
+        {/* Sales Associate Car Upload Wizard */}
+        <CreateCarWizard
+          sellCatalog={sellCatalog}
+          isOpen={isCarWizardOpen}
+          onClose={() => setIsCarWizardOpen(false)}
+          onSubmit={handleSalesUploadCar}
+          submitStatus="pending"
+        />
+
+        {/* Edit My Listing Modal */}
+        {!!editingOwnCar && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 my-8">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-black text-lg text-slate-900 tracking-tight flex items-center gap-2">
+                    <Pencil className="h-4.5 w-4.5 text-[#2E7D32]" /> Edit My Listing
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5 font-semibold">
+                    {(editingOwnCar.brand || editingOwnCar.payload?.brand) + " " + (editingOwnCar.model || "")} • Only cars uploaded by you can be edited.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditingOwnCar(null)}
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveOwnCar} className="space-y-5 text-xs font-semibold">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Selling Price (₹)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      required
+                      value={String(ownCarDraft.price ?? "")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, price: e.target.value }))}
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">KM Driven</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      required
+                      value={String(ownCarDraft.km_driven ?? "")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, km_driven: e.target.value }))}
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Variant</label>
+                    <Input
+                      value={String(ownCarDraft.variant ?? "")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, variant: e.target.value }))}
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Color</label>
+                    <Input
+                      value={String(ownCarDraft.color ?? "")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, color: e.target.value }))}
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Fuel</label>
+                    <select
+                      value={String(ownCarDraft.fuel ?? "Petrol")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, fuel: e.target.value }))}
+                      className="w-full h-10 border border-slate-200 bg-white rounded-xl text-xs font-bold px-3 outline-none cursor-pointer focus:ring-1 focus:ring-[#2E7D32]"
+                    >
+                      {["Petrol", "Diesel", "CNG", "Electric", "Hybrid"].map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Transmission</label>
+                    <select
+                      value={String(ownCarDraft.transmission ?? "Automatic")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, transmission: e.target.value }))}
+                      className="w-full h-10 border border-slate-200 bg-white rounded-xl text-xs font-bold px-3 outline-none cursor-pointer focus:ring-1 focus:ring-[#2E7D32]"
+                    >
+                      {["Automatic", "Manual", "DCT", "AWD"].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Body Type</label>
+                    <select
+                      value={String(ownCarDraft.bodyType ?? "Sedan")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, bodyType: e.target.value }))}
+                      className="w-full h-10 border border-slate-200 bg-white rounded-xl text-xs font-bold px-3 outline-none cursor-pointer focus:ring-1 focus:ring-[#2E7D32]"
+                    >
+                      {["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "EV"].map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">City / Location</label>
+                    <Input
+                      value={String(ownCarDraft.city ?? "")}
+                      onChange={(e) => setOwnCarDraft((prev) => ({ ...prev, city: e.target.value }))}
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] font-bold text-amber-800 leading-relaxed">
+                  ⏳ Listing status stays "{editingOwnCar.status === "available" ? "Live" : "Pending Review"}" after editing.
+                  {editingOwnCar.status === "pending" && " A pending listing only goes live after the Admin approves it."}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditingOwnCar(null)}
+                    className="border-slate-200 bg-white text-slate-600 text-[10px] font-black uppercase tracking-wider h-10 px-4 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSavingOwnCar}
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-10 px-5 rounded-xl flex items-center gap-1.5"
+                  >
+                    <Check className="h-3.5 w-3.5" /> {isSavingOwnCar ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
