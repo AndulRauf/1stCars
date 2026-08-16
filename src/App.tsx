@@ -665,23 +665,24 @@ export default function App() {
           className={cn(
             // z-[200] keeps the toast ABOVE modal backdrops (z-50) and the SMS
             // banner (z-[100]) so it can never be covered / blurred by a
-            // backdrop-filter overlay. Opaque backgrounds + subtle slide-in
-            // (instead of the jittery continuous bounce) keep text crisp.
+            // backdrop-filter overlay. Light backgrounds + dark high-contrast
+            // text (instead of the jittery continuous bounce) keep copy crisp
+            // and readable on any screen.
             "fixed bottom-6 right-6 z-[200] px-5 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 max-w-sm border-2 animate-in fade-in slide-in-from-bottom-4 duration-300",
             toastType === "error"
-              ? "bg-rose-600 border-rose-400 text-white"
+              ? "bg-rose-50 border-rose-300 text-rose-900"
               : toastType === "info"
-                ? "bg-slate-900 border-slate-600 text-white"
-                : "bg-[#1B5E20] border-[#2E7D32] text-white"
+                ? "bg-slate-100 border-slate-300 text-slate-800"
+                : "bg-emerald-50 border-emerald-300 text-emerald-900"
           )}
         >
           <Sparkles className={cn(
             "h-5 w-5 shrink-0",
             toastType === "error"
-              ? "text-white"
+              ? "text-rose-500"
               : toastType === "info"
-                ? "text-slate-300"
-                : "text-emerald-200"
+                ? "text-slate-500"
+                : "text-emerald-600"
           )} />
           <p className="text-sm font-bold leading-snug">{toastMessage}</p>
         </div>

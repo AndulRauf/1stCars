@@ -1156,8 +1156,20 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const handleApproveCar = async (item: any) => {
     if (!window.confirm(`Approve ${item.brand || ""} ${item.model || "this car"} and publish it live on the 1stCars website?`)) return;
     try {
-      const { error } = await supabase.from("cars").update({ status: "available" }).eq("id", item.id);
+      const { data, error } = await supabase.from("cars").update({ status: "available" }).eq("id", item.id).select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        // 0 rows updated — the row id is stale (e.g. a local-only record
+        // against the real database). Retry with the id stored in payload.
+        const payloadId = item.payload?.id;
+        if (payloadId && payloadId !== item.id) {
+          const retry = await supabase.from("cars").update({ status: "available" }).eq("id", payloadId).select("id");
+          if (retry.error) throw retry.error;
+          if (!retry.data || retry.data.length === 0) throw new Error("Car row not found in the database. Refresh the list and try again.");
+        } else {
+          throw new Error("Car row not found in the database. Refresh the list and try again.");
+        }
+      }
 
       const creatorId = item.created_by || item.payload?.created_by;
       if (creatorId) {
@@ -1176,7 +1188,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       if (onReloadAllData) onReloadAllData();
       setTimeout(() => window.dispatchEvent(new Event("1stcars_settings_updated")), 0);
     } catch (err) {
-      toast.error("Failed to approve car: " + errorMessage(err));
+      console.error("Failed to approve car:", err);
+      toast.error("Could not approve this car. " + errorMessage(err));
     }
   };
 
