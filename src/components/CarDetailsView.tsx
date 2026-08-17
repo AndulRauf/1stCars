@@ -33,7 +33,7 @@ export function CarDetailsView({
   onNavigateToSalesPortal,
   onNavigateToDashboard,
 }: CarDetailsViewProps) {
-  const catalogCars = useCatalogCars();
+  const { cars: catalogCars } = useCatalogCars();
 
   // 120-Point checklist totals computed from the official inspection data so
   // the certificate banner always matches the module breakdown rendered below.

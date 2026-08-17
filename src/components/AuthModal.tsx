@@ -3,9 +3,9 @@ import { X, ShieldCheck, Mail, User, Phone, MapPin, Database, Check, Award, Uplo
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -52,12 +52,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
   const [success, setSuccess] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
+  // Production builds may not use the local mock database at all — the
+  // "Bypass & Use Local Mock Database" escape hatch below is hidden then.
   // @ts-ignore
-  const hasSupabaseKeys = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
-  const [isUsingMock, setIsUsingMock] = React.useState(() => {
-    return typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
-  });
-  const isRealSupabase = hasSupabaseKeys && !isUsingMock;
+  const isProdBuild = import.meta.env.PROD === true;
 
   // Reset form state each time the modal opens. When an initialEmail is
   // provided (e.g. "Go to Seller Dashboard") the login email is pre-filled so
@@ -163,8 +161,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       return;
     }
 
-    const autoPassword = deriveAutoPassword(demoEmail);
-    localStorage.setItem(getAutoPasswordKey(demoEmail), autoPassword);
+    const autoPassword = getOrCreateAutoPassword(demoEmail);
 
     try {
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
@@ -238,6 +235,32 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       // Never fabricate a login: a thrown error means the backend could not
       // authenticate us, so surface it instead of minting a fake user.
       setError(err?.message || "Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google OAuth sign-in (real Supabase only — the mock client has no OAuth).
+  const handleGoogleLogin = async () => {
+    setError("");
+    setSuccess("");
+    if (!isRealSupabase) {
+      setError("Google sign-in is only available when connected to real Supabase. Use the demo accounts instead.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/role_dashboards` : undefined
+        }
+      });
+      if (oauthErr) {
+        setError(oauthErr.message || "Google sign-in failed. Is the Google provider enabled in Supabase Auth?");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -341,6 +364,74 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         localStorage.setItem("1stcars_cms_dealers", JSON.stringify(updatedDealers));
       } catch (e) {}
 
+      if (isRealSupabase) {
+        // Real Supabase: create an actual auth account (role Dealer, pending
+        // approval) so the dealer can sign in after admin approval. A random
+        // per-device password is used and a password-reset email is sent so the
+        // dealer controls their own credentials.
+        try {
+          const dealerEmail = email.trim().toLowerCase();
+          const dealerPassword = getOrCreateAutoPassword(dealerEmail);
+          const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+            email: dealerEmail,
+            password: dealerPassword,
+            options: {
+              data: {
+                name: regName,
+                role: "Dealer",
+                mobile: regMobile,
+                city: regCity,
+                dealership_name: dealershipName || `${regName} Motors`
+              }
+            }
+          });
+          if (signUpErr) throw signUpErr;
+          if (!signUpData?.user) {
+            setError("Account creation did not complete. If you already have an account for this email, please sign in instead.");
+            return;
+          }
+
+          // Persist the KYC application so the Admin review queue can approve
+          // the account against the uploaded documents.
+          try {
+            await supabase.from("dealer_applications").insert({
+              user_id: signUpData.user.id,
+              name: regName,
+              dealership_name: dealershipName || `${regName} Motors`,
+              email: dealerEmail,
+              mobile: regMobile,
+              city: regCity,
+              status: "pending_approval",
+              visiting_card_url: visitingCardUrl,
+              aadhar_card_url: aadharCardUrl
+            });
+          } catch (appErr) {
+            console.error("Failed to persist dealer application:", appErr);
+          }
+
+          // Give the dealer a way to set their own password.
+          try {
+            await supabase.auth.resetPasswordForEmail(dealerEmail);
+          } catch (resetErr) {
+            console.error("Failed to send password reset email:", resetErr);
+          }
+
+          setSuccess(`Dealer registration submitted for ${regName}! Admin will review your documents. Check ${dealerEmail} for a password-setup link — once approved you can sign in to participate in live auctions.`);
+          toast.success("Dealer profile submitted to Admin for review!");
+          setLoading(false);
+          setRegName("");
+          setRegMobile("");
+          setEmail("");
+          setDealershipName("");
+          setVisitingCardUrl("");
+          setAadharCardUrl("");
+          return;
+        } catch (err: any) {
+          setError(err?.message || "Dealer registration failed. Please try again.");
+          return;
+        }
+      }
+
       // KYC documents (Visiting Card / Aadhar) are intentionally NOT written to
       // the public `profiles` table — that table carries no KYC columns and is
       // world-readable (Public Read Profiles policy). They live only in the
@@ -442,7 +533,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           </div>
 
         {/* Error and Success Indicators */}
-        {hasSupabaseKeys && isUsingMock && (
+        {!isRealSupabase && (
           <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl font-bold flex flex-col gap-1">
             <div className="flex justify-between items-center">
               <span className="flex items-center gap-1">💡 Running in Mock DB mode</span>
@@ -506,16 +597,26 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 </div>
 
                 <div className="border-t border-rose-100/70 pt-2 flex flex-col gap-1">
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    Or bypass this and use the local high-fidelity preview mode:
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleMockFallback}
-                    className="w-full py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
-                  >
-                    Bypass & Use Local Mock Database
-                  </button>
+                  {!isProdBuild && (
+                    <>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Or bypass this and use the local high-fidelity preview mode:
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleMockFallback}
+                        className="w-full py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                      >
+                        Bypass & Use Local Mock Database
+                      </button>
+                    </>
+                  )}
+                  {isProdBuild && (
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Production builds cannot fall back to the local mock database. Set the Supabase
+                      environment variables and redeploy.
+                    </p>
+                  )}
                 </div>
               </div>
             );
@@ -707,6 +808,28 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                   </div>
                 </div>
               )}
+
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-black text-slate-700 transition-all cursor-pointer disabled:opacity-60"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/>
+                    <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52Z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="flex-1 h-px bg-slate-200" />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">or use email</span>
+                  <span className="flex-1 h-px bg-slate-200" />
+                </div>
+              </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address *</label>

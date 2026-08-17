@@ -78,11 +78,25 @@ export function getGa4MeasurementId(): string {
   return "";
 }
 
+// Consent gate: analytics may only start after the visitor explicitly accepts
+// tracking (stored by src/lib/consent.ts). Read directly to avoid a circular
+// import between the two modules.
+function hasTrackingConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem("1stcars_analytics_consent") === "granted";
+  } catch {
+    return false;
+  }
+}
+
 // Inject the gtag.js loader exactly once and configure GA4. Reuses an existing
 // window.gtag if one is already present (no duplicate initialization). Safe to
-// call repeatedly — no-ops when no valid Measurement ID is configured.
+// call repeatedly — no-ops when no valid Measurement ID is configured OR when
+// the visitor has not consented to tracking.
 export function initGA4(): void {
   if (typeof window === "undefined" || ga4Initialized) return;
+  if (!hasTrackingConsent()) return;
   const id = getGa4MeasurementId();
   if (!id) return;
 

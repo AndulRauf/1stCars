@@ -4,10 +4,10 @@ import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
@@ -84,7 +84,9 @@ export function BookingModal({
 
   if (!isOpen) return null;
 
-  // Handle Send Mobile OTP
+  // Handle Send Mobile OTP — simulated OTP exists ONLY in mock/demo mode. On a
+  // real backend the concierge verifies the number over the phone; the UI never
+  // pretends a production SMS verification happened.
   const handleSendOtp = () => {
     if (!mobile || mobile.replace(/\D/g, "").length < 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
@@ -131,13 +133,17 @@ export function BookingModal({
       return;
     }
 
-    // Auto verify OTP if user hasn't manually clicked verify but filled correctly
-    if (!isOtpVerified) {
-      if (isOtpSent && enteredOtp === generatedOtp) {
-        setIsOtpVerified(true);
-      } else {
-        toast.error("Please send & verify your Mobile OTP before submitting.");
-        return;
+    // Auto verify OTP if user hasn't manually clicked verify but filled
+    // correctly. The simulated OTP gate only applies in mock/demo mode — real
+    // bookings never fake a mobile verification.
+    if (!isRealSupabase) {
+      if (!isOtpVerified) {
+        if (isOtpSent && enteredOtp === generatedOtp) {
+          setIsOtpVerified(true);
+        } else {
+          toast.error("Please send & verify your Mobile OTP before submitting.");
+          return;
+        }
       }
     }
 
@@ -169,18 +175,14 @@ export function BookingModal({
     };
 
     try {
-      // 0. Auto-register / Log in as Buyer profile
+      // 0. Auto-register / Log in as Buyer profile. The password is random per
+      // device and stored locally — it can NEVER be derived from the email by
+      // a third party (previous deterministic scheme removed).
       const userEmail = email.trim().toLowerCase();
       const userName = name.trim();
       const userMobile = mobile.trim();
       const userCity = city || "Surat";
-      // Use a password deterministically derived from the email so repeat
-      // bookings (even from another device) can sign back into the SAME
-      // auto-created Buyer account. Random per-device passwords break sign-in
-      // once the account already exists (the stored hash no longer matches).
-      const autoPasswordKey = getAutoPasswordKey(userEmail);
-      const autoPassword = deriveAutoPassword(userEmail);
-      localStorage.setItem(autoPasswordKey, autoPassword);
+      const autoPassword = getOrCreateAutoPassword(userEmail);
 
       // Automatically add vehicle to favorite/saved cars list
       if (car?.id) {
@@ -395,8 +397,13 @@ export function BookingModal({
                 </div>
               )}
               <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
-                <span className="text-slate-400 font-black uppercase text-[10px]">Verified Phone</span>
-                <span className="text-slate-900 font-black">+91 {mobile} <span className="text-emerald-600 font-normal">✓</span></span>
+                <span className="text-slate-400 font-black uppercase text-[10px]">
+                  {isOtpVerified ? "Verified Phone" : "Contact Number"}
+                </span>
+                <span className="text-slate-900 font-black">
+                  +91 {mobile}
+                  {isOtpVerified && <span className="text-emerald-600 font-normal"> ✓</span>}
+                </span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
                 <span className="text-slate-400 font-black uppercase text-[10px]">Gmail / Email</span>
@@ -527,7 +534,7 @@ export function BookingModal({
                     className="h-10 pl-10 text-xs font-bold rounded-xl"
                   />
                 </div>
-                {!isOtpVerified && (
+                {!isRealSupabase && !isOtpVerified && (
                   <Button
                     type="button"
                     onClick={handleSendOtp}
@@ -539,8 +546,8 @@ export function BookingModal({
                 )}
               </div>
 
-              {/* OTP Input Field when Sent */}
-              {isOtpSent && !isOtpVerified && (
+              {/* Simulated OTP Input (mock/demo mode only) */}
+              {!isRealSupabase && isOtpSent && !isOtpVerified && (
                 <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black text-emerald-900 uppercase">Enter 6-Digit OTP</span>
@@ -571,6 +578,14 @@ export function BookingModal({
                     </Button>
                   </div>
                 </div>
+              )}
+
+              {/* Real mode: number is verified by the concierge on the call —
+                  the UI must not pretend an SMS verification happened. */}
+              {isRealSupabase && (
+                <p className="text-[10px] text-slate-400 font-semibold pt-0.5">
+                  Our concierge will verify this number when they call you to confirm your slot.
+                </p>
               )}
             </div>
 

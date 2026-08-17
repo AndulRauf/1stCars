@@ -7,11 +7,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
@@ -720,27 +721,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [resendCountdown, setResendCountdown] = React.useState(0);
   const [otpSending, setOtpSending] = React.useState(false);
 
-  // States for the bottom "Sell or Trade-In in 3 steps" inline inspection booking and calculator
-  const [bookPhone, setBookPhone] = React.useState("");
-  const [bookDate, setBookDate] = React.useState("");
-  const [bookName, setBookName] = React.useState("");
-  const [bookSuccess, setBookSuccess] = React.useState(false);
-
+  // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
   const [calcBrand, setCalcBrand] = React.useState("");
   const [calcYear, setCalcYear] = React.useState("2021");
   const [calcMileage, setCalcMileage] = React.useState("");
   const [calcEstimatedValue, setCalcEstimatedValue] = React.useState<number | null>(null);
   const [calcError, setCalcError] = React.useState("");
-
-  const handleBookInspection = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookPhone || !bookDate || !bookName) {
-      toast.error("Please fill in all inspection details.");
-      return;
-    }
-    setBookSuccess(true);
-    toast.success("Free evaluation booked successfully! Our concierge will call you shortly.");
-  };
 
   const handleCalculateValuation = (e: React.FormEvent) => {
     e.preventDefault();
@@ -756,15 +742,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
 
-    // Estimate math
-    const baseValue = 1800000; // default average for luxury pre-owned
-    const currentYear = new Date().getFullYear();
-    const age = Math.max(0, currentYear - Number(calcYear));
-    const ageDepreciation = Math.max(0.3, 1 - (age * 0.08));
-    const mileageDepreciation = Math.max(0.2, 1 - (mileageNum * 0.000005));
-    
-    const finalValue = Math.round(baseValue * ageDepreciation * mileageDepreciation);
-    setCalcEstimatedValue(Math.max(12000, finalValue));
+    // Shared honest heuristic — same numbers as the car valuation used on the
+    // Buy-side detail page, so a quote never contradicts the rest of the site.
+    const finalValue = estimateCarValue(calcBrand.trim(), Number(calcYear), mileageNum);
+    setCalcEstimatedValue(finalValue);
     toast.success(`Instant valuation compiled for your ${calcBrand}!`);
   };
 
@@ -792,6 +773,15 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
     setOtpSending(true);
+    if (isRealSupabase) {
+      // No simulated OTP in production: the concierge verifies the seller's
+      // mobile over the confirmation call. The request can proceed without a
+      // fabricated code.
+      setOtpSending(false);
+      setOtpVerified(true);
+      toast.success("Mobile noted — our concierge verifies it on your confirmation call.");
+      return;
+    }
     const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
     setOtpCode(generatedCode);
     
@@ -972,9 +962,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // already exists (the stored credential hash would no longer match),
       // which is what left the seller unauthenticated and bounced to the login
       // popup after tapping "Go to Seller Dashboard".
-      const autoPasswordKey = getAutoPasswordKey(sellerEmail);
-      const candidatePassword = deriveAutoPassword(sellerEmail);
-      localStorage.setItem(autoPasswordKey, candidatePassword);
+      const candidatePassword = getOrCreateAutoPassword(sellerEmail);
 
 
       const { user: signedInUser, error: authError } = await resolveAutoSignIn(
@@ -1015,8 +1003,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
-    // Construct registration number with custom suffix or fallback
-    const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase() : "AB-1234";
+    // Construct registration number with custom suffix or a clear "to be
+    // recorded on-site" placeholder — never a fabricated plate.
+    const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase().replace(/[^A-Z0-9-]/g, "") : "XX-0000";
     const computedReg = `${selectedRTO}-${finalRegSuffix}`;
 
     // Smart default fallbacks for removed fields
@@ -1026,9 +1015,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
     const finalTime = preferredTime || "11:00 AM - 01:00 PM";
 
-    // Parse KM driven value
-    const match = selectedKMs.match(/[\d,]+/);
-    const computedKms = match ? Number(match[0].replace(/,/g, "")) : 35000;
+    // Parse KM driven value — options are ranges like "30,000 - 40,000 Km";
+    // take the UPPER bound so "0 - 10,000 Km" never becomes 0 km.
+    const kmMatches = selectedKMs.match(/[\d,]+/g) || [];
+    const kmValues = kmMatches.map((n) => Number(n.replace(/,/g, ""))).filter((n) => !isNaN(n));
+    const computedKms = kmValues.length > 0 ? Math.max(...kmValues) : 35000;
 
     const inspectionRecord = {
       seller_id: user?.id || null,
@@ -1878,7 +1869,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               disabled={otpSending || !mobile || mobile.length !== 10}
                               className="h-11 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs px-4 rounded-xl shrink-0"
                             >
-                              {otpSending ? "Sending..." : otpSent ? "Resend" : "Send OTP"}
+                              {isRealSupabase ? "Verify on call" : otpSending ? "Sending..." : otpSent ? "Resend" : "Send OTP"}
                             </Button>
                           )}
                         </div>
@@ -1941,6 +1932,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
                           {/* Demo-only simulated SMS banner. A real gateway never
                               shows the code here — it goes to the seller's phone. */}
+                          {!isRealSupabase && (
                           <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2">
                             <p className="text-[10px] font-bold text-slate-500 leading-snug">
                               Demo SMS: <span className="text-slate-800">+91 {mobile}</span> — your 1stCars verification code is{" "}
@@ -1958,6 +1950,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               ⚡ Autofill
                             </button>
                           </div>
+                          )}
                         </div>
                       )}
 
@@ -1965,9 +1958,80 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       {otpVerified && (
                         <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-2.5 text-[#2E7D32] text-xs font-black">
                           <CheckCircle2 className="h-5 w-5 text-[#2E7D32] shrink-0" />
-                          <span>Mobile verified successfully! Your car details are ready for pricing.</span>
+                          <span>{isRealSupabase ? "Mobile noted! Our concierge verifies it on the confirmation call." : "Mobile verified successfully! Your car details are ready for pricing."}</span>
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-4 border-t border-slate-100 pt-5">
+                      {/* Doorstep Address Input Row */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">DOORSTEP ADDRESS *</label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Flat / house no, street, area, city — where should the inspector come?"
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            required
+                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Preferred Date + Time Row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
+                          <div className="relative">
+                            <Calendar className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                            <Input
+                              type="date"
+                              min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                              value={preferredDate}
+                              onChange={(e) => setPreferredDate(e.target.value)}
+                              required
+                              className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED TIME *</label>
+                          <div className="relative">
+                            <Clock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                            <select
+                              value={preferredTime}
+                              onChange={(e) => setPreferredTime(e.target.value)}
+                              required
+                              className="h-11 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
+                            >
+                              {["10:00 AM - 12:00 PM", "12:00 PM - 02:00 PM", "02:00 PM - 04:00 PM", "04:00 PM - 06:00 PM", "06:00 PM - 08:00 PM"].map((slot) => (
+                                <option key={slot} value={slot}>{slot}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Registration Number Suffix (optional) — replaces the old fake plate */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">REGISTRATION SUFFIX (OPTIONAL)</label>
+                        <div className="relative">
+                          <Tag className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder={`e.g. AB-1234 — auto-set as ${selectedRTO}-XX-0000 until the inspector records the real plate`}
+                            type="text"
+                            maxLength={12}
+                            value={customRegSuffix}
+                            onChange={(e) => setCustomRegSuffix(e.target.value.toUpperCase())}
+                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-semibold">
+                          Leave blank if you don't know it — the inspector records the actual number at your doorstep.
+                        </p>
+                      </div>
                     </div>
 
                     <div className="pt-4">

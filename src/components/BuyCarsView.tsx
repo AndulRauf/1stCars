@@ -38,7 +38,7 @@ export function BuyCarsView({
   });
 
   // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
-  const catalogCars = useCatalogCars();
+  const { cars: catalogCars } = useCatalogCars();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {

@@ -9,7 +9,7 @@ import {
   Activity, Shield, Hammer, MapPin, Calendar, Heart, 
   MessageSquare, ClipboardList, BookOpen, UserCheck, Eye, 
   Upload, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle2,
-  Car, Link, Menu
+  Car, Link, Menu, Inbox, Wallet, QrCode
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { isHiddenPage } from "@/src/lib/utils";
@@ -136,12 +136,19 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   // Active sub-module within Admin CMS
   const [activeModule, setActiveModule] = React.useState<CMSModule>("dashboard");
 
+  // Role scope for per-role sidebar preferences (see Sidebar).
+  const sidebarRoleKey = currentUser?.role || "admin";
+  const sidebarCollapseKey = `1stcars_admin_sidebar_collapsed_${sidebarRoleKey}`;
+
   // Mobile drawer state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
 
   // Desktop sidebar collapsed state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(sidebarCollapseKey);
+      if (stored !== null) return stored === "true";
+      // Legacy global key fallback
       return localStorage.getItem("1stcars_admin_sidebar_collapsed") === "true";
     }
     return false;
@@ -150,7 +157,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const handleToggleSidebarCollapse = () => {
     setIsSidebarCollapsed(prev => {
       const next = !prev;
-      localStorage.setItem("1stcars_admin_sidebar_collapsed", String(next));
+      localStorage.setItem(sidebarCollapseKey, String(next));
       return next;
     });
   };
@@ -163,6 +170,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [users, setUsers] = React.useState<any[]>([]);
   const [inspections, setInspections] = React.useState<any[]>([]);
   const [auctions, setAuctions] = React.useState<any[]>([]);
+  const [auctionBids, setAuctionBids] = React.useState<any[]>([]);
   const [notifications, setNotifications] = React.useState<any[]>([]);
   const [brands, setBrands] = React.useState<any[]>([]);
   const [pages, setPages] = React.useState<any[]>([]);
@@ -183,6 +191,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [testDrives, setTestDrives] = React.useState<any[]>([]);
   const [purchases, setPurchases] = React.useState<any[]>([]);
   const [crmActivities, setCrmActivities] = React.useState<any[]>([]);
+
+  // Unified "Leads & Enquiries" module: one sidebar entry with tabs across
+  // test drive requests, booking requests and the test drives log.
+  const [leadsTab, setLeadsTab] = React.useState<"test_drive_requests" | "booking_requests" | "test_drives">("test_drive_requests");
+
+  // Theme Design module holds two tabs: the brand/SEO designer and UPI payments.
+  const [settingsTab, setSettingsTab] = React.useState<"theme" | "payments">("theme");
   
   // Custom mock/localStorage tables for the other modules requested
   const [dealers, setDealers] = React.useState<any[]>([]);
@@ -700,7 +715,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { data: ciData },
         { data: tdData },
         { data: puData },
-        { data: caData }
+        { data: caData },
+        { data: abData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -726,7 +742,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         supabase.from("car_images").select(),
         supabase.from("test_drives").select(),
         supabase.from("purchases").select(),
-        supabase.from("crm_activities").select()
+        supabase.from("crm_activities").select(),
+        supabase.from("auction_bids").select()
       ]);
 
       if (cData) setCars(cData);
@@ -747,6 +764,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       if (puData) setPurchases(puData);
       if (caData) setCrmActivities(caData);
       if (ciData) setCarImages(ciData);
+      if (abData) setAuctionBids(abData);
 
       // Load local-storage metadata schemas for extra requested modules
       const getStored = (key: string, def: any[]) => {
@@ -1053,7 +1071,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     setEditingId(null);
     
     // Car creation uses the sell-form-style wizard instead of the generic form
-    if (activeModule === "cars") {
+    if (currentListModule === "cars") {
       setIsCarWizardOpen(true);
       return;
     }
@@ -1062,6 +1080,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     const defaultTemplates: Record<CMSModule, any> = {
       dashboard: {},
       crm: {},
+      leads: {},
       cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
         { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
         { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
@@ -1099,7 +1118,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       crm_activities: { customer_id: "", staff_id: "", activity_type: "note", subject: "", detail: "" }
     };
 
-    setFormData(defaultTemplates[activeModule] || {});
+    setFormData(defaultTemplates[currentListModule] || {});
     setIsFormOpen(true);
   };
 
@@ -1109,7 +1128,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     setEditingId(item.id);
     
     let initialData = { ...item };
-    if (activeModule === "cars") {
+    if (currentListModule === "cars") {
       // Flatten the JSONB payload into the top level so photos, price breakup,
       // inspection and every other CMS-only field survive an edit. saveCar's
       // buildCarRecord rebuilds `payload` from the top-level record, so without
@@ -1247,7 +1266,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               setIsUploading(false);
               setUploadProgress(0);
               
-              if (activeModule === "settings") {
+              if (currentListModule === "settings") {
                 setWebsiteSettings((prev: any) => {
                   const updated = {
                     ...prev,
@@ -1268,7 +1287,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                   logo: realUrl,
                   photo: realUrl
                 }));
-                toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-${activeModule}`);
+                toast.success(`Pristine Image "${file.name}" uploaded successfully to Supabase Storage bucket: public-${currentListModule}`);
               }
             }, 300);
             return 100;
@@ -1330,7 +1349,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const handleDropUpload = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      if (activeModule === "cars") {
+      if (currentListModule === "cars") {
         simulateMultipleImageUpload(e.dataTransfer.files);
       } else {
         simulateImageUpload(e.dataTransfer.files[0]);
@@ -1340,7 +1359,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   const handleManualUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      if (activeModule === "cars") {
+      if (currentListModule === "cars") {
         simulateMultipleImageUpload(e.target.files);
       } else {
         simulateImageUpload(e.target.files[0]);
@@ -1355,13 +1374,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     setIsLoading(true);
 
     try {
-      const generatedId = editingId || `id-${activeModule}-${Math.random().toString(36).substr(2, 9)}`;
+      const generatedId = editingId || `id-${currentListModule}-${Math.random().toString(36).substr(2, 9)}`;
       const currentRecord = { ...formData, id: generatedId, created_at: formData.created_at || new Date().toISOString() };
 
-      if (activeModule === "cars") {
+      if (currentListModule === "cars") {
         const { error } = await saveCar(currentRecord, formMode === "add" ? null : editingId);
         if (error) throw error;
-      } else if (activeModule === "users") {
+      } else if (currentListModule === "users") {
         // `password` is a login credential — never store it on the public profile.
         const { password, ...profileRecord } = currentRecord;
 
@@ -1404,24 +1423,24 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         } else {
           await supabase.from("profiles").update(profileRecord).eq("id", editingId);
         }
-      } else if (activeModule === "inspections") {
+      } else if (currentListModule === "inspections") {
         if (formMode === "add") {
           await supabase.from("inspections").insert([currentRecord]);
         } else {
           await supabase.from("inspections").update(currentRecord).eq("id", editingId);
         }
-      } else if (activeModule === "test_drives" || activeModule === "purchases" || activeModule === "crm_activities") {
+      } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
         if (formMode === "add") {
-          await supabase.from(activeModule).insert([currentRecord]);
+          await supabase.from(currentListModule).insert([currentRecord]);
         } else {
-          await supabase.from(activeModule).update(currentRecord).eq("id", editingId);
+          await supabase.from(currentListModule).update(currentRecord).eq("id", editingId);
         }
-      } else if (activeModule === "auctions") {
+      } else if (currentListModule === "auctions") {
         // Auctions are lifecycle-managed by the canonical engine (RPCs in
         // public/auction_engine.sql). Never write the table directly here —
         // direct writes would bypass the status guard, RLS and RPC validation.
         throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Use the New Auction / lifecycle buttons there.");
-      } else if (activeModule === "brands") {
+      } else if (currentListModule === "brands") {
         // 1. Save or update the Brand record in Supabase
         const logoUrlToSave = currentRecord.logo_url || currentRecord.logo || currentRecord.image_url || currentRecord.photo || "⭐";
         const brandRecord = {
@@ -1495,16 +1514,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           localStorage.setItem("1stcars_cms_models", JSON.stringify(nextModels));
           await mirrorRecordToSupabase("models", modelRecord, existingModelIdx > -1 ? nextModels[existingModelIdx].id : null);
         }
-      } else if (activeModule === "notifications") {
+      } else if (currentListModule === "notifications") {
         if (formMode === "add") {
           await supabase.from("notifications").insert([currentRecord]);
         } else {
           await supabase.from("notifications").update(currentRecord).eq("id", editingId);
         }
-      } else if (activeModule === "pages" || activeModule === "footer_links") {
+      } else if (currentListModule === "pages" || currentListModule === "footer_links") {
         const recordToSave = {
           ...currentRecord,
-          is_footer: activeModule === "footer_links" ? true : (currentRecord.is_footer || false)
+          is_footer: currentListModule === "footer_links" ? true : (currentRecord.is_footer || false)
         };
         if (formMode === "add") {
           await supabase.from("pages").insert([recordToSave]);
@@ -1526,20 +1545,20 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           expenses: [expenses, (d) => persistMockTable("expenses", d)]
         };
 
-        const mapData = tableStateMap[activeModule];
+        const mapData = tableStateMap[currentListModule];
         if (mapData) {
           const [currentList, updateFn] = mapData;
           if (formMode === "add") {
             updateFn([...currentList, currentRecord]);
-            await mirrorRecordToSupabase(activeModule, currentRecord, null);
+            await mirrorRecordToSupabase(currentListModule, currentRecord, null);
           } else {
             updateFn(currentList.map(item => item.id === editingId ? currentRecord : item));
-            await mirrorRecordToSupabase(activeModule, currentRecord, editingId);
+            await mirrorRecordToSupabase(currentListModule, currentRecord, editingId);
           }
         }
       }
 
-      toast.success(`${activeModule.toUpperCase()} item saved successfully.`);
+      toast.success(`${currentListModule.toUpperCase()} item saved successfully.`);
       setIsFormOpen(false);
       setTimeout(() => {
         window.dispatchEvent(new Event("1stcars_settings_updated"));
@@ -1548,7 +1567,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
       console.error("Error submitting CMS form:", err);
-      toast.error(`Failed to save ${activeModule}: ${errorMessage(err)}`);
+      toast.error(`Failed to save ${currentListModule}: ${errorMessage(err)}`);
     } finally {
       setIsLoading(false);
     }
@@ -1556,22 +1575,22 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   // Delete Action
   const handleDeleteItem = async (id: string) => {
-    if (!confirm(`Are you absolutely sure you want to permanently delete this ${activeModule} record?`)) return;
+    if (!confirm(`Are you absolutely sure you want to permanently delete this ${currentListModule} record?`)) return;
     setIsLoading(true);
 
     try {
-      if (activeModule === "cars") {
+      if (currentListModule === "cars") {
         const { error } = await deleteCar(id);
         if (error) throw error;
-      } else if (activeModule === "users") {
+      } else if (currentListModule === "users") {
         await supabase.from("profiles").delete().eq("id", id);
-      } else if (activeModule === "inspections") {
+      } else if (currentListModule === "inspections") {
         await supabase.from("inspections").delete().eq("id", id);
-      } else if (activeModule === "test_drives" || activeModule === "purchases" || activeModule === "crm_activities") {
-        await supabase.from(activeModule).delete().eq("id", id);
-      } else if (activeModule === "auctions") {
+      } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
+        await supabase.from(currentListModule).delete().eq("id", id);
+      } else if (currentListModule === "auctions") {
         throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Cancel or close auctions from there instead.");
-      } else if (activeModule === "brands") {
+      } else if (currentListModule === "brands") {
         // If it's a model in our local list, delete from models
         const isModel = models.some(m => m.id === id);
         if (isModel) {
@@ -1582,9 +1601,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           // It's a brand in Supabase
           await supabase.from("brands").delete().eq("id", id);
         }
-      } else if (activeModule === "notifications") {
+      } else if (currentListModule === "notifications") {
         await supabase.from("notifications").delete().eq("id", id);
-      } else if (activeModule === "pages" || activeModule === "footer_links") {
+      } else if (currentListModule === "pages" || currentListModule === "footer_links") {
         await supabase.from("pages").delete().eq("id", id);
       } else {
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
@@ -1600,13 +1619,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           expenses: [expenses, (d) => persistMockTable("expenses", d)]
         };
 
-        const mapData = tableStateMap[activeModule];
+        const mapData = tableStateMap[currentListModule];
         if (mapData) {
           const [currentList, updateFn] = mapData;
           const record = currentList.find(item => item.id === id);
           // Tombstone BEFORE touching state so any in-flight reload filters the
           // row out — a delete can never be resurrected by a stale read.
-          if (activeModule === "testimonials" && record?.name) {
+          if (currentListModule === "testimonials" && record?.name) {
             const name = String(record.name).trim().toLowerCase();
             if (name) {
               const deleted = readDeletedTestimonialNames();
@@ -1618,8 +1637,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           }
           const nextList = currentList.filter(item => item.id !== id);
           updateFn(nextList);
-          const { dbError } = await deleteRecordFromSupabase(activeModule, id, record);
-          if (activeModule === "testimonials" && dbError) {
+          const { dbError } = await deleteRecordFromSupabase(currentListModule, id, record);
+          if (currentListModule === "testimonials" && dbError) {
             toast.error("Review removed from this browser, but the database delete failed. Run the testimonials RLS policy in Supabase SQL Editor so it disappears for everyone.");
           }
         }
@@ -2188,31 +2207,42 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const handleSaveWebsiteSettings = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(websiteSettings));
-    
+
+    // CRIT-05: the settings table is readable by any visitor via RLS. The
+    // custom-SMS gateway block (URL + headers + payload) can embed real API
+    // keys / basic-auth tokens (Twilio, Fast2SMS, MSG91), so those fields are
+    // kept in this browser's localStorage ONLY and never synced to the shared
+    // table. The admin's browser still has the working config for the test.
+    const { customOtpUrl, customOtpHeaders, customOtpPayload, ...sharedSettings } = websiteSettings;
+    const sanitized = { ...sharedSettings, otpProvider: sharedSettings.otpProvider || "simulated" };
+
     // Mirror to the Supabase settings table so every device & admin session
     // picks up the same theme/branding/SEO values on reload.
     supabase
       .from("settings")
       .upsert(
-        { key: "website_settings", value: JSON.stringify(websiteSettings), description: "1stCars website theme/branding/SEO settings" },
+        { key: "website_settings", value: JSON.stringify(sanitized), description: "1stCars website theme/branding/SEO settings" },
         { onConflict: "key" }
       )
       .then(({ error }) => {
-        if (error) console.error("Failed to sync website settings to Supabase:", error);
+        if (error) {
+          console.error("Failed to sync website settings to Supabase:", error);
+          toast.error("Saved locally, but syncing to the shared settings table failed — check your connection.");
+        } else {
+          toast.success("Website Theme, branding parameters, SEO tags, and analytics updated.");
+        }
       });
-    
+
     // Apply visual color changes to root if possible for client demonstration
     if (typeof document !== "undefined") {
       document.documentElement.style.setProperty("--primary-theme-color", websiteSettings.primaryColor);
       document.documentElement.style.setProperty("--button-theme-color", websiteSettings.buttonColor);
-      
+
       // Notify other decoupled components like the Navbar
       setTimeout(() => {
         window.dispatchEvent(new Event("1stcars_settings_updated"));
       }, 0);
     }
-
-    toast.success("Prismatically updated Website Theme, branding parameters, SEO tags, and analytics successfully.");
   };
 
   const handleSendTestSms = async () => {
@@ -2292,10 +2322,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         toast.success("🔥 Real Custom SMS Dispatched Successfully!");
         setTestStatus(`Dispatched successfully to +91 ${testMobile}! Code is ${code}.`);
       } else {
-        // Simulated
-        toast.success(`🔑 Simulated: Code is ${code}. SMS simulation triggered!`);
-        setTestStatus(`Simulated Success! Verification code is ${code}.`);
-        
+        // Simulated (MED-15): never present a simulated dispatch as a real SMS.
+        toast.success(`🔑 Simulated only — NO SMS was sent. Demo code: ${code}.`);
+        setTestStatus(`SIMULATED ONLY — nothing was sent to +91 ${testMobile}. Demo verification code: ${code}.`);
+
         // Custom event so that the visual pop-up banner also shows up!
         const event = new CustomEvent("1stcars_simulate_sms", {
           detail: { mobile: testMobile, code }
@@ -2355,9 +2385,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     return list;
   };
 
-  // Generic data mapping per active CMS view
-  const getActiveModuleData = (): any[] => {
-    switch (activeModule) {
+  // Generic data mapping per active CMS view. The unified "leads" module
+  // delegates to the active tab so the same table logic serves all three.
+  const getModuleData = (module: CMSModule): any[] => {
+    switch (module) {
       case "cars": return cars;
       case "users": return users;
       case "test_drive_requests":
@@ -2379,7 +2410,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           const norm = String(lead.type || "").toLowerCase().replace(/[^a-z0-9]/g, "");
           return norm.includes("testdrive");
         };
-        return activeModule === "test_drive_requests"
+        return module === "test_drive_requests"
           ? leads.filter((lead: any) => isTestDrive(lead))
           : leads.filter((lead: any) => !isTestDrive(lead));
       }
@@ -2425,6 +2456,20 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     }
   };
 
+  const getActiveModuleData = (): any[] => getModuleData(currentListModule);
+
+  // Per-tab counts for the unified "Leads & Enquiries" module header.
+  const leadsCounts = {
+    test_drive_requests: getModuleData("test_drive_requests").length,
+    booking_requests: getModuleData("booking_requests").length,
+    test_drives: getModuleData("test_drives").length
+  };
+
+  // The module actually being listed right now: when the unified "leads"
+  // module is open this follows the active tab, otherwise it is the sidebar
+  // module itself. All list CRUD + table rendering use this value.
+  const currentListModule: CMSModule = activeModule === "leads" ? leadsTab : activeModule;
+
   // Which storage backend backs the currently active admin module? Used by the
   // header badge so the operator always knows if edits are shared with
   // Supabase (every device) or only live in this browser (localStorage).
@@ -2434,6 +2479,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       "cars", "users", "inspections", "auctions", "brands", "notifications",
       "pages", "footer_links", "faqs", "testimonials", "cities", "finance",
       "expenses", "settings", "test_drive_requests", "booking_requests", "seller_enquiries",
+      // The unified Leads module spans sales_notifications + test_drives (shared).
+      "leads",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
       // Associate/Admin), so they reflect shared data rather than browser-only lists.
       "dealers", "inspectors", "sales", "staff", "test_drives", "purchases", "crm_activities"
@@ -2488,13 +2535,14 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         isLoadingData={isLoading}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleSidebarCollapse}
+        roleKey={sidebarRoleKey}
       />
 
       {/* Main Right Content Panel */}
-      <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"} p-4 sm:p-6 lg:p-8 space-y-6`}>
+      <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarCollapsed ? "lg:pl-20" : "lg:pl-72"} p-4 sm:p-5 lg:p-6 space-y-4`}>
         
         {/* Top Sticky Header */}
-        <div className="bg-white border border-[#2E7D32]/20 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-white border border-[#2E7D32]/20 rounded-2xl px-4 py-3 shadow-xl flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -2508,7 +2556,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 <ShieldCheck className="h-5 w-5 text-[#ff5a07]" /> 1STCARS MASTER ADMIN CMS
               </h2>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                Control center for 28 modules, styling theme & SEO values dynamically
+                All modules, styling theme & SEO values managed dynamically
               </p>
             </div>
           </div>
@@ -2523,9 +2571,11 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 <AlertCircle className="h-3 w-3" /> Mock Browser DB · not reaching Supabase
               </span>
             )}
+            {isRealSupabase && (
             <span className="hidden sm:inline-flex items-center gap-1.5 bg-[#ffb81e]/10 text-[#ffb81e] border border-[#ffb81e]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
               <Sparkles className="h-3 w-3" /> Super Admin Active
             </span>
+            )}
             <Button 
               onClick={loadCMSData} 
               size="sm"
@@ -2557,7 +2607,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
         {/* 1. MERGED DASHBOARD OVERVIEW (legacy admin dashboard + CRM center) */}
         {activeModule === "dashboard" && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <AdminDashboard
               cars={cars}
               users={users}
@@ -2585,6 +2635,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               parkSell={parkSell}
               carImages={carImages}
               onRefresh={loadCMSData}
+              hideKpis
             />
           </div>
         )}
@@ -2594,7 +2645,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
       {/* 1stMark Certifications Panel */}
       {activeModule === "certifications" && (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6 text-slate-800">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4 text-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -2662,10 +2713,29 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         </div>
       )}
 
-      {/* UPI PAYMENT SETTINGS PANEL */}
-      {activeModule === "payment_settings" && (
-        <form onSubmit={handleSavePaymentSettings} className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-6 text-xs font-semibold max-w-3xl">
-          <div className="border-b border-slate-100 pb-4">
+      {/* UPI PAYMENT SETTINGS PANEL — now a tab inside the Theme Design module */}
+      {activeModule === "settings" && settingsTab === "payments" && (
+        <form onSubmit={handleSavePaymentSettings} className="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 shadow-sm space-y-4 text-xs font-semibold max-w-3xl">
+          <div className="flex flex-wrap items-center gap-1.5 -mt-1">
+            {([
+              ["theme", "Theme & Branding", Palette],
+              ["payments", "UPI Payments", QrCode]
+            ] as const).map(([id, label, TabIcon]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setSettingsTab(id)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                  settingsTab === id
+                    ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <TabIcon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+          <div className="border-b border-slate-100 pb-3">
             <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-[#2E7D32]" /> UPI Payment Collection Settings
             </h3>
@@ -2756,9 +2826,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
       {/* SELL FORM & BRANDS EDITOR (brands / models / variants + 120-point inspection checklist) */}
       {activeModule === "sell_form" && (
-        <div className="space-y-6">
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div className="space-y-4">
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Sell Form & Brands Editor</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
@@ -2810,7 +2880,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
           {/* BRANDS TAB */}
           {sellFormTab === "brands" && (
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">Brands</h4>
@@ -2948,7 +3018,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
           {/* MODELS & VARIANTS TAB */}
           {sellFormTab === "models" && (
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">Models & Variants</h4>
@@ -3068,7 +3138,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
           {/* INSPECTION FORM TAB */}
           {sellFormTab === "inspection" && (
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-5">
+            <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-black text-base text-slate-900 uppercase tracking-wider">120-Point Inspection Checklist</h4>
@@ -3231,11 +3301,43 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
       {/* 2. REUSABLE CRUD FOR LIST MODULES (excluding Settings, Dashboard, Reports, Text Editor, Certifications) */}
       {activeModule !== "dashboard" && activeModule !== "crm" && activeModule !== "reports" && activeModule !== "settings" && activeModule !== "text_editor" && activeModule !== "certifications" && activeModule !== "payment_settings" && activeModule !== "sell_form" && activeModule !== "automation" && activeModule !== "auctions" && (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
             <div>
-              <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {activeModule}</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Database search, structural filters, pagination & image upload tools</p>
+              {activeModule === "leads" ? (
+                <>
+                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">
+                    <Inbox className="h-5 w-5 text-[#ff5a07] inline -mt-0.5 mr-1.5" /> Leads & Enquiries
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                    {([
+                      ["test_drive_requests", "Test Drive Requests"],
+                      ["booking_requests", "Booking Requests"],
+                      ["test_drives", "Test Drives Log"]
+                    ] as const).map(([id, label]) => (
+                      <button
+                        key={id}
+                        onClick={() => { setLeadsTab(id); setCurrentPage(1); setSearchQuery(""); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                          leadsTab === id
+                            ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {label}
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${leadsTab === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                          {leadsCounts[id]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {currentListModule}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Database search, structural filters, pagination & image upload tools</p>
+                </>
+              )}
             </div>
             
             <Button 
@@ -3280,13 +3382,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 <option value="Seller">Role: Seller</option>
                 <option value="Dealer">Role: Dealer</option>
                 <option value="Inspector">Role: Inspector</option>
+                <option value="Sales Associate">Role: Sales Associate</option>
                 <option value="Admin">Role: Admin</option>
+                <option value="Staff">Role: Staff</option>
               </select>
             </div>
           </div>
 
           <BulkActionsBar
-            activeModule={activeModule}
+            activeModule={currentListModule}
             onExport={handleExportXLS}
             onImport={(module, e) => handleImportXLS(module, e)}
           />
@@ -3330,75 +3434,75 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       </div>
                     </td>
                     <td className="p-4">
-                      {activeModule === "cars" && (
+                      {currentListModule === "cars" && (
                         <div>
                           <p className="font-black text-slate-800">{item.model} ({item.year})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Reg: {item.reg_number} • Owner: {item.owner_count}</p>
                         </div>
                       )}
-                      {activeModule === "users" && (
+                      {currentListModule === "users" && (
                         <div>
                           <p className="font-black text-slate-800">{item.email}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Mobile: {item.mobile || "N/A"}</p>
                         </div>
                       )}
-                      {activeModule === "inspections" && (
+                      {currentListModule === "inspections" && (
                         <div>
                           <p className="font-black text-slate-800">{item.brand} {item.model} ({item.year})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Seller: {item.seller_name} ({item.seller_mobile})</p>
                         </div>
                       )}
-                      {(activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
+                      {(currentListModule === "test_drive_requests" || currentListModule === "booking_requests") && (
                         <div>
-                          <p className="font-black text-slate-800">{item.name || (activeModule === "test_drive_requests" ? "Test Drive Request" : "Booking Request")} ({item.mobile || "N/A"})</p>
+                          <p className="font-black text-slate-800">{item.name || (currentListModule === "test_drive_requests" ? "Test Drive Request" : "Booking Request")} ({item.mobile || "N/A"})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Vehicle: {item.vehicle || item.model || "General Inquiry"} • City: {item.city || "Surat"}</p>
                         </div>
                       )}
 
-                      {activeModule === "seller_enquiries" && (
+                      {currentListModule === "seller_enquiries" && (
                         <div>
                           <p className="font-black text-slate-800">{item.seller_name || item.name} ({item.seller_mobile || item.mobile})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Car: {item.brand} {item.model} ({item.year}) • Reg: {item.reg_number || "Pending"}</p>
                         </div>
                       )}
-                      {activeModule === "dealers" && (
+                      {currentListModule === "dealers" && (
                         <div>
                           <p className="font-black text-slate-800">{item.dealership_name || item.name} ({item.mobile})</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Contact: {item.name || item.manager} • Email: {item.email || "N/A"} • City: {item.city || "Gujarat"}</p>
                         </div>
                       )}
-                      {activeModule === "testimonials" && (
+                      {currentListModule === "testimonials" && (
                         <div>
                           <p className="text-[11px] text-slate-500 italic">"{item.content}"</p>
                         </div>
                       )}
-                      {activeModule === "faqs" && (
+                      {currentListModule === "faqs" && (
                         <div>
                           <p className="font-bold text-slate-800">{item.question}</p>
                           <p className="text-[11px] text-slate-500 italic mt-1">{item.answer}</p>
                         </div>
                       )}
-                      {activeModule === "expenses" && (
+                      {currentListModule === "expenses" && (
                         <div>
                           <p className="font-black text-slate-800">{item.title}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Logged: {item.date} by {item.logged_by}</p>
                         </div>
                       )}
-                      {(activeModule === "pages" || activeModule === "footer_links") && (
+                      {(currentListModule === "pages" || currentListModule === "footer_links") && (
                         <div className="max-w-md">
                           <p className="font-black text-slate-800">{item.title}</p>
                           <p className="text-[10px] text-indigo-600 font-bold mt-0.5">Slug: /{item.slug}</p>
                           <p className="text-[10px] text-slate-400 truncate max-w-xs mt-1">{item.content}</p>
                         </div>
                       )}
-                      {activeModule === "brands" && (
+                      {currentListModule === "brands" && (
                         <div>
                           <p className="font-black text-slate-800">{item.brand_name}</p>
                           <p className="text-[10px] text-[#2E7D32] font-black uppercase tracking-wider mt-0.5">Model: {item.model_name}</p>
                         </div>
                       )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands"].includes(activeModule) && (
+                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands"].includes(currentListModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -3406,26 +3510,26 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       )}
                     </td>
                     <td className="p-4">
-                      {activeModule === "cars" && (
+                      {currentListModule === "cars" && (
                         <div>
                           <p className="font-black text-slate-900">₹{(item.price).toLocaleString()}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.km_driven} km • {item.fuel}</p>
                         </div>
                       )}
-                      {(activeModule === "test_drive_requests" || activeModule === "booking_requests") && (
+                      {(currentListModule === "test_drive_requests" || currentListModule === "booking_requests") && (
                         <div>
-                          <p className="font-black text-indigo-600 uppercase text-[10px]">{item.type || (activeModule === "test_drive_requests" ? "Test Drive Request" : "Buy Car / Reservation")}</p>
+                          <p className="font-black text-indigo-600 uppercase text-[10px]">{item.type || (currentListModule === "test_drive_requests" ? "Test Drive Request" : "Buy Car / Reservation")}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Pref: {item.preferred_date || "Flexible"} ({item.preferred_time || "Anytime"})</p>
                         </div>
                       )}
 
-                      {activeModule === "seller_enquiries" && (
+                      {currentListModule === "seller_enquiries" && (
                         <div>
                           <p className="font-black text-slate-900 text-[10px]">{item.km_driven ? `${item.km_driven} km` : "Valuation Request"} • {item.fuel || "Petrol"}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate max-w-xs">{item.address || "Doorstep Valuation"}</p>
                         </div>
                       )}
-                      {activeModule === "dealers" && (
+                      {currentListModule === "dealers" && (
                         <div className="flex flex-wrap items-center gap-1.5">
                           {item.visiting_card_url ? (
                             <button
@@ -3451,32 +3555,32 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           )}
                         </div>
                       )}
-                      {activeModule === "expenses" && (
+                      {currentListModule === "expenses" && (
                         <div>
                           <p className="font-black text-rose-600">₹{(item.amount).toLocaleString()}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.category}</p>
                         </div>
                       )}
-                      {(activeModule === "pages" || activeModule === "footer_links") && (
+                      {(currentListModule === "pages" || currentListModule === "footer_links") && (
                         <div>
                           <p className="font-mono text-[10px] text-[#2E7D32] font-bold">Dynamic CMS</p>
                         </div>
                       )}
-                      {activeModule === "brands" && (
+                      {currentListModule === "brands" && (
                         <div>
                           <p className="font-black text-slate-900">{item.category}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Specs: {item.engine} ({item.power})</p>
                         </div>
                       )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands"].includes(activeModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands"].includes(currentListModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
                       )}
                     </td>
                     <td className="p-4">
-                      {activeModule === "brands" ? (
+                      {currentListModule === "brands" ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 w-max">
                             👥 {item.audience}
@@ -3501,7 +3605,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {activeModule === "dealers" && (
+                        {currentListModule === "dealers" && (
                           <>
                             {item.is_approved || item.status === "Approved" || item.status === "approved" ? (
                               <span className="px-2.5 py-1 rounded-lg bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
@@ -3518,7 +3622,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                             )}
                           </>
                         )}
-                        {activeModule === "seller_enquiries" && (
+                        {currentListModule === "seller_enquiries" && (
                           <button
                             onClick={() => setSelected120Inspection(item)}
                             className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-[#2E7D32]/30 text-[#2E7D32] bg-[#2E7D32]/5 hover:bg-[#2E7D32] hover:text-white transition-all cursor-pointer flex items-center gap-1"
@@ -3528,7 +3632,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                             120-Pt Report
                           </button>
                         )}
-                        {activeModule === "inspections" && (
+                        {currentListModule === "inspections" && (
                           <>
                             <button
                               onClick={() => setSelected120Inspection(item)}
@@ -3556,7 +3660,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                             </button>
                           </>
                         )}
-                        {activeModule === "cars" && String(item.status || "").toLowerCase() === "pending" && (
+                        {currentListModule === "cars" && String(item.status || "").toLowerCase() === "pending" && (
                           <button
                             onClick={() => handleApproveCar(item)}
                             className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-sm transition-all cursor-pointer flex items-center gap-1"
@@ -3620,65 +3724,212 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         </div>
       )}
 
-      {/* 3. REPORTS & METRICS */}
-      {activeModule === "reports" && (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Operational Summary & Audit Analytics</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">High-fidelity printable format summarizing database inventory value & partner conversions</p>
-          </div>
+      {/* 3. REPORTS & METRICS — live aggregations from the loaded tables */}
+      {activeModule === "reports" && (() => {
+        // --- live data layer: every number below is computed from state ---
+        const inventoryValue = cars.reduce((s, c) => s + (Number(c.price) || 0), 0);
+        const avgPrice = cars.length ? Math.round(inventoryValue / cars.length) : 0;
+        const soldCars = cars.filter((c) => String(c.status || "").toLowerCase() === "sold").length;
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-5 text-xs font-semibold text-slate-600 space-y-3">
-              <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2">Fleet Capital Value</p>
-              <div className="flex justify-between font-bold">
-                <span>Total Catalog Listings:</span>
-                <span className="text-slate-800">{cars.length} vehicles</span>
+        const carStatusCounts = cars.reduce((acc: Record<string, number>, c) => {
+          const s = String(c.status || "available").toLowerCase();
+          acc[s] = (acc[s] || 0) + 1;
+          return acc;
+        }, {});
+        const maxCarStatus = Math.max(1, ...Object.values(carStatusCounts).map(Number));
+
+        const inspBy = (s: string) => inspections.filter((i) => String(i.status || "").toLowerCase() === s).length;
+        const inspPending = inspBy("pending");
+        const inspAssigned = inspBy("assigned");
+        const inspCompleted = inspBy("completed");
+        const inspPublished = inspBy("published");
+        const certRate = inspections.length ? Math.round((inspections.filter((i) => i.is_certified).length / inspections.length) * 100) : 0;
+
+        const liveAuc = auctions.filter((a) => ["LIVE", "EXTENDED", "CLOSING"].includes(a.status)).length;
+        // LOW-02: auction rows have no total_bids column — count the actual
+        // bid-ledger rows loaded from auction_bids.
+        const totalBids = auctionBids.length;
+        const avgBidsPerAuction = auctions.length ? (totalBids / auctions.length).toFixed(1) : "0";
+
+        const expenseByCategory = expenses.reduce((acc: Record<string, number>, e) => {
+          const k = e.category || "Other";
+          acc[k] = (acc[k] || 0) + (Number(e.amount) || 0);
+          return acc;
+        }, {} as Record<string, number>);
+        const topExpenseCats = Object.entries(expenseByCategory).sort((a: [string, number], b: [string, number]) => b[1] - a[1]).slice(0, 5);
+        const maxExpCat = Math.max(1, ...topExpenseCats.map(([, v]) => Number(v)));
+
+        const roleCounts = users.reduce((acc: Record<string, number>, u) => {
+          const r = u.role || "Buyer";
+          acc[r] = (acc[r] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        const roleEntries = Object.entries(roleCounts).sort((a: [string, number], b: [string, number]) => b[1] - a[1]);
+        const maxRole = Math.max(1, ...roleEntries.map(([, v]) => Number(v)));
+
+        const totalExpenses = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const unreadAlerts = notifications.filter((n) => !n.is_read).length;
+        const reportedAt = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+        return (
+          <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-[#2E7D32]" /> Operational Summary & Audit Analytics
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                  Live aggregations from the loaded tables · generated {reportedAt}
+                </p>
               </div>
-              <div className="flex justify-between font-bold">
-                <span>Direct Asset Value:</span>
-                <span className="text-emerald-600 font-black">₹{(cars.reduce((sum, c) => sum + (Number(c.price) || 0), 0)).toLocaleString()}</span>
+              <span className="text-[9px] font-black uppercase tracking-wider bg-[#FAF9F6] border border-slate-200 text-slate-500 px-2.5 py-1 rounded-lg">
+                {cars.length} cars · {users.length} users · {leadsCounts.test_drive_requests + leadsCounts.booking_requests} leads · {auctions.length} auctions
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Fleet & revenue */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <Car className="h-4 w-4 text-[#2E7D32]" /> Fleet & Revenue
+                </p>
+                <div className="flex justify-between font-bold"><span>Total Catalog Listings:</span><span className="text-slate-800">{cars.length} vehicles</span></div>
+                <div className="flex justify-between font-bold"><span>Direct Asset Value:</span><span className="text-emerald-600 font-black">₹{inventoryValue.toLocaleString()}</span></div>
+                <div className="flex justify-between font-bold"><span>Average Listing Price:</span><span className="text-slate-800">₹{avgPrice.toLocaleString()}</span></div>
+                <div className="flex justify-between font-bold"><span>Sold This Cycle:</span><span className="text-[#2E7D32] font-black">{soldCars} cars</span></div>
+                <div className="space-y-1.5 pt-1">
+                  {Object.entries(carStatusCounts).map(([status, count]) => (
+                    <div key={status} className="flex items-center gap-2">
+                      <span className="w-24 uppercase text-[9px] font-black text-slate-500">{status}</span>
+                      <div className="flex-1 h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#2E7D32] rounded-full" style={{ width: `${(Number(count) / maxCarStatus) * 100}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-black text-slate-700">{String(count)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex justify-between font-bold">
-                <span>Average vehicle age:</span>
-                <span className="text-slate-800">3.4 Years</span>
+
+              {/* Lead pipeline */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <Inbox className="h-4 w-4 text-[#ff5a07]" /> Lead Pipeline
+                </p>
+                <div className="flex justify-between font-bold"><span>Test Drive Requests:</span><span className="text-slate-800">{leadsCounts.test_drive_requests}</span></div>
+                <div className="flex justify-between font-bold"><span>Booking Requests:</span><span className="text-slate-800">{leadsCounts.booking_requests}</span></div>
+                <div className="flex justify-between font-bold"><span>Seller Enquiries:</span><span className="text-slate-800">{inspections.length} inspection requests</span></div>
+                <div className="flex justify-between font-bold"><span>Purchases & Orders:</span><span className="text-[#2E7D32] font-black">{purchases.length} orders</span></div>
+                <div className="flex justify-between font-bold"><span>CRM Activities Logged:</span><span className="text-indigo-600 font-black">{crmActivities.length}</span></div>
+                <div className="flex justify-between font-bold"><span>Test Drives Completed:</span><span className="text-slate-800">{testDrives.length}</span></div>
+              </div>
+
+              {/* Inspection funnel */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-amber-600" /> Inspection Funnel
+                </p>
+                <div className="flex justify-between font-bold"><span>Pending:</span><span className="text-amber-600 font-black">{inspPending}</span></div>
+                <div className="flex justify-between font-bold"><span>Assigned:</span><span className="text-slate-800">{inspAssigned}</span></div>
+                <div className="flex justify-between font-bold"><span>Completed:</span><span className="text-slate-800">{inspCompleted}</span></div>
+                <div className="flex justify-between font-bold"><span>Published to Website:</span><span className="text-emerald-600 font-black">{inspPublished}</span></div>
+                <div className="flex justify-between font-bold"><span>Certification Rate:</span><span className="text-[#2E7D32] font-black">{certRate}%</span></div>
+                <div className="mt-1 h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${certRate}%` }} />
+                </div>
+              </div>
+
+              {/* Auction engine */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <Gavel className="h-4 w-4 text-indigo-600" /> Auction Engine
+                </p>
+                <div className="flex justify-between font-bold"><span>Total Auctions:</span><span className="text-slate-800">{auctions.length}</span></div>
+                <div className="flex justify-between font-bold"><span>Live Right Now:</span><span className="text-indigo-600 font-black">{liveAuc}</span></div>
+                <div className="flex justify-between font-bold"><span>Bids Placed:</span><span className="text-slate-800">{totalBids}</span></div>
+                <div className="flex justify-between font-bold"><span>Avg Bids / Auction:</span><span className="text-slate-800">{avgBidsPerAuction}</span></div>
+                <div className="flex justify-between font-bold"><span>Unread Alerts:</span><span className="text-orange-600 font-black">{unreadAlerts}</span></div>
+              </div>
+
+              {/* Expenses by category */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-rose-600" /> Expense Ledger
+                </p>
+                <div className="flex justify-between font-bold"><span>Total Expenses:</span><span className="text-rose-600 font-black">₹{totalExpenses.toLocaleString()}</span></div>
+                <div className="flex justify-between font-bold"><span>Entries Logged:</span><span className="text-slate-800">{expenses.length}</span></div>
+                {topExpenseCats.length === 0 && (
+                  <p className="italic text-slate-400 pt-1">No expenses logged yet.</p>
+                )}
+                {topExpenseCats.map(([cat, amt]) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <span className="w-24 truncate uppercase text-[9px] font-black text-slate-500">{cat}</span>
+                    <div className="flex-1 h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
+                      <div className="h-full bg-rose-500 rounded-full" style={{ width: `${(Number(amt) / maxExpCat) * 100}%` }} />
+                    </div>
+                    <span className="w-20 text-right font-black text-slate-700">₹{Number(amt).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* User base by role */}
+              <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-600 space-y-2.5">
+                <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-violet-600" /> User Base
+                </p>
+                <div className="flex justify-between font-bold"><span>Total Profiles:</span><span className="text-slate-800">{users.length}</span></div>
+                {roleEntries.length === 0 && (
+                  <p className="italic text-slate-400 pt-1">No profiles yet.</p>
+                )}
+                {roleEntries.map(([role, count]) => (
+                  <div key={role} className="flex items-center gap-2">
+                    <span className="w-28 truncate uppercase text-[9px] font-black text-slate-500">{role}</span>
+                    <div className="flex-1 h-1.5 bg-slate-200/70 rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(Number(count) / maxRole) * 100}%` }} />
+                    </div>
+                    <span className="w-8 text-right font-black text-slate-700">{String(count)}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-5 text-xs font-semibold text-slate-600 space-y-3">
-              <p className="text-slate-900 font-black text-sm uppercase tracking-wider border-b border-slate-200 pb-2">Sales Funnel Conversion</p>
-              <div className="flex justify-between font-bold">
-                <span>Assigned Inspection Requests:</span>
-                <span className="text-slate-800">{inspections.filter(i => i.status === "assigned" || i.status === "completed").length} pending</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>Total Live Auction Bids:</span>
-                <span className="text-indigo-600 font-black">{auctions.reduce((acc, current) => acc + (current.total_bids || 0), 0)} placed</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>CRM Open Leads Desk:</span>
-                <span className="text-[#2E7D32]">88% response rating</span>
-              </div>
-            </div>
+            {/* Print */}
+            <Button
+              onClick={() => {
+                window.print();
+              }}
+              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase h-11 rounded-xl flex items-center justify-center gap-2"
+            >
+              <FileText className="h-4.5 w-4.5" /> Print Live CMS Report & Financial Ledger
+            </Button>
           </div>
+        );
+      })()}
 
-          {/* Download Print layout mock button */}
-          <Button
-            onClick={() => {
-              window.print();
-            }}
-            className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase h-11 rounded-xl flex items-center justify-center gap-2"
-          >
-            <FileText className="h-4.5 w-4.5" /> Print Live CMS Report & Financial Ledger
-          </Button>
-        </div>
-      )}
-
-      {/* 4. SETTINGS & WEBSITE DESIGNER PANEL */}
-      {activeModule === "settings" && (
-        <form onSubmit={handleSaveWebsiteSettings} className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-8 text-xs font-semibold">
+      {/* 4. SETTINGS & WEBSITE DESIGNER PANEL (theme tab of the settings module) */}
+      {activeModule === "settings" && settingsTab === "theme" && (
+        <form onSubmit={handleSaveWebsiteSettings} className="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 text-xs font-semibold">
           
-          <div className="border-b border-slate-100 pb-4">
+          <div className="flex flex-wrap items-center gap-1.5 -mt-1">
+            {([
+              ["theme", "Theme & Branding", Palette],
+              ["payments", "UPI Payments", QrCode]
+            ] as const).map(([id, label, TabIcon]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setSettingsTab(id)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                  settingsTab === id
+                    ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <TabIcon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="border-b border-slate-100 pb-3">
             <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Dynamic Brand Designer & Page Layout Builder</h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Customize global fonts, branding colors, contact info, SEO indices & analytics without editing code</p>
           </div>
@@ -4420,7 +4671,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
       {/* 4.5. WEBSITE TEXT COPY EDITOR PANEL */}
       {activeModule === "text_editor" && (
-        <form onSubmit={handleSaveWebsiteSettings} className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-8 text-xs font-semibold">
+        <form onSubmit={handleSaveWebsiteSettings} className="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 text-xs font-semibold">
           
           <div className="border-b border-slate-100 pb-4">
             <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -4890,9 +5141,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsFormOpen(false);
           }}
-          className={`fixed inset-0 bg-[#2E7D32]/20 backdrop-blur-xs z-50 flex items-center justify-center ${activeModule === "cars" ? "p-0" : "p-4"} overflow-y-auto`}
+          className={`fixed inset-0 bg-[#2E7D32]/20 backdrop-blur-xs z-50 flex items-center justify-center ${currentListModule === "cars" ? "p-0" : "p-4"} overflow-y-auto`}
         >
-          <div className={`bg-white border border-slate-100 ${activeModule === "cars" ? "w-full h-full max-w-none max-h-none rounded-none p-6 md:p-10" : "rounded-[32px] max-w-2xl w-full p-6 md:p-8 max-h-[90vh]"} space-y-6 shadow-2xl overflow-y-auto relative text-left`}>
+          <div className={`bg-white border border-slate-100 ${currentListModule === "cars" ? "w-full h-full max-w-none max-h-none rounded-none p-6 md:p-10" : "rounded-[32px] max-w-2xl w-full p-6 md:p-8 max-h-[90vh]"} space-y-6 shadow-2xl overflow-y-auto relative text-left`}>
             <button
               onClick={() => setIsFormOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full border border-slate-100 hover:bg-slate-50 cursor-pointer"
@@ -4901,14 +5152,14 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             </button>
 
             <div className="border-b border-slate-100 pb-3">
-              <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">{formMode === "add" ? "Create New" : "Edit Details"} - {activeModule.toUpperCase()}</h3>
+              <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">{formMode === "add" ? "Create New" : "Edit Details"} - {currentListModule.toUpperCase()}</h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Provide accurate schema metadata for persistent catalog storage</p>
             </div>
 
             <form onSubmit={handleSubmitForm} className="space-y-4 text-xs font-semibold">
               
               {/* Dynamic form inputs based on active module fields */}
-              <div className={`grid grid-cols-1 ${activeModule === "cars" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2"} gap-4`}>
+              <div className={`grid grid-cols-1 ${currentListModule === "cars" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2"} gap-4`}>
                 
                 {Object.keys(formData).map((key) => {
                   if (key === "id" || key === "created_at" || key === "created_by" || key === "updated_at" || key === "image_url" || key === "logo_url" || key === "logo" || key === "photo" || key === "images" || key === "price_breakup" || key === "shift") return null;
@@ -4944,7 +5195,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
                         </select>
-                      ) : key === "role" && (activeModule === "staff" || activeModule === "users") ? (
+                      ) : key === "role" && (currentListModule === "staff" || currentListModule === "users") ? (
                         <select
                           value={formData[key] || "Inspector"}
                           onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
@@ -5017,7 +5268,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               </div>
 
               {/* Editable Price Summary / Breakup for Cars */}
-              {activeModule === "cars" && (
+              {currentListModule === "cars" && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <div>
@@ -5117,7 +5368,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               )}
 
               {/* Editable Specifications for Cars */}
-              {activeModule === "cars" && (
+              {currentListModule === "cars" && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
@@ -5138,7 +5389,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               )}
 
               {/* Editable Key Features for Cars */}
-              {activeModule === "cars" && (
+              {currentListModule === "cars" && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-slate-800">
@@ -5159,7 +5410,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               )}
 
               {/* Editable 120-Point Inspection Report for Cars */}
-              {activeModule === "cars" && (
+              {currentListModule === "cars" && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div>
@@ -5225,9 +5476,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               )}
 
               {/* Dynamic Image Upload for Catalog record / vehicle / testimonial */}
-              {(formData.image_url !== undefined || formData.logo_url !== undefined || formData.photo !== undefined || activeModule === "brands") && (
+              {(formData.image_url !== undefined || formData.logo_url !== undefined || formData.photo !== undefined || currentListModule === "brands") && (
                 <div className="space-y-4 pt-4 border-t border-slate-100">
-                  {activeModule === "cars" ? (
+                  {currentListModule === "cars" ? (
                     // Premium Multi-Photo upload for Cars
                     <div className="space-y-3 text-left">
                       <div className="flex items-center justify-between">

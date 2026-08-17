@@ -261,8 +261,8 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
   );
 
   return (
-    <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-8 text-xs font-semibold">
-      <div className="border-b border-slate-100 pb-4">
+    <div className="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 text-xs font-semibold">
+      <div className="border-b border-slate-100 pb-3">
         <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
           <Edit3 className="h-5 w-5 text-[#2E7D32]" /> Edit Website Pages
         </h3>

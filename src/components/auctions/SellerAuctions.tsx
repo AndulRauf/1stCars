@@ -60,6 +60,14 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
       await auctionService.ensureDemo();
       await reload();
     })();
+    // MED-04: poll so the seller's review/live statuses stay fresh even when
+    // the app-level maintenance poller is not mounted. Also drives the local
+    // engine's auto-close in mock mode.
+    const timer = window.setInterval(() => {
+      auctionService.runMaintenance().catch(() => undefined);
+      reload();
+    }, 30000);
+    return () => window.clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

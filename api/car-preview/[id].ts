@@ -67,11 +67,11 @@ export default async function handler(req: any, res: any) {
     <meta property="og:image" content="${image}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="${origin}/cars/${escapeHtml(carId)}" />
-    <meta property="twitter:title" content="${escapeHtml(title)}" />
-    <meta property="twitter:description" content="${escapeHtml(description)}" />
-    <meta property="twitter:image" content="${image}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${origin}/cars/${escapeHtml(carId)}" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${image}" />
     <script>location.replace("${redirect}");</script>
   </head>
   <body>

@@ -57,6 +57,9 @@ INSERT INTO public.auction_status_flow (from_status, to_status) VALUES
   ('LIVE', 'LIVE'), ('LIVE', 'EXTENDED'), ('LIVE', 'CLOSING'), ('LIVE', 'CANCELLED'),
   ('EXTENDED', 'EXTENDED'), ('EXTENDED', 'CLOSING'), ('EXTENDED', 'CANCELLED'),
   ('CLOSING', 'CLOSING'), ('CLOSING', 'CLOSED'), ('CLOSING', 'SELLER_REVIEW'), ('CLOSING', 'EXPIRED'), ('CLOSING', 'CANCELLED'),
+  -- MED-01: 'CLOSED' is a legacy status — the close flow goes CLOSING →
+  -- SELLER_REVIEW / EXPIRED directly and nothing writes CLOSED anymore. The
+  -- rows below are kept only so historical rows remain decidable.
   ('CLOSED', 'SELLER_REVIEW'), ('CLOSED', 'ACCEPTED'), ('CLOSED', 'REJECTED'),
   ('SELLER_REVIEW', 'SELLER_REVIEW'), ('SELLER_REVIEW', 'ACCEPTED'), ('SELLER_REVIEW', 'REJECTED'), ('SELLER_REVIEW', 'CANCELLED'),
   ('ACCEPTED', 'ACCEPTED'),
@@ -700,33 +703,45 @@ DECLARE
   v_extended boolean := false;
   v_new_ends_at timestamptz;
   v_existing uuid;
-  v_result jsonb;
+  v_dup_amount integer;
   v_next_bid integer;
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Authentication required'; END IF;
   SELECT role::text INTO v_role FROM public.profiles WHERE id = v_uid;
   IF v_role IS DISTINCT FROM 'Dealer' THEN RAISE EXCEPTION 'Only dealers can place bids'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_uid AND is_verified = true) THEN
-    RAISE EXCEPTION 'Dealer account is not verified for auction participation';
+  -- Dealer approval gate: the profile must be admin-approved (is_approved, the
+  -- flag AdminCMS flips for dealer applications). profiles.is_verified is NOT
+  -- used as a gate: it was never written outside the demo seed, so gating on
+  -- it locked every real dealer out of bidding (CRIT-02). If the dealer also
+  -- has a row in public.dealers (dealer application flow), it must be verified.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles p
+    LEFT JOIN public.dealers d ON d.id = p.id
+    WHERE p.id = v_uid AND p.is_approved = true
+      AND (d.id IS NULL OR d.is_verified = true)
+  ) THEN
+    RAISE EXCEPTION 'Dealer account is not approved for auction participation';
   END IF;
   IF p_amount IS NULL OR p_amount <= 0 THEN RAISE EXCEPTION 'Bid amount must be positive'; END IF;
   IF p_client_request_id IS NULL OR p_client_request_id = '' THEN
     RAISE EXCEPTION 'client_request_id is required';
   END IF;
 
-  -- Idempotency: a retried request returns the original outcome.
-  SELECT b.id INTO v_existing FROM public.auction_bids b
-  WHERE b.auction_id = p_auction_id AND b.client_request_id = p_client_request_id;
-  IF v_existing IS NOT NULL THEN
-    SELECT jsonb_build_object('success', true, 'duplicate', true,
-             'bid_id', b.id, 'amount', b.amount, 'created_at', b.created_at)
-      INTO v_result FROM public.auction_bids b WHERE b.id = v_existing;
-    RETURN v_result;
-  END IF;
-
   -- Lock the auction row so concurrent bids serialize.
   SELECT * INTO v_auction FROM public.auctions WHERE id = p_auction_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Auction not found'; END IF;
+
+  -- Idempotency (CRIT-03): the check runs INSIDE the auction row lock so two
+  -- concurrent retries of the same client_request_id cannot both pass the
+  -- "no existing row" test. The lock holder's duplicate is found here; any
+  -- other duplicate is caught by the UNIQUE constraint on client_request_id.
+  SELECT b.id, b.amount INTO v_existing, v_dup_amount
+  FROM public.auction_bids b
+  WHERE b.auction_id = p_auction_id AND b.client_request_id = p_client_request_id;
+  IF v_existing IS NOT NULL THEN
+    RETURN jsonb_build_object('success', true, 'duplicate', true,
+      'bid_id', v_existing, 'amount', v_dup_amount, 'created_at', now());
+  END IF;
 
   IF v_auction.status NOT IN ('LIVE', 'EXTENDED') THEN
     RAISE EXCEPTION 'Auction is not open for bidding (current status: %)', v_auction.status;
@@ -1060,6 +1075,15 @@ BEGIN
   SELECT i.brand || ' ' || i.model INTO v_vehicle FROM public.inspections i WHERE i.id = v_auction.inspection_id;
 
   IF p_decision = 'ACCEPT' THEN
+    -- Reserve enforcement (HIGH-09): a result below the reserve cannot be
+    -- accepted by the seller — they must reject so the vehicle returns to
+    -- inventory (or the car is re-auctioned).
+    IF v_auction.reserve_price > 0
+       AND (v_auction.current_highest_bid IS NULL OR v_auction.current_highest_bid < v_auction.reserve_price)
+    THEN
+      RAISE EXCEPTION 'The highest bid of ₹% is below the reserve price of ₹%. The result cannot be accepted.',
+        v_auction.current_highest_bid, v_auction.reserve_price;
+    END IF;
     UPDATE public.auctions SET status = 'ACCEPTED', ended_reason = 'seller_accepted', updated_at = now()
     WHERE id = p_auction_id;
     IF v_auction.car_id IS NOT NULL THEN
@@ -1104,6 +1128,10 @@ BEGIN
   ELSE
     UPDATE public.auctions SET status = 'REJECTED', ended_reason = 'seller_rejected', updated_at = now()
     WHERE id = p_auction_id;
+    -- MED-02: the winning bid must stop being "WINNING" once rejected — it was
+    -- still shown as the active highest bid in dealer/seller UIs.
+    UPDATE public.auction_bids SET status = 'REJECTED'
+    WHERE auction_id = p_auction_id AND status = 'WINNING';
     IF v_auction.car_id IS NOT NULL THEN
       UPDATE public.cars SET status = 'available', updated_at = now()
       WHERE id = v_auction.car_id AND status IN ('bidding', 'available', 'listed');
@@ -1171,6 +1199,9 @@ BEGIN
   ELSE
     UPDATE public.auctions SET status = 'REJECTED', ended_reason = 'admin_rejected', updated_at = now()
     WHERE id = p_auction_id;
+    -- MED-02: release the winning bid so it stops being shown as active.
+    UPDATE public.auction_bids SET status = 'REJECTED'
+    WHERE auction_id = p_auction_id AND status = 'WINNING';
     IF v_auction.car_id IS NOT NULL THEN
       UPDATE public.cars SET status = 'available', updated_at = now()
       WHERE id = v_auction.car_id AND status IN ('bidding', 'available', 'listed');
@@ -1200,6 +1231,11 @@ DECLARE
   v_closed integer := 0;
   v_auction public.auctions%ROWTYPE;
 BEGIN
+  -- MED-05: a pg_cron / system call has no auth context (auth.uid() IS NULL)
+  -- and must be allowed; any interactive caller must be staff.
+  IF auth.uid() IS NOT NULL THEN
+    PERFORM public.auction_require_role(ARRAY['Admin', 'Sales Associate']);
+  END IF;
   -- Auto-start scheduled auctions.
   FOR v_auction IN
     SELECT * FROM public.auctions
@@ -1235,7 +1271,13 @@ $$;
 -- ============================================================
 
 GRANT SELECT ON public.auction_status_flow TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.auctions, public.auction_bids,
+-- MED-06: read-only table grants. All auction writes flow through the
+-- role-checked SECURITY DEFINER RPCs (place_auction_bid, auction_*), which run
+-- as the function owner; direct INSERT/UPDATE/DELETE via PostgREST would have
+-- let any authenticated user bypass the engine's validations under the
+-- permissive "Staff manage auctions" policy. RLS SELECT policies still give
+-- staff/dealers/sellers read access to their own auctions.
+GRANT SELECT ON public.auctions, public.auction_bids,
   public.auction_dealer_eligibility, public.auction_payments TO authenticated;
 
 GRANT EXECUTE ON FUNCTION public.auction_create_auction(uuid, uuid, integer, integer, integer, timestamptz, timestamptz, integer, integer, uuid[]) TO authenticated;

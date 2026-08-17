@@ -3,9 +3,9 @@ import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, Sh
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
@@ -50,9 +50,7 @@ const processCheckout = async (
     // account's real password across ALL flows (Sell Car, Booking, Checkout).
     // A hardcoded password here created accounts that SellCarView's later
     // sign-in attempt could not authenticate, leaving the seller stranded.
-    const autoPasswordKey = getAutoPasswordKey(safeEmail);
-    const autoPassword = deriveAutoPassword(safeEmail);
-    localStorage.setItem(autoPasswordKey, autoPassword);
+    const autoPassword = getOrCreateAutoPassword(safeEmail);
   } catch (authErr) {
     console.warn("Auto sign in error during checkout:", authErr);
   }
@@ -71,7 +69,7 @@ const processCheckout = async (
     name: buyerName.trim(),
     email: safeEmail,
     mobile: buyerMobile.trim(),
-    mobile_verified: true,
+    mobile_verified: !isRealSupabase,
     city: selectedCity || car.cities?.[0] || car.location || "Surat",
     vehicle: vehicleTitle,
     car_id: car.id,
@@ -114,8 +112,8 @@ const processCheckout = async (
     assigned_to: owner?.id || null,
     assigned_to_name: owner?.name || null,
     notes: paymentStatus === "Payment Submitted"
-      ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
-      : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
+      ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile ${!isRealSupabase ? "Verified" : "Pending Call Verification"}`
+      : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile ${!isRealSupabase ? "Verified" : "Pending Call Verification"}`,
   });
 
   if (insertError) throw new Error(insertError.message);
@@ -146,7 +144,7 @@ const processCheckout = async (
       await resolveAutoSignIn(
         supabase,
         safeEmail,
-        deriveAutoPassword(safeEmail),
+        getOrCreateAutoPassword(safeEmail),
         {
           data: {
             name: buyerName.trim(),
@@ -332,7 +330,9 @@ export function BuyNowCheckout({
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   };
 
-  // Step 1: Send a verification OTP to the buyer's mobile number
+  // Step 1: Verify mobile before payment. On the real backend the number is
+  // verified by the concierge on the call — no simulated OTP is ever shown in
+  // production. The simulated OTP gate exists only in mock/demo mode.
   const handleSendOtp = async () => {
     if (!buyerName.trim()) {
       toast.error("Please enter your full name.");
@@ -347,6 +347,12 @@ export function BuyNowCheckout({
       return;
     }
 
+    if (isRealSupabase) {
+      toast.success("Proceed to pay the booking token — our team verifies your number over the call.");
+      setShowUpiPayment(true);
+      return;
+    }
+
     setIsSendingOtp(true);
     try {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -355,7 +361,7 @@ export function BuyNowCheckout({
       setEnteredOtp("");
       setCountdown(30);
 
-      // Simulated SMS gateway (mirrors the login OTP experience)
+      // Simulated SMS gateway (mirrors the login OTP experience) — mock only.
       setSimulatedSms({ mobile: buyerMobile, code: otpCode });
       setTimeout(() => setSimulatedSms(null), 15000);
 
@@ -612,8 +618,8 @@ export function BuyNowCheckout({
   // Main checkout sheet
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center animate-in fade-in duration-200">
-      {/* Simulated SMS Notification Banner */}
-      {simulatedSms && (
+      {/* Simulated SMS Notification Banner — mock/demo mode only */}
+      {!isRealSupabase && simulatedSms && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4">
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20 flex flex-col gap-2 animate-bounce">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5">

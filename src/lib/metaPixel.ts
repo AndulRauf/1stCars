@@ -86,7 +86,8 @@ export function trackMetaEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
   try {
     window.fbq("track", event, data);
-    console.log(`[Meta] ${event} fired`, data ?? "");
+    // @ts-ignore
+    if (import.meta.env?.DEV) console.log(`[Meta] ${event} fired`, data ?? "");
   } catch (e) {
     console.warn("Meta Pixel event failed:", e);
   }
@@ -96,7 +97,8 @@ export function trackMetaCustomEvent(event: string, data?: Record<string, unknow
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
   try {
     window.fbq("trackCustom", event, data);
-    console.log(`[Meta] custom event fired: ${event}`, data ?? "");
+    // @ts-ignore
+    if (import.meta.env?.DEV) console.log(`[Meta] custom event fired: ${event}`, data ?? "");
   } catch (e) {
     console.warn("Meta Pixel custom event failed:", e);
   }

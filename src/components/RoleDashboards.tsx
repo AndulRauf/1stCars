@@ -40,7 +40,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [isLoading, setIsLoading] = React.useState(true);
 
   // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
-  const catalogCars = useCatalogCars();
+  const { cars: catalogCars } = useCatalogCars();
 
   // Common Database States
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
