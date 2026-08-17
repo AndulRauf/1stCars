@@ -568,17 +568,19 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               </div>
 
-              {/* Browse inventory help callout */}
-              <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2 text-center">
-                <p className="text-[9px] font-black text-[#2E7D32] uppercase tracking-widest">Public Catalog</p>
-                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">Want to browse standard certified cars?</p>
-                <Button
-                  onClick={onNavigateToInventory}
-                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 rounded-lg"
-                >
-                  Browse Cars
-                </Button>
-              </div>
+              {/* Browse inventory help callout (hidden for Sales Associates) */}
+              {currentUser.role !== "Sales Associate" && (
+                <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2 text-center">
+                  <p className="text-[9px] font-black text-[#2E7D32] uppercase tracking-widest">Public Catalog</p>
+                  <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">Want to browse standard certified cars?</p>
+                  <Button
+                    onClick={onNavigateToInventory}
+                    className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 rounded-lg"
+                  >
+                    Browse Cars
+                  </Button>
+                </div>
+              )}
 
             </div>
           )}
