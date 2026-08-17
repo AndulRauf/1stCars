@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight, Copy, QrCode } from "lucide-react";
+import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight, QrCode } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
@@ -469,18 +469,6 @@ export function BuyNowCheckout({
                     <img src={upiSettings.qrUrl} alt="UPI QR Code" className="w-44 h-44 rounded-2xl border border-slate-200 object-contain" />
                   </div>
                 )}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">UPI ID</p>
-                    <p className="text-sm font-black text-slate-900">{upiSettings.upiId}</p>
-                  </div>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(upiSettings.upiId); toast.success("UPI ID copied!"); }}
-                    className="flex items-center gap-1 text-xs font-bold text-[#2E7D32] cursor-pointer"
-                  >
-                    <Copy className="h-3.5 w-3.5" /> Copy
-                  </button>
-                </div>
                 {upiSettings.instructions && (
                   <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{upiSettings.instructions}</p>
                 )}
@@ -508,7 +496,7 @@ export function BuyNowCheckout({
                       // if the page is still visible, tell the user to scan the QR / use another app.
                       setTimeout(() => {
                         if (document.visibilityState === "visible") {
-                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR / copy the UPI ID above.`);
+                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR above.`);
                         }
                       }, 1200);
                     }}
