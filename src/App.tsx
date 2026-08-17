@@ -322,7 +322,7 @@ export default function App() {
     testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.",
+    ctaSubheadingText: "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
     otpProvider: "simulated",
     customOtpUrl: "",
     customOtpHeaders: "",
@@ -385,7 +385,7 @@ export default function App() {
         parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
         parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
         parsed.testimonialSubheadingText = "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.";
-        parsed.ctaSubheadingText = "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.";
+        parsed.ctaSubheadingText = "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.";
         return parsed;
       };
       const apply = (parsed: any) => {
@@ -1192,7 +1192,7 @@ export default function App() {
               {websiteSettings.ctaHeadingText || "Ready to Drive Your Certified Vehicle?"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold max-w-lg mx-auto leading-relaxed">
-              {websiteSettings.ctaSubheadingText || "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals."}
+              {websiteSettings.ctaSubheadingText || "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals."}
             </p>
           </div>
 
