@@ -1251,16 +1251,10 @@ export default function App() {
         }}
       />
 
-      {/* Floating WhatsApp Widget with page-aware greeting (hidden in Admin panel) */}
-      {!(currentView === "role_dashboards" && currentUser?.role === "Admin") && (
-        <WhatsAppFloatingButton
-          view={currentView}
-          carName={(() => {
-            if (currentView !== "car_details") return undefined;
-            const car = catalogCarsRef.current.find(c => c.id === activeCarId);
-            return car ? `${car.year} ${car.brand} ${car.model}` : undefined;
-          })()}
-        />
+      {/* Floating WhatsApp Widget — home page only (removed from all user
+          dashboards and inner pages) */}
+      {currentView === "home" && (
+        <WhatsAppFloatingButton view={currentView} />
       )}
 
     </div>
