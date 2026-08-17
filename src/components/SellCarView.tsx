@@ -2163,8 +2163,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   },
                   { 
                     icon: Clock, 
-                    title: "Offers in 2 Hours", 
-                    desc: "Once inspected, your vehicle goes into live custom bidding with 1000+ certified dealers." 
+                    title: "Offers in 1 Hours", 
+                    desc: "Once inspected, your vehicle goes into live custom bidding with 250+ certified dealers." 
                   },
                   { 
                     icon: Sparkles, 
