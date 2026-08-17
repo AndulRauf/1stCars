@@ -1,5 +1,5 @@
 import React from "react";
-import { supabase } from "./supabaseClient";
+import { supabase, isRealSupabase } from "./supabaseClient";
 
 export interface Notification {
   id: string;
@@ -127,6 +127,7 @@ export const notificationService = {
       created_at: new Date().toISOString()
     };
 
+    let insertError: any = null;
     try {
       const { data, error } = await supabase.from("notifications").insert([
         {
@@ -139,6 +140,7 @@ export const notificationService = {
           metadata: payload.metadata || {}
         }
       ]);
+      insertError = error;
 
       if (!error && data) {
         const inserted = Array.isArray(data) ? data[0] : data;
@@ -146,8 +148,21 @@ export const notificationService = {
         notifyListeners(inserted);
         return { data: inserted, error: null };
       }
-    } catch {
-      // Fallback below
+      if (!isRealSupabase) {
+        // Demo mode: the localStorage mirror is the source of truth, so a
+        // failed "DB" write still yields a locally-visible notification.
+        saveLocalNotification(fallbackNotif);
+        notifyListeners(fallbackNotif);
+        return { data: fallbackNotif, error: null };
+      }
+    } catch (e) {
+      insertError = insertError ?? e;
+    }
+
+    // Real backend: never fake success for a failed write (CRIT-06) — the
+    // caller must see the error so the lead isn't silently lost.
+    if (isRealSupabase) {
+      return { data: null, error: insertError ?? { message: "Failed to save notification" } };
     }
 
     saveLocalNotification(fallbackNotif);
