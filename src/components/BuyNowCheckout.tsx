@@ -594,9 +594,9 @@ export function BuyNowCheckout({
             <p className="text-sm text-slate-500 mt-1">Ref: <strong className="text-slate-800">{leadRefId}</strong></p>
             <p className="text-sm text-slate-500 mt-2">Your Sales Assistant will contact you shortly.</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="rounded-xl font-bold text-xs uppercase tracking-wider h-11">Close</Button>
-            <Button onClick={() => { onClose(); onNavigateToDashboard?.(); }} className="bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Dashboard</Button>
+          <div className="space-y-2 pt-2">
+            <Button onClick={() => { onClose(); onNavigateToDashboard?.(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
+            <p className="text-[10px] text-slate-400 font-bold text-center">Redirecting you to your Buyer Dashboard in a moment…</p>
           </div>
         </div>
       </div>

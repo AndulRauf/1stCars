@@ -82,6 +82,17 @@ export function BookingModal({
     return () => clearInterval(timer);
   }, [otpCountdown]);
 
+  // Auto-redirect to the Buyer dashboard once the booking is submitted.
+  React.useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        onClose();
+        onNavigateToDashboard?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, onClose, onNavigateToDashboard]);
+
   if (!isOpen) return null;
 
   // Handle Send Mobile OTP — simulated OTP exists ONLY in mock/demo mode. On a
@@ -429,15 +440,9 @@ export function BookingModal({
                 <Sparkles className="h-4 w-4" />
                 Go to Buyer Menu & Favorite Cars
               </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="w-full border-slate-200 text-slate-700 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider h-10 rounded-xl cursor-pointer"
-              >
-                Close & Continue Browsing
-              </Button>
+              <p className="text-[10px] text-slate-400 font-bold text-center">
+                Redirecting you to your Buyer Dashboard in a moment…
+              </p>
             </div>
           </div>
         ) : (
