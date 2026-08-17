@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.car_status_flow (
   PRIMARY KEY (from_status, to_status)
 );
 INSERT INTO public.car_status_flow (from_status, to_status) VALUES
+  ('pending', 'pending'), ('pending', 'available'), ('pending', 'listed'), ('pending', 'sold'), ('pending', 'bidding'),
   ('draft', 'draft'), ('draft', 'seller_inquiry'), ('draft', 'inspection_pending'), ('draft', 'available'),
   ('seller_inquiry', 'seller_inquiry'), ('seller_inquiry', 'inspection_pending'), ('seller_inquiry', 'available'), ('seller_inquiry', 'listed'),
   ('inspection_pending', 'inspection_pending'), ('inspection_pending', 'inspection_in_progress'), ('inspection_pending', 'available'), ('inspection_pending', 'listed'),
