@@ -158,6 +158,7 @@ ALTER TABLE public.auction_dealer_eligibility ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auction_payments ENABLE ROW LEVEL SECURITY;
 
 -- auction_status_flow: public reference map (like car_status_flow).
+DROP POLICY IF EXISTS "Anyone reads auction status flow" ON public.auction_status_flow;
 CREATE POLICY "Anyone reads auction status flow" ON public.auction_status_flow
   FOR SELECT USING (true);
 
