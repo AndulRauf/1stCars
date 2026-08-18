@@ -8,9 +8,10 @@ import { cn } from "@/src/lib/utils";
 
 interface SalesDashboardViewProps {
   onBackToInventory: () => void;
+  currentUserId?: string | null;
 }
 
-export function SalesDashboardView({ onBackToInventory }: SalesDashboardViewProps) {
+export function SalesDashboardView({ onBackToInventory, currentUserId }: SalesDashboardViewProps) {
   const [notifications, setNotifications] = React.useState<SalesNotification[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [copiedSql, setCopiedSql] = React.useState(false);
@@ -21,7 +22,13 @@ export function SalesDashboardView({ onBackToInventory }: SalesDashboardViewProp
     setIsLoading(true);
     const { data } = await supabase.from("sales_notifications").select();
     if (data) {
-      setNotifications(data);
+      // Lead privacy rule: a logged-in Sales Associate only sees leads
+      // auto-assigned to them (from cars THEY uploaded) plus the shared
+      // unassigned pool — never leads assigned to another associate.
+      const visible = currentUserId
+        ? data.filter((l: any) => !l.assigned_to || l.assigned_to === currentUserId)
+        : data;
+      setNotifications(visible);
     }
     setIsLoading(false);
   };

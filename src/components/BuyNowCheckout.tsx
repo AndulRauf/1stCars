@@ -87,9 +87,6 @@ const processCheckout = async (
       payment_status: "submitted"
     })
   };
-  const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-  localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
-
   // Auto-assign the lead to the Sales Associate who uploaded this car
   // (leads for admin-published/demo cars stay in the shared pool).
   const owner = await resolveLeadOwner(car);
@@ -97,6 +94,9 @@ const processCheckout = async (
     leadRecord.assigned_to = owner.id;
     leadRecord.assigned_to_name = owner.name || "";
   }
+
+  const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+  localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
   const { error: insertError } = await insertLeadWithAssignment({
     name: buyerName.trim() || "Buyer (Checkout)",

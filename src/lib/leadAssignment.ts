@@ -37,7 +37,10 @@ export async function resolveLeadOwner(car: { id?: string | null; brand?: string
   }
 
   // 2. Fallback: brand + model match (demo/legacy cars may not exist
-  //    in the DB by the frontend id).
+  //    in the DB by the frontend id). Only auto-assign when the listing is
+  //    unambiguous — i.e. exactly ONE associate uploaded that car. If several
+  //    associates carry the same brand+model, the lead stays in the shared
+  //    pool instead of being stolen by whoever matched first.
   if (car.brand && car.model) {
     try {
       const { data: matches } = await supabase
@@ -45,9 +48,12 @@ export async function resolveLeadOwner(car: { id?: string | null; brand?: string
         .select("created_by, created_by_name")
         .eq("brand", car.brand)
         .eq("model", car.model);
-      const owner = (matches || []).find((m: any) => m.created_by);
-      if (owner?.created_by) {
-        return { id: owner.created_by, name: owner.created_by_name };
+      const owners = (matches || []).filter((m: any) => m.created_by);
+      const distinct = owners.filter(
+        (m: any, i: number) => owners.findIndex((o: any) => o.created_by === m.created_by) === i
+      );
+      if (distinct.length === 1) {
+        return { id: distinct[0].created_by, name: distinct[0].created_by_name };
       }
     } catch (e) {
       console.warn("Lead assignment lookup by brand/model failed:", e);

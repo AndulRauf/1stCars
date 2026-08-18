@@ -223,10 +223,6 @@ export function BookingModal({
       const currentTDs = JSON.parse(localStorage.getItem("1stcars_test_drives") || "[]");
       localStorage.setItem("1stcars_test_drives", JSON.stringify([testDriveEntry, ...currentTDs]));
 
-      // 1. Save to localStorage "1stcars_sales_leads" for Admin CMS Buyer Enquiries
-      const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
-      localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
-
       // 2. Auto-assign the lead to the Sales Associate who uploaded this car
       //    (leads for admin-published/demo cars stay in the shared pool).
       const owner = await resolveLeadOwner(car);
@@ -235,7 +231,13 @@ export function BookingModal({
         leadRecord.assigned_to_name = owner.name || "";
       }
 
-      // 3. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
+      // 3. Save to localStorage "1stcars_sales_leads" for Admin CMS Buyer
+      //    Enquiries — persisted AFTER auto-assignment so the record carries
+      //    the same owner as the Supabase row (mock-mode fallback source).
+      const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+      localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
+
+      // 4. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
       const { error: insertError } = await insertLeadWithAssignment({
         name: name.trim(),
         mobile: mobile.trim(),

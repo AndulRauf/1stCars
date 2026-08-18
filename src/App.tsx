@@ -896,6 +896,7 @@ export default function App() {
           onBackToInventory={() => {
             handleNavigate("buy_cars");
           }}
+          currentUserId={currentUser?.id}
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
