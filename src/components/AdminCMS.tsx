@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { isHiddenPage } from "@/src/lib/utils";
-import { saveCar, deleteCar, errorMessage } from "@/src/lib/carPersistence";
+import { saveCar, deleteCar, buildCarRecord, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -42,6 +42,35 @@ import {
 
 // Default sell-car catalog derived from the built-in brand database
 const DEFAULT_SELL_CATALOG = catalogFromLegacy(defaultBrandData, defaultBrandLogos, DEFAULT_POPULAR_SELL_BRANDS);
+
+// Allowed car status transitions — mirrors public/automation_phase2.sql
+// `car_status_flow`. The DB guard trigger `on_cars_status_change_guard`
+// rejects any other transition with "Invalid vehicle status transition",
+// so the admin form must only offer statuses reachable from the current one.
+const CAR_STATUS_LABELS: Record<string, string> = {
+  available: "Available (Live)",
+  pending: "Pending Review",
+  reserved: "Reserved",
+  sold: "Sold",
+  bidding: "Bidding",
+  listed: "Listed"
+};
+const CAR_STATUS_FLOW: Record<string, string[]> = {
+  pending: ["pending", "available", "listed", "sold", "bidding"],
+  draft: ["draft", "seller_inquiry", "inspection_pending", "available"],
+  seller_inquiry: ["seller_inquiry", "inspection_pending", "available", "listed"],
+  inspection_pending: ["inspection_pending", "inspection_in_progress", "available", "listed"],
+  inspection_in_progress: ["inspection_in_progress", "inspection_completed", "available", "listed"],
+  inspection_completed: ["inspection_completed", "valuation_pending", "ready_for_sale", "available", "listed"],
+  valuation_pending: ["valuation_pending", "ready_for_sale", "available", "listed"],
+  ready_for_sale: ["ready_for_sale", "listed", "available", "sold"],
+  available: ["available", "reserved", "sold", "listed", "bidding"],
+  listed: ["listed", "reserved", "sold", "available", "bidding"],
+  reserved: ["reserved", "sold", "available"],
+  bidding: ["bidding", "sold", "available", "listed"],
+  sold: ["sold", "delivered"],
+  delivered: ["delivered"]
+};
 
 const isLogoImageUrl = (url: string) =>
   !!url && url !== "⭐" && (url.startsWith("http") || url.startsWith("/") || url.startsWith("data:"));
@@ -634,7 +663,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       rtoCode: inspection.reg_number || "GJ05-ER-4050"
     };
 
-    await supabase.from("cars").insert([carRecord]);
+    // Real cars.id is a UUID column and the table only stores core columns +
+    // JSONB payload. buildCarRecord maps the record into { core..., payload }
+    // and drops the client text id so the insert succeeds on Supabase; status
+    // "available" makes the car show up live on the public catalog.
+    const carRow = buildCarRecord({ ...carRecord, status: "available" });
+    const { error: pubErr } = await supabase.from("cars").insert([carRow]);
+    if (pubErr) throw pubErr;
     await supabase.from("inspections").update({ 
       status: "published", 
       is_certified: true,
@@ -1430,16 +1465,45 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           await supabase.from("profiles").update(profileRecord).eq("id", editingId);
         }
       } else if (currentListModule === "inspections") {
+        // Strip the client-side text id so the real DB generates a valid UUID
+        // (the inspections.id column is UUID and rejects "id-inspections-*").
+        const { id: _inspId, ...recordToSave } = currentRecord;
         if (formMode === "add") {
-          await supabase.from("inspections").insert([currentRecord]);
+          await supabase.from("inspections").insert([recordToSave]);
         } else {
-          await supabase.from("inspections").update(currentRecord).eq("id", editingId);
+          await supabase.from("inspections").update(recordToSave).eq("id", editingId);
         }
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
+        // These tables use UUID FK columns (car_id/buyer_id/sales_associate_id/
+        // customer_id/staff_id). Empty or "all"-style strings would fail the
+        // UUID parse, so map blanks to NULL and validate the required FKs up
+        // front with a readable message instead of PostgREST's cryptic error.
+        const uuidFields: Record<string, string[]> = {
+          test_drives: ["car_id", "buyer_id", "sales_associate_id"],
+          purchases: ["car_id", "buyer_id", "sales_associate_id"],
+          crm_activities: ["customer_id", "staff_id"]
+        };
+        const requiredRefs: Record<string, string[]> = {
+          test_drives: ["car_id", "buyer_id"],
+          purchases: ["car_id", "buyer_id"]
+        };
+        const { id: _actId, ...recordToSave } = currentRecord;
+        for (const field of uuidFields[currentListModule] || []) {
+          const v = recordToSave[field];
+          if (v === undefined || v === null || String(v).trim() === "") {
+            recordToSave[field] = null;
+          }
+        }
+        const missing = (requiredRefs[currentListModule] || []).filter((f) => !recordToSave[f]);
+        if (missing.length > 0) {
+          throw new Error(
+            `${currentListModule} needs a valid ${missing.map((f) => f.replace(/_/g, " ")).join(" and ")} — enter the record's real id (e.g. the car's UUID shown in the list).`
+          );
+        }
         if (formMode === "add") {
-          await supabase.from(currentListModule).insert([currentRecord]);
+          await supabase.from(currentListModule).insert([recordToSave]);
         } else {
-          await supabase.from(currentListModule).update(currentRecord).eq("id", editingId);
+          await supabase.from(currentListModule).update(recordToSave).eq("id", editingId);
         }
       } else if (currentListModule === "auctions") {
         // Auctions are lifecycle-managed by the canonical engine (RPCs in
@@ -1456,6 +1520,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         };
 
         let brandId = currentRecord.brand_id || (currentRecord.type === "brand" ? currentRecord.id : "");
+        // Local-demo brands use text ids like "b-toyota"; the real brands.id is
+        // a UUID column, so text ids must not be sent to Supabase — let the DB
+        // generate a fresh UUID instead (name lookup below dedupes).
+        if (brandId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(brandId)) {
+          brandId = "";
+        }
 
         // Check if brand exists by ID or by Name
         let existingBrand: any = null;
@@ -1472,9 +1542,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           brandId = existingBrand.id;
           await supabase.from("brands").update(brandRecord).eq("id", brandId);
         } else {
+          // Omit the client-side text id (brands.id is UUID — the DB generates
+          // it). If brandId is a real UUID (existing brand being re-saved),
+          // keep it so the row updates consistently.
+          const brandInsert = { ...brandRecord } as any;
+          if (brandId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(brandId)) {
+            brandInsert.id = brandId;
+          }
           const { data: insertedBrand, error: insErr } = await supabase
             .from("brands")
-            .insert([{ ...brandRecord, id: brandId || `b-${Math.random().toString(36).substr(2, 9)}` }])
+            .insert([brandInsert])
             .select()
             .single();
           if (insertedBrand) {
@@ -1521,16 +1598,58 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           await mirrorRecordToSupabase("models", modelRecord, existingModelIdx > -1 ? nextModels[existingModelIdx].id : null);
         }
       } else if (currentListModule === "notifications") {
-        if (formMode === "add") {
-          await supabase.from("notifications").insert([currentRecord]);
+        // notifications.recipient_id is a NOT NULL user UUID column, so a
+        // literal "all" or a client text id would fail. Handle broadcast as
+        // one row per known profile, and fall back to the admin's own feed
+        // when no valid recipient is picked.
+        const { id: _notifId, ...notif } = currentRecord;
+        if (!notif.sender_id || String(notif.sender_id).trim() === "") {
+          notif.sender_id = null;
+        }
+        const recipient = String(notif.recipient_id || "").trim();
+        const isRecipientUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipient);
+        if (recipient === "all") {
+          const targets = (users || []).map((u: any) => u.id).filter((id: string) =>
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+          );
+          if (targets.length === 0 && currentUser?.id) targets.push(currentUser.id);
+          for (const rid of targets) {
+            const { error: nbErr } = await supabase.from("notifications").insert([{ ...notif, recipient_id: rid }]);
+            if (nbErr) throw nbErr;
+          }
+          toast.success(`Notification broadcast to ${targets.length} user${targets.length === 1 ? "" : "s"}.`);
+        } else if (isRecipientUuid || formMode === "edit") {
+          if (!isRecipientUuid && formMode === "edit") {
+            // Empty recipient on edit: leave the existing recipient untouched.
+            delete notif.recipient_id;
+          }
+          if (formMode === "add") {
+            await supabase.from("notifications").insert([notif]);
+          } else {
+            await supabase.from("notifications").update(notif).eq("id", editingId);
+          }
+        } else if (currentUser?.id) {
+          await supabase.from("notifications").insert([{ ...notif, recipient_id: currentUser.id }]);
+          toast.success("No valid recipient picked — notification saved to your own feed.");
         } else {
-          await supabase.from("notifications").update(currentRecord).eq("id", editingId);
+          throw new Error("Pick a valid recipient id (user UUID) or use \"all\" to broadcast.");
         }
       } else if (currentListModule === "pages" || currentListModule === "footer_links") {
-        const recordToSave = {
+        const { id: _pageId, ...recordToSave } = {
           ...currentRecord,
           is_footer: currentListModule === "footer_links" ? true : (currentRecord.is_footer || false)
         };
+        if (formMode === "add" && recordToSave.slug) {
+          // pages.slug is NOT NULL UNIQUE — catch duplicates up front instead
+          // of surfacing Supabase's unique-violation error.
+          const slug = String(recordToSave.slug).trim();
+          const { data: slugHits } = await supabase.from("pages").select("id, slug").eq("slug", slug);
+          const localHit = pages.some((p: any) => String(p.slug).trim().toLowerCase() === slug.toLowerCase());
+          if ((slugHits && slugHits.length > 0) || localHit) {
+            throw new Error(`A page with the slug "${slug}" already exists. Pick a unique slug.`);
+          }
+          recordToSave.slug = slug;
+        }
         if (formMode === "add") {
           await supabase.from("pages").insert([recordToSave]);
         } else {
@@ -5199,14 +5318,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
                         >
                           {currentListModule === "cars" ? (
-                            <>
-                              <option value="available">Available (Live)</option>
-                              <option value="pending">Pending Review</option>
-                              <option value="reserved">Reserved</option>
-                              <option value="sold">Sold</option>
-                              <option value="bidding">Bidding</option>
-                              <option value="listed">Listed</option>
-                            </>
+                            (() => {
+                              const current = String(formData[key] || "available");
+                              const allowed = CAR_STATUS_FLOW[current];
+                              const statuses = allowed && allowed.length > 0
+                                ? Array.from(new Set([current, ...allowed]))
+                                : Object.keys(CAR_STATUS_LABELS);
+                              return statuses.map((s) => (
+                                <option key={s} value={s}>{CAR_STATUS_LABELS[s] || s}</option>
+                              ));
+                            })()
                           ) : (
                             <>
                               <option value="Active">Active</option>
