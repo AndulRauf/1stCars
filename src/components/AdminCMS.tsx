@@ -49,7 +49,7 @@ const DEFAULT_SELL_CATALOG = catalogFromLegacy(defaultBrandData, defaultBrandLog
 // so the admin form must only offer statuses reachable from the current one.
 const CAR_STATUS_LABELS: Record<string, string> = {
   available: "Available (Live)",
-  pending: "Pending Review",
+  pending: "In Review",
   reserved: "Reserved",
   sold: "Sold",
   bidding: "Bidding",
