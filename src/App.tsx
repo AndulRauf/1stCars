@@ -701,7 +701,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] flex flex-col font-sans selection:bg-[#2E7D32]/20 selection:text-[#2E7D32] pt-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-[#2E7D32]/20 selection:text-[#2E7D32] pt-20 overflow-x-hidden">
       
       {/* Dynamic Toast Message */}
       {toastMessage && (
@@ -967,6 +967,9 @@ export default function App() {
           onNavigateToInventory={() => {
             handleNavigate("buy_cars");
           }}
+          onNavigateToSell={() => {
+            handleNavigate("sell_car");
+          }}
         />
       ) : currentView === "faq" ? (
         <FAQView
@@ -975,6 +978,9 @@ export default function App() {
           }}
           onNavigateToInventory={() => {
             handleNavigate("buy_cars");
+          }}
+          onNavigateToSell={() => {
+            handleNavigate("sell_car");
           }}
         />
       ) : currentView === "error_404" ? (
