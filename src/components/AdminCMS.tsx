@@ -1134,7 +1134,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       // buildCarRecord rebuilds `payload` from the top-level record, so without
       // this an edit would silently drop those fields (and re-saving would also
       // move data-URL photos to Supabase Storage, which is what we want).
-      initialData = { ...item, ...(item.payload || {}) };
+      //
+      // The payload must merge UNDER the row (payload first, row wins): payload
+      // can hold stale copies of the physical columns — e.g. an approved car
+      // keeps payload.status "pending" while the column says "available" — and
+      // writing that stale copy back trips the DB status-guard trigger with
+      // "Invalid vehicle status transition", silently failing featured/any edits.
+      initialData = { ...(item.payload || {}), ...item };
       if (!Array.isArray(initialData.images)) {
         initialData.images = initialData.image_url && initialData.image_url !== "🚙" 
           ? [initialData.image_url] 
@@ -5188,12 +5194,25 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                         </select>
                       ) : key === "status" ? (
                         <select
-                          value={formData[key] || "Active"}
+                          value={formData[key] || (currentListModule === "cars" ? "available" : "Active")}
                           onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
                           className="w-full h-9 bg-slate-50 border border-slate-200 rounded-lg px-2 text-xs font-bold"
                         >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
+                          {currentListModule === "cars" ? (
+                            <>
+                              <option value="available">Available (Live)</option>
+                              <option value="pending">Pending Review</option>
+                              <option value="reserved">Reserved</option>
+                              <option value="sold">Sold</option>
+                              <option value="bidding">Bidding</option>
+                              <option value="listed">Listed</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="Active">Active</option>
+                              <option value="Inactive">Inactive</option>
+                            </>
+                          )}
                         </select>
                       ) : key === "role" && (currentListModule === "staff" || currentListModule === "users") ? (
                         <select

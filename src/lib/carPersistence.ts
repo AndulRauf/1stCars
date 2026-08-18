@@ -45,6 +45,15 @@ export function buildCarRecord(record: any): any {
     if (rest[col] !== undefined && rest[col] !== null) core[col] = rest[col];
   }
 
+  // The physical columns are the source of truth — never duplicate them inside
+  // `payload`. Stale payload copies (e.g. status "pending" on a car the admin
+  // already approved to "available") were silently overriding the row when the
+  // edit form re-flattened the record, tripping the DB status-guard trigger and
+  // failing the save with "Invalid vehicle status transition".
+  for (const col of CAR_CORE_COLUMNS) {
+    delete rest[col];
+  }
+
   return { ...core, payload: rest };
 }
 
