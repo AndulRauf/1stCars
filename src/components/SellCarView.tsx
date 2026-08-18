@@ -2253,7 +2253,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </li>
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
                     <span className="text-slate-800 block font-black">Direct Deal</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Sell directly to an end customer.</span>
+                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Sell car directly to buyer.</span>
                   </li>
                 </ul>
               </div>
