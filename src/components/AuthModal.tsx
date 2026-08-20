@@ -416,6 +416,16 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             console.error("Failed to send password reset email:", resetErr);
           }
 
+          // Do NOT keep the dealer signed in: the account must stay locked out
+          // of the dealer dashboard until the Admin approves the application.
+          // With "Confirm email" OFF, signUp already created a session, so sign
+          // it out again here.
+          try {
+            await supabase.auth.signOut();
+          } catch (signOutErr) {
+            console.error("Failed to sign out pending dealer:", signOutErr);
+          }
+
           setSuccess(`Dealer registration submitted for ${regName}! Admin will review your documents. Check ${dealerEmail} for a password-setup link — once approved you can sign in to participate in live auctions.`);
           toast.success("Dealer profile submitted to Admin for review!");
           setLoading(false);

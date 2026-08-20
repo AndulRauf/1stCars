@@ -24,6 +24,7 @@ export default async function handler(req: any, res: any) {
     ["/certification", "monthly", "0.7"],
     ["/about-us", "monthly", "0.5"],
     ["/faq", "monthly", "0.4"],
+    ["/careers", "monthly", "0.4"],
     ["/auctions", "weekly", "0.6"]
   ];
 

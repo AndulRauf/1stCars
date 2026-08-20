@@ -1,10 +1,10 @@
 import { ArrowDownToLine, ArrowUpFromLine, Sparkles } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 
-type ExportableModule = "cars" | "brands" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "dealers";
+type ExportableModule = "cars" | "brands" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "dealers" | "career_applications";
 type ImportableModule = "cars" | "brands" | "test_drive_requests" | "booking_requests";
 
-const EXPORTABLE: ExportableModule[] = ["cars", "brands", "test_drive_requests", "booking_requests", "seller_enquiries", "dealers"];
+const EXPORTABLE: ExportableModule[] = ["cars", "brands", "test_drive_requests", "booking_requests", "seller_enquiries", "dealers", "career_applications"];
 const IMPORTABLE: ImportableModule[] = ["cars", "brands", "test_drive_requests", "booking_requests"];
 
 interface BulkActionsBarProps {
@@ -25,6 +25,8 @@ export function BulkActionsBar({ activeModule, onExport, onImport }: BulkActions
       ? "Seller Enquiries Management & Download Sheet"
       : activeModule === "dealers"
       ? "Dealer Verification & Application Manager"
+      : activeModule === "career_applications"
+      ? "Job Applications Management & Download Sheet"
       : `Bulk spreadsheet ${activeModule} catalog manager`;
 
   const desc =
@@ -36,6 +38,8 @@ export function BulkActionsBar({ activeModule, onExport, onImport }: BulkActions
       ? "Download all car valuation and evaluation requests in a separate Excel/CSV sheet"
       : activeModule === "dealers"
       ? "Review submitted Visiting Cards and Aadhar Cards to approve dealers for live vehicle auctions"
+      : activeModule === "career_applications"
+      ? "Download all submitted job applications in a dedicated Excel/CSV sheet"
       : "Download current catalog as Excel .xls or upload bulk new listings";
 
   const downloadLabel =
@@ -47,6 +51,8 @@ export function BulkActionsBar({ activeModule, onExport, onImport }: BulkActions
       ? "Seller Sheet (.XLS)"
       : activeModule === "dealers"
       ? "Dealer Applications (.XLS)"
+      : activeModule === "career_applications"
+      ? "Job Applications (.XLS)"
       : "Catalog XLS";
 
   const uploadLabel =

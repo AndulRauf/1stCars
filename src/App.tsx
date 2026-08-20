@@ -75,6 +75,7 @@ const FirstMarkCertification = React.lazy(() => import("@/src/components/FirstMa
 const CustomPageView = React.lazy(() => import("@/src/components/CustomPageView").then(m => ({ default: m.CustomPageView })));
 const AboutUsView = React.lazy(() => import("@/src/components/AboutUsView").then(m => ({ default: m.AboutUsView })));
 const FAQView = React.lazy(() => import("@/src/components/FAQView").then(m => ({ default: m.FAQView })));
+const CareersView = React.lazy(() => import("@/src/components/CareersView").then(m => ({ default: m.CareersView })));
 
 
 // Lightweight fallback shown while a lazily-loaded view chunk is downloading.
@@ -203,10 +204,11 @@ export default function App() {
         let name: string = user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User";
         let mobile: string = user.user_metadata?.mobile || user.mobile || "";
         let city: string = user.user_metadata?.city || user.city || "Mumbai";
+        let approvalState: { is_approved?: boolean; status?: string } | null = null;
         try {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("id, name, email, mobile, role, city")
+            .select("id, name, email, mobile, role, city, is_approved, status")
             .eq("id", user.id)
             .maybeSingle();
           if (profile) {
@@ -214,6 +216,10 @@ export default function App() {
             name = profile.name || name;
             mobile = profile.mobile || mobile;
             city = profile.city || city;
+            approvalState = {
+              is_approved: profile.is_approved,
+              status: profile.status
+            };
           }
         } catch (e) {
           // Profile lookup is best-effort; fall back to token metadata.
@@ -226,6 +232,8 @@ export default function App() {
           mobile,
           role,
           city,
+          is_approved: approvalState?.is_approved,
+          status: approvalState?.status,
           created_at: user.created_at || new Date().toISOString()
         } as any);
       } else {
@@ -981,6 +989,15 @@ export default function App() {
           }}
           onNavigateToSell={() => {
             handleNavigate("sell_car");
+          }}
+        />
+      ) : currentView === "careers" ? (
+        <CareersView
+          onBackToHome={() => {
+            handleNavigate("home");
+          }}
+          onNavigateToInventory={() => {
+            handleNavigate("buy_cars");
           }}
         />
       ) : currentView === "error_404" ? (

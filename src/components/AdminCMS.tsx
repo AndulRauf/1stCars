@@ -208,6 +208,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   // BuyNowCheckout. localStorage is only a fallback for demo/mock mode.
   const [salesLeads, setSalesLeads] = React.useState<any[]>([]);
 
+  // Job applications from the public /careers page (career_applications table
+  // + localStorage fallback in mock mode).
+  const [careerApplications, setCareerApplications] = React.useState<any[]>([]);
+
   // CRM tables — the existing business tables powering the unified CRM view.
   const [offers, setOffers] = React.useState<any[]>([]);
   const [sellRequests, setSellRequests] = React.useState<any[]>([]);
@@ -751,7 +755,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { data: tdData },
         { data: puData },
         { data: caData },
-        { data: abData }
+        { data: abData },
+        { data: jobData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -778,7 +783,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         supabase.from("test_drives").select(),
         supabase.from("purchases").select(),
         supabase.from("crm_activities").select(),
-        supabase.from("auction_bids").select()
+        supabase.from("auction_bids").select(),
+        supabase.from("career_applications").select()
       ]);
 
       if (cData) setCars(cData);
@@ -800,6 +806,21 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       if (caData) setCrmActivities(caData);
       if (ciData) setCarImages(ciData);
       if (abData) setAuctionBids(abData);
+
+      // Job applications: Supabase career_applications is the source of truth
+      // (written by CareersView); localStorage is the mock-mode fallback.
+      const localApplications = safeParseArray(localStorage.getItem("1stcars_career_applications"));
+      if (jobData && jobData.length > 0) {
+        setCareerApplications(jobData.sort(
+          (a: any, b: any) =>
+            (b.created_at ? new Date(b.created_at).getTime() : 0) -
+            (a.created_at ? new Date(a.created_at).getTime() : 0)
+        ));
+      } else if (localApplications.length > 0) {
+        setCareerApplications(localApplications);
+      } else {
+        setCareerApplications([]);
+      }
 
       // Load local-storage metadata schemas for extra requested modules
       const getStored = (key: string, def: any[]) => {
@@ -1150,7 +1171,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       automation: {},
       test_drives: { buyer_id: "", car_id: "", sales_associate_id: "", preferred_date: new Date().toISOString().split("T")[0], preferred_time: "10:00 AM - 12:00 PM", status: "pending", feedback: "" },
       purchases: { buyer_id: "", car_id: "", sales_associate_id: "", amount_paid: 0, payment_method: "UPI", payment_status: "pending", delivery_status: "pending" },
-      crm_activities: { customer_id: "", staff_id: "", activity_type: "note", subject: "", detail: "" }
+      crm_activities: { customer_id: "", staff_id: "", activity_type: "note", subject: "", detail: "" },
+      career_applications: { full_name: "", phone: "", email: "", position: "Sales Associate", experience: "", message: "", resume_url: "", resume_name: "", status: "pending" }
     };
 
     setFormData(defaultTemplates[currentListModule] || {});
@@ -1655,6 +1677,26 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         } else {
           await supabase.from("pages").update(recordToSave).eq("id", editingId);
         }
+      } else if (currentListModule === "career_applications") {
+        // Career applications are shared with the public /careers page: write
+        // through to Supabase (career_applications table) and mirror to the
+        // same localStorage key the public form uses, so mock mode stays in sync.
+        const { id: _appId, ...recordToSave } = currentRecord;
+        if (formMode === "add") {
+          await supabase.from("career_applications").insert([recordToSave]);
+        } else {
+          await supabase.from("career_applications").update(recordToSave).eq("id", editingId);
+        }
+        const localApplications = safeParseArray(localStorage.getItem("1stcars_career_applications"));
+        const mirrored = {
+          ...recordToSave,
+          id: editingId || `app-${Math.random().toString(36).substr(2, 9)}`,
+          created_at: recordToSave.created_at || new Date().toISOString()
+        };
+        const nextLocal = formMode === "add"
+          ? [mirrored, ...localApplications]
+          : localApplications.map((a: any) => a.id === editingId ? mirrored : a);
+        localStorage.setItem("1stcars_career_applications", JSON.stringify(nextLocal));
       } else {
         // Handle mock schema arrays
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
@@ -1730,6 +1772,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         await supabase.from("notifications").delete().eq("id", id);
       } else if (currentListModule === "pages" || currentListModule === "footer_links") {
         await supabase.from("pages").delete().eq("id", id);
+      } else if (currentListModule === "career_applications") {
+        await supabase.from("career_applications").delete().eq("id", id);
+        const localApplications = safeParseArray(localStorage.getItem("1stcars_career_applications"));
+        localStorage.setItem(
+          "1stcars_career_applications",
+          JSON.stringify(localApplications.filter((a: any) => a.id !== id))
+        );
       } else {
         const tableStateMap: Record<string, [any[], (d: any[]) => void]> = {
           staff: [getStoredMockList("staff"), (d) => persistMockTable("staff", d)],
@@ -2017,6 +2066,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       }).eq("id", dealerItem.id);
     } catch (e) {}
 
+    // Mark the KYC application row approved so the dealer-side dashboard gate
+    // (which checks dealer_applications.status) unlocks the account.
+    try {
+      await supabase.from("dealer_applications").update({ status: "approved" }).eq("user_id", dealerItem.id);
+    } catch (e) {}
+
     // Also flip is_verified on the real dealers table when the row exists.
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dealerItem.id || "")) {
       try {
@@ -2085,6 +2140,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       headers = ["created_at", "name", "dealership_name", "mobile", "email", "city", "status", "is_approved", "visiting_card_url", "aadhar_card_url"];
       rows = dealers;
       filename = "1stcars-dealer-registrations.xls";
+    } else if (type === "career_applications") {
+      headers = ["created_at", "full_name", "phone", "email", "position", "experience", "message", "resume_url", "resume_name", "status"];
+      rows = careerApplications;
+      filename = "1stcars-job-applications.xls";
     } else {
       headers = ["id", "name", "mobile", "email", "city", "status"];
       rows = getActiveModuleData();
@@ -2575,6 +2634,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       case "testimonials": return testimonials;
       case "finance": return financePartners;
       case "expenses": return expenses;
+      case "career_applications": return careerApplications;
       case "pages": return pages.filter((p) => !isHiddenPage(p));
       case "footer_links": return pages.filter((p) => p.is_footer && !isHiddenPage(p));
       default: return [];
@@ -2608,7 +2668,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       "leads",
       // These merge real Supabase profile rows (role = Dealer/Inspector/Sales
       // Associate/Admin), so they reflect shared data rather than browser-only lists.
-      "dealers", "inspectors", "sales", "staff", "test_drives", "purchases", "crm_activities"
+      "dealers", "inspectors", "sales", "staff", "test_drives", "purchases", "crm_activities",
+      // Careers: applications submitted on the public /careers page.
+      "career_applications"
     ];
     return supabaseBacked.includes(module) ? "supabase" : "local";
   };
@@ -3459,7 +3521,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 </>
               ) : (
                 <>
-                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {currentListModule}</h3>
+                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {currentListModule === "career_applications" ? "Job Applications" : currentListModule}</h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Database search, structural filters, pagination & image upload tools</p>
                 </>
               )}
@@ -3626,8 +3688,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <p className="text-[10px] text-[#2E7D32] font-black uppercase tracking-wider mt-0.5">Model: {item.model_name}</p>
                         </div>
                       )}
+                      {currentListModule === "career_applications" && (
+                        <div className="max-w-md">
+                          <p className="font-black text-slate-800">{item.full_name || item.name} ({item.phone || "N/A"})</p>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Email: {item.email || "N/A"} • Experience: {item.experience || "Not mentioned"}</p>
+                          {item.message && <p className="text-[10px] text-slate-500 italic mt-1 truncate max-w-xs">"{item.message}"</p>}
+                        </div>
+                      )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands"].includes(currentListModule) && (
+                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands", "career_applications"].includes(currentListModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -3697,8 +3766,18 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Specs: {item.engine} ({item.power})</p>
                         </div>
                       )}
+                      {currentListModule === "career_applications" && (
+                        <div>
+                          <p className="font-black text-[#2E7D32] uppercase text-[10px] tracking-wider">{item.position || "General Application"}</p>
+                          {item.resume_name && (
+                            <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate max-w-[180px]" title={item.resume_name}>
+                              📄 {item.resume_name}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands"].includes(currentListModule) && (
+                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands", "career_applications"].includes(currentListModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
@@ -3793,6 +3872,18 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           >
                             <Check className="h-3 w-3" /> Approve &amp; Publish
                           </button>
+                        )}
+                        {currentListModule === "career_applications" && item.resume_url && (
+                          <a
+                            href={item.resume_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-[#2E7D32]/30 text-[#2E7D32] bg-[#2E7D32]/5 hover:bg-[#2E7D32] hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                            title="Open the uploaded resume in a new tab"
+                          >
+                            <FileText className="h-3 w-3" />
+                            View Resume
+                          </a>
                         )}
                         <button
                           onClick={() => openEditModal(item)}

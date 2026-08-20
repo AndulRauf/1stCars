@@ -39,6 +39,47 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
 
+  // Dealer KYC gate: a dealer whose application is pending admin approval must
+  // NOT see the dealer dashboard. Only after approval may they participate in
+  // auctions, so the dashboard renders a locked "under review" screen instead.
+  const [dealerPending, setDealerPending] = React.useState<null | boolean>(null);
+
+  const checkDealerApproval = React.useCallback(async () => {
+    if (currentUser.role !== "Dealer") {
+      setDealerPending(false);
+      return;
+    }
+    try {
+      const { data: apps, error: appsErr } = await supabase
+        .from("dealer_applications")
+        .select("status")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (!appsErr && Array.isArray(apps) && apps.length > 0) {
+        setDealerPending(apps[0].status === "pending_approval" || apps[0].status === "rejected");
+        return;
+      }
+    } catch (e) {}
+    const localDealers = JSON.parse(localStorage.getItem("1stcars_cms_dealers") || "[]");
+    const localMatch = localDealers.find(
+      (d: any) => (d.email || "").toLowerCase() === (currentUser.email || "").toLowerCase()
+    );
+    if (localMatch) {
+      setDealerPending(
+        localMatch.is_approved === false ||
+        String(localMatch.status || "").toLowerCase() === "pending_approval" ||
+        String(localMatch.status || "").toLowerCase() === "rejected"
+      );
+      return;
+    }
+    setDealerPending(currentUser.is_approved === false);
+  }, [currentUser]);
+
+  React.useEffect(() => {
+    void checkDealerApproval();
+  }, [checkDealerApproval]);
+
   // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
   const { cars: catalogCars } = useCatalogCars();
 
@@ -345,6 +386,57 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     const sellerInspIds = new Set(inspections.filter(i => i.seller_id === currentUser.id).map(i => i.id));
     return offers.filter(o => sellerInspIds.has(o.inspection_id));
   }, [currentUser, inspections, offers]);
+
+  // Dealer KYC gate: show a locked "under review" screen instead of the dealer
+  // dashboard until the Admin approves the application.
+  if (currentUser.role === "Dealer" && dealerPending === true) {
+    return (
+      <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white border border-amber-200 rounded-3xl shadow-sm p-6 sm:p-10 space-y-6 text-center">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center">
+              <Clock className="h-8 w-8 text-amber-600" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Dealer Application Under Review
+              </h1>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                Hi <strong className="text-slate-800">{currentUser.name}</strong>, your dealer application has been
+                submitted to the Admin for review. Your Visiting Card and Aadhar Card are being verified.
+              </p>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left text-xs text-amber-800 font-semibold space-y-1.5">
+              <p>⏳ Status: <strong>Pending Admin Approval</strong></p>
+              <p>🏢 Dealership: <strong>{currentUser.name}</strong> • 📍 {currentUser.city}</p>
+              <p>📧 {currentUser.email}</p>
+            </div>
+
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              You'll get access to live auctions, bidding, and the full Dealer Dashboard as soon as your
+              application is approved. No action needed from your side right now.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                onClick={() => { void checkDealerApproval(); }}
+                className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-xs h-11 rounded-xl"
+              >
+                <RefreshCw className="h-4 w-4" /> Check Approval Status
+              </Button>
+              <Button
+                onClick={onLogout}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-wider text-xs h-11 rounded-xl"
+              >
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">

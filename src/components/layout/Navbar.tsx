@@ -9,7 +9,7 @@ interface NavbarProps {
   onSavedClick?: () => void;
   onAuthClick?: (mode: "login" | "register") => void;
   onSearchClick?: () => void;
-  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "custom_page" | "about" | "faq" | "error_404" | "error_500";
+  currentView?: "home" | "buy_cars" | "car_details" | "sales_dashboard" | "sell_car" | "role_dashboards" | "firstmark_certification" | "custom_page" | "about" | "faq" | "careers" | "error_404" | "error_500";
   onViewChange?: (view: any, carId?: string) => void;
   currentUser?: any;
   onLoginSuccess?: (user: any) => void;

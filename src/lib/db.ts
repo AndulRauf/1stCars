@@ -147,6 +147,8 @@ export interface Profile {
   role: UserRole;
   city: string;
   created_at: string;
+  is_approved?: boolean;
+  status?: string;
 }
 
 export interface Inspection {
