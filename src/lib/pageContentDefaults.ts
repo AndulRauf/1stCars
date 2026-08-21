@@ -145,8 +145,16 @@ export function getPageContent(overrides?: Record<string, string | undefined>): 
       const raw = localStorage.getItem(PAGE_CONTENT_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
+        // Known keys override defaults...
         for (const key of Object.keys(PAGE_CONTENT_DEFAULTS)) {
           if (typeof parsed[key] === "string" && parsed[key].length > 0) {
+            merged[key] = parsed[key];
+          }
+        }
+        // ...and any newly-added stored keys are carried through too, so a
+        // settings key added after PAGE_CONTENT_DEFAULTS still takes effect.
+        for (const key of Object.keys(parsed)) {
+          if (!(key in merged) && typeof parsed[key] === "string" && parsed[key].length > 0) {
             merged[key] = parsed[key];
           }
         }
@@ -160,6 +168,14 @@ export function getPageContent(overrides?: Record<string, string | undefined>): 
       const val = overrides[key];
       if (typeof val === "string" && val.length > 0) {
         merged[key] = val;
+      }
+    }
+    for (const key of Object.keys(overrides)) {
+      if (!(key in merged)) {
+        const val = overrides[key];
+        if (typeof val === "string" && val.length > 0) {
+          merged[key] = val;
+        }
       }
     }
   }

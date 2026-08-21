@@ -865,7 +865,37 @@ For questions, concerns, or feedback regarding these Terms, please contact:
   }
 }
 
+// In production with missing credentials we intentionally do NOT instantiate
+// the localStorage mock (it has no Row-Level Security and is fully client-
+// tamperable). Instead we return a stub whose data methods throw a clear error
+// — that error is caught by the app's existing try/catch and surfaced to the
+// user — while keeping `auth` no-throw so the app can still mount gracefully.
+function createFatalStub(message: string): any {
+  const safeAuth = {
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signOut: async () => ({ error: null }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error(message) }),
+    signUp: async () => ({ data: { user: null, session: null }, error: new Error(message) }),
+  };
+  const throwFn = () => {
+    throw new Error(message);
+  };
+  return new Proxy({}, {
+    get(_target, prop: string) {
+      if (prop === "auth") return safeAuth;
+      return throwFn;
+    },
+  }) as any;
+}
+
 // Instantiate the appropriate client
 export const supabase = isRealSupabase
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : (new SupabaseMockClient() as any);
+  : (isProdMockBlocked
+      ? createFatalStub(
+          "[1stCars] Production is missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. " +
+          "Configure both environment variables in your deploy settings; the app cannot reach the database."
+        )
+      : (new SupabaseMockClient() as any));

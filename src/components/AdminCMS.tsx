@@ -12,6 +12,7 @@ import {
   Car, Link, Menu, Inbox, Wallet, QrCode
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { deleteRecordFromSupabase, readDeletedTestimonialNames } from "@/src/lib/cmsSync";
 import { isHiddenPage } from "@/src/lib/utils";
 import { saveCar, deleteCar, buildCarRecord, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
@@ -1437,7 +1438,18 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     setIsLoading(true);
 
     try {
-      const generatedId = editingId || `id-${currentListModule}-${Math.random().toString(36).substr(2, 9)}`;
+      // FAQ & testimonials are mirrored to Supabase keyed by `id` (UUID), so new
+      // rows must get a real UUID rather than the `id-<module>-<rand>` mock id
+      // used by other modules (which would fail the UUID column / break upsert).
+      const newUuid =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `id-${currentListModule}-${Math.random().toString(36).substr(2, 9)}`;
+      const generatedId =
+        editingId ||
+        (currentListModule === "faqs" || currentListModule === "testimonials"
+          ? newUuid
+          : `id-${currentListModule}-${Math.random().toString(36).substr(2, 9)}`);
       const currentRecord = { ...formData, id: generatedId, created_at: formData.created_at || new Date().toISOString() };
 
       if (currentListModule === "cars") {
@@ -1861,7 +1873,18 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     const dbId = isUuid(editingId) ? editingId : null;
     try {
       if (module === "faqs") {
+        // Always key FAQ rows by `id` so the admin `faqs` module and the
+        // PageEditor FAQ tab (which upserts by id) never diverge, and we don't
+        // collide with the UNIQUE(question) constraint on public.faq.
+        const isUuidVal = (v: unknown) =>
+          !!v && typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+        const rowId = isUuidVal(record.id)
+          ? String(record.id)
+          : (typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : `id-faqs-${Math.random().toString(36).substr(2, 9)}`);
         const row = {
+          id: rowId,
           question: record.question,
           answer: record.answer,
           category: record.category || "General",
@@ -1870,12 +1893,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         if (dbId) {
           await supabase.from("faq").update(row).eq("id", dbId);
         } else {
-          const { data: existing } = await supabase.from("faq").select("id").eq("question", row.question).maybeSingle();
-          if (existing) {
-            await supabase.from("faq").update(row).eq("id", existing.id);
-          } else {
-            await supabase.from("faq").insert([row]);
-          }
+          await supabase.from("faq").upsert(row, { onConflict: "id" });
         }
       } else if (module === "testimonials") {
         const row = {
@@ -1976,72 +1994,6 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     } catch (e) {
       console.error(`AdminCMS: Supabase mirror failed for ${module}:`, e);
     }
-  };
-
-  const readDeletedTestimonialNames = (): string[] => {
-    try {
-      const raw = JSON.parse(localStorage.getItem("1stcars_cms_testimonials_deleted") || "[]");
-      return Array.isArray(raw) ? raw : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
-  const deleteRecordFromSupabase = async (module: string, id: string, record?: any): Promise<{ dbError: boolean }> => {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (module === "testimonials") {
-      // Tombstone the review FIRST (by normalized author name) so it disappears
-      // from the admin list and the home page even when the DB row cannot be
-      // removed (e.g. RLS blocks DELETE). The DB delete is best-effort.
-      if (record?.name) {
-        const name = String(record.name).trim().toLowerCase();
-        if (name) {
-          const deleted = readDeletedTestimonialNames();
-          if (!deleted.includes(name)) {
-            deleted.push(name);
-            localStorage.setItem("1stcars_cms_testimonials_deleted", JSON.stringify(deleted));
-          }
-        }
-      }
-      let dbError = false;
-      if (isUuid) {
-        try {
-          const { error } = await supabase.from("testimonials").delete().eq("id", id);
-          if (error) {
-            dbError = true;
-            console.error("AdminCMS: Supabase delete failed for testimonials (check RLS policy). Review is hidden locally:", error);
-          }
-        } catch (e) {
-          dbError = true;
-          console.error("AdminCMS: Supabase delete threw for testimonials:", e);
-        }
-      }
-      return { dbError };
-    }
-
-    if (!isUuid) return { dbError: false };
-    try {
-      if (module === "faqs") {
-        const { error } = await supabase.from("faq").delete().eq("id", id);
-        if (error) throw error;
-      } else if (module === "models") {
-        const { error } = await supabase.from("models").delete().eq("id", id);
-        if (error) throw error;
-      } else if (module === "cities") {
-        const { error } = await supabase.from("cities").delete().eq("id", id);
-        if (error) throw error;
-      } else if (module === "finance") {
-        const { error } = await supabase.from("finance_partners").delete().eq("id", id);
-        if (error) throw error;
-      } else if (module === "expenses") {
-        const { error } = await supabase.from("expenses").delete().eq("id", id);
-        if (error) throw error;
-      }
-    } catch (e) {
-      console.error(`AdminCMS: Supabase delete failed for ${module}:`, e);
-      throw e;
-    }
-    return { dbError: false };
   };
 
   // Dealer Approval Action
