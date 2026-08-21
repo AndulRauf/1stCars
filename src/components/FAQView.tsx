@@ -1,6 +1,7 @@
 import * as React from "react";
 import { HelpCircle } from "lucide-react";
 import { PageHero } from "@/src/components/ui/PageHero";
+import { SectionHeader } from "@/src/components/ui/SectionHeader";
 import { FAQAccordion } from "@/src/components/ui/FAQAccordion";
 import { CTASection } from "@/src/components/ui/CTASection";
 import { getPageContent, PAGE_CONTENT_DEFAULTS, PAGE_CONTENT_UPDATED_EVENT, FaqItem, DEFAULT_FAQ_ITEMS, PAGE_CONTENT_STORAGE_KEY } from "@/src/lib/pageContentDefaults";
@@ -151,8 +152,15 @@ export function FAQView({ onBackToHome, onNavigateToInventory, onNavigateToSell 
       />
 
       {/* FAQ Categories + Accordion */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <FAQAccordion items={faqs} className="animate-fade-up" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
+        <SectionHeader
+          badge="QUICK ANSWERS"
+          title="Frequently asked questions"
+          subtitle="Everything buyers and sellers ask about certified cars, inspections, payments and ownership — organised by topic."
+        />
+        <div className="max-w-3xl mx-auto mt-10">
+          <FAQAccordion items={faqs} className="animate-fade-up" />
+        </div>
       </div>
 
       {/* Closing CTA */}
