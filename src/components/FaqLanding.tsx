@@ -182,8 +182,6 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
     return (
       <div className="min-h-screen bg-background pb-16">
         <PageHero
-          label="1STCARS HELP CENTER"
-          labelIcon={<HelpCircle className="h-4 w-4" />}
           title={faqHeading}
           subtitle={faqSubheading}
           ctas={[{ label: "Back to Home", onClick: onBackToHome, variant: "secondary" }]}
@@ -276,8 +274,6 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
     <div className="bg-background min-h-screen text-slate-900">
       {/* Hero */}
       <PageHero
-        label="1STCARS HELP CENTER"
-        labelIcon={<HelpCircle className="h-4 w-4" />}
         title={faqHeading}
         subtitle={faqSubheading}
         ctas={[
