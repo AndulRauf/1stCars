@@ -34,6 +34,7 @@ import { CMSModule } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
 import { AdminAuctions } from "./auctions/AdminAuctions";
+import { auctionService, AuctionActor } from "@/src/lib/auctions";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
   SellCatalog, SellBrandEntry, SellModel, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -622,11 +623,38 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     if (onReloadAllData) onReloadAllData();
   };
 
-  // NOTE: The old "Start Auction" shortcut (direct INSERT into auctions with
-  // the legacy flat schema + status "active") was removed. Auction creation is
-  // owned by the canonical engine — Admin drives it from Admin CMS → Live
-  // Auctions (auctionService.createAuction → auction_create_auction, then
-  // publish → schedule → start).
+  // Auction creation is owned by the canonical engine — Admin drives it from
+  // Admin CMS → Live Auctions (auctionService.createAuction → auction_create_auction,
+  // then publish → schedule → start).
+  const handleStartAuction = async (inspection: any, reportData: Full120PointReport) => {
+    const actor: AuctionActor = { userId: currentUser?.id || "admin", role: currentUser?.role || "Admin" };
+    const basePrice = inspection.year > 2020 ? 800000 : 400000;
+    try {
+      // Canonical engine only — the DB/RPC engine owns every auction lifecycle write.
+      await auctionService.createAndLaunch(actor, {
+        car_id: inspection.car_id || null,
+        inspection_id: inspection.id,
+        starting_bid: basePrice,
+        reserve_price: 0,
+        minimum_increment: 25000,
+        starts_at: new Date().toISOString(),
+        ends_at: new Date(Date.now() + 3600000 * 24).toISOString()
+      });
+
+      await supabase.from("inspections").update({
+        status: "auctioned",
+        report_120_json: JSON.stringify(reportData),
+        report_150_json: JSON.stringify(reportData)
+      }).eq("id", inspection.id);
+
+      toast.success(`Live B2B Dealer Auction successfully launched for ${inspection.brand} ${inspection.model}!`);
+      setSelected120Inspection(null);
+      loadCMSData();
+      if (onReloadAllData) onReloadAllData();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    }
+  };
 
   const handlePublishToWebsite = async (inspection: any, reportData: Full120PointReport) => {
     const carRecord = {
@@ -1534,16 +1562,24 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             `${currentListModule} needs a valid ${missing.map((f) => f.replace(/_/g, " ")).join(" and ")} — enter the record's real id (e.g. the car's UUID shown in the list).`
           );
         }
+      } else if (activeModule === "auctions") {
+        // Canonical engine only — never write the auction table directly.
+        const actor: AuctionActor = { userId: currentUser?.id || "admin", role: currentUser?.role || "Admin" };
         if (formMode === "add") {
-          await supabase.from(currentListModule).insert([recordToSave]);
+          await auctionService.createAuction(actor, {
+            car_id: currentRecord.car_id || currentRecord.car || null,
+            inspection_id: currentRecord.inspection_id || currentRecord.inspection || null,
+            starting_bid: Number(currentRecord.base_price || currentRecord.starting_bid || 0),
+            reserve_price: Number(currentRecord.reserve || currentRecord.reserve_price || 0),
+            minimum_increment: 25000
+          });
         } else {
-          await supabase.from(currentListModule).update(recordToSave).eq("id", editingId);
+          toast.error("Auction editing is handled in the Auction Engine — open the auction there to edit, publish or cancel it.");
+          setIsFormOpen(false);
+          loadCMSData();
+          if (onReloadAllData) onReloadAllData();
+          return;
         }
-      } else if (currentListModule === "auctions") {
-        // Auctions are lifecycle-managed by the canonical engine (RPCs in
-        // public/auction_engine.sql). Never write the table directly here —
-        // direct writes would bypass the status guard, RLS and RPC validation.
-        throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Use the New Auction / lifecycle buttons there.");
       } else if (currentListModule === "brands") {
         // 1. Save or update the Brand record in Supabase
         const logoUrlToSave = currentRecord.logo_url || currentRecord.logo || currentRecord.image_url || currentRecord.photo || "⭐";
@@ -1768,7 +1804,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
         await supabase.from(currentListModule).delete().eq("id", id);
       } else if (currentListModule === "auctions") {
-        throw new Error("Auction records are managed by the Auction Engine (Admin CMS → Live Auctions). Cancel or close auctions from there instead.");
+        const actor: AuctionActor = { userId: currentUser?.id || "admin", role: currentUser?.role || "Admin" };
+        await auctionService.deleteAuction(actor, id);
       } else if (currentListModule === "brands") {
         // If it's a model in our local list, delete from models
         const isModel = models.some(m => m.id === id);

@@ -13,6 +13,7 @@ import * as React from "react";
 import { supabase, isRealSupabase } from "./supabaseClient";
 import { notificationService } from "./notifications";
 import { automationService } from "./automation";
+import { buildCarRecord } from "./carPersistence";
 
 // ============================================================
 // TYPES
@@ -120,7 +121,7 @@ export interface AuctionActor {
 }
 
 export interface CreateAuctionInput {
-  car_id: string;
+  car_id: string | null;
   inspection_id: string;
   starting_bid: number;
   reserve_price?: number;
@@ -284,11 +285,64 @@ async function localListAuctions(actor: AuctionActor | null): Promise<AuctionRec
   return [];
 }
 
+// Resolves the `cars` row backing an inspection and creates one from the
+// inspection data when it is missing, so the canonical createAuction RPC (which
+// requires a car_id) can run for inspections that never went through the CMS
+// car flow. Mirrors the auto-car behaviour the legacy inspector/admin
+// "Start Auction" flows used to fake with a direct table insert.
+async function ensureCarForInspection(inspectionId: string, startingBid: number): Promise<string> {
+  const { data: inspRows } = await (supabase as any).from("inspections").select("*").eq("id", inspectionId);
+  const insp = inspRows?.[0];
+  if (!insp) throw new Error("Inspection not found");
+
+  if (insp.car_id) return insp.car_id;
+
+  const { data: matches } = await (supabase as any)
+    .from("cars")
+    .select("id, reg_number, status")
+    .eq("brand", insp.brand)
+    .eq("model", insp.model)
+    .eq("year", insp.year);
+  const match = (matches || []).find((c: any) => {
+    const regOk = !insp.reg_number || String(c.reg_number || "").toLowerCase() === String(insp.reg_number).toLowerCase();
+    return regOk && ["available", "listed", "ready_for_sale", "inspection_completed"].includes(c.status);
+  });
+  if (match) return match.id;
+
+  const carRecord = buildCarRecord({
+    title: `${insp.brand} ${insp.model}`,
+    brand: insp.brand,
+    model: insp.model,
+    variant: insp.variant || "ZX / Lux",
+    year: insp.year,
+    price: startingBid,
+    km_driven: insp.km_driven,
+    fuel: insp.fuel || "Petrol",
+    transmission: insp.transmission || "Manual",
+    city: insp.city || "Surat",
+    reg_number: insp.reg_number,
+    overall_score: insp.overall_score,
+    status: "inspection_completed",
+    payload: { source: "auction-create", inspection_id: inspectionId }
+  });
+  const { data, error } = await (supabase as any).from("cars").insert([carRecord]).select().single();
+  if (error || !data?.id) throw new Error(error?.message || "Failed to create a car record for the auction");
+  return data.id;
+}
+
+async function verifiedDealerIds(): Promise<string[]> {
+  const { data } = await (supabase as any).from("profiles").select("id, role, is_verified, is_approved");
+  return (data || [])
+    .filter((p: any) => p.role === "Dealer" && p.is_verified !== false && p.is_approved !== false)
+    .map((p: any) => p.id);
+}
+
 async function localCreateAuction(actor: AuctionActor, input: CreateAuctionInput): Promise<AuctionRecord> {
-  if (actor.role !== "Admin" && actor.role !== "Sales Associate") {
+  if (actor.role !== "Admin" && actor.role !== "Sales Associate" && actor.role !== "Inspector") {
     throw new Error("Not authorized to create auctions");
   }
-  const { data: cars } = await (supabase as any).from("cars").select("*").eq("id", input.car_id);
+  const carId = input.car_id ? input.car_id : await ensureCarForInspection(input.inspection_id, input.starting_bid);
+  const { data: cars } = await (supabase as any).from("cars").select("*").eq("id", carId);
   const car = cars?.[0];
   if (!car) throw new Error("Car not found");
   if (!["available", "listed", "ready_for_sale", "inspection_completed"].includes(car.status)) {
@@ -307,7 +361,7 @@ async function localCreateAuction(actor: AuctionActor, input: CreateAuctionInput
 
   const row: AuctionRecord = {
     id: newId("auc"),
-    car_id: input.car_id,
+    car_id: carId,
     inspection_id: input.inspection_id,
     seller_id: insp.seller_id,
     status: "DRAFT",
@@ -904,9 +958,10 @@ export const auctionService = {
   },
 
   async createAuction(actor: AuctionActor, input: CreateAuctionInput): Promise<AuctionRecord> {
+    const carId = input.car_id ? input.car_id : await ensureCarForInspection(input.inspection_id, input.starting_bid);
     if (rpcSupported()) {
       const { data, error } = await (supabase as any).rpc("auction_create_auction", {
-        p_car_id: input.car_id,
+        p_car_id: carId,
         p_inspection_id: input.inspection_id,
         p_starting_bid: input.starting_bid,
         p_reserve_price: input.reserve_price || 0,
@@ -920,7 +975,24 @@ export const auctionService = {
       if (error) throw new Error(error.message);
       return data as AuctionRecord;
     }
-    return localCreateAuction(actor, input);
+    return localCreateAuction(actor, { ...input, car_id: carId });
+  },
+
+  // Creates a DRAFT auction and immediately drives it live
+  // (DRAFT -> READY -> SCHEDULED -> LIVE) with a 24-hour window. Used by the
+  // legacy "auto-list after inspection" and admin "Approve for Auction" flows so
+  // they keep their current behaviour without ever writing the auction table
+  // directly. Eligible dealer pool defaults to every verified dealer.
+  async createAndLaunch(actor: AuctionActor, input: CreateAuctionInput): Promise<AuctionRecord> {
+    const eligible = input.eligible_dealer_ids && input.eligible_dealer_ids.length
+      ? input.eligible_dealer_ids
+      : await verifiedDealerIds();
+    const created = await this.createAuction(actor, { ...input, eligible_dealer_ids: eligible });
+    await this.publishAuction(actor, created.id);
+    const starts = created.starts_at || new Date().toISOString();
+    const ends = input.ends_at || new Date(Date.now() + 86400000).toISOString();
+    await this.scheduleAuction(actor, created.id, starts, ends);
+    return (await this.startAuction(actor, created.id)) || created;
   },
 
   async publishAuction(actor: AuctionActor, id: string): Promise<AuctionRecord | null> {
@@ -929,7 +1001,7 @@ export const auctionService = {
       if (error) throw new Error(error.message);
       return data as AuctionRecord;
     }
-    if (actor.role !== "Admin" && actor.role !== "Sales Associate") throw new Error("Not authorized");
+    if (actor.role !== "Admin" && actor.role !== "Sales Associate" && actor.role !== "Inspector") throw new Error("Not authorized");
     const updated = await localTransition(id, "READY");
     await automationService.emitEvent({ type: "auction.published", sourceTable: "auctions", sourceId: id, payload: { auction_id: id } });
     return updated;
@@ -941,7 +1013,7 @@ export const auctionService = {
       if (error) throw new Error(error.message);
       return data as AuctionRecord;
     }
-    if (actor.role !== "Admin" && actor.role !== "Sales Associate") throw new Error("Not authorized");
+    if (actor.role !== "Admin" && actor.role !== "Sales Associate" && actor.role !== "Inspector") throw new Error("Not authorized");
     if (new Date(endsAt).getTime() <= new Date(startsAt).getTime()) throw new Error("ends_at must be after starts_at");
     const updated = await localTransition(id, "SCHEDULED", { starts_at: startsAt, ends_at: endsAt, extension_count: 0 });
     await automationService.emitEvent({ type: "auction.scheduled", sourceTable: "auctions", sourceId: id, payload: { auction_id: id, starts_at: startsAt, ends_at: endsAt } });
@@ -954,7 +1026,7 @@ export const auctionService = {
       if (error) throw new Error(error.message);
       return data as AuctionRecord;
     }
-    if (actor.role !== "Admin" && actor.role !== "Sales Associate") throw new Error("Not authorized");
+    if (actor.role !== "Admin" && actor.role !== "Sales Associate" && actor.role !== "Inspector") throw new Error("Not authorized");
     const a = (await this.listAuctions(actor)).find((x) => x.id === id);
     if (!a) throw new Error("Auction not found");
     if (!["READY", "SCHEDULED"].includes(a.status)) throw new Error(`Auction not startable from ${a.status}`);
@@ -1038,6 +1110,20 @@ export const auctionService = {
       }
     }
     return updated;
+  },
+
+  // Removes an auction from active view via the canonical engine. The engine has
+  // no hard-delete RPC, so this cancels the auction (terminal CANCELLED state,
+  // vehicle released, dealers notified). Idempotent for auctions already closed.
+  async deleteAuction(actor: AuctionActor, id: string, reason?: string): Promise<void> {
+    try {
+      await this.cancelAuction(actor, id, reason || "Deleted from CMS");
+    } catch (err) {
+      const a = await this.getAuction(id);
+      if (!a) return;
+      if (["CANCELLED", "ACCEPTED", "REJECTED", "EXPIRED"].includes(a.status)) return;
+      throw err;
+    }
   },
 
   async adminClose(actor: AuctionActor, id: string, reason?: string): Promise<string> {

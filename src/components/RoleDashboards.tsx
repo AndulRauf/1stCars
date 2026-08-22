@@ -14,6 +14,7 @@ import {
 } from "@/src/lib/db";
 import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
+import { auctionService, AuctionActor } from "@/src/lib/auctions";
 import { AdminCMS } from "./AdminCMS";
 import { DealerAuctions } from "./auctions/DealerAuctions";
 import { SellerAuctions } from "./auctions/SellerAuctions";
@@ -225,12 +226,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
   };
 
-  // NOTE: Dealer bid placement now lives entirely in <DealerAuctions />, which
-  // routes through the canonical secure bid RPC (auctionService.placeBid →
-  // place_auction_bid) with atomic locking, minimum-increment + dealer
-  // eligibility validation and anti-sniping extensions. The old raw
-  // `supabase.from("auctions").update(...)` bid path was removed to keep a
-  // single canonical auction lifecycle.
+  // Dealer bidding is handled by DealerAuctions (canonical auctionService.placeBid).
 
   // Handle Inspector: Upload 120-Point Report Checklist
   const handleUploadReport = async (inspectionId: string, reportData: Full120PointReport) => {
@@ -251,21 +247,34 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       is_certified: reportData.isCertified
     }).eq("id", inspectionId);
 
-    // 2. Completing a certified inspection makes the vehicle READY FOR AUCTION.
-    // It does NOT create the auction directly — auction creation is owned by the
-    // canonical engine (auctionService.createAuction → auction_create_auction),
-    // which Admin drives from Admin CMS → Auctions (create → publish → schedule
-    // → start). This keeps a single canonical auction lifecycle and avoids a
-    // second, competing "active" auction row. We simply notify Admin that a
-    // certified vehicle is ready to be put up for auction.
+    // 2. Auto-list this certified car in the Live Dealer Auction via the canonical engine.
+    //    (DRAFT -> READY -> SCHEDULED -> LIVE, 24h window — same live-listing the
+    //    legacy direct insert used to fake, but now every write is the engine's.)
     if (targetInsp) {
-      await notificationService.triggerReportSubmitted({
-        inspectionId: targetInsp.id,
-        inspectorName: currentUser.name,
-        brand: targetInsp.brand,
-        model: targetInsp.model,
-        score: reportData.overallScorePercent
-      });
+      const actor: AuctionActor = { userId: currentUser.id, role: currentUser.role };
+      const basePrice = targetInsp.year > 2020 ? 800000 : 400000;
+      try {
+        await auctionService.createAndLaunch(actor, {
+          car_id: targetInsp.car_id || null,
+          inspection_id: targetInsp.id,
+          starting_bid: basePrice,
+          reserve_price: 0,
+          minimum_increment: 25000,
+          starts_at: new Date().toISOString(),
+          ends_at: new Date(Date.now() + 3600000 * 24).toISOString()
+        });
+
+        // Notify Admin
+        await notificationService.triggerReportSubmitted({
+          inspectionId: targetInsp.id,
+          inspectorName: currentUser.name,
+          brand: targetInsp.brand,
+          model: targetInsp.model,
+          score: reportData.overallScorePercent
+        });
+      } catch (err) {
+        toast.error(`Report saved, but the auction could not be auto-listed: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
 
     toast.success("120-Point Certified Inspection Report uploaded! Vehicle is now certified and ready for Admin to put up for auction.");
