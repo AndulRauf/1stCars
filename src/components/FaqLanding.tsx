@@ -70,7 +70,18 @@ function parseFaqContent(md: string): ParsedFaq[] {
   return items;
 }
 
-const CATEGORY_ORDER = ["Buying", "Selling", "Inspection", "Payments", "General"];
+const CATEGORY_ORDER = [
+  "Buying",
+  "Selling",
+  "Inspection",
+  "Certification",
+  "Financing",
+  "Test drive",
+  "Payments",
+  "Delivery",
+  "Account & safety",
+  "General",
+];
 
 function normalizeCategory(category: string): string {
   const c = (category || "General").trim();

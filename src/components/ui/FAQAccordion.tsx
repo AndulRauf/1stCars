@@ -10,7 +10,18 @@ export interface FAQAccordionProps {
 
 // Preferred display order for FAQ categories; unknown categories (added via the
 // Admin Panel) are appended after these, still alphabetically among themselves.
-const CATEGORY_ORDER = ["Buying", "Selling", "Inspection", "Payments", "General"];
+const CATEGORY_ORDER = [
+  "Buying",
+  "Selling",
+  "Inspection",
+  "Certification",
+  "Financing",
+  "Test drive",
+  "Payments",
+  "Delivery",
+  "Account & safety",
+  "General",
+];
 
 function normalizeCategory(category: string): string {
   const c = (category || "General").trim();
