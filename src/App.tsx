@@ -74,7 +74,6 @@ const RoleDashboards = React.lazy(() => import("@/src/components/RoleDashboards"
 const FirstMarkCertification = React.lazy(() => import("@/src/components/FirstMarkCertification").then(m => ({ default: m.FirstMarkCertification })));
 const CustomPageView = React.lazy(() => import("@/src/components/CustomPageView").then(m => ({ default: m.CustomPageView })));
 const AboutUsView = React.lazy(() => import("@/src/components/AboutUsView").then(m => ({ default: m.AboutUsView })));
-const FAQView = React.lazy(() => import("@/src/components/FAQView").then(m => ({ default: m.FAQView })));
 const CareersView = React.lazy(() => import("@/src/components/CareersView").then(m => ({ default: m.CareersView })));
 
 
@@ -980,15 +979,10 @@ export default function App() {
           }}
         />
       ) : currentView === "faq" ? (
-        <FAQView
+        <CustomPageView
+          pageId="p-faq"
           onBackToHome={() => {
             handleNavigate("home");
-          }}
-          onNavigateToInventory={() => {
-            handleNavigate("buy_cars");
-          }}
-          onNavigateToSell={() => {
-            handleNavigate("sell_car");
           }}
         />
       ) : currentView === "careers" ? (
