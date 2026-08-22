@@ -4,6 +4,7 @@ import Markdown from "react-markdown";
 import { PageHero } from "@/src/components/ui/PageHero";
 import { CTASection } from "@/src/components/ui/CTASection";
 import { cn } from "@/src/lib/utils";
+import { getPageContent, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
 import { supabase } from "@/src/lib/supabaseClient";
 
 interface FaqLandingProps {
@@ -81,6 +82,25 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
   // We fall back to the p-faq page markdown only when the table has no rows yet.
   const [faqRows, setFaqRows] = React.useState<ParsedFaq[] | null>(null);
 
+  // Hero copy is admin-editable via website_settings (faqPageHeading /
+  // faqPageSubheading). Mirror the rest of the site (AboutUsView, etc.) so the
+  // CMS actually drives the FAQ hero instead of hard-coded strings — the old
+  // FAQView used these, but the rewritten FaqLanding dropped them.
+  const [settings, setSettings] = React.useState<Record<string, string>>(() => getPageContent());
+
+  React.useEffect(() => {
+    const apply = () => setSettings(getPageContent());
+    apply();
+    window.addEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+    return () => window.removeEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
+  }, []);
+
+  const faqHeading = settings.faqPageHeading || "Frequently Asked Questions";
+  const faqSubheading =
+    settings.faqPageSubheading ||
+    page.meta_description ||
+    "Find quick answers about buying, selling and certifying cars with 1stCars.";
+
   React.useEffect(() => {
     let cancelled = false;
 
@@ -147,8 +167,8 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
         <PageHero
           label="1STCARS HELP CENTER"
           labelIcon={<HelpCircle className="h-4 w-4" />}
-          title="Frequently Asked Questions"
-          subtitle={page.meta_description || "Find quick answers about buying, selling and certifying cars with 1stCars."}
+          title={faqHeading}
+          subtitle={faqSubheading}
           ctas={[{ label: "Back to Home", onClick: onBackToHome, variant: "secondary" }]}
         />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -208,11 +228,8 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
       <PageHero
         label="1STCARS HELP CENTER"
         labelIcon={<HelpCircle className="h-4 w-4" />}
-        title="Frequently Asked Questions"
-        subtitle={
-          page.meta_description ||
-          "Find quick answers about buying, selling and certifying cars with 1stCars."
-        }
+        title={faqHeading}
+        subtitle={faqSubheading}
         ctas={[
           { label: "Browse Cars", onClick: onBackToHome },
           { label: "Back to Home", onClick: onBackToHome, variant: "secondary" },
