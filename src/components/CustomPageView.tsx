@@ -75,7 +75,14 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
     );
   }
 
-  if (pageId === "p-faq") {
+  // Render the redesigned FAQ landing for the dedicated route (pageId "p-faq")
+  // AND for any page reached by slug (e.g. the footer/nav link that uses the
+  // page's UUID), so the redesign applies no matter how the page is opened.
+  const isFaqPage =
+    pageId === "p-faq" ||
+    (page && typeof page.slug === "string" && /faq/i.test(page.slug));
+
+  if (isFaqPage) {
     return <FaqLanding page={page} onBackToHome={onBackToHome} />;
   }
 

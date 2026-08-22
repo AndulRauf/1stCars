@@ -4,7 +4,7 @@ import Markdown from "react-markdown";
 import { PageHero } from "@/src/components/ui/PageHero";
 import { CTASection } from "@/src/components/ui/CTASection";
 import { cn } from "@/src/lib/utils";
-import { getPageContent, PAGE_CONTENT_UPDATED_EVENT } from "@/src/lib/pageContentDefaults";
+import { getPageContent, PAGE_CONTENT_UPDATED_EVENT, DEFAULT_FAQ_ITEMS } from "@/src/lib/pageContentDefaults";
 import { supabase } from "@/src/lib/supabaseClient";
 
 interface FaqLandingProps {
@@ -185,7 +185,14 @@ export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
 
   const parsed = React.useMemo(() => {
     if (faqRows && faqRows.length > 0) return faqRows;
-    return page.content ? parseFaqContent(page.content) : [];
+    if (page.content) return parseFaqContent(page.content);
+    // Last-resort fallback so the page is never empty before the admin seeds
+    // the live `faq` table: use the canonical default FAQ entries.
+    return DEFAULT_FAQ_ITEMS.map((f) => ({
+      category: f.category,
+      question: f.question,
+      answer: f.answer,
+    }));
   }, [faqRows, page.content]);
 
   // If there's genuinely no FAQ content, fall back to the raw Markdown render.
