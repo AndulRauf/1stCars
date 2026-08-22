@@ -856,6 +856,9 @@ export default function App() {
           onNavigateToInventory={() => {
             handleNavigate("buy_cars");
           }}
+          onNavigateToSell={() => {
+            handleNavigate("sell_car");
+          }}
         />
       ) : currentView === "error_404" ? (
         <Error404Page onGoHome={() => handleNavigate("home")} />

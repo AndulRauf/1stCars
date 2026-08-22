@@ -7,6 +7,7 @@ import { cn } from "@/src/lib/utils";
 interface FAQViewProps {
   onBackToHome: () => void;
   onNavigateToInventory: () => void;
+  onNavigateToSell: () => void;
 }
 
 function loadFaqs(): FaqItem[] {
@@ -61,14 +62,14 @@ export function FAQView({ onBackToHome, onNavigateToInventory }: FAQViewProps) {
               onClick={onNavigateToInventory}
               className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full shadow-lg shadow-[#2E7D32]/25 cursor-pointer"
             >
-              Browse Certified Cars <ArrowRight className="h-4 w-4 ml-2" />
+              Buy Car <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button
               variant="outline"
-              onClick={onBackToHome}
+              onClick={onNavigateToSell}
               className="bg-white/60 hover:bg-white/80 border border-[#2E7D32]/20 text-[#2E7D32] font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full backdrop-blur-md transition-all cursor-pointer"
             >
-              Back to Home
+              Sell Your Car
             </Button>
           </div>
         </div>
