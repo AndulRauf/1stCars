@@ -4,6 +4,7 @@ import { isHiddenPage } from "@/src/lib/utils";
 import Markdown from "react-markdown";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { FaqLanding } from "@/src/components/FaqLanding";
 
 interface CustomPageViewProps {
   pageId: string | null;
@@ -74,9 +75,12 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
     );
   }
 
+  if (pageId === "p-faq") {
+    return <FaqLanding page={page} onBackToHome={onBackToHome} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8F6F0] pb-16">
-      
       {/* Hero Section */}
       <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
