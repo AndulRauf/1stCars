@@ -4,6 +4,7 @@ import Markdown from "react-markdown";
 import { PageHero } from "@/src/components/ui/PageHero";
 import { CTASection } from "@/src/components/ui/CTASection";
 import { cn } from "@/src/lib/utils";
+import { supabase } from "@/src/lib/supabaseClient";
 
 interface FaqLandingProps {
   page: {
@@ -76,13 +77,70 @@ function normalizeCategory(category: string): string {
 }
 
 export function FaqLanding({ page, onBackToHome }: FaqLandingProps) {
-  const parsed = React.useMemo(
-    () => (page.content ? parseFaqContent(page.content) : []),
-    [page.content]
-  );
+  // The `faq` table (admin-managed) is the source of truth for the Q&A.
+  // We fall back to the p-faq page markdown only when the table has no rows yet.
+  const [faqRows, setFaqRows] = React.useState<ParsedFaq[] | null>(null);
 
-  // If the page content isn't in the expected FAQ format, fall back to the
-  // original Markdown rendering so nothing is ever lost.
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const applyRows = (rows: any[]) => {
+      if (!cancelled && rows && rows.length > 0) {
+        const sorted = [...rows].sort(
+          (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+        );
+        setFaqRows(
+          sorted.map((q: any) => ({
+            category: q.category || "General",
+            question: String(q.question || ""),
+            answer: String(q.answer || ""),
+          }))
+        );
+      }
+    };
+
+    const fetchFromSupabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("faq")
+          .select("id, category, question, answer, display_order");
+        if (!cancelled && !error && data && data.length > 0) applyRows(data);
+      } catch {}
+    };
+
+    fetchFromSupabase();
+
+    // Stay in sync with admin edits (realtime + light polling for CDN/Vercel cache).
+    let channel: any = null;
+    try {
+      if ((supabase as any).channel) {
+        channel = (supabase as any)
+          .channel("faq-landing-live")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "faq" },
+            () => fetchFromSupabase()
+          )
+          .subscribe();
+      }
+    } catch {}
+    const interval = window.setInterval(fetchFromSupabase, 30_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      try {
+        if (channel) (supabase as any).removeChannel?.(channel);
+      } catch {}
+    };
+  }, []);
+
+  const parsed = React.useMemo(() => {
+    if (faqRows && faqRows.length > 0) return faqRows;
+    return page.content ? parseFaqContent(page.content) : [];
+  }, [faqRows, page.content]);
+
+  // If there's genuinely no FAQ content, fall back to the raw Markdown render.
   if (parsed.length === 0) {
     return (
       <div className="min-h-screen bg-background pb-16">

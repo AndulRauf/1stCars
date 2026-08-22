@@ -13,6 +13,26 @@ interface PageEditorProps {
 
 type PageTab = "home" | "buy" | "sell" | "certification" | "about" | "faq";
 
+// Build the p-faq page Markdown from the admin-managed `faq` table rows so the
+// FAQ page (FaqLanding) and the `faq` table stay in sync. Format matches what
+// FaqLanding.parseFaqContent expects: `## Category` headings and `### Question`.
+function buildFaqMarkdown(rows: { category?: string; question: string; answer: string }[]): string {
+  const byCat = new Map<string, { question: string; answer: string }[]>();
+  for (const r of rows) {
+    const cat = (r.category || "General").trim() || "General";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push({ question: r.question, answer: r.answer });
+  }
+  let md = "# Frequently Asked Questions\n\n";
+  for (const [cat, qs] of byCat) {
+    md += `## ${cat}\n\n`;
+    qs.forEach((q, i) => {
+      md += `### ${i + 1}. ${q.question}\n${q.answer}\n\n`;
+    });
+  }
+  return md.trim();
+}
+
 const TABS: { id: PageTab; label: string; icon: LucideIcon; hint: string }[] = [
   { id: "home", label: "Home Page", icon: HomeIcon, hint: "Hero, trust points, fleet, certified & testimonial sections" },
   { id: "buy", label: "Buy Cars", icon: Car, hint: "Inventory page hero, filters & CTA labels" },
@@ -227,6 +247,12 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
           { id: row.id, category: row.category || "General", question: row.question, answer: row.answer },
           { onConflict: "id" }
         );
+      }
+      // Keep the p-faq CMS page in sync with the admin-managed `faq` table.
+      try {
+        await supabase.from("pages").update({ content: buildFaqMarkdown(clean) }).eq("id", "p-faq");
+      } catch (e) {
+        console.error("Failed to sync FAQ into p-faq page:", e);
       }
       window.dispatchEvent(new Event("1stcars_settings_updated"));
       toast.success("FAQ page questions & answers saved successfully.");
