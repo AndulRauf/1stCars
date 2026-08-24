@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, Plus, Gavel, Rocket, CalendarClock, PlayCircle, StopCircle, Ban, CheckCircle2, XCircle, Users, Search, RefreshCw, ClipboardList, Database, Cpu, Clock } from "lucide-react";
+import { X, Plus, Gavel, Rocket, CalendarClock, PlayCircle, StopCircle, Ban, CheckCircle2, XCircle, Users, Search, RefreshCw, ClipboardList, Database, Cpu, Clock, Car } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
@@ -309,14 +309,20 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
   const launchDemo = async () => {
     setTestRunning(true);
     try {
-      const insp = inspections.find((i) => i.overall_score != null && ["completed", "offered", "auctioned", "published"].includes(i.status));
-      const car = cars.find((c) => ["available", "listed", "ready_for_sale", "inspection_completed"].includes(c.status));
-      if (!insp || !car) {
-        toast.error("No completed inspection + available car to launch");
+      // Same gate as the create form: any scored inspection works (prefer one
+      // that is not already auctioned). The car is optional — the engine
+      // auto-creates a vehicle record from the inspection when omitted.
+      const insp = inspections.find((i) => i.overall_score != null && i.status !== "auctioned")
+        || inspections.find((i) => i.overall_score != null);
+      const openStatuses = ["available", "listed", "ready_for_sale", "inspection_completed"];
+      const car = cars.find((c) => openStatuses.includes(c.status) && insp != null && (c.id === insp.car_id || (c.brand === insp.brand && c.model === insp.model)))
+        || cars.find((c) => openStatuses.includes(c.status));
+      if (!insp) {
+        toast.error("No certified inspection available — click \"Upload Demo Car\" below first");
         return;
       }
       const created = await auctionService.createAuction(actor, {
-        car_id: car.id,
+        car_id: car?.id || null,
         inspection_id: insp.id,
         starting_bid: Math.max(100000, Math.round((Number(insp.km_driven) / 200) * 100)),
         reserve_price: 0,
@@ -331,6 +337,25 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
         new Date(Date.now() + 720000).toISOString());
       await auctionService.startAuction(actor, created.id);
       toast.success("Demo auction created, scheduled and launched LIVE");
+      await reload();
+      if (onReloadAllData) onReloadAllData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    } finally {
+      setTestRunning(false);
+    }
+  };
+
+  // Seeds one demo car + certified inspection (idempotent) so the
+  // "Launch New Auction" Certified Inspection menu is never empty on a fresh
+  // database. See auctionService.seedDemoInspection.
+  const seedDemoCar = async () => {
+    setTestRunning(true);
+    try {
+      const res = await auctionService.seedDemoInspection(actor);
+      toast.success(res.created
+        ? "Demo car uploaded: Toyota Fortuner 2022 with a certified inspection — ready to auction"
+        : "Demo car already exists — reusing the seeded Toyota Fortuner inspection");
       await reload();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -547,6 +572,9 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
           <Button size="sm" onClick={runMaintenance} disabled={testRunning} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9 px-4 text-[10px]">
             <Database className="h-3.5 w-3.5" /> Run Auto-Manage Pass
           </Button>
+          <Button size="sm" onClick={seedDemoCar} disabled={testRunning} variant="outline" className="text-white border-white/20 hover:bg-white/10 h-9 px-4 text-[10px]">
+            <Car className="h-3.5 w-3.5" /> Upload Demo Car
+          </Button>
           <Button size="sm" onClick={launchDemo} disabled={testRunning} variant="outline" className="text-white border-white/20 hover:bg-white/10 h-9 px-4 text-[10px]">
             <Rocket className="h-3.5 w-3.5" /> Create & Launch Demo Auction
           </Button>
@@ -590,7 +618,7 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
                 </select>
                 {availableInspections.length === 0 && (
                   <p className="mt-2 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                    No certified inspections yet — an Inspector must upload a 120-Point report first (Admin CMS → Inspections → score a report also works).
+                    No certified inspections yet — an Inspector must upload a 120-Point report first. Quick start: click "Upload Demo Car" in Engine Test Mode below.
                   </p>
                 )}
               </div>

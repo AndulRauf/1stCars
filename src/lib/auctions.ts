@@ -857,6 +857,60 @@ export const auctionService = {
     if (!rpcSupported()) await ensureMockDemo();
   },
 
+  // Creates (idempotently) a demo car + certified inspection pair so the admin
+  // "Launch New Auction" → Certified Inspection menu has data on a fresh
+  // database. The engine requires the inspection to carry a seller_id and an
+  // overall_score, so the demo row is seeded completed + certified with the
+  // calling staff member as the demo seller. Safe to click repeatedly: the
+  // DEMO-001 reg number is the idempotency marker.
+  async seedDemoInspection(actor: AuctionActor): Promise<{ carId: string; inspectionId: string; created: boolean }> {
+    const { data: existing, error: existingErr } = await (supabase as any)
+      .from("inspections")
+      .select("id, car_id")
+      .eq("reg_number", "DEMO-001");
+    if (!existingErr && existing && existing.length > 0) {
+      const row = existing[0];
+      const carId = row.car_id || await ensureCarForInspection(row.id, 500000);
+      return { carId, inspectionId: row.id, created: false };
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const demo = {
+      seller_id: actor.userId,
+      seller_name: "Demo Seller",
+      seller_mobile: "9000000001",
+      inspector_id: actor.userId,
+      reg_number: "DEMO-001",
+      brand: "Toyota",
+      model: "Fortuner",
+      variant: "4x4 AT",
+      fuel: "Diesel",
+      transmission: "Automatic",
+      year: 2022,
+      km_driven: 38000,
+      city: "Surat",
+      address: "Demo address, Surat",
+      preferred_date: today,
+      preferred_time: "10:00 AM - 12:00 PM",
+      status: "completed",
+      overall_score: 9.2,
+      is_certified: true,
+      notes: "Demo vehicle seeded from Admin → Live Auctions → Upload Demo Car."
+    };
+    const { data: inspRow, error: inspErr } = await (supabase as any)
+      .from("inspections")
+      .insert([demo])
+      .select()
+      .single();
+    if (inspErr || !inspRow?.id) throw new Error(inspErr?.message || "Failed to create the demo inspection");
+
+    // Attach a car record (creates a status "inspection_completed" car from the
+    // inspection when none exists) so the vehicle dropdown and the auction
+    // engine both have a cars row to point at.
+    const carId = await ensureCarForInspection(inspRow.id, 500000);
+    return { carId, inspectionId: inspRow.id, created: true };
+  },
+
   async fetchActor(): Promise<AuctionActor | null> {
     try {
       const res = await (supabase as any).auth.getUser();
