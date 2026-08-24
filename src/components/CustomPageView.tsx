@@ -4,13 +4,16 @@ import { isHiddenPage } from "@/src/lib/utils";
 import Markdown from "react-markdown";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { FaqLanding } from "@/src/components/FaqLanding";
 
 interface CustomPageViewProps {
   pageId: string | null;
   onBackToHome: () => void;
+  onNavigateToInventory?: () => void;
+  onNavigateToSell?: () => void;
 }
 
-export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
+export function CustomPageView({ pageId, onBackToHome, onNavigateToInventory, onNavigateToSell }: CustomPageViewProps) {
   const [page, setPage] = React.useState<any | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -74,9 +77,26 @@ export function CustomPageView({ pageId, onBackToHome }: CustomPageViewProps) {
     );
   }
 
+  // Render the redesigned FAQ landing for the dedicated route (pageId "p-faq")
+  // AND for any page reached by slug (e.g. the footer/nav link that uses the
+  // page's UUID), so the redesign applies no matter how the page is opened.
+  const isFaqPage =
+    pageId === "p-faq" ||
+    (page && typeof page.slug === "string" && /faq/i.test(page.slug));
+
+  if (isFaqPage) {
+    return (
+      <FaqLanding
+        page={page}
+        onBackToHome={onBackToHome}
+        onNavigateToInventory={onNavigateToInventory}
+        onNavigateToSell={onNavigateToSell}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8F6F0] pb-16">
-      
       {/* Hero Section */}
       <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />

@@ -389,7 +389,7 @@ DECLARE
   v_end timestamptz := coalesce(p_ends_at, timezone('utc'::text, now()) + interval '24 hours');
   v_dealer uuid;
 BEGIN
-  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate']);
+  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate', 'Inspector']);
 
   IF p_car_id IS NULL OR p_inspection_id IS NULL THEN
     RAISE EXCEPTION 'car_id and inspection_id are required';
@@ -454,7 +454,7 @@ DECLARE
   v_role text;
   v_auction public.auctions;
 BEGIN
-  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate']);
+  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate', 'Inspector']);
   UPDATE public.auctions SET status = 'READY', updated_at = now()
   WHERE id = p_auction_id AND status = 'DRAFT'
   RETURNING * INTO v_auction;
@@ -481,7 +481,7 @@ DECLARE
   v_role text;
   v_auction public.auctions;
 BEGIN
-  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate']);
+  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate', 'Inspector']);
   IF p_starts_at IS NULL OR p_ends_at IS NULL OR p_ends_at <= p_starts_at THEN
     RAISE EXCEPTION 'A valid start/end window is required';
   END IF;
@@ -512,7 +512,7 @@ DECLARE
   v_seller uuid;
   v_eligible uuid;
 BEGIN
-  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate']);
+  v_role := public.auction_require_role(ARRAY['Admin', 'Sales Associate', 'Inspector']);
   UPDATE public.auctions SET status = 'LIVE', updated_at = now()
   WHERE id = p_auction_id AND status IN ('READY', 'SCHEDULED')
   RETURNING * INTO v_auction;

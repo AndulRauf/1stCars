@@ -165,12 +165,11 @@ export function Navbar({
     { label: "Buy Cars", view: "buy_cars" as const, href: "/buy-cars" },
     { label: "Sell Car", view: "sell_car" as const, href: "/sell-car" },
     { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification" },
-    { label: "About Us", view: "about" as const, href: "/about" },
   ];
 
-  // "about us" is always hidden from the nav menu because the dedicated /about
-  // page now covers it — the legacy CMS page remains usable via the footer /
-  // admin but never shows in the header.
+  // "about us" is always hidden from the nav menu (desktop + mobile) because it
+  // lives only in the footer. The dedicated /about page remains reachable via
+  // the footer link.
   const hiddenNavPageLabels = new Set(["about us"]);
   const sectionLinkLabels = new Set(hiddenNavPageLabels);
   const isDuplicateOfSectionLink = (title: string) => {

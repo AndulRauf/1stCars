@@ -13,6 +13,26 @@ interface PageEditorProps {
 
 type PageTab = "home" | "buy" | "sell" | "certification" | "about" | "faq";
 
+// Build the p-faq page Markdown from the admin-managed `faq` table rows so the
+// FAQ page (FaqLanding) and the `faq` table stay in sync. Format matches what
+// FaqLanding.parseFaqContent expects: `## Category` headings and `### Question`.
+function buildFaqMarkdown(rows: { category?: string; question: string; answer: string }[]): string {
+  const byCat = new Map<string, { question: string; answer: string }[]>();
+  for (const r of rows) {
+    const cat = (r.category || "General").trim() || "General";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push({ question: r.question, answer: r.answer });
+  }
+  let md = "# Frequently Asked Questions\n\n";
+  for (const [cat, qs] of byCat) {
+    md += `## ${cat}\n\n`;
+    qs.forEach((q, i) => {
+      md += `### ${i + 1}. ${q.question}\n${q.answer}\n\n`;
+    });
+  }
+  return md.trim();
+}
+
 const TABS: { id: PageTab; label: string; icon: LucideIcon; hint: string }[] = [
   { id: "home", label: "Home Page", icon: HomeIcon, hint: "Hero, trust points, fleet, certified & testimonial sections" },
   { id: "buy", label: "Buy Cars", icon: Car, hint: "Inventory page hero, filters & CTA labels" },
@@ -190,16 +210,7 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
   React.useEffect(() => {
     let disposed = false;
     (async () => {
-      let items: FaqItem[] = [...DEFAULT_FAQ_ITEMS];
-      try {
-        const raw = localStorage.getItem("1stcars_cms_faqs");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) items = parsed;
-        }
-      } catch (e) {
-        console.error("Failed to parse FAQ items from storage", e);
-      }
+      let items: FaqItem[] = [];
       try {
         const { data } = await supabase.from("faq").select();
         if (data && data.length > 0) {
@@ -208,6 +219,11 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
       } catch (e) {
         console.error("Failed to load FAQ items from database", e);
       }
+      // Fall back to the canonical defaults only when the live `faq` table is
+      // empty (e.g. before the first admin save). We deliberately do NOT read
+      // the legacy localStorage key — it can hold stale pre-seed data and was
+      // the source of "old FAQ data" appearing in the editor.
+      if (items.length === 0) items = [...DEFAULT_FAQ_ITEMS];
       if (disposed) return;
       setFaqItems(items);
       setFaqLoaded(true);
@@ -221,18 +237,25 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
     setSavingFaqs(true);
     try {
       const clean = faqItems.filter((f) => f.question.trim() && f.answer.trim());
-      localStorage.setItem("1stcars_cms_faqs", JSON.stringify(clean));
       for (const row of clean) {
         await supabase.from("faq").upsert(
           { id: row.id, category: row.category || "General", question: row.question, answer: row.answer },
           { onConflict: "id" }
         );
       }
+      // Keep the *live* FAQ page (slug "faqs") content in sync with the `faq`
+      // table, so the Admin → Pages view and any markdown fallback stay current.
+      // (Previously this targeted id "p-faq", which is not the rendered page.)
+      try {
+        await supabase.from("pages").update({ content: buildFaqMarkdown(clean) }).eq("slug", "faqs");
+      } catch (e) {
+        console.error("Failed to sync FAQ into FAQ page:", e);
+      }
       window.dispatchEvent(new Event("1stcars_settings_updated"));
       toast.success("FAQ page questions & answers saved successfully.");
     } catch (e) {
       console.error("Failed to save FAQ items:", e);
-      toast.error("FAQ items saved locally, but the database sync failed.");
+      toast.error("Failed to save FAQ items to the database.");
     } finally {
       setSavingFaqs(false);
     }

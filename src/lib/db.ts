@@ -154,6 +154,7 @@ export interface Profile {
 export interface Inspection {
   id: string;
   created_at: string;
+  car_id?: string;
   seller_id?: string;
   seller_name: string;
   seller_mobile: string;
