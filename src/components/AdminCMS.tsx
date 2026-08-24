@@ -604,7 +604,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [isCar120ModalOpen, setIsCar120ModalOpen] = React.useState(false);
 
   const handleSave120Report = async (inspectionId: string, reportData: Full120PointReport) => {
+    // Promote pre-completion inspections to "completed" so they become
+    // auction-eligible (the auction engine requires overall_score, and the
+    // Admin Auctions "Certified Inspection" menu lists scored inspections).
+    // Never regress a row that is already auctioned/published.
+    const current = inspections.find((i) => i.id === inspectionId) || selected120Inspection;
+    const currentStatus = String(current?.status || "").toLowerCase();
+    const promote = !currentStatus || ["pending", "assigned", "draft"].includes(currentStatus);
     await supabase.from("inspections").update({
+      ...(promote ? { status: "completed" } : {}),
       overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
       report_engine: reportData.categories[0]?.summary || "",
       report_exterior: reportData.categories[1]?.summary || "",

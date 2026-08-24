@@ -741,22 +741,31 @@ const DEMO_FLAG = "1stcars_auction_demo_seeded";
 
 async function ensureMockDemo(): Promise<void> {
   if (typeof window === "undefined") return;
+
+  // Guarantee at least one auction-ready inspection (completed + overall_score)
+  // so the admin "Launch New Auction" → Certified Inspection menu is never
+  // empty in demo mode — even when the demo auction flag was already set by a
+  // previous session. Idempotent: only promotes when nothing is certified yet.
+  try {
+    const { data: inspRows } = await (supabase as any).from("inspections").select("*");
+    if (!(inspRows || []).some((i: any) => i.overall_score != null)) {
+      await (supabase as any).from("inspections").update({
+        status: "completed",
+        overall_score: 9.4,
+        is_certified: true
+      }).eq("id", "insp-2");
+      await (supabase as any).from("cars").update({
+        status: "listed",
+        updated_at: nowIso()
+      }).eq("id", "car-2");
+    }
+  } catch {}
+
   if (window.localStorage.getItem(DEMO_FLAG) === "1") return;
 
   const { data: auctions } = await (supabase as any).from("auctions").select("*");
   const hasAny = (auctions || []).some((r: any) => !looksLikeLegacy(r));
   if (!hasAny) {
-    // Promote the seeded inspection/car into a completed, auction-ready state.
-    await (supabase as any).from("inspections").update({
-      status: "completed",
-      overall_score: 9.4,
-      is_certified: true
-    }).eq("id", "insp-2");
-    await (supabase as any).from("cars").update({
-      status: "listed",
-      updated_at: nowIso()
-    }).eq("id", "car-2");
-
     const demo: AuctionRecord = {
       id: "auc-demo-1",
       car_id: "car-2",

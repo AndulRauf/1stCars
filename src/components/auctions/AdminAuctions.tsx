@@ -174,7 +174,7 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
   const openCreate = () => {
     const eligible: Record<string, boolean> = {};
     dealers.forEach((d) => (eligible[d.id] = true));
-    const firstInsp = inspections.find((i) => i.overall_score != null && ["completed", "offered", "auctioned", "published"].includes(i.status));
+    const firstInsp = inspections.find((i) => i.overall_score != null && i.status !== "auctioned");
     setCreateForm({
       inspection_id: firstInsp?.id || "",
       car_id: cars.find((c) => ["available", "listed", "ready_for_sale", "inspection_completed"].includes(c.status))?.id || "",
@@ -191,14 +191,17 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
   };
 
   const submitCreate = async () => {
-    if (!createForm.inspection_id || !createForm.car_id) {
-      toast.error("Select a certified inspection and a car");
+    if (!createForm.inspection_id) {
+      toast.error("Select a certified inspection");
       return;
     }
     setCreating(true);
     try {
       await auctionService.createAuction(actor, {
-        car_id: createForm.car_id,
+        // Empty car selection is fine — the engine auto-creates/lists a vehicle
+        // record from the inspection (ensureCarForInspection), mirroring the
+        // inspector auto-launch path.
+        car_id: createForm.car_id || null,
         inspection_id: createForm.inspection_id,
         starting_bid: Number(createForm.starting_bid) || 100000,
         reserve_price: Number(createForm.reserve_price) || 0,
@@ -356,7 +359,12 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
     total: auctions.length
   };
 
-  const availableInspections = inspections.filter((i) => i.overall_score != null && ["completed", "offered", "auctioned", "published"].includes(i.status));
+  // Auction-eligible inspections — aligned with the engine gate in
+  // auction_create_auction (overall_score IS NOT NULL). The old UI also
+  // required status completed/offered/auctioned/published, which silently hid
+  // inspections the engine accepts (e.g. admin-scored reports still marked
+  // "assigned"). Already-auctioned inspections stay listed but disabled.
+  const availableInspections = inspections.filter((i) => i.overall_score != null);
   const availableCars = cars.filter((c) => ["available", "listed", "ready_for_sale", "inspection_completed"].includes(c.status));
 
   return (
@@ -573,13 +581,18 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
                   onChange={(e) => startCreateFromCar(e.target.value)}
                   className="mt-1 w-full h-10 border border-slate-200 rounded-xl text-xs font-semibold px-3 outline-none"
                 >
-                  <option value="">Select completed inspection...</option>
+                  <option value="">Select certified inspection...</option>
                   {availableInspections.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {i.brand} {i.model} ({i.year}) • {i.city} • 1stMark {i.overall_score}/10
+                    <option key={i.id} value={i.id} disabled={i.status === "auctioned"}>
+                      {i.brand} {i.model} ({i.year}) • {i.city} • 1stMark {i.overall_score}/10{i.status === "auctioned" ? " • already auctioned" : ""}
                     </option>
                   ))}
                 </select>
+                {availableInspections.length === 0 && (
+                  <p className="mt-2 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    No certified inspections yet — an Inspector must upload a 120-Point report first (Admin CMS → Inspections → score a report also works).
+                  </p>
+                )}
               </div>
 
               <div className="md:col-span-2">
@@ -589,13 +602,18 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
                   onChange={(e) => setCreateForm((f) => ({ ...f, car_id: e.target.value }))}
                   className="mt-1 w-full h-10 border border-slate-200 rounded-xl text-xs font-semibold px-3 outline-none"
                 >
-                  <option value="">Select car...</option>
+                  <option value="">Auto-create from inspection...</option>
                   {availableCars.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.brand} {c.model} ({c.year}) • {c.city} • {c.km_driven ? `${c.km_driven.toLocaleString()} km` : ""}
                     </option>
                   ))}
                 </select>
+                {availableCars.length === 0 && (
+                  <p className="mt-2 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                    No available vehicles — leaving this empty auto-lists a vehicle record from the selected inspection.
+                  </p>
+                )}
               </div>
 
               <Input label="Starting Bid (₹)" type="number" value={createForm.starting_bid} onChange={(e) => setCreateForm((f) => ({ ...f, starting_bid: e.target.value }))} />
