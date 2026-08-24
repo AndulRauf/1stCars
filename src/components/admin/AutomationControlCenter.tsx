@@ -231,9 +231,9 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
     setConfig((prev) => (prev ? { ...prev, [key]: !prev[key] } : prev));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -281,7 +281,7 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
       </div>
 
       {/* Rules / Configuration */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <h4 className="font-black text-sm text-slate-900 uppercase tracking-wider">Automation Rules</h4>
@@ -341,7 +341,7 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
 
       {/* Test mode (admin only) */}
       {isAdmin && (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
             <FlaskConical className="h-4 w-4 text-amber-600" />
             <div>
@@ -377,7 +377,7 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
       )}
 
       {/* Data tabs */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4 mb-5">
           {([
             { key: "events", label: "Events", icon: Activity },

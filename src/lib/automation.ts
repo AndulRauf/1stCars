@@ -12,7 +12,7 @@
  * - startScheduler()  -> in-app poller that runs maintenance passes
  */
 import * as React from "react";
-import { supabase } from "./supabaseClient";
+import { supabase, isRealSupabase } from "./supabaseClient";
 import { notificationService } from "./notifications";
 
 export type AutomationEventType =
@@ -290,6 +290,11 @@ export const automationService = {
   // ==========================================
 
   async processPendingEvents(): Promise<{ assignedInspectorId?: string; assignedSalesId?: string }> {
+    // CRIT-06: this local rule engine fabricates assignments / tasks from the
+    // browser. On the real backend those flows run in the database
+    // (automation_record_event triggers, automation RPCs) — never duplicate
+    // business-logic writes from the client against production rows.
+    if (isRealSupabase) return {};
     const events = readLocal<AutomationEvent[]>(EVENTS_KEY, []);
     const config = this.getConfig();
     const pending = events.filter((e) => e.status === "pending");

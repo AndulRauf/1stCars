@@ -134,6 +134,8 @@ interface CRMProps {
   carImages: any[];
   currentUser?: any;
   onRefresh?: () => void;
+  /** When rendered inside the master dashboard, the duplicate KPI card row is hidden because AdminDashboard already shows the same metrics. */
+  hideKpis?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +145,7 @@ interface CRMProps {
 export function CRM({
   profiles, cars, inspections, auctions, notifications, salesLeads, offers,
   sellRequests, inspectionReports, dealerBids, parkSell, carImages,
-  currentUser, onRefresh
+  currentUser, onRefresh, hideKpis
 }: CRMProps) {
   const [view, setView] = React.useState<"overview" | "pipeline">("overview");
   const [detail, setDetail] = React.useState<{ kind: CrmRecordKind; id: string } | null>(null);
@@ -664,8 +666,9 @@ export function CRM({
   // -------------------------------------------------------------------------
   const overview = (
     <div className="space-y-6">
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* KPI cards (hidden inside the master dashboard which shows the same metrics) */}
+      {!hideKpis && (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         {[
           { label: "New Leads", val: stageCounts.leads, desc: "Buyer + seller enquiries", tone: "bg-sky-50 border-sky-200 text-sky-700", mod: "leads" as Stage },
           { label: "Inspections", val: stageCounts.inspection + stageCounts.valuation, desc: "Booked → valued", tone: "bg-indigo-50 border-indigo-200 text-indigo-700", mod: "inspection" as Stage },
@@ -697,6 +700,7 @@ export function CRM({
           </button>
         ))}
       </div>
+      )}
 
       {/* Funnel */}
       <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
@@ -947,7 +951,7 @@ export function CRM({
       const records = customerRecords(p);
       const tline = timeline;
       return (
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div className="flex items-center gap-4">
               <span className="h-14 w-14 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#4CAF50] text-white text-xl font-black flex items-center justify-center">
@@ -1046,7 +1050,7 @@ export function CRM({
     const tline = buildTimeline(detail);
 
     return (
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6">
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div className="flex items-center gap-4">
             <span className={`h-12 w-12 rounded-2xl border flex items-center justify-center shrink-0 ${meta.chip}`}><I className="h-6 w-6" /></span>

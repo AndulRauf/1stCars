@@ -261,8 +261,8 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
   );
 
   return (
-    <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm space-y-8 text-xs font-semibold">
-      <div className="border-b border-slate-100 pb-4">
+    <div className="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 shadow-sm space-y-6 text-xs font-semibold">
+      <div className="border-b border-slate-100 pb-3">
         <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
           <Edit3 className="h-5 w-5 text-[#2E7D32]" /> Edit Website Pages
         </h3>
@@ -410,7 +410,16 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
 
       {/* Save bar */}
       <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-        <Button onClick={onSave} className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-10 px-6 rounded-xl flex items-center gap-2 cursor-pointer">
+        <Button
+          onClick={() => {
+            // On the FAQ tab, persist the Q&A too so a single click saves
+            // everything (heading/subtitle + questions). The dedicated
+            // "Save Questions & Answers" button remains for explicit saves.
+            if (activeTab === "faq") handleSaveFaqs();
+            onSave({ preventDefault() {} } as React.FormEvent);
+          }}
+          className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-wider text-[10px] h-10 px-6 rounded-xl flex items-center gap-2 cursor-pointer"
+        >
           <Save className="h-4 w-4" /> Save Changes
         </Button>
         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Updates apply instantly across the live website</p>

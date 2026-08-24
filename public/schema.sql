@@ -476,6 +476,50 @@ CREATE POLICY "Dealers manage own info" ON public.dealers FOR ALL USING (auth.ui
 DROP POLICY IF EXISTS "Admin manages dealers" ON public.dealers;
 CREATE POLICY "Admin manages dealers" ON public.dealers FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role);
 
+-- 10b. Dealer KYC applications (dealer registration queue; see also
+-- public/add_dealer_applications.sql for an idempotent standalone patch).
+CREATE TABLE IF NOT EXISTS public.dealer_applications (
+  id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id            UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  name               TEXT NOT NULL,
+  dealership_name    TEXT NOT NULL,
+  email              TEXT,
+  mobile             TEXT,
+  city               TEXT,
+  status             TEXT DEFAULT 'pending_approval' NOT NULL
+                     CHECK (status IN ('pending_approval', 'approved', 'rejected')),
+  visiting_card_url  TEXT,
+  aadhar_card_url    TEXT,
+  reviewed_by        UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  reviewed_at        TIMESTAMP WITH TIME ZONE,
+  created_at         TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at         TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS dealer_applications_status_idx ON public.dealer_applications (status);
+CREATE INDEX IF NOT EXISTS dealer_applications_user_idx ON public.dealer_applications (user_id);
+
+ALTER TABLE public.dealer_applications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Dealers insert own applications" ON public.dealer_applications;
+CREATE POLICY "Dealers insert own applications" ON public.dealer_applications
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Dealers read own applications" ON public.dealer_applications;
+CREATE POLICY "Dealers read own applications" ON public.dealer_applications
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Staff read dealer applications" ON public.dealer_applications;
+CREATE POLICY "Staff read dealer applications" ON public.dealer_applications
+  FOR SELECT USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
+
+DROP POLICY IF EXISTS "Admin reviews dealer applications" ON public.dealer_applications;
+CREATE POLICY "Admin reviews dealer applications" ON public.dealer_applications
+  FOR UPDATE USING (public.get_auth_user_role() = 'Admin'::public.user_role)
+  WITH CHECK (public.get_auth_user_role() = 'Admin'::public.user_role);
+
+GRANT SELECT, INSERT ON public.dealer_applications TO authenticated;
+
 -- 11. Dealer Bids Policies
 DROP POLICY IF EXISTS "Sellers view bids on own car" ON public.dealer_bids;
 CREATE POLICY "Sellers view bids on own car" ON public.dealer_bids FOR SELECT USING (
@@ -517,6 +561,7 @@ CREATE POLICY "System/Staff inserts notifications" ON public.notifications FOR I
 DROP POLICY IF EXISTS "Staff read all notifications" ON public.notifications;
 CREATE POLICY "Staff read all notifications" ON public.notifications FOR SELECT USING (public.get_auth_user_role() IN ('Admin'::public.user_role, 'Sales Associate'::public.user_role));
 DROP POLICY IF EXISTS "Staff manage all notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Admin manages all notifications" ON public.notifications;
 CREATE POLICY "Admin manages all notifications" ON public.notifications FOR ALL USING (public.get_auth_user_role() = 'Admin'::public.user_role) WITH CHECK (true);
 DROP POLICY IF EXISTS "Sales Associate updates notifications" ON public.notifications;
 CREATE POLICY "Sales Associate updates notifications" ON public.notifications FOR UPDATE USING (public.get_auth_user_role() = 'Sales Associate'::public.user_role);
@@ -708,6 +753,12 @@ ALTER TABLE public.inspections ALTER COLUMN seller_id DROP NOT NULL;
 -- Rich car record persisted by the Admin CMS (photos, price breakup, inspection
 -- report, features, ...) on top of the normalized columns.
 ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- Lead auto-assignment: every lead (test drive / buy-now) for a car uploaded
+-- by a Sales Associate is routed to that associate's CRM desk only. The column
+-- is nullable so legacy/portal leads stay in the shared pool.
+ALTER TABLE public.sales_notifications ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE public.sales_notifications ADD COLUMN IF NOT EXISTS assigned_to_name TEXT;
 
 
 -- ====================================================

@@ -4,10 +4,12 @@ import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -80,9 +82,22 @@ export function BookingModal({
     return () => clearInterval(timer);
   }, [otpCountdown]);
 
+  // Auto-redirect to the Buyer dashboard once the booking is submitted.
+  React.useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        onClose();
+        onNavigateToDashboard?.();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, onClose, onNavigateToDashboard]);
+
   if (!isOpen) return null;
 
-  // Handle Send Mobile OTP
+  // Handle Send Mobile OTP — simulated OTP exists ONLY in mock/demo mode. On a
+  // real backend the concierge verifies the number over the phone; the UI never
+  // pretends a production SMS verification happened.
   const handleSendOtp = () => {
     if (!mobile || mobile.replace(/\D/g, "").length < 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
@@ -129,13 +144,17 @@ export function BookingModal({
       return;
     }
 
-    // Auto verify OTP if user hasn't manually clicked verify but filled correctly
-    if (!isOtpVerified) {
-      if (isOtpSent && enteredOtp === generatedOtp) {
-        setIsOtpVerified(true);
-      } else {
-        toast.error("Please send & verify your Mobile OTP before submitting.");
-        return;
+    // Auto verify OTP if user hasn't manually clicked verify but filled
+    // correctly. The simulated OTP gate only applies in mock/demo mode — real
+    // bookings never fake a mobile verification.
+    if (!isRealSupabase) {
+      if (!isOtpVerified) {
+        if (isOtpSent && enteredOtp === generatedOtp) {
+          setIsOtpVerified(true);
+        } else {
+          toast.error("Please send & verify your Mobile OTP before submitting.");
+          return;
+        }
       }
     }
 
@@ -147,7 +166,7 @@ export function BookingModal({
 
     const vehicleTitle = car ? `${car.brand} ${car.model} (${car.year})` : "General Vehicle Inquiry";
 
-    const leadRecord = {
+    const leadRecord: Record<string, any> = {
       id: refId,
       created_at: new Date().toISOString(),
       name: name.trim(),
@@ -167,41 +186,14 @@ export function BookingModal({
     };
 
     try {
-      // 0. Auto-register / Log in as Buyer profile
+      // 0. Auto-register / Log in as Buyer profile. The password is random per
+      // device and stored locally — it can NEVER be derived from the email by
+      // a third party (previous deterministic scheme removed).
       const userEmail = email.trim().toLowerCase();
       const userName = name.trim();
       const userMobile = mobile.trim();
       const userCity = city || "Surat";
-      // Use a password deterministically derived from the email so repeat
-      // bookings (even from another device) can sign back into the SAME
-      // auto-created Buyer account. Random per-device passwords break sign-in
-      // once the account already exists (the stored hash no longer matches).
-      const autoPasswordKey = getAutoPasswordKey(userEmail);
-      const autoPassword = deriveAutoPassword(userEmail);
-      localStorage.setItem(autoPasswordKey, autoPassword);
-
-
-      try {
-        const { user, error: authError } = await resolveAutoSignIn(
-          supabase,
-          userEmail,
-          autoPassword,
-          {
-            data: {
-              name: userName,
-              mobile: userMobile,
-              role: "Buyer",
-              city: userCity,
-            },
-          }
-        );
-
-        if (authError) {
-          console.warn("Auto sign in error during booking:", authError);
-        }
-      } catch (authErr) {
-        console.warn("Auto sign in error during booking:", authErr);
-      }
+      const autoPassword = getOrCreateAutoPassword(userEmail);
 
       // Automatically add vehicle to favorite/saved cars list
       if (car?.id) {
@@ -231,71 +223,119 @@ export function BookingModal({
       const currentTDs = JSON.parse(localStorage.getItem("1stcars_test_drives") || "[]");
       localStorage.setItem("1stcars_test_drives", JSON.stringify([testDriveEntry, ...currentTDs]));
 
-      // 1. Save to localStorage "1stcars_sales_leads" for Admin CMS Buyer Enquiries
+      // 2. Auto-assign the lead to the Sales Associate who uploaded this car
+      //    (leads for admin-published/demo cars stay in the shared pool).
+      const owner = await resolveLeadOwner(car);
+      if (owner) {
+        leadRecord.assigned_to = owner.id;
+        leadRecord.assigned_to_name = owner.name || "";
+      }
+
+      // 3. Save to localStorage "1stcars_sales_leads" for Admin CMS Buyer
+      //    Enquiries — persisted AFTER auto-assignment so the record carries
+      //    the same owner as the Supabase row (mock-mode fallback source).
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-      // 3. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
-      const { error: insertError } = await supabase.from("sales_notifications").insert([
-        {
-          name: name.trim(),
-          mobile: mobile.trim(),
-          city: city || "Surat",
-          preferred_date: preferredDate,
-          preferred_time: preferredTime,
-          car_id: car?.id,
-          car_brand: car?.brand,
-          car_model: car?.model,
-          type: bookingType,
-          status: "pending",
-          notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
-        }
-      ]);
+      // 4. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
+      const { error: insertError } = await insertLeadWithAssignment({
+        name: name.trim(),
+        mobile: mobile.trim(),
+        city: city || "Surat",
+        preferred_date: preferredDate,
+        preferred_time: preferredTime,
+        car_id: car?.id,
+        car_brand: car?.brand,
+        car_model: car?.model,
+        type: bookingType,
+        status: "pending",
+        assigned_to: owner?.id || null,
+        assigned_to_name: owner?.name || null,
+        notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
+      });
 
       if (insertError) {
         // The lead did NOT reach the Sales desk — surface a real failure instead of a false success.
         throw new Error(insertError.message || "Could not save your request to the database.");
       }
 
-      // Record the automation event (idempotent; on the live DB the AFTER INSERT
-      // trigger already recorded it, so the RPC is a no-op and only the local
-      // engine consumes this for mock/pre-migration databases).
-      void automationService.emitEvent({
-        type: "lead.created",
-        sourceTable: "sales_notifications",
-        sourceId: refId,
-        payload: {
-          lead_id: refId,
-          name: name.trim(),
-          mobile: mobile.trim(),
-          city: city || "Surat",
-          type: bookingType,
-          car_brand: car?.brand,
-          car_model: car?.model,
-          preferred_date: preferredDate,
-          preferred_time: preferredTime
-        }
-      }).catch((err) => console.warn("Automation event emission failed:", err));
-
-
-      // 4. Trigger system notifications
-      if (bookingType === "test_drive") {
-        await notificationService.triggerTestDriveBooked({
-          buyerName: name.trim(),
-          carTitle: vehicleTitle,
-          preferredDate: preferredDate,
-          preferredTime: preferredTime
-        });
-      } else {
-        await notificationService.triggerCarReserved({
-          buyerName: name.trim(),
-          carTitle: vehicleTitle,
-          price: car?.price || 0
-        });
-      }
-
+      // Lead is persisted — show the confirmation immediately. Everything
+      // below (auto sign-in, automation event, notifications) runs in the
+      // background so the submit never blocks on extra network round-trips.
       setIsSubmitted(true);
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
+
+      trackMetaEvent(bookingType === "test_drive" ? "Lead" : "InitiateCheckout", {
+        content_name: vehicleTitle,
+        content_category: "Test Drive",
+        value: car?.price || 0,
+        currency: "INR",
+        num_items: 1
+      });
+
+      void (async () => {
+        try {
+          const { error: authError } = await resolveAutoSignIn(
+            supabase,
+            userEmail,
+            autoPassword,
+            {
+              data: {
+                name: userName,
+                mobile: userMobile,
+                role: "Buyer",
+                city: userCity,
+              },
+            }
+          );
+
+          if (authError) {
+            console.warn("Auto sign in error during booking:", authError);
+          }
+        } catch (authErr) {
+          console.warn("Auto sign in error during booking:", authErr);
+        }
+
+        // Record the automation event (idempotent; on the live DB the AFTER INSERT
+        // trigger already recorded it, so the RPC is a no-op and only the local
+        // engine consumes this for mock/pre-migration databases).
+        void automationService.emitEvent({
+          type: "lead.created",
+          sourceTable: "sales_notifications",
+          sourceId: refId,
+          payload: {
+            lead_id: refId,
+            name: name.trim(),
+            mobile: mobile.trim(),
+            city: city || "Surat",
+            type: bookingType,
+            car_brand: car?.brand,
+            car_model: car?.model,
+            preferred_date: preferredDate,
+            preferred_time: preferredTime
+          }
+        }).catch((err) => console.warn("Automation event emission failed:", err));
+
+        // Trigger system notifications
+        try {
+          if (bookingType === "test_drive") {
+            await notificationService.triggerTestDriveBooked({
+              buyerName: name.trim(),
+              carTitle: vehicleTitle,
+              preferredDate: preferredDate,
+              preferredTime: preferredTime
+            });
+          } else {
+            await notificationService.triggerCarReserved({
+              buyerName: name.trim(),
+              carTitle: vehicleTitle,
+              price: car?.price || 0
+            });
+          }
+        } catch (notifErr) {
+          console.warn("Background booking notification failed:", notifErr);
+        }
+      })();
     } catch (err) {
       console.error("Booking submission error:", err);
       const message = err instanceof Error ? err.message : "Something went wrong while submitting your request.";
@@ -370,8 +410,13 @@ export function BookingModal({
                 </div>
               )}
               <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
-                <span className="text-slate-400 font-black uppercase text-[10px]">Verified Phone</span>
-                <span className="text-slate-900 font-black">+91 {mobile} <span className="text-emerald-600 font-normal">✓</span></span>
+                <span className="text-slate-400 font-black uppercase text-[10px]">
+                  {isOtpVerified ? "Verified Phone" : "Contact Number"}
+                </span>
+                <span className="text-slate-900 font-black">
+                  +91 {mobile}
+                  {isOtpVerified && <span className="text-emerald-600 font-normal"> ✓</span>}
+                </span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
                 <span className="text-slate-400 font-black uppercase text-[10px]">Gmail / Email</span>
@@ -397,15 +442,9 @@ export function BookingModal({
                 <Sparkles className="h-4 w-4" />
                 Go to Buyer Menu & Favorite Cars
               </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="w-full border-slate-200 text-slate-700 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider h-10 rounded-xl cursor-pointer"
-              >
-                Close & Continue Browsing
-              </Button>
+              <p className="text-[10px] text-slate-400 font-bold text-center">
+                Redirecting you to your Buyer Dashboard in a moment…
+              </p>
             </div>
           </div>
         ) : (
@@ -502,7 +541,7 @@ export function BookingModal({
                     className="h-10 pl-10 text-xs font-bold rounded-xl"
                   />
                 </div>
-                {!isOtpVerified && (
+                {!isRealSupabase && !isOtpVerified && (
                   <Button
                     type="button"
                     onClick={handleSendOtp}
@@ -514,8 +553,8 @@ export function BookingModal({
                 )}
               </div>
 
-              {/* OTP Input Field when Sent */}
-              {isOtpSent && !isOtpVerified && (
+              {/* Simulated OTP Input (mock/demo mode only) */}
+              {!isRealSupabase && isOtpSent && !isOtpVerified && (
                 <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black text-emerald-900 uppercase">Enter 6-Digit OTP</span>
@@ -546,6 +585,14 @@ export function BookingModal({
                     </Button>
                   </div>
                 </div>
+              )}
+
+              {/* Real mode: number is verified by the concierge on the call —
+                  the UI must not pretend an SMS verification happened. */}
+              {isRealSupabase && (
+                <p className="text-[10px] text-slate-400 font-semibold pt-0.5">
+                  Our concierge will verify this number when they call you to confirm your slot.
+                </p>
               )}
             </div>
 

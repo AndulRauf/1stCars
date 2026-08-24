@@ -11,6 +11,7 @@ import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 
 interface CarDetailsViewProps {
@@ -32,7 +33,7 @@ export function CarDetailsView({
   onNavigateToSalesPortal,
   onNavigateToDashboard,
 }: CarDetailsViewProps) {
-  const catalogCars = useCatalogCars();
+  const { cars: catalogCars } = useCatalogCars();
 
   // 120-Point checklist totals computed from the official inspection data so
   // the certificate banner always matches the module breakdown rendered below.
@@ -131,6 +132,18 @@ export function CarDetailsView({
 
   // Buy Now / Reserve checkout sheet state
   const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!car) return;
+    trackMetaEvent("ViewContent", {
+      content_name: `${car.brand} ${car.model} (${car.year})`,
+      content_category: "Car Listing",
+      content_ids: [car.id],
+      value: car.price,
+      currency: "INR",
+      num_items: 1
+    });
+  }, [car]);
 
 
   // Finance slider state
@@ -538,12 +551,8 @@ export function CarDetailsView({
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-4 text-left">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                  <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Complete Car Overview</span>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters & Heritage</h3>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">Key Vehicle Parameters</h3>
                 </div>
-                <Badge className="bg-emerald-50 text-[#2E7D32] border border-emerald-200 font-bold text-[10px] uppercase tracking-wider">
-                  Verified Heritage Data
-                </Badge>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">

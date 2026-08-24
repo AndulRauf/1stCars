@@ -147,6 +147,8 @@ export interface Profile {
   role: UserRole;
   city: string;
   created_at: string;
+  is_approved?: boolean;
+  status?: string;
 }
 
 export interface Inspection {
@@ -167,14 +169,29 @@ export interface Inspection {
   address: string;
   preferred_date: string;
   preferred_time: string;
-  status: "pending" | "assigned" | "completed" | "offered" | "sold";
+  // Union merged with the src/types.ts Inspection definition so every status
+  // either codebase writes compiles cleanly:
+  // pending | assigned | completed | rejected | auctioned | published | offered | sold
+  status:
+    | "pending"
+    | "assigned"
+    | "completed"
+    | "rejected"
+    | "auctioned"
+    | "published"
+    | "offered"
+    | "sold";
   inspector_id?: string;
+  inspector_name?: string;
   overall_score?: number;
   report_engine?: string;
   report_brakes?: string;
   report_electronics?: string;
   report_exterior?: string;
   report_interior?: string;
+  report_120_json?: string;
+  report_150_json?: string;
+  is_certified?: boolean;
   notes?: string;
 }
 
@@ -207,6 +224,9 @@ export interface SalesNotification {
   type: "test_drive" | "buy_now" | "whatsapp" | "call_request";
   status: "pending" | "contacted" | "resolved";
   notes?: string;
+  // Auto-assignment: the Sales Associate who uploaded the target car.
+  assigned_to?: string;
+  assigned_to_name?: string;
 }
 
 // Seed other core collections if not present in localStorage

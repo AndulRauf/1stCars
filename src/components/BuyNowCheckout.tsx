@@ -1,11 +1,13 @@
 import * as React from "react";
-import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight, Copy, QrCode } from "lucide-react";
+import { X, ArrowLeft, Headphones, CheckCircle2, ArrowRight, RotateCcw, Home, ShieldCheck, BadgeCheck, ChevronRight, QrCode } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { toast } from "@/src/lib/toast";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
-import { deriveAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -48,23 +50,7 @@ const processCheckout = async (
     // account's real password across ALL flows (Sell Car, Booking, Checkout).
     // A hardcoded password here created accounts that SellCarView's later
     // sign-in attempt could not authenticate, leaving the seller stranded.
-    const autoPasswordKey = getAutoPasswordKey(safeEmail);
-    const autoPassword = deriveAutoPassword(safeEmail);
-    localStorage.setItem(autoPasswordKey, autoPassword);
-    await resolveAutoSignIn(
-      supabase,
-      safeEmail,
-      autoPassword,
-      {
-        data: {
-          name: buyerName.trim(),
-          email: safeEmail,
-          mobile: buyerMobile.trim(),
-          role: "Buyer",
-          city: selectedCity || car.cities?.[0] || car.location || "Surat",
-        },
-      }
-    );
+    const autoPassword = getOrCreateAutoPassword(safeEmail);
   } catch (authErr) {
     console.warn("Auto sign in error during checkout:", authErr);
   }
@@ -77,13 +63,13 @@ const processCheckout = async (
     if (onSaveToggle && !existingSaved.includes(car.id)) onSaveToggle(car.id, car.model);
   }
 
-  const leadRecord = {
+  const leadRecord: Record<string, any> = {
     id: refId,
     created_at: new Date().toISOString(),
     name: buyerName.trim(),
     email: safeEmail,
     mobile: buyerMobile.trim(),
-    mobile_verified: true,
+    mobile_verified: !isRealSupabase,
     city: selectedCity || car.cities?.[0] || car.location || "Surat",
     vehicle: vehicleTitle,
     car_id: car.id,
@@ -101,10 +87,18 @@ const processCheckout = async (
       payment_status: "submitted"
     })
   };
+  // Auto-assign the lead to the Sales Associate who uploaded this car
+  // (leads for admin-published/demo cars stay in the shared pool).
+  const owner = await resolveLeadOwner(car);
+  if (owner) {
+    leadRecord.assigned_to = owner.id;
+    leadRecord.assigned_to_name = owner.name || "";
+  }
+
   const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
   localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-  const { error: insertError } = await supabase.from("sales_notifications").insert([{
+  const { error: insertError } = await insertLeadWithAssignment({
     name: buyerName.trim() || "Buyer (Checkout)",
     mobile: buyerMobile.trim(),
     city: selectedCity || car.cities?.[0] || car.location || "Surat",
@@ -115,18 +109,66 @@ const processCheckout = async (
     car_model: car.model,
     type: "buy_now",
     status: paymentStatus === "Payment Submitted" ? "payment_submitted" : "pending",
+    assigned_to: owner?.id || null,
+    assigned_to_name: owner?.name || null,
     notes: paymentStatus === "Payment Submitted"
-      ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`
-      : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile Verified`,
-  }]);
+      ? `Token ${fmt(tokenAmount)} | UPI Ref: ${upiRef} | UPI ID: ${upiId} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile ${!isRealSupabase ? "Verified" : "Pending Call Verification"}`
+      : `Token ${fmt(tokenAmount)} | Total ${fmt(totalPrice)} | Ref ${refId} | Mobile ${!isRealSupabase ? "Verified" : "Pending Call Verification"}`,
+  });
 
   if (insertError) throw new Error(insertError.message);
 
-  await notificationService.triggerCarReserved({
-    buyerName: buyerName.trim(),
-    carTitle: vehicleTitle,
-    price: car.price,
+  trackMetaEvent("Lead", {
+    content_name: vehicleTitle,
+    content_category: "Buy Now",
+    value: car.price,
+    currency: "INR",
+    num_items: 1
   });
+
+  if (paymentStatus === "Payment Submitted") {
+    trackMetaEvent("Purchase", {
+      content_name: vehicleTitle,
+      content_category: "Buy Now",
+      value: totalPrice,
+      currency: "INR",
+      num_items: 1
+    });
+  }
+
+  // Lead is persisted — the caller shows the confirmation immediately. The
+  // auto sign-in and staff notifications run in the background so the
+  // checkout never blocks on extra network round-trips.
+  void (async () => {
+    try {
+      await resolveAutoSignIn(
+        supabase,
+        safeEmail,
+        getOrCreateAutoPassword(safeEmail),
+        {
+          data: {
+            name: buyerName.trim(),
+            email: safeEmail,
+            mobile: buyerMobile.trim(),
+            role: "Buyer",
+            city: selectedCity || car.cities?.[0] || car.location || "Surat",
+          },
+        }
+      );
+    } catch (authErr) {
+      console.warn("Auto sign in error during checkout:", authErr);
+    }
+
+    try {
+      await notificationService.triggerCarReserved({
+        buyerName: buyerName.trim(),
+        carTitle: vehicleTitle,
+        price: car.price,
+      });
+    } catch (notifErr) {
+      console.warn("Background reservation notification failed:", notifErr);
+    }
+  })();
 };
 
 export function BuyNowCheckout({
@@ -288,7 +330,9 @@ export function BuyNowCheckout({
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   };
 
-  // Step 1: Send a verification OTP to the buyer's mobile number
+  // Step 1: Verify mobile before payment. On the real backend the number is
+  // verified by the concierge on the call — no simulated OTP is ever shown in
+  // production. The simulated OTP gate exists only in mock/demo mode.
   const handleSendOtp = async () => {
     if (!buyerName.trim()) {
       toast.error("Please enter your full name.");
@@ -303,6 +347,12 @@ export function BuyNowCheckout({
       return;
     }
 
+    if (isRealSupabase) {
+      toast.success("Proceed to pay the booking token — our team verifies your number over the call.");
+      setShowUpiPayment(true);
+      return;
+    }
+
     setIsSendingOtp(true);
     try {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -311,7 +361,7 @@ export function BuyNowCheckout({
       setEnteredOtp("");
       setCountdown(30);
 
-      // Simulated SMS gateway (mirrors the login OTP experience)
+      // Simulated SMS gateway (mirrors the login OTP experience) — mock only.
       setSimulatedSms({ mobile: buyerMobile, code: otpCode });
       setTimeout(() => setSimulatedSms(null), 15000);
 
@@ -419,18 +469,6 @@ export function BuyNowCheckout({
                     <img src={upiSettings.qrUrl} alt="UPI QR Code" className="w-44 h-44 rounded-2xl border border-slate-200 object-contain" />
                   </div>
                 )}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">UPI ID</p>
-                    <p className="text-sm font-black text-slate-900">{upiSettings.upiId}</p>
-                  </div>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(upiSettings.upiId); toast.success("UPI ID copied!"); }}
-                    className="flex items-center gap-1 text-xs font-bold text-[#2E7D32] cursor-pointer"
-                  >
-                    <Copy className="h-3.5 w-3.5" /> Copy
-                  </button>
-                </div>
                 {upiSettings.instructions && (
                   <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 rounded-xl px-3 py-2">{upiSettings.instructions}</p>
                 )}
@@ -458,7 +496,7 @@ export function BuyNowCheckout({
                       // if the page is still visible, tell the user to scan the QR / use another app.
                       setTimeout(() => {
                         if (document.visibilityState === "visible") {
-                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR / copy the UPI ID above.`);
+                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR above.`);
                         }
                       }, 1200);
                     }}
@@ -556,9 +594,9 @@ export function BuyNowCheckout({
             <p className="text-sm text-slate-500 mt-1">Ref: <strong className="text-slate-800">{leadRefId}</strong></p>
             <p className="text-sm text-slate-500 mt-2">Your Sales Assistant will contact you shortly.</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="rounded-xl font-bold text-xs uppercase tracking-wider h-11">Close</Button>
-            <Button onClick={() => { onClose(); onNavigateToDashboard?.(); }} className="bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Dashboard</Button>
+          <div className="space-y-2 pt-2">
+            <Button onClick={() => { onClose(); onNavigateToDashboard?.(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
+            <p className="text-[10px] text-slate-400 font-bold text-center">Redirecting you to your Buyer Dashboard in a moment…</p>
           </div>
         </div>
       </div>
@@ -568,8 +606,8 @@ export function BuyNowCheckout({
   // Main checkout sheet
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center animate-in fade-in duration-200">
-      {/* Simulated SMS Notification Banner */}
-      {simulatedSms && (
+      {/* Simulated SMS Notification Banner — mock/demo mode only */}
+      {!isRealSupabase && simulatedSms && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4">
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20 flex flex-col gap-2 animate-bounce">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
@@ -634,7 +672,7 @@ export function BuyNowCheckout({
               </div>
               <span className="text-sm font-black text-slate-900">{fmt(bookingToken)}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5 ml-8">1% of car value (min ₹3,000, max ₹10,000). Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
+            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
 
           </div>
 

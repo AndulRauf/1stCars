@@ -69,7 +69,14 @@ function isListable(car: any) {
   return !car.status || car.status === "available";
 }
 
-export function useCatalogCars(): Car[] {
+export interface CatalogState {
+  cars: Car[];
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
+}
+
+export function useCatalogCars(): CatalogState {
   // The Supabase "cars" table is the single source of truth for the live
   // inventory. We never fall back to the bundled static demo list, so deleting
   // or publishing cars in the Admin CMS is reflected 1:1 on the public site.
@@ -86,25 +93,39 @@ export function useCatalogCars(): Car[] {
     }
     return [];
   });
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Monotonic sequence so overlapping refreshes can never let a stale response
+  // overwrite a newer one (the last REQUESTED wins, not the last arrived).
+  const seqRef = React.useRef(0);
+
+  const refresh = React.useCallback(async () => {
+    const seq = ++seqRef.current;
+    setLoading(true);
+    try {
+      const { data, error: queryError } = await supabase.from("cars").select();
+      if (seq !== seqRef.current) return;
+      setLoading(false);
+      if (queryError) {
+        setError(queryError.message || "Failed to load the vehicle catalog.");
+        return;
+      }
+      if (Array.isArray(data)) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(DB_CACHE_KEY, JSON.stringify(data));
+        }
+        setError(null);
+        setCars(data.filter(isListable).map(normalizeDbCar));
+      }
+    } catch (e: any) {
+      if (seq !== seqRef.current) return;
+      setLoading(false);
+      setError(e?.message || "Failed to load the vehicle catalog.");
+    }
+  }, []);
 
   React.useEffect(() => {
-    let disposed = false;
-
-    const refresh = async () => {
-      try {
-        const { data } = await supabase.from("cars").select();
-        if (disposed) return;
-        if (Array.isArray(data)) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem(DB_CACHE_KEY, JSON.stringify(data));
-          }
-          setCars(data.filter(isListable).map(normalizeDbCar));
-        }
-      } catch (e) {
-        console.error("Failed to load cars from catalog:", e);
-      }
-    };
-
     refresh();
 
     // Admin CMS dispatches this after every create/update/delete, so the
@@ -124,11 +145,11 @@ export function useCatalogCars(): Car[] {
     window.addEventListener("1stcars_settings_updated", handleSettingsUpdated);
     window.addEventListener("storage", handleStorage);
     return () => {
-      disposed = true;
+      seqRef.current++;
       window.removeEventListener("1stcars_settings_updated", handleSettingsUpdated);
       window.removeEventListener("storage", handleStorage);
     };
-  }, []);
+  }, [refresh]);
 
-  return cars;
+  return { cars, loading, error, refresh };
 }

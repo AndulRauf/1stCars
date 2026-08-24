@@ -33,7 +33,9 @@ export interface Car {
   };
   owners?: number;
   km_driven?: number;
-  status?: "available" | "reserved" | "sold";
+  // "pending" is the Sales-Associate submit status; "hidden"/"ended" guard
+  // delisted and auction-sold records from surfacing on the public catalog.
+  status?: "available" | "reserved" | "sold" | "pending" | "hidden" | "ended";
   cities?: string[];
 
 
@@ -50,7 +52,8 @@ export interface Car {
   price_breakup?: { label: string; amount: number; desc?: string }[];
 }
 
-export type ViewType = "home" | "buy_cars" | "car_details" | "sales_dashboard";
+// NOTE: ViewType lives in @/src/lib/router (single source of truth for the
+// 12 route values). This stale duplicate was removed — never redefine it here.
 
 export interface FilterState {
   search: string;
@@ -82,7 +85,17 @@ export interface Inspection {
   address: string;
   preferred_date?: string;
   preferred_time?: string;
-  status: "pending" | "assigned" | "completed" | "rejected" | "auctioned" | "published";
+  // Union merged from both historical definitions (types.ts + lib/db.ts):
+  // pending | assigned | completed | rejected | auctioned | published | offered | sold
+  status:
+    | "pending"
+    | "assigned"
+    | "completed"
+    | "rejected"
+    | "auctioned"
+    | "published"
+    | "offered"
+    | "sold";
   inspector_id?: string;
   inspector_name?: string;
   overall_score?: number;

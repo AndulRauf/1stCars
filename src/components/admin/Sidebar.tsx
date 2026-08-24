@@ -3,7 +3,7 @@ import {
   Search, PanelLeftClose, PanelLeftOpen, ShieldCheck, 
   X, Sparkles, RefreshCw
 } from "lucide-react";
-import { ADMIN_NAV_SECTIONS, CMSModule } from "./adminNavData";
+import { ADMIN_NAV_SECTIONS, CMSModule, getSectionAndItemForModule } from "./adminNavData";
 import { SidebarSection } from "./SidebarSection";
 
 interface SidebarProps {
@@ -15,6 +15,8 @@ interface SidebarProps {
   isLoadingData?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  /** Role scope for persisted UI state so each role keeps its own sidebar prefs. */
+  roleKey?: string;
 }
 
 export function Sidebar({
@@ -25,13 +27,20 @@ export function Sidebar({
   onReloadData,
   isLoadingData,
   isCollapsed: externalIsCollapsed,
-  onToggleCollapse: externalOnToggleCollapse
+  onToggleCollapse: externalOnToggleCollapse,
+  roleKey = "default"
 }: SidebarProps) {
+  // Namespaced storage keys: each role keeps its own collapse/expansion prefs.
+  const collapseKey = `1stcars_admin_sidebar_collapsed_${roleKey}`;
+  const expansionsKey = `1stcars_admin_section_expansions_${roleKey}`;
+
   // Collapsed desktop state saved in localStorage
   const [internalIsCollapsed, setInternalIsCollapsed] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("1stcars_admin_sidebar_collapsed");
-      return stored === "true";
+      const stored = localStorage.getItem(collapseKey);
+      if (stored !== null) return stored === "true";
+      // Legacy global key fallback
+      return localStorage.getItem("1stcars_admin_sidebar_collapsed") === "true";
     }
     return false;
   });
@@ -41,20 +50,21 @@ export function Sidebar({
   // Track expanded state for each section
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("1stcars_admin_section_expansions");
+      const stored = localStorage.getItem(expansionsKey) || localStorage.getItem("1stcars_admin_section_expansions");
       if (stored) {
         try { return JSON.parse(stored); } catch (e) { /* ignore */ }
       }
     }
-    // Default all sections expanded
+    // Default only Overview expanded; the rest stay collapsed so the sidebar
+    // stays compact and the module list is easy to scan.
     return {
       "Overview": true,
-      "Inventory": true,
-      "Leads & Sales": true,
-      "People & Access": true,
-      "Quality & Trust": true,
-      "Finance & Operations": true,
-      "Site & Content": true
+      "Leads & Sales": false,
+      "Inventory & Catalog": false,
+      "Quality & Trust": false,
+      "People & Access": false,
+      "Finance & Operations": false,
+      "Website & Content": false
     };
   });
 
@@ -67,17 +77,29 @@ export function Sidebar({
     } else {
       const next = !internalIsCollapsed;
       setInternalIsCollapsed(next);
-      localStorage.setItem("1stcars_admin_sidebar_collapsed", String(next));
+      localStorage.setItem(collapseKey, String(next));
     }
   };
 
   const toggleSectionExpand = (sectionTitle: string) => {
     setExpandedSections(prev => {
       const next = { ...prev, [sectionTitle]: !prev[sectionTitle] };
-      localStorage.setItem("1stcars_admin_section_expansions", JSON.stringify(next));
+      localStorage.setItem(expansionsKey, JSON.stringify(next));
       return next;
     });
   };
+
+  // Auto-expand the section that owns the active module so the current page
+  // is always visible in the sidebar (e.g. navigating from a dashboard card).
+  React.useEffect(() => {
+    const { sectionTitle } = getSectionAndItemForModule(activeModule);
+    setExpandedSections(prev => {
+      if (prev[sectionTitle]) return prev;
+      const next = { ...prev, [sectionTitle]: true };
+      localStorage.setItem(expansionsKey, JSON.stringify(next));
+      return next;
+    });
+  }, [activeModule]);
 
   const handleSelect = (mod: CMSModule) => {
     onSelectModule(mod);

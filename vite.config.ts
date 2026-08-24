@@ -27,7 +27,6 @@ export default defineConfig(() => {
             if (id.includes('react-markdown') || id.includes('remark') || id.includes('micromark') || id.includes('mdast') || id.includes('hast') || id.includes('unist') || id.includes('unified') || id.includes('vfile')) {
               return 'vendor-markdown';
             }
-            if (id.includes('/motion/') || id.includes('framer-motion')) return 'vendor-motion';
             return 'vendor';
           },
         },

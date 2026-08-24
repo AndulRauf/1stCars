@@ -1,44 +1,47 @@
 // Auto-created accounts (Buyer/Seller from bookings & inspections) use a
-// password that is deterministically derived from the email address. Random
-// per-device passwords broke sign-in whenever the account already existed
-// (repeat submission, another browser/device, or a pre-fix account): signUp
-// then returns no session and signInWithPassword fails because the stored
-// random password no longer matches the account's hash. A stable derivation
-// means the SAME email always resolves to the SAME password, so quiet
-// re-sign-in succeeds on every device and every submission.
-export function deriveAutoPassword(email: string): string {
-  const salt = "1stcars::auto-auth::v1";
-  const input = `${salt}::${email.trim().toLowerCase()}`;
+// cryptographically random password that is generated once per device and
+// stored in that device's localStorage. A third party can NEVER derive the
+// password from the email address (unlike the previous deterministic scheme),
+// so auto-created accounts are not hijackable from another device.
+//
+// Re-sign-in from the SAME device works because the stored password is reused;
+// a brand-new device falls back to a fresh signUp (Supabase returns an error
+// if the account already exists, which the caller surfaces honestly).
 
+export function getAutoPasswordKey(email: string): string {
+  return `1stcars_auto_password_${email.toLowerCase()}`;
+}
+
+export function generateRandomPassword(): string {
   const letters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
   const numbers = "23456789";
   const symbols = "!@#$%^&*";
   const all = letters + numbers + symbols;
 
-  // FNV-1a 32-bit hash + LCG expansion for a stable, reproducible password.
-  let h1 = 0x811c9dc5;
-  let h2 = 0x1000193;
-  for (let i = 0; i < input.length; i++) {
-    h1 ^= input.charCodeAt(i);
-    h1 = Math.imul(h1, 0x01000193) >>> 0;
-    h2 = (Math.imul(h2, 31) + input.charCodeAt(i)) >>> 0;
-  }
-  let seed = (h1 ^ (h2 << 1)) >>> 0;
-  const next = () => {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    return seed;
+  const pick = (set: string) => {
+    const rand = new Uint32Array(1);
+    globalThis.crypto?.getRandomValues?.(rand);
+    return set[rand[0] % set.length];
   };
 
-  // Guarantee one char from each required class (letters, digits, symbol).
-  let password = letters[next() % letters.length];
-  password += numbers[next() % numbers.length];
-  password += symbols[next() % symbols.length];
-  for (let i = 3; i < 14; i++) password += all[next() % all.length];
+  let password = pick(letters) + pick(numbers) + pick(symbols);
+  for (let i = 3; i < 16; i++) password += pick(all);
   return password;
 }
 
-export function getAutoPasswordKey(email: string): string {
-  return `1stcars_auto_password_${email.toLowerCase()}`;
+export function getOrCreateAutoPassword(email: string): string {
+  const key = getAutoPasswordKey(email);
+  const existing = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+  if (existing) return existing;
+  const password = generateRandomPassword();
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(key, password);
+    } catch {
+      // ignore quota/security errors — the session still works
+    }
+  }
+  return password;
 }
 
 export async function resolveAutoSignIn(
@@ -61,7 +64,6 @@ export async function resolveAutoSignIn(
     if (authData?.user && authData?.session) {
       return { user: authData.user, error: null };
     }
-
 
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,

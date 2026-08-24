@@ -7,10 +7,10 @@
   
   /* Primary Theme Palette (Military Green & Premium Accents) */
   --color-primary: #2E7D32;
-  --color-primary-hover: #1B5E20;
-  --color-primary-foreground: #F8F6F0;
+  --color-primary-hover: #25632a;
+  --color-primary-foreground: #FAF9F6;
   
-  --color-background: #F8F6F0;
+  --color-background: #FAF9F6;
   --color-foreground: #1C1B16;
   
   --color-card: #FFFFFF;
@@ -195,5 +195,42 @@
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+  }
+}
+
+/* ── Shared motion utilities ── */
+
+/* Scrollable pill rows (FAQ category tabs, checklist pills) hide the
+   horizontal scrollbar so the row reads as a clean, swipeable strip. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Subtle section entrance (fade + rise) — never runs for users who prefer
+   reduced motion, and fades in with no transform when they do. */
+@keyframes fc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-up {
+    animation: fc-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    opacity: 1;
   }
 }

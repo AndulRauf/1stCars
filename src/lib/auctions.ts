@@ -10,7 +10,7 @@
  *                       auction flow can be demoed without a database.
  */
 import * as React from "react";
-import { supabase } from "./supabaseClient";
+import { supabase, isRealSupabase } from "./supabaseClient";
 import { notificationService } from "./notifications";
 import { automationService } from "./automation";
 
@@ -244,6 +244,12 @@ async function readTable<T = any>(table: string): Promise<T[]> {
 }
 
 async function writeTable(table: string, rows: any[]): Promise<void> {
+  // The local engine is a demo-only mirror. If we ever reach it against the
+  // real backend (e.g. an RPC outage), the destructive delete-and-reinsert
+  // below must NOT run against production rows — fail loudly instead.
+  if (isRealSupabase) {
+    throw new Error(`Mock auction engine blocked from writing "${table}" against the real database`);
+  }
   await (supabase as any).from(table).delete().neq("id", "__never__");
   if (rows.length > 0) {
     await (supabase as any).from(table).insert(rows);
@@ -591,6 +597,13 @@ async function localApplyDecision(
   const amount = winning?.amount || a.current_highest_bid || 0;
 
   if (decision === "ACCEPT") {
+    // Reserve parity with the SQL engine (HIGH-09): below-reserve results
+    // cannot be accepted — the seller must reject instead.
+    if (a.reserve_price > 0 && amount < a.reserve_price) {
+      throw new Error(
+        `The highest bid of ₹${amount.toLocaleString("en-IN")} is below the reserve price of ₹${a.reserve_price.toLocaleString("en-IN")}. The result cannot be accepted.`
+      );
+    }
     const updated = await localTransition(id, "ACCEPTED", { closed_at: nowIso() }, actor.role === "Seller" ? "seller_accepted" : "admin_accepted");
     if (a.car_id) {
       await (supabase as any).from("cars").update({ status: "sold", updated_at: nowIso() }).eq("id", a.car_id);
@@ -637,6 +650,11 @@ async function localApplyDecision(
   }
 
   const updated = await localTransition(id, "REJECTED", { closed_at: nowIso() }, actor.role === "Seller" ? "seller_rejected" : "admin_rejected");
+  // MED-02 parity: release the winning bid so it stops being shown as active.
+  for (const b of bids) {
+    if (b.auction_id === id && b.status === "WINNING") b.status = "REJECTED";
+  }
+  await writeTable("auction_bids", bids);
   if (a.car_id) {
     await (supabase as any).from("cars").update({ status: "available", updated_at: nowIso() }).eq("id", a.car_id);
   }

@@ -6,26 +6,37 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 // @ts-ignore
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-// Check for local storage override to use mock database
-const useMockOverride = typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
+// Production builds must NEVER fall back to the local mock database, even if
+// the runtime localStorage override is present — the override is a
+// development/testing-only escape hatch. If the Supabase env vars are missing
+// in a production build, the app renders a blocking misconfiguration screen
+// (see App.tsx) instead of silently serving demo data.
+// @ts-ignore
+const isProdBuild = typeof window !== "undefined" && import.meta.env.PROD;
 
-export const isRealSupabase = Boolean(supabaseUrl && supabaseAnonKey) && !useMockOverride;
+// The localStorage override is ignored entirely in production builds.
+const useMockOverride =
+  !isProdBuild && typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true";
+
+export const isMissingSupabaseEnv = !supabaseUrl || !supabaseAnonKey;
+
+export const isRealSupabase = !isMissingSupabaseEnv && !useMockOverride;
+
+// True when a production build would otherwise fall back to the mock database.
+export const isProdMockBlocked = isProdBuild && isMissingSupabaseEnv;
 
 // Explicit environment validation: production must never silently fall back to
 // the local mock database. Log a loud, actionable error when it would.
 // @ts-ignore
 if (typeof window !== "undefined" && import.meta.env.PROD) {
-  const missing = !supabaseUrl || !supabaseAnonKey;
-  if (missing) {
+  if (isMissingSupabaseEnv) {
     console.error(
       "[1stCars] PRODUCTION MISCONFIGURATION: VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are missing. " +
-      "The app will fall back to the LOCAL MOCK database, which is NOT production data. " +
-      "Set both env vars for the deployed build."
+      "The app must not serve local mock data in production. Set both env vars for the deployed build."
     );
-  } else if (useMockOverride) {
+  } else if (typeof window !== "undefined" && localStorage.getItem("1stcars_use_mock_db") === "true") {
     console.warn(
-      "[1stCars] The local mock database override (1stcars_use_mock_db=true) is active in production. " +
-      "This is intended for development/testing only."
+      "[1stCars] The local mock database override (1stcars_use_mock_db=true) is set but IGNORED in production."
     );
   }
 }
@@ -854,7 +865,37 @@ For questions, concerns, or feedback regarding these Terms, please contact:
   }
 }
 
+// In production with missing credentials we intentionally do NOT instantiate
+// the localStorage mock (it has no Row-Level Security and is fully client-
+// tamperable). Instead we return a stub whose data methods throw a clear error
+// — that error is caught by the app's existing try/catch and surfaced to the
+// user — while keeping `auth` no-throw so the app can still mount gracefully.
+function createFatalStub(message: string): any {
+  const safeAuth = {
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signOut: async () => ({ error: null }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error(message) }),
+    signUp: async () => ({ data: { user: null, session: null }, error: new Error(message) }),
+  };
+  const throwFn = () => {
+    throw new Error(message);
+  };
+  return new Proxy({}, {
+    get(_target, prop: string) {
+      if (prop === "auth") return safeAuth;
+      return throwFn;
+    },
+  }) as any;
+}
+
 // Instantiate the appropriate client
 export const supabase = isRealSupabase
   ? createClient(supabaseUrl, supabaseAnonKey)
-  : (new SupabaseMockClient() as any);
+  : (isProdMockBlocked
+      ? createFatalStub(
+          "[1stCars] Production is missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. " +
+          "Configure both environment variables in your deploy settings; the app cannot reach the database."
+        )
+      : (new SupabaseMockClient() as any));

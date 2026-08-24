@@ -3,17 +3,17 @@ import {
   ClipboardList, FileText, Gavel, Users, UserCheck, 
   ShieldCheck, Shield, Star, HelpCircle, DollarSign, 
   Bell, TrendingUp, BookOpen, Link, Palette, Edit3,
-  Sparkles, Calendar, QrCode, ClipboardEdit, Zap
+  Sparkles, QrCode, ClipboardEdit, Zap, Inbox, Briefcase
 } from "lucide-react";
 
 export type CMSModule = 
   | "dashboard" | "crm" | "cars" | "users" | "test_drive_requests" | "booking_requests" | "seller_enquiries" | "staff" | "dealers" | "inspectors" | "sales"
-  | "test_drives" | "purchases" | "crm_activities"
+  | "test_drives" | "purchases" | "crm_activities" | "leads"
 
   | "inspections" | "certifications" | "auctions" | "brands" | "cities"
   | "faqs" | "testimonials" | "finance" | "notifications" | "expenses"
   | "reports" | "pages" | "footer_links" | "settings" | "text_editor" | "payment_settings"
-  | "sell_form" | "automation";
+  | "sell_form" | "automation" | "career_applications";
 
 export interface NavItem {
   id: CMSModule;
@@ -31,38 +31,28 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
   {
     title: "Overview",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: BarChart3 }
-    ]
-  },
-  {
-    title: "Inventory",
-    items: [
-      { id: "cars", label: "Cars Catalog", icon: Car },
-      { id: "brands", label: "Brands & Models", icon: Award },
-      { id: "cities", label: "Cities", icon: MapPin }
+      { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+      { id: "reports", label: "Reports & Analytics", icon: TrendingUp },
+      { id: "automation", label: "Automation Center", icon: Zap }
     ]
   },
   {
     title: "Leads & Sales",
     items: [
-      { id: "test_drive_requests", label: "Test Drive Requests", icon: Calendar },
-      { id: "test_drives", label: "Test Drives Log", icon: ClipboardList },
-      { id: "booking_requests", label: "Booking Requests", icon: Calendar },
+      { id: "leads", label: "Leads & Enquiries", icon: Inbox },
+      { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
+      { id: "career_applications", label: "Job Applications", icon: Briefcase },
       { id: "purchases", label: "Purchases & Orders", icon: QrCode },
       { id: "crm_activities", label: "CRM Activity Log", icon: ClipboardEdit },
-      { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
-
       { id: "auctions", label: "Live Auctions", icon: Gavel, badge: "LIVE" }
     ]
   },
   {
-    title: "People & Access",
+    title: "Inventory & Catalog",
     items: [
-      { id: "users", label: "Users", icon: Users },
-      { id: "staff", label: "Staff", icon: UserCheck },
-      { id: "dealers", label: "Dealers & Approvals", icon: ShieldCheck },
-      { id: "inspectors", label: "Inspectors", icon: Shield },
-      { id: "sales", label: "Sales Associates", icon: UserCheck }
+      { id: "cars", label: "Cars Catalog", icon: Car },
+      { id: "brands", label: "Brands & Models", icon: Award },
+      { id: "cities", label: "Cities", icon: MapPin }
     ]
   },
   {
@@ -76,28 +66,29 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     ]
   },
   {
-    title: "Finance & Operations",
+    title: "People & Access",
     items: [
-      { id: "finance", label: "Finance", icon: DollarSign },
-      { id: "payment_settings", label: "UPI Payments", icon: QrCode },
-      { id: "expenses", label: "Ledger", icon: FileText },
-      { id: "notifications", label: "Alerts Core", icon: Bell },
-      { id: "reports", label: "Reports", icon: TrendingUp }
+      { id: "users", label: "Users & Staff", icon: Users },
+      { id: "dealers", label: "Dealers & Approvals", icon: ShieldCheck },
+      { id: "inspectors", label: "Inspectors", icon: Shield },
+      { id: "sales", label: "Sales Associates", icon: UserCheck }
     ]
   },
   {
-    title: "Site & Content",
+    title: "Finance & Operations",
+    items: [
+      { id: "finance", label: "Finance", icon: DollarSign },
+      { id: "expenses", label: "Ledger", icon: FileText },
+      { id: "notifications", label: "Alerts Core", icon: Bell }
+    ]
+  },
+  {
+    title: "Website & Content",
     items: [
       { id: "pages", label: "Edit Pages", icon: BookOpen },
       { id: "footer_links", label: "Footer Links", icon: Link },
       { id: "settings", label: "Theme Design", icon: Palette },
       { id: "text_editor", label: "Text Editor", icon: Edit3 }
-    ]
-  },
-  {
-    title: "Automation",
-    items: [
-      { id: "automation", label: "Automation Center", icon: Zap }
     ]
   }
 ];

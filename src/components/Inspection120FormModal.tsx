@@ -23,6 +23,7 @@ interface Inspection120FormModalProps {
   onStartAuction?: (inspection: any, reportData: Full120PointReport) => void;
   onPublishToWebsite?: (inspection: any, reportData: Full120PointReport) => void;
   userRole?: "Inspector" | "Admin" | string;
+  fullScreen?: boolean;
 }
 
 export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
@@ -32,7 +33,8 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
   onSubmitReport,
   onStartAuction,
   onPublishToWebsite,
-  userRole = "Inspector"
+  userRole = "Inspector",
+  fullScreen = false
 }) => {
   // Initialize report state from stored report_150_json / report_120_json or initial report
   const [reportData, setReportData] = useState<Full120PointReport>(() => {
@@ -165,9 +167,9 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto text-left"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm overflow-y-auto text-left ${fullScreen ? "p-0" : "p-3 md:p-6"}`}
     >
-      <div className="bg-white w-full max-w-4xl rounded-3xl border border-[#2E7D32]/20 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto">
+      <div className={`bg-white w-full rounded-3xl border border-[#2E7D32]/20 shadow-2xl overflow-hidden flex flex-col my-auto ${fullScreen ? "max-w-none h-screen max-h-screen rounded-none" : "max-w-4xl max-h-[92vh]"}`}>
         
         {/* Header Banner */}
         <div className="bg-gradient-to-r from-[#F1F6F1] to-[#E4EEE6] p-5 md:p-6 border-b border-[#2E7D32]/15 shrink-0">

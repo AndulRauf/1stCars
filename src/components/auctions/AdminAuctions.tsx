@@ -360,9 +360,9 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
   const availableCars = cars.filter((c) => ["available", "listed", "ready_for_sale", "inspection_completed"].includes(c.status));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider flex items-center gap-2">
             <Gavel className="h-5 w-5 text-[#ff5a07]" /> Dealer Auction Engine

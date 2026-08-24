@@ -13,7 +13,7 @@ export function Breadcrumb({ activeModule, onReload, isLoading }: BreadcrumbProp
   const { sectionTitle, itemLabel, itemIcon: Icon } = getSectionAndItemForModule(activeModule);
 
   return (
-    <div className="bg-slate-900 border-b border-slate-800/80 text-white px-4 py-3 sm:px-6 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div className="bg-slate-900 border-b border-slate-800/80 text-white px-4 py-2.5 sm:px-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-3 mb-3">
       <div className="flex items-center gap-2 text-xs font-bold tracking-wide">
         <div className="flex items-center gap-1.5 text-slate-400">
           <Home className="h-3.5 w-3.5 text-slate-400" />

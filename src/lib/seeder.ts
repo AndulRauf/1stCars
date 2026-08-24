@@ -579,6 +579,13 @@ const AUTO_SEED_FLAG_PREFIX = "1stcars_auto_seed_";
 export async function maybeAutoSeedDatabase(user?: { id?: string; role?: string } | null) {
   if (!isRealSupabase) return;
 
+  // Seeding is a DEVELOPMENT convenience and must never auto-inject demo cars
+  // into a production database. It only runs when VITE_ALLOW_SEED === "true" is
+  // explicitly set for the build (or in a local dev server).
+  // @ts-ignore
+  const seedAllowed = import.meta.env.DEV || import.meta.env.VITE_ALLOW_SEED === "true";
+  if (!seedAllowed) return;
+
   const isStaff = user?.role === "Admin" || user?.role === "Sales Associate";
   if (!isStaff || !user?.id) return;
 

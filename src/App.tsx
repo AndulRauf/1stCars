@@ -2,7 +2,7 @@ import * as React from "react";
 import { toast } from "@/src/lib/toast";
 import { Navbar } from "@/src/components/layout/Navbar";
 import { CarCard } from "@/src/components/CarCard";
-import { cn } from "@/src/lib/utils";
+import { cn, sanitizeSettings } from "@/src/lib/utils";
 import { Footer } from "@/src/components/layout/Footer";
 import { WhatsAppFloatingButton } from "@/src/components/WhatsAppFloatingButton";
 import { Button } from "@/src/components/ui/Button";
@@ -48,10 +48,15 @@ import { FAMOUS_BRANDS, BUDGET_RANGES } from "@/src/data/cars";
 import { Car } from "@/src/types";
 import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase, isProdMockBlocked } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+import { captureUtm, trackPageView } from "@/src/lib/analytics";
+import { trackMetaPageView } from "@/src/lib/metaPixel";
 import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
+import { estimateCarValue } from "@/src/lib/valuation";
+import { getConsentStatus, setConsentStatus } from "@/src/lib/consent";
+import { auctionService } from "@/src/lib/auctions";
 // ErrorPages is statically imported by ErrorBoundary (it's the crash fallback),
 // so it always lives in the main chunk. Import it statically here too to avoid
 // a redundant dynamic chunk.
@@ -70,6 +75,7 @@ const FirstMarkCertification = React.lazy(() => import("@/src/components/FirstMa
 const CustomPageView = React.lazy(() => import("@/src/components/CustomPageView").then(m => ({ default: m.CustomPageView })));
 const AboutUsView = React.lazy(() => import("@/src/components/AboutUsView").then(m => ({ default: m.AboutUsView })));
 const FAQView = React.lazy(() => import("@/src/components/FAQView").then(m => ({ default: m.FAQView })));
+const CareersView = React.lazy(() => import("@/src/components/CareersView").then(m => ({ default: m.CareersView })));
 
 
 // Lightweight fallback shown while a lazily-loaded view chunk is downloading.
@@ -97,7 +103,7 @@ export default function App() {
 
   // Live catalog = static curated list + cars uploaded/published via the CMS
   // (they live in the Supabase "cars" table, so they must be merged in here).
-  const catalogCars = useCatalogCars();
+  const { cars: catalogCars, loading: catalogLoading, error: catalogError, refresh: refreshCatalog } = useCatalogCars();
 
   // Keep a stable ref so navigation callbacks (used by many children) can read
   // the latest catalog without changing identity on every inventory refresh.
@@ -147,6 +153,42 @@ export default function App() {
     };
   }, []);
 
+  // GA4 + UTM tracking: capture campaign params on arrival, then emit exactly
+  // one page_view per SPA route change (pushState navigation, back/forward, and
+  // direct URL loads). captureUtm() reads any utm_* params from the URL and
+  // persists first-touch (localStorage) / latest-touch (sessionStorage) so the
+  // campaign attribution survives in-app navigation.
+  React.useEffect(() => {
+    captureUtm();
+    trackPageView();
+
+    const handleHistory = () => {
+      captureUtm();
+      trackPageView();
+      trackMetaPageView();
+    };
+
+    // pushState/replaceState don't fire popstate, so hook the router's history
+    // writes and treat each as a route change for analytics.
+    const patchHistory = (method: "pushState" | "replaceState") => {
+      const original = window.history[method].bind(window.history);
+      window.history[method] = function (...args: any[]) {
+        const result = original(...args);
+        window.dispatchEvent(new Event("1stcars:routechange"));
+        return result;
+      };
+    };
+    patchHistory("pushState");
+    patchHistory("replaceState");
+
+    window.addEventListener("1stcars:routechange", handleHistory);
+    window.addEventListener("popstate", handleHistory);
+    return () => {
+      window.removeEventListener("1stcars:routechange", handleHistory);
+      window.removeEventListener("popstate", handleHistory);
+    };
+  }, []);
+
   React.useEffect(() => {
     // Listen to Supabase auth events (works with both mock and live Supabase clients)
     let disposed = false;
@@ -162,10 +204,11 @@ export default function App() {
         let name: string = user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User";
         let mobile: string = user.user_metadata?.mobile || user.mobile || "";
         let city: string = user.user_metadata?.city || user.city || "Mumbai";
+        let approvalState: { is_approved?: boolean; status?: string } | null = null;
         try {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("id, name, email, mobile, role, city")
+            .select("id, name, email, mobile, role, city, is_approved, status")
             .eq("id", user.id)
             .maybeSingle();
           if (profile) {
@@ -173,6 +216,10 @@ export default function App() {
             name = profile.name || name;
             mobile = profile.mobile || mobile;
             city = profile.city || city;
+            approvalState = {
+              is_approved: profile.is_approved,
+              status: profile.status
+            };
           }
         } catch (e) {
           // Profile lookup is best-effort; fall back to token metadata.
@@ -185,6 +232,8 @@ export default function App() {
           mobile,
           role,
           city,
+          is_approved: approvalState?.is_approved,
+          status: approvalState?.status,
           created_at: user.created_at || new Date().toISOString()
         } as any);
       } else {
@@ -205,6 +254,27 @@ export default function App() {
       maybeAutoSeedDatabase(currentUser as any);
     }
   }, [currentUser]);
+
+  // Auction engine maintenance poller: starts SCHEDULED auctions at their
+  // starts_at and auto-closes LIVE/EXTENDED ones whose ends_at has passed.
+  // Without this nothing ever moves an auction off LIVE (CRIT-01).
+  React.useEffect(() => {
+    const tick = async () => {
+      try {
+        const res = await auctionService.runMaintenance();
+        if (res && (res.started > 0 || res.closed > 0)) {
+          console.info(`[auctions] maintenance: ${res.started} started, ${res.closed} closed`);
+        }
+      } catch (err) {
+        console.warn("[auctions] maintenance tick failed:", err);
+      }
+    };
+    tick();
+    const timer = window.setInterval(tick, 60000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   // Dynamic website configuration states from Admin CMS settings
   const [websiteSettings, setWebsiteSettings] = React.useState({
@@ -229,7 +299,7 @@ export default function App() {
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "The Premium Pre-Owned Hub",
-    brandDescription: "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -260,7 +330,7 @@ export default function App() {
     testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.",
+    ctaSubheadingText: "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
     otpProvider: "simulated",
     customOtpUrl: "",
     customOtpHeaders: "",
@@ -273,6 +343,9 @@ export default function App() {
     if (typeof window !== "undefined") {
       // Normalize demo placeholders that must never render on the live site.
       const sanitize = (parsed: any) => {
+        // Strip retired marketing phrases from stored CMS copy
+        // (e.g. "standard buyback guarantee") so they never render.
+        parsed = sanitizeSettings(parsed);
         const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
         if (isDemoAddress) {
           parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
@@ -315,12 +388,12 @@ export default function App() {
         // re-introduce the "luxury" wording on the live site.
         parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
         parsed.brandSlogan = "The Premium Pre-Owned Hub";
-        parsed.brandDescription = "We curate only top-tier premium, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute premium service.";
+        parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
         parsed.seoTitle = "1stCars - Certified Car Marketplace";
         parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
         parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
         parsed.testimonialSubheadingText = "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.";
-        parsed.ctaSubheadingText = "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals.";
+        parsed.ctaSubheadingText = "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.";
         return parsed;
       };
       const apply = (parsed: any) => {
@@ -429,10 +502,8 @@ export default function App() {
   const [selectedBudget, setSelectedBudget] = React.useState(0);
 
   // Lead capture / Book inspection states
-  const [bookPhone, setBookPhone] = React.useState("");
-  const [bookDate, setBookDate] = React.useState("");
-  const [bookName, setBookName] = React.useState("");
-  const [bookSuccess, setBookSuccess] = React.useState(false);
+  const [conciergeName, setConciergeName] = React.useState("");
+  const [conciergeMobile, setConciergeMobile] = React.useState("");
 
   // Valuation Calculator states
   const [calcBrand, setCalcBrand] = React.useState("");
@@ -446,13 +517,19 @@ export default function App() {
     isOpen: false,
     mode: "login"
   });
-  const [authEmail, setAuthEmail] = React.useState("");
-  const [authPassword, setAuthPassword] = React.useState("");
-  const [authSuccess, setAuthSuccess] = React.useState(false);
 
   // General Notification Toast
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const [toastType, setToastType] = React.useState<"success" | "info" | "error">("success");
+
+  // Analytics consent (GA4 / Meta Pixel are only loaded after explicit opt-in)
+  const [consentStatus, setConsentStatusState] = React.useState<"granted" | "denied" | "undecided">(() =>
+    getConsentStatus()
+  );
+  const handleConsentChoice = (choice: "granted" | "denied") => {
+    setConsentStatus(choice);
+    setConsentStatusState(choice);
+  };
 
   // Global simulated SMS state
   const [globalSimulatedSms, setGlobalSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
@@ -530,7 +607,9 @@ export default function App() {
     searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  // Calculate Instant Offer Valuation logic
+  // Instant valuation — single honest heuristic shared with the Sell Car form
+  // (src/lib/valuation.ts): brand-class anchor + age/km depreciation. Clearly
+  // an estimate: the on-site 120-point inspection produces the final quote.
   const handleCalculateValuation = (e: React.FormEvent) => {
     e.preventDefault();
     if (!calcBrand) {
@@ -542,49 +621,40 @@ export default function App() {
       setCalcError("Please enter a valid mileage.");
       return;
     }
-    setCalcError("");
-
-    // Calculate realistic premium used car price anchor
-    // Base anchor values in INR (₹) for the Indian pre-owned market
-    let baseValue = 1800000;
-    if (calcBrand.toLowerCase().includes("porsche") || calcBrand.toLowerCase().includes("ferrari") || calcBrand.toLowerCase().includes("lamborghini") || calcBrand.toLowerCase().includes("bentley")) {
-      baseValue = 9000000;
-    } else if (calcBrand.toLowerCase().includes("mercedes") || calcBrand.toLowerCase().includes("bmw") || calcBrand.toLowerCase().includes("audi")) {
-      baseValue = 3500000;
+    const yearNum = parseInt(calcYear);
+    if (isNaN(yearNum) || yearNum < 1980 || yearNum > new Date().getFullYear() + 1) {
+      setCalcError("Please enter a valid manufacturing year.");
+      return;
     }
-
-    const age = 2026 - parseInt(calcYear);
-    const ageDepreciation = Math.max(0.1, 1 - (age * 0.08));
-    const mileageDepreciation = Math.max(0.2, 1 - (mileageNum * 0.000005));
-    
-    const finalValue = Math.round(baseValue * ageDepreciation * mileageDepreciation);
-    setCalcEstimatedValue(Math.max(50000, finalValue));
+    setCalcError("");
+    setCalcEstimatedValue(estimateCarValue(calcBrand, yearNum, mileageNum));
     triggerToast(`Instant valuation compiled for your ${calcBrand}!`);
   };
 
-  // Book free inspection submission
-  const handleBookInspection = (e: React.FormEvent) => {
+  // Concierge call-back lead — persisted to sales_notifications so it reaches
+  // the Sales Associate dashboard instead of being silently dropped.
+  const handleConciergeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookPhone || !bookDate || !bookName) {
-      triggerToast("Please fill in all inspection details.");
+    if (!conciergeName.trim() || !conciergeMobile.trim()) {
+      triggerToast("Please enter your name and mobile number.", "error");
       return;
     }
-    setBookSuccess(true);
-    triggerToast("Free evaluation booked successfully! Our concierge will call you shortly.");
-  };
-
-  // Auth submission
-  const handleAuthSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!authEmail || !authPassword) return;
-    setAuthSuccess(true);
-    setTimeout(() => {
-      setAuthModal({ isOpen: false, mode: "login" });
-      setAuthSuccess(false);
-      setAuthEmail("");
-      setAuthPassword("");
-      triggerToast("Welcome back! Authenticated successfully.");
-    }, 1500);
+    try {
+      const { error } = await supabase.from("sales_notifications").insert({
+        name: conciergeName.trim(),
+        mobile: conciergeMobile.trim().replace(/\D/g, "").slice(-10),
+        type: "call_back",
+        status: "pending",
+        notes: "Homepage concierge call-back request",
+        city: selectedCity
+      });
+      if (error) throw error;
+      setConciergeName("");
+      setConciergeMobile("");
+      triggerToast("Concierge call-back request received! Specialist will contact you within 10 minutes.");
+    } catch (err: any) {
+      triggerToast("Could not save your request. Please call us at +91 8866377722.", "error");
+    }
   };
 
   // Filter listings
@@ -613,8 +683,33 @@ export default function App() {
     triggerToast("All filters reset");
   };
 
+  // Production misconfiguration: if the build ships without Supabase env vars,
+  // the local mock database would otherwise become the production data source.
+  // Refuse to run with demo data instead of silently serving it.
+  if (isProdMockBlocked) {
+    return (
+      <div className="min-h-screen bg-[#F8F6F0] flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-xl border border-rose-200 p-8 max-w-md text-center">
+          <div className="mx-auto h-14 w-14 rounded-full bg-rose-50 flex items-center justify-center mb-4">
+            <Shield className="h-7 w-7 text-rose-600" />
+          </div>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight">Misconfigured Deployment</h1>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            This production build is missing the Supabase environment variables
+            (<code className="bg-rose-50 px-1 py-0.5 rounded text-rose-700 font-mono text-xs">VITE_SUPABASE_URL</code> and{" "}
+            <code className="bg-rose-50 px-1 py-0.5 rounded text-rose-700 font-mono text-xs">VITE_SUPABASE_ANON_KEY</code>).
+            The app refuses to fall back to local demo data in production.
+          </p>
+          <p className="text-xs text-slate-400 mt-3 font-semibold">
+            Set both variables in the deployment platform and redeploy.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F8F6F0] flex flex-col font-sans selection:bg-[#2E7D32]/20 selection:text-[#2E7D32] pt-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-[#2E7D32]/20 selection:text-[#2E7D32] pt-20 overflow-x-hidden">
       
       {/* Dynamic Toast Message */}
       {toastMessage && (
@@ -624,31 +719,34 @@ export default function App() {
           className={cn(
             // z-[200] keeps the toast ABOVE modal backdrops (z-50) and the SMS
             // banner (z-[100]) so it can never be covered / blurred by a
-            // backdrop-filter overlay. Opaque backgrounds + subtle slide-in
-            // (instead of the jittery continuous bounce) keep text crisp.
+            // backdrop-filter overlay. Light backgrounds + dark high-contrast
+            // text (instead of the jittery continuous bounce) keep copy crisp
+            // and readable on any screen.
             "fixed bottom-6 right-6 z-[200] px-5 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 max-w-sm border-2 animate-in fade-in slide-in-from-bottom-4 duration-300",
             toastType === "error"
-              ? "bg-rose-600 border-rose-400 text-white"
+              ? "bg-rose-50 border-rose-300 text-rose-900"
               : toastType === "info"
-                ? "bg-slate-900 border-slate-600 text-white"
-                : "bg-[#1B5E20] border-[#2E7D32] text-white"
+                ? "bg-slate-100 border-slate-300 text-slate-800"
+                : "bg-emerald-50 border-emerald-300 text-emerald-900"
           )}
         >
           <Sparkles className={cn(
             "h-5 w-5 shrink-0",
             toastType === "error"
-              ? "text-white"
+              ? "text-rose-500"
               : toastType === "info"
-                ? "text-slate-300"
-                : "text-emerald-200"
+                ? "text-slate-500"
+                : "text-emerald-600"
           )} />
           <p className="text-sm font-bold leading-snug">{toastMessage}</p>
         </div>
       )}
 
 
-      {/* Global Simulated SMS Notification Banner */}
-      {globalSimulatedSms && (
+      {/* Global Simulated SMS Notification Banner — mock mode ONLY. Production
+          never shows a simulated OTP (real OTPs are delivered via the real
+          gateway; see BookingModal / BuyNowCheckout). */}
+      {globalSimulatedSms && !isRealSupabase && (
         <div className="fixed top-24 right-6 z-[100] w-full max-w-sm px-4">
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-[#2E7D32]/25 flex flex-col gap-2 animate-bounce">
             <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
@@ -688,6 +786,35 @@ export default function App() {
             >
               ⚡ {!authModal.isOpen ? "Autofill & Sign In:" : "Autofill OTP Code:"} {globalSimulatedSms.code}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tracking Consent Banner — GA4 / Meta Pixel stay dormant until the
+          visitor accepts (DPDP/GDPR-aligned). */}
+      {consentStatus === "undecided" && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-lg px-5 py-4">
+          <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex flex-col gap-3">
+            <p className="text-xs leading-relaxed text-slate-200 font-medium">
+              We use cookies and analytics (Google Analytics, Meta Pixel) to understand how visitors use
+              1stCars and improve your experience. You can accept or decline — your choice is saved locally.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleConsentChoice("granted")}
+                className="px-4 py-2 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+              >
+                Accept Tracking
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConsentChoice("denied")}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+              >
+                Decline
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -777,6 +904,7 @@ export default function App() {
           onBackToInventory={() => {
             handleNavigate("buy_cars");
           }}
+          currentUserId={currentUser?.id}
         />
       ) : currentView === "sell_car" ? (
         <SellCarView
@@ -847,6 +975,9 @@ export default function App() {
           onNavigateToInventory={() => {
             handleNavigate("buy_cars");
           }}
+          onNavigateToSell={() => {
+            handleNavigate("sell_car");
+          }}
         />
       ) : currentView === "faq" ? (
         <FAQView
@@ -858,6 +989,15 @@ export default function App() {
           }}
           onNavigateToSell={() => {
             handleNavigate("sell_car");
+          }}
+        />
+      ) : currentView === "careers" ? (
+        <CareersView
+          onBackToHome={() => {
+            handleNavigate("home");
+          }}
+          onNavigateToInventory={() => {
+            handleNavigate("buy_cars");
           }}
         />
       ) : currentView === "error_404" ? (
@@ -950,7 +1090,29 @@ export default function App() {
           </div>
 
           {/* Grid of Listings */}
-          {filteredCars.length > 0 ? (
+          {catalogLoading && filteredCars.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="rounded-3xl bg-white border border-slate-100 overflow-hidden animate-pulse">
+                  <div className="h-44 bg-slate-200" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="h-3.5 bg-slate-200 rounded w-3/4" />
+                    <div className="h-3 bg-slate-200 rounded w-1/2" />
+                    <div className="h-6 bg-slate-200 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : catalogError && filteredCars.length === 0 ? (
+            <div className="bg-rose-50 rounded-3xl p-10 text-center max-w-xl mx-auto border border-rose-200">
+              <Info className="h-10 w-10 text-rose-400 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-slate-900">Could Not Load Inventory</h3>
+              <p className="text-sm text-slate-500 mt-2">{catalogError}</p>
+              <Button onClick={() => refreshCatalog()} className="mt-5 bg-[#2E7D32] text-white font-extrabold text-xs tracking-wider uppercase rounded-full">
+                Try Again
+              </Button>
+            </div>
+          ) : filteredCars.length > 0 ? (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
                 {filteredCars.slice(0, 8).map((car) => {
@@ -997,73 +1159,7 @@ export default function App() {
 
 
 
-      {/* 5. WHY CHOOSE 1STMARK CERTIFIED */}
-      <Section id="certified-benefits" bg="white" padding="lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          
-          <div className="space-y-4 max-w-2xl mx-auto">
-            <Badge variant="premium">{websiteSettings.certifiedBadgeText || "THE TRUST BLUEPRINT"}</Badge>
-            <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
-              {websiteSettings.certifiedHeadingText || "Why Choose 1stMark Certified?"}
-            </h2>
-            <p className="text-sm sm:text-base text-slate-500 font-medium">
-              {websiteSettings.certifiedSubheadingText || "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars."}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 max-w-5xl mx-auto gap-8 text-left">
-            
-            {/* Benefit 1 */}
-            <Card hoverEffect className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg shadow-slate-200/40">
-              <div className="space-y-4">
-                <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">120+ Point Certificate</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  Rigorous diagnostic scans, structural integrity checks, road testing, and detail evaluation. If it does not pass flawlessly, we will not list it.
-                </p>
-                <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Mechanical & Powertrain OK</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Diagnostic Scan Clearance</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Exterior Refinement Certified</div>
-                </div>
-                <div className="pt-4 mt-2 border-t border-slate-100 flex">
-                  <button
-                    onClick={() => {
-                      handleNavigate("firstmark_certification");
-                    }}
-                    className="text-[#2E7D32] hover:text-[#25632a] text-xs font-black uppercase tracking-widest flex items-center gap-1 cursor-pointer"
-                  >
-                    View Certification Process <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Benefit 3 */}
-            <Card hoverEffect className="bg-white border border-slate-100 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg shadow-slate-200/40">
-              <div className="space-y-4">
-                <div className="h-12 w-12 bg-[#2E7D32]/10 text-primary rounded-2xl flex items-center justify-center shadow-sm">
-                  <Clock className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Verified & Clean History</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                  We verify ownership history, insurance claims, odometer readings, and past service logs through trusted verification partners so there are no surprise skeletons.
-                </p>
-                <div className="pt-2 space-y-1.5 text-[11px] font-extrabold text-slate-600">
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Certified Clean Titles Only</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> No Accidental History</div>
-                  <div className="flex items-center"><Check className="h-3.5 w-3.5 text-[#2E7D32] mr-2" /> Transparent Log Reports</div>
-                </div>
-              </div>
-            </Card>
-
-          </div>
-        </div>
-      </Section>
-
-      {/* 6. TESTIMONIALS */}
+      {/* 5. TESTIMONIALS */}
       <Section bg="muted" padding="lg" className="border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           
@@ -1120,7 +1216,7 @@ export default function App() {
               {websiteSettings.ctaHeadingText || "Ready to Drive Your Certified Vehicle?"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold max-w-lg mx-auto leading-relaxed">
-              {websiteSettings.ctaSubheadingText || "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare car arrivals."}
+              {websiteSettings.ctaSubheadingText || "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals."}
             </p>
           </div>
 
@@ -1130,21 +1226,22 @@ export default function App() {
             </h3>
             
             <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                triggerToast("Concierge call-back request received! Specialist will contact you within 10 minutes.");
-              }} 
+              onSubmit={handleConciergeSubmit} 
               className="grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
               <input 
                 type="text" 
                 placeholder="Full Name" 
+                value={conciergeName}
+                onChange={(e) => setConciergeName(e.target.value)}
                 className="bg-white/10 border border-white/10 text-white text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:bg-white/20"
                 required
               />
               <input 
                 type="tel" 
                 placeholder="Mobile Number" 
+                value={conciergeMobile}
+                onChange={(e) => setConciergeMobile(e.target.value)}
                 className="bg-white/10 border border-white/10 text-white text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:bg-white/20"
                 required
               />
@@ -1178,8 +1275,11 @@ export default function App() {
         }}
       />
 
-      {/* Floating WhatsApp Widget with page-aware greeting */}
-      <WhatsAppFloatingButton view={currentView} />
+      {/* Floating WhatsApp Widget — home page only (removed from all user
+          dashboards and inner pages) */}
+      {currentView === "home" && (
+        <WhatsAppFloatingButton view={currentView} />
+      )}
 
     </div>
   );

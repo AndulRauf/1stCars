@@ -23,7 +23,10 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Guard: place_auction_bid reads profiles.is_verified; make sure it exists.
+-- Guard: place_auction_bid now gates on profiles.is_approved (admin-approved
+-- dealers) + dealers.is_verified when a dealers row exists — not
+-- profiles.is_verified, which is never written in production (CRIT-02).
+-- profiles.is_verified is still seeded below so this demo mirrors the flag.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_verified boolean DEFAULT false NOT NULL;
 
 -- ---------- 0. Reset test users (cascades to profiles/dealers) ----------

@@ -4,11 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>1stCars - Premium Used Car Marketplace</title>
-    <meta name="description" content="1stCars - The premier aggregator marketplace connecting car buyers, sellers, and certified dealers. Explore 1stMark certified vehicles with 150-Point inspection, Single Owned, and Non Accident Trusted guarantee." />
+    <meta name="description" content="1stCars - The premier aggregator marketplace connecting car buyers, sellers, and certified dealers. Explore 1stMark certified vehicles with 120-Point inspection, Single Owned, and Non Accident Trusted guarantee." />
     <meta name="keywords" content="premium cars, luxury cars, certified used cars, 1stCars, pre-owned luxury, sports cars" />
     <meta name="author" content="1stCars Elite" />
     <meta name="theme-color" content="#135D38" />
     <link rel="canonical" href="https://1stcars.in/" />
+
+    <link rel="preconnect" href="https://wxzhuqdctavzphzhgqgz.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="/logo.png" as="image" />
+
+    <!-- Structured data (LOW-17): LocalBusiness JSON-LD for rich results -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "AutoDealer",
+        "name": "1stCars",
+        "url": "https://1stcars.in/",
+        "logo": "https://1stcars.in/logo.png",
+        "image": "https://1stcars.in/og-image.jpg",
+        "description": "Certified pre-owned car marketplace in Surat, Gujarat. 120-point inspected, single-owner, accident-free vehicles with doorstep delivery.",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Vikas Arced, Masma, Olpad",
+          "addressLocality": "Surat",
+          "addressRegion": "Gujarat",
+          "postalCode": "394540",
+          "addressCountry": "IN"
+        },
+        "telephone": "+91 8866377722",
+        "priceRange": "₹₹₹",
+        "openingHours": "Mo-Su 09:00-21:00"
+      }
+    </script>
 
 
     <!-- Favicon and Mobile App Icons -->
@@ -25,13 +54,16 @@
     <meta property="og:description" content="1stCars aggregator marketplace connecting car buyers, car sellers, and car dealers with 1stMark Certification." />
     <meta property="og:image" content="https://1stcars.in/og-image.jpg?v=5" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://1stcars.in/" />
-    <meta property="twitter:title" content="1stCars - Premium Used Car Marketplace" />
-    <meta property="twitter:description" content="1stCars aggregator marketplace connecting car buyers, car sellers, and car dealers with 1stMark Certification." />
-    <meta property="twitter:image" content="https://1stcars.in/og-image.jpg?v=5" />
+    <!-- Twitter (LOW-16: Twitter requires name=, not property=) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://1stcars.in/" />
+    <meta name="twitter:title" content="1stCars - Premium Used Car Marketplace" />
+    <meta name="twitter:description" content="1stCars aggregator marketplace connecting car buyers, car sellers, and car dealers with 1stMark Certification." />
+    <meta name="twitter:image" content="https://1stcars.in/og-image.jpg?v=5" />
 
+    <!-- Meta Pixel Code: loaded and initialized by src/lib/metaPixel.ts using
+         the VITE_META_PIXEL_ID env var (or the production fallback Pixel ID),
+         so the ID stays configurable and the script is never duplicated. -->
   </head>
   <body>
     <div id="root"></div>
