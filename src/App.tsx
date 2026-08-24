@@ -904,6 +904,7 @@ export default function App() {
             handleNavigate("buy_cars");
           }}
           currentUserId={currentUser?.id}
+          userRole={currentUser?.role}
         />
       ) : currentView === "sell_car" ? (
         <SellCarView

@@ -28,6 +28,9 @@ import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from 
 import {
   SellCatalog, catalogFromLegacy, mergeCatalog, getStoredSellCatalog, DEFAULT_POPULAR_SELL_BRANDS
 } from "@/src/lib/sellFormData";
+import { useSalesData } from "@/src/components/sales/SalesCrmBits";
+import { SalesLeads } from "@/src/components/sales/SalesLeads";
+import { SalesAppointments } from "@/src/components/sales/SalesAppointments";
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -39,6 +42,11 @@ interface RoleDashboardsProps {
 export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
+
+  // Sales CRM (Phase 1) shared data — real queries scoped to this associate
+  // (leads, owned cars, test drives, follow-ups). Used by the upgraded
+  // Leads / Appointments tabs below.
+  const salesData = useSalesData(currentUser.id, false);
 
   // Dealer KYC gate: a dealer whose application is pending admin approval must
   // NOT see the dealer dashboard. Only after approval may they participate in
@@ -1076,113 +1084,16 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   5. SALES ASSOCIATE DASHBOARD TABS
                   ======================================================= */}
               
-              {/* Test Drive Requests */}
+              {/* Test Drive Requests — upgraded to the Phase-1 CRM
+                  (appointments owned by the vehicle's Sales Associate). */}
               {currentUser.role === "Sales Associate" && activeTab === "test_drives" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Test Drive Requests</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Manage virtual tour requests and customer driving schedules.</p>
-                  </div>
-
-                  {/* Sales Associates only see leads assigned to them (their uploaded cars)
-                    or unassigned leads from the shared pool — never leads assigned
-                    to another associate. */}
-                  {leads.filter(l => l.type === "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).length > 0 ? (
-                    <div className="space-y-3">
-                      {leads.filter(l => l.type === "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).map(lead => (
-                        <div key={lead.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-[#2E7D32] text-white text-[9px] uppercase tracking-widest font-black px-2.5 py-0.5">
-                                {lead.status}
-                              </Badge>
-                              <span className="text-[9px] font-mono text-slate-400">ID: {lead.id}</span>
-                              {lead.assigned_to === currentUser.id && (
-                                <span className="text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20">
-                                  Auto-assigned to you
-                                </span>
-                              )}
-                            </div>
-                            <h4 className="font-black text-slate-900 text-base mt-1">{lead.name} • {lead.mobile}</h4>
-                            <p className="text-xs text-slate-600 font-bold uppercase tracking-wider">
-                              Target Vehicle: <strong className="text-[#2E7D32]">{lead.car_brand} {lead.car_model}</strong> • Prefer Slot: {lead.preferred_date} ({lead.preferred_time})
-                            </p>
-                          </div>
-
-                          {lead.status === "pending" && (
-                            <div className="flex gap-1.5 shrink-0">
-                              <Button
-                                size="sm"
-                                onClick={() => handleLeadStatus(lead.id, "contacted")}
-                                className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-2.5"
-                              >
-                                Contacted
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleLeadStatus(lead.id, "resolved")}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-2.5"
-                              >
-                                Resolve
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
-                      <Calendar className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-bold">No active requests logged.</p>
-                    </div>
-                  )}
-                </div>
+                <SalesAppointments data={salesData} userId={currentUser.id} isAdmin={false} />
               )}
 
-              {/* Customer Leads */}
+              {/* Customer Leads — upgraded to the Phase-1 CRM:
+                  pipeline stages, detail panel, follow-ups, timeline. */}
               {currentUser.role === "Sales Associate" && activeTab === "leads" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">CRM Active Customer Leads</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">General buy queries, WhatsApp callbacks, and cash-quote bookings.</p>
-                  </div>
-
-                  {leads.filter(l => l.type !== "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).length > 0 ? (
-                    <div className="space-y-3">
-                      {leads.filter(l => l.type !== "test_drive" && (!l.assigned_to || l.assigned_to === currentUser.id)).map(lead => (
-                        <div key={lead.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-amber-600 text-white text-[9px] uppercase tracking-widest font-black px-2.5 py-0.5">
-                                {lead.type.replace("_", " ")}
-                              </Badge>
-                              <span className={`text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full ${
-                                lead.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                              }`}>{lead.status}</span>
-                            </div>
-                            <h4 className="font-black text-slate-900 text-base mt-1">{lead.name} • {lead.mobile}</h4>
-                            <p className="text-xs text-slate-600 font-bold">Location: {lead.city} • Target Car: {lead.car_brand} {lead.car_model}</p>
-                          </div>
-
-                          {lead.status === "pending" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleLeadStatus(lead.id, "resolved")}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-2.5 shrink-0"
-                            >
-                              Mark Solved
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
-                      <ClipboardList className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-bold">No active general leads.</p>
-                    </div>
-                  )}
-                </div>
+                <SalesLeads data={salesData} userId={currentUser.id} userName={currentUser.name} isAdmin={false} />
               )}
 
               {/* Upload New Car */}

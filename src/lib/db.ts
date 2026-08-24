@@ -222,12 +222,16 @@ export interface SalesNotification {
   car_id: string;
   car_brand: string;
   car_model: string;
-  type: "test_drive" | "buy_now" | "whatsapp" | "call_request";
-  status: "pending" | "contacted" | "resolved";
+  type: "test_drive" | "buy_now" | "whatsapp" | "call_request" | "call_back";
+  // Legacy values ("pending"/"contacted"/"resolved") remain valid; the Sales
+  // CRM pipeline (src/lib/salesCrm.ts) adds the full stage vocabulary and
+  // maps legacy values onto it without breaking existing rows.
+  status: "pending" | "contacted" | "resolved" | "new" | "qualified" | "appointment" | "test_drive" | "negotiation" | "booked" | "sold" | "lost" | "payment_submitted";
   notes?: string;
   // Auto-assignment: the Sales Associate who uploaded the target car.
-  assigned_to?: string;
-  assigned_to_name?: string;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  assigned_at?: string | null;
 }
 
 // Seed other core collections if not present in localStorage
