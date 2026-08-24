@@ -295,7 +295,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
     testimonialBadgeText: "VIP CLUB FEEDBACK",
     testimonialHeadingText: "Loved By Drivers & Collectors",
-    testimonialSubheadingText: "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.",
+    testimonialSubheadingText: "We have completed over 280+ deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
     ctaSubheadingText: "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
@@ -1123,7 +1123,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             parsed.seoTitle = "1stCars - Certified Car Marketplace";
             parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
             parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
-            parsed.testimonialSubheadingText = "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified car owners.";
+            parsed.testimonialSubheadingText = "We have completed over 280+ deliveries. Read reviews from verified car owners.";
             parsed.ctaSubheadingText = "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.";
             setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
