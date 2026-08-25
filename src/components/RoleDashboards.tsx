@@ -3,7 +3,8 @@ import {
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
   Trash2, ArrowRight, DollarSign, Hammer, 
 Upload, Check, Pencil, Eye, X,
-  RefreshCw, ClipboardList, Car, Bell, Gavel
+  RefreshCw, ClipboardList, Car, Bell, Gavel,
+LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -30,6 +31,10 @@ import {
 } from "@/src/lib/sellFormData";
 import { useSalesData } from "@/src/components/sales/SalesCrmBits";
 import { SalesLeads } from "@/src/components/sales/SalesLeads";
+import { SalesOverview } from "@/src/components/sales/SalesOverview";
+import { SalesFollowUps } from "@/src/components/sales/SalesFollowUps";
+import { SalesPipeline } from "@/src/components/sales/SalesPipeline";
+import { SalesActivities } from "@/src/components/sales/SalesActivities";
 import { SalesAppointments } from "@/src/components/sales/SalesAppointments";
 
 interface RoleDashboardsProps {
@@ -185,7 +190,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       case "Seller": setActiveTab("inspections"); break;
       case "Dealer": setActiveTab("auctions"); break;
       case "Inspector": setActiveTab("assigned"); break;
-      case "Sales Associate": setActiveTab("test_drives"); break;
+      case "Sales Associate": setActiveTab("overview"); break;
       case "Admin": setActiveTab("overview"); break;
     }
   }, [currentUser]);
@@ -654,10 +659,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {currentUser.role === "Sales Associate" && (
                   <>
                     {[
-                      { id: "test_drives", label: "Customer Requests Log", icon: Calendar },
+                      { id: "overview", label: "CRM Overview", icon: LayoutDashboard },
                       { id: "leads", label: "CRM Active Leads Desk", icon: ClipboardList },
+                      { id: "follow_ups", label: "Follow-ups", icon: AlarmClock },
+                      { id: "appointments", label: "Appointments", icon: Calendar },
+                      { id: "test_drives", label: "Test Drives", icon: CalendarClock },
+                      { id: "pipeline", label: "Sales Pipeline", icon: GitBranch },
+                      { id: "my_cars", label: "My Car Listings", icon: Car },
                       { id: "upload_car", label: "Upload New Car", icon: Upload },
-                      { id: "my_cars", label: "My Car Listings", icon: Car }
+                      { id: "activities", label: "Activities", icon: History }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -1088,6 +1098,31 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   (appointments owned by the vehicle's Sales Associate). */}
               {currentUser.role === "Sales Associate" && activeTab === "test_drives" && (
                 <SalesAppointments data={salesData} userId={currentUser.id} isAdmin={false} />
+              )}
+
+              {/* CRM Overview — live KPIs for this associate */}
+              {currentUser.role === "Sales Associate" && activeTab === "overview" && (
+                <SalesOverview data={salesData} onNavigate={(t: string) => setActiveTab(t)} />
+              )}
+
+              {/* Appointments & Test Drives */}
+              {currentUser.role === "Sales Associate" && activeTab === "appointments" && (
+                <SalesAppointments data={salesData} userId={currentUser.id} isAdmin={false} />
+              )}
+
+              {/* Follow-ups */}
+              {currentUser.role === "Sales Associate" && activeTab === "follow_ups" && (
+                <SalesFollowUps data={salesData} userId={currentUser.id} />
+              )}
+
+              {/* Sales Pipeline */}
+              {currentUser.role === "Sales Associate" && activeTab === "pipeline" && (
+                <SalesPipeline data={salesData} userId={currentUser.id} isAdmin={false} />
+              )}
+
+              {/* Activities */}
+              {currentUser.role === "Sales Associate" && activeTab === "activities" && (
+                <SalesActivities data={salesData} />
               )}
 
               {/* Customer Leads — upgraded to the Phase-1 CRM:

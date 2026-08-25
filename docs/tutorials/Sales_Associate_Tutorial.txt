@@ -53,9 +53,16 @@ for training - never on the live site.
 WHAT YOU SHOULD SEE
   - "Welcome back, <your name>"
   - "Profile Role: Sales Associate Dashboard • Location: <city>"
-  - A "Dashboard Hub" on the left with two tabs:
-        * Customer Requests Log
+  - A "Dashboard Hub" on the left with the full CRM menu:
+        * CRM Overview
         * CRM Active Leads Desk
+        * Follow-ups
+        * Appointments
+        * Test Drives
+        * Sales Pipeline
+        * My Car Listings
+        * Upload New Car
+        * Activities
   - A "Live System Alerts Hub" area on the right
   - Buttons: Refresh (reload data), Logout
 
@@ -63,11 +70,38 @@ WHAT YOU SHOULD SEE
 ----------------------------------------------------------------
 3. YOUR DASHBOARD (ROLE HUB)
 ----------------------------------------------------------------
-Default tab when you log in: "Customer Requests Log".
+Default tab when you log in: "CRM Overview".
 
-Left hub tabs:
-  - Customer Requests Log (test drive requests)
-  - CRM Active Leads Desk (buy leads)
+Left sidebar tabs (your full used-car sales CRM):
+  - CRM Overview      : live KPIs (my cars, new leads, active
+                        leads, follow-ups due, today's
+                        appointments, upcoming test drives,
+                        bookings and sales). Click any KPI to
+                        jump to that screen.
+  - CRM Active Leads Desk : all buyer inquiries routed to you,
+                        with pipeline stage advance, claim,
+                        detail panel, notes, follow-ups and
+                        the activity timeline.
+  - Follow-ups        : scheduled re-contact tasks (create,
+                        complete, reschedule). The Automation
+                        Center auto-creates one for every new
+                        lead (due within 24 hours).
+  - Appointments      : customer appointments calendar view.
+  - Test Drives       : test-drive / virtual-tour requests and
+                        their status (Scheduled / Confirmed /
+                        Completed / Cancelled / No Show).
+  - Sales Pipeline    : your leads grouped by stage
+                        NEW -> CONTACTED -> QUALIFIED ->
+                        APPOINTMENT -> TEST DRIVE ->
+                        NEGOTIATION -> BOOKED -> SOLD (and LOST)
+                        advance leads one click at a time.
+  - My Car Listings   : the vehicles you uploaded, with their
+                        listing status.
+  - Upload New Car    : add a vehicle to inventory (admin must
+                        approve before it goes live).
+  - Activities        : chronological history of every lead
+                        event and stage change (audit trail +
+                        automation events).
 
 Right panel:
   - Live System Alerts Hub
