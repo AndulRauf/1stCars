@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, DollarSign, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
 import { Car } from "@/src/types";
 import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
 
@@ -520,14 +520,12 @@ export function CarDetailsView({
                 onClick={() => handleScrollToBooking("test_drive")}
                 className="bg-[#2E7D32] hover:bg-[#25632a] text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <Sparkles className="h-3.5 w-3.5" />
                 Test Drive
               </Button>
               <Button
                 onClick={() => handleScrollToBooking("buy_now")}
                 className="bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <DollarSign className="h-3.5 w-3.5" />
                 Buy Now
               </Button>
             </div>
@@ -906,13 +904,13 @@ export function CarDetailsView({
                 onClick={() => handleScrollToBooking("test_drive")}
                 className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer flex items-center justify-center gap-2"
               >
-                <Sparkles className="h-4 w-4" /> Book Test Drive
+                Book Test Drive
               </Button>
               <Button
                 onClick={() => handleScrollToBooking("buy_now")}
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-2"
               >
-                <DollarSign className="h-4 w-4" /> Buy Now
+                Buy Now
               </Button>
               <div className="flex items-center gap-2 pt-1">
                 <ShieldCheck className="h-4 w-4 text-[#2E7D32] shrink-0" />
