@@ -526,7 +526,7 @@ export function CarDetailsView({
                 onClick={() => handleScrollToBooking("buy_now")}
                 className="bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
               >
-                Buy Now
+                Reserve Now
               </Button>
             </div>
 
@@ -910,7 +910,7 @@ export function CarDetailsView({
                 onClick={() => handleScrollToBooking("buy_now")}
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-2"
               >
-                Buy Now
+                Reserve Now
               </Button>
               <div className="flex items-center gap-2 pt-1">
                 <ShieldCheck className="h-4 w-4 text-[#2E7D32] shrink-0" />
