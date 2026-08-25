@@ -4,7 +4,8 @@ import {
   Trash2, ArrowRight, DollarSign, Hammer, 
 Upload, Check, Pencil, Eye, X,
   RefreshCw, ClipboardList, Car, Bell, Gavel,
-LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock
+LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -47,6 +48,27 @@ interface RoleDashboardsProps {
 export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
+
+  // Dashboard Hub side menu — collapsible (hidden → slim icon rail) so the
+  // workspace gets more room on smaller screens. Preference persists per browser.
+  const [hubCollapsed, setHubCollapsed] = React.useState<boolean>(() => {
+    try {
+      return localStorage.getItem("1stcars_hub_collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const handleToggleHub = React.useCallback(() => {
+    setHubCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem("1stcars_hub_collapsed", next ? "1" : "0");
+      } catch {
+        /* non-fatal */
+      }
+      return next;
+    });
+  }, []);
 
   // Sales CRM (Phase 1) shared data — real queries scoped to this associate
   // (leads, owned cars, test drives, follow-ups). Used by the upgraded
@@ -558,8 +580,19 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             
             {/* LEFT BAR: SUB-NAVIGATION */}
             {(currentUser.role as string) !== "Admin" && (
-              <div className="lg:col-span-3 bg-white border border-[#2E7D32]/10 rounded-3xl p-5 shadow-xs space-y-4">
-              <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest px-2.5">Dashboard Hub</p>
+              <div className={`${hubCollapsed ? "lg:col-span-1" : "lg:col-span-3"} bg-white border border-[#2E7D32]/10 rounded-3xl p-3 sm:p-4 lg:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all duration-200`}>
+              <div className={`flex items-center gap-2 ${hubCollapsed ? "flex-col" : "justify-between"}`}>
+                {!hubCollapsed && (
+                  <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest px-2.5">Dashboard Hub</p>
+                )}
+                <button
+                  onClick={handleToggleHub}
+                  title={hubCollapsed ? "Show full menu" : "Hide menu"}
+                  className="p-2 rounded-xl text-slate-500 hover:bg-[#2E7D32]/10 hover:text-[#2E7D32] transition-all cursor-pointer shrink-0"
+                >
+                  {hubCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                </button>
+              </div>
               
               <div className="flex gap-1.5 overflow-x-auto lg:flex-col lg:gap-1 pb-1 lg:pb-0 scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0">
                 {/* BUYER LINKS */}
@@ -572,15 +605,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        {!hubCollapsed && <span>{tab.label}</span>}
                       </button>
                     ))}
                   </>
@@ -596,15 +629,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        {!hubCollapsed && <span>{tab.label}</span>}
                       </button>
                     ))}
                   </>
@@ -619,15 +652,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        {!hubCollapsed && <span>{tab.label}</span>}
                       </button>
                     ))}
                   </>
@@ -641,15 +674,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        {!hubCollapsed && <span>{tab.label}</span>}
                       </button>
                     ))}
                   </>
@@ -671,15 +704,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        {!hubCollapsed && <span>{tab.label}</span>}
                       </button>
                     ))}
                   </>
@@ -687,8 +720,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               </div>
 
-              {/* Browse inventory help callout (hidden for Sales Associates) */}
-              {currentUser.role !== "Sales Associate" && (
+              {/* Browse inventory help callout (hidden for Sales Associates & when hub is collapsed) */}
+              {!hubCollapsed && currentUser.role !== "Sales Associate" && (
                 <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2 text-center">
                   <p className="text-[9px] font-black text-[#2E7D32] uppercase tracking-widest">Public Catalog</p>
                   <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">Want to browse standard certified cars?</p>
@@ -705,7 +738,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           )}
 
             {/* RIGHT BAR: MAIN WORKSPACE CONTAINER */}
-            <div className={`${currentUser.role === "Admin" ? "lg:col-span-12" : "lg:col-span-9"} space-y-4 lg:space-y-6`}>
+            <div className={`${currentUser.role === "Admin" ? "lg:col-span-12" : hubCollapsed ? "lg:col-span-11" : "lg:col-span-9"} space-y-4 lg:space-y-6`}>
               
               {/* =======================================================
                   1. BUYER DASHBOARD TABS 
