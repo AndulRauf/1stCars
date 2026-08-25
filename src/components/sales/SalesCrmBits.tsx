@@ -106,7 +106,7 @@ export function CrmCard({ title, subtitle, children, actions }: {
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 shadow-sm">
       <div className="border-b border-slate-100 pb-4 flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h3 className="font-black text-xl text-slate-900 tracking-tight">{title}</h3>

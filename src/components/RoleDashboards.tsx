@@ -462,10 +462,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
         
         {/* Dashboard Heading & Meta Info */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-[#2E7D32]/10 p-6 md:p-8 rounded-3xl shadow-xs">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-[#2E7D32]/10 p-4 sm:p-6 md:p-8 rounded-3xl shadow-xs">
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
               Welcome back, <span className="text-[#2E7D32]">{currentUser.name}</span>
@@ -494,10 +494,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
         {/* LOADING STATE */}
         <div className="relative">
-          <div className="space-y-8">
+          <div className="space-y-5">
             {/* Live System Alerts Feed (Rule 1-6 Alerts Hub) */}
             {userNotifs.length > 0 && (
-              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
                     <div className="relative">
@@ -554,14 +554,14 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
             
             {/* LEFT BAR: SUB-NAVIGATION */}
             {(currentUser.role as string) !== "Admin" && (
               <div className="lg:col-span-3 bg-white border border-[#2E7D32]/10 rounded-3xl p-5 shadow-xs space-y-4">
               <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest px-2.5">Dashboard Hub</p>
               
-              <div className="flex flex-col gap-1">
+              <div className="flex gap-1.5 overflow-x-auto lg:flex-col lg:gap-1 pb-1 lg:pb-0 scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0">
                 {/* BUYER LINKS */}
                 {currentUser.role === "Buyer" && (
                   <>
@@ -573,7 +573,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -597,7 +597,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -620,7 +620,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -642,7 +642,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -672,7 +672,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -705,7 +705,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           )}
 
             {/* RIGHT BAR: MAIN WORKSPACE CONTAINER */}
-            <div className={`${currentUser.role === "Admin" ? "lg:col-span-12" : "lg:col-span-9"} space-y-6`}>
+            <div className={`${currentUser.role === "Admin" ? "lg:col-span-12" : "lg:col-span-9"} space-y-4 lg:space-y-6`}>
               
               {/* =======================================================
                   1. BUYER DASHBOARD TABS 
@@ -713,7 +713,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               
               {/* Saved Cars Collection */}
               {currentUser.role === "Buyer" && activeTab === "saved_cars" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Saved Premium Cars</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Quick access to vehicles you saved for review.</p>
@@ -759,7 +759,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Test Drives */}
               {currentUser.role === "Buyer" && activeTab === "test_drives" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Scheduled Test Drives</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Track your upcoming appointments with concierge associates.</p>
@@ -805,7 +805,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Orders */}
               {currentUser.role === "Buyer" && activeTab === "orders" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Deposits & Bookings</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Secure escrow purchases logged for your account.</p>
@@ -849,7 +849,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Inspection Status */}
               {currentUser.role === "Seller" && activeTab === "inspections" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Car Inspections</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Real-time tracking of Spinny-style home inspections logged for your account.</p>
@@ -903,7 +903,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Offers (Sellers can accept/reject dealer cash bids) */}
               {currentUser.role === "Seller" && activeTab === "offers" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Dealer Offers</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Competitive live bids placed on your certified inspected cars.</p>
@@ -982,7 +982,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Purchased Stock */}
               {currentUser.role === "Dealer" && activeTab === "dealer_inventory" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Purchased Showroom Stock</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Vehicles won in auctions and transferred legally.</p>
@@ -1012,7 +1012,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               
               {/* Assigned Inspections */}
               {currentUser.role === "Inspector" && activeTab === "assigned" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Doorstep Inspection Worklist</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Perform 200-point structural evaluations and upload report parameters.</p>
@@ -1133,7 +1133,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Upload New Car */}
               {currentUser.role === "Sales Associate" && activeTab === "upload_car" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <h3 className="font-black text-xl text-slate-900 tracking-tight">Upload a New Car</h3>
@@ -1149,7 +1149,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     </Button>
                   </div>
 
-                  <div className="p-6 bg-[#FAF9F6] border border-slate-100 rounded-2xl text-center space-y-2">
+                  <div className="p-4 sm:p-6 bg-[#FAF9F6] border border-slate-100 rounded-2xl text-center space-y-2">
                     <Car className="h-10 w-10 text-[#2E7D32] mx-auto" />
                     <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Launch the 9-step wizard to list a vehicle</p>
                     <p className="text-[11px] text-slate-400 font-semibold max-w-md mx-auto leading-relaxed">
@@ -1161,7 +1161,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* My Car Listings */}
               {currentUser.role === "Sales Associate" && activeTab === "my_cars" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Car Listings</h3>
                     <p className="text-xs text-slate-400 mt-0.5">

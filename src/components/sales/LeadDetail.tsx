@@ -82,7 +82,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl w-full max-w-3xl p-6 space-y-6 shadow-2xl my-8">
+      <div className="bg-white rounded-3xl w-full max-w-3xl p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xl my-4 sm:my-8">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
