@@ -87,13 +87,13 @@ export function getGa4MeasurementId(): string {
   return "";
 }
 
-// Consent gate: analytics may only start after the visitor explicitly accepts
-// tracking (stored by src/lib/consent.ts). Read directly to avoid a circular
-// import between the two modules.
+// Consent gate (opt-out model): analytics runs by default and stops only after
+// an explicit "denied" choice (persisted by src/lib/consent.ts). Read directly
+// to avoid a circular import between the two modules.
 function hasTrackingConsent(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem("1stcars_analytics_consent") === "granted";
+    return localStorage.getItem("1stcars_analytics_consent") !== "denied";
   } catch {
     return false;
   }
@@ -132,9 +132,11 @@ export function initGA4(): void {
   window.gtag("config", id, { send_page_view: false });
 }
 
-// Generic GA4 event emitter. No-op when gtag has not loaded.
+// Generic GA4 event emitter. No-op when gtag has not loaded or the visitor
+// opted out of tracking.
 export function trackGA4(event: string, params: Record<string, unknown> = {}): void {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  if (!hasTrackingConsent()) return;
   try {
     window.gtag("event", event, params);
     debugLog(`event: ${event}`, params);

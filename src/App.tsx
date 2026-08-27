@@ -796,7 +796,8 @@ export default function App() {
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex flex-col gap-3">
             <p className="text-xs leading-relaxed text-slate-200 font-medium">
               We use cookies and analytics (Google Analytics, Meta Pixel) to understand how visitors use
-              1stCars and improve your experience. You can accept or decline — your choice is saved locally.
+              1stCars and improve your experience. Tracking is on by default — you can turn it off anytime.
+              Your choice is saved locally.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -804,14 +805,14 @@ export default function App() {
                 onClick={() => handleConsentChoice("granted")}
                 className="px-4 py-2 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
               >
-                Accept Tracking
+                Keep On
               </button>
               <button
                 type="button"
                 onClick={() => handleConsentChoice("denied")}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
               >
-                Decline
+                Turn Off
               </button>
             </div>
           </div>
