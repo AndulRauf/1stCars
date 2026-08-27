@@ -19,7 +19,7 @@ const PLACEHOLDER_GA4_IDS = new Set(["G-1STCARS2026", "G-XXXXXXXXXX", "G-XXXXXXX
 // code-level fallback so analytics works out-of-the-box after redeploy, even if
 // the VITE_GA4_MEASUREMENT_ID build/env var has not been set yet. It can still
 // be overridden by an env var / the AdminCMS website setting when provided.
-const PRODUCTION_GA4_ID = "G-2Z1JREBR0R";
+const PRODUCTION_GA4_ID = "G-MGWJ1RDHDL";
 
 // A real GA4 Measurement ID looks like G- followed by exactly 10 alphanumerics
 // (e.g. G-ABCDE12345).
