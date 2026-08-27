@@ -7,6 +7,7 @@ import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { trackWhatsAppClick } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
 interface BuyNowCheckoutProps {
@@ -672,7 +673,7 @@ export function BuyNowCheckout({
               </div>
               <span className="text-sm font-black text-slate-900">{fmt(bookingToken)}</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="text-[#2E7D32] font-bold underline">Know more!</a></p>
+            <p className="text-xs text-slate-500 mt-1.5 ml-8">Pay token to get priority assistance <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" onClick={() => { trackWhatsAppClick("buy_now_know_more", `${car.brand} ${car.model}`, car.price); trackMetaEvent("InitiateContact", { content_name: `${car.brand} ${car.model}`, contact_way: "whatsapp" }); }} className="text-[#2E7D32] font-bold underline">Know more!</a></p>
 
           </div>
 

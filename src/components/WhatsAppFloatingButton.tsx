@@ -1,5 +1,7 @@
 import * as React from "react";
 import { ViewType } from "@/src/lib/router";
+import { trackWhatsAppClick } from "@/src/lib/analytics";
+import { trackMetaEvent } from "@/src/lib/metaPixel";
 
 interface WhatsAppFloatingButtonProps {
   view?: ViewType;
@@ -27,6 +29,10 @@ export function WhatsAppFloatingButton({ view, carName }: WhatsAppFloatingButton
   const defaultMessage = encodeURIComponent(getWhatsAppMessage(view, carName));
 
   const handleClick = () => {
+    // Fire analytics so conversation intent is captured even though no form is
+    // submitted (WhatsApp is a strong buying/selling signal).
+    trackWhatsAppClick(view || "general", carName);
+    trackMetaEvent("Contact", { content_name: carName || view || "general", contact_way: "whatsapp" });
     window.open(`https://wa.me/${phoneNumber}?text=${defaultMessage}`, "_blank");
   };
 

@@ -12,6 +12,7 @@ import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { trackShareEvent } from "@/src/lib/analytics";
 
 
 interface CarDetailsViewProps {
@@ -332,6 +333,7 @@ export function CarDetailsView({
                 const shareUrl = carShareLink(car);
                 const message = buildCarShareMessage(car);
                 if (navigator.share) {
+                  trackShareEvent("whatsapp", "car_details", `${car.brand} ${car.model}`);
                   try {
                     await navigator.share({
                       title: `${car.year} ${car.brand} ${car.model} | 1stCars Certified`,
@@ -341,6 +343,7 @@ export function CarDetailsView({
                     return;
                   } catch (e) {}
                 }
+                trackShareEvent("copy", "car_details", `${car.brand} ${car.model}`);
                 try {
                   await navigator.clipboard.writeText(buildCarShareFullMessage(car));
                   toast.success("Car card copied! Paste it anywhere to share.");

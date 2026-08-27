@@ -20,6 +20,30 @@ credentials. Follow these steps to go live with a real, shared backend.
      `pages` table, schema-compat patches, and a hardened signup trigger
      (re-running applies all of them).
 
+### 2b. Migration order (IMPORTANT)
+Run the SQL files **in this exact order**. Because several files add the same
+columns with `ADD COLUMN IF NOT EXISTS`, the first file to create a column
+wins its type — running them out of order silently changes the schema:
+
+```text
+1. schema.sql
+2. automation_schema.sql
+3. automation_phase2.sql
+4. auction_engine.sql
+5. sales_crm_phase1.sql
+6. seed_faq.sql (optional)
+7. refine_supabase_v2.sql   <- consolidated safe refinements (run last)
+```
+
+Notably, `sales_notifications.assigned_to` is declared `TEXT` in `schema.sql`
+but `UUID REFERENCES profiles(id)` in the CRM/automation files. **Never re-run
+`schema.sql` after `sales_crm_phase1.sql`** — it would revert the column to
+`TEXT` and break the Sales-CRM lead-privacy RLS. [`public/refine_supabase_v2.sql`](public/refine_supabase_v2.sql)
+normalises the column to `UUID` (guarded: it only converts when all existing
+values are valid UUIDs), adds the missing `cars.created_by_name` column the app
+reads, adds `updated_at` auto-triggers, performance indexes, and safe CHECK
+guards — run it last after any of the above.
+
 ## 3. Configure auth
 - **Authentication → Providers → Email**: enable it.
 - For a smooth launch you may turn **"Confirm email"** OFF (Authentication →

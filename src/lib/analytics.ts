@@ -15,6 +15,12 @@ type UtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 // Known placeholder values that must never be treated as a real GA4 ID.
 const PLACEHOLDER_GA4_IDS = new Set(["G-1STCARS2026", "G-XXXXXXXXXX", "G-XXXXXXXXXXX"]);
 
+// The real, active 1stCars GA4 Measurement ID (added by the owner). Used as a
+// code-level fallback so analytics works out-of-the-box after redeploy, even if
+// the VITE_GA4_MEASUREMENT_ID build/env var has not been set yet. It can still
+// be overridden by an env var / the AdminCMS website setting when provided.
+const PRODUCTION_GA4_ID = "G-2Z1JREBR0R";
+
 // A real GA4 Measurement ID looks like G- followed by exactly 10 alphanumerics
 // (e.g. G-ABCDE12345).
 const GA4_ID_PATTERN = /^G-[A-Z0-9]{10}$/i;
@@ -57,6 +63,8 @@ function readSettingsGa4Id(): string {
 // Resolve the GA4 Measurement ID. Priority:
 //   1. VITE_GA4_MEASUREMENT_ID env var (recommended for production builds)
 //   2. The CMS "googleAnalyticsId" website setting (editable in AdminCMS without code)
+//   3. The bundled production ID (PRODUCTION_GA4_ID) — so analytics works even
+//      before the env var / CMS setting is filled in.
 // Only valid IDs are accepted; placeholders such as G-1STCARS2026 are ignored.
 export function getGa4MeasurementId(): string {
   const envId = ((import.meta.env?.VITE_GA4_MEASUREMENT_ID as string) || "").trim();
@@ -75,6 +83,7 @@ export function getGa4MeasurementId(): string {
       settingsId
     );
   }
+  if (isValidGa4Id(PRODUCTION_GA4_ID)) return PRODUCTION_GA4_ID;
   return "";
 }
 
@@ -273,4 +282,74 @@ export function trackSellerLeadSubmit(): void {
     utm_campaign: utm.utm_campaign || undefined,
     utm_content: utm.utm_content || undefined
   });
+}
+
+// ---------------------------------------------------------------------------
+// Conversation-intent events (click-to-WhatsApp / click-to-call / share).
+// These capture a strong buying/selling signal BEFORE a full form is filled —
+// e.g. a visitor tapping the floating WhatsApp button — so the owner can see
+// engagement even when no lead form is submitted. All are non-PII.
+// ---------------------------------------------------------------------------
+
+function utmSpread(): Record<string, string | undefined> {
+  const u = getUtmParams();
+  return {
+    utm_source: u.utm_source || undefined,
+    utm_medium: u.utm_medium || undefined,
+    utm_campaign: u.utm_campaign || undefined,
+    utm_content: u.utm_content || undefined
+  };
+}
+
+// A visitor tapped the WhatsApp contact button (conversation not captured yet).
+export function trackWhatsAppClick(context: string, carName?: string, carPrice?: number): void {
+  trackGA4("whatsapp_click", {
+    context,
+    car_name: carName || undefined,
+    value: carPrice && carPrice > 0 ? carPrice : undefined,
+    page_location: typeof window !== "undefined" ? window.location.pathname : undefined,
+    ...utmSpread()
+  });
+}
+
+// A visitor tapped the phone / call-back CTA intent.
+export function trackCallClick(context: string, carName?: string): void {
+  trackGA4("call_click", {
+    context,
+    car_name: carName || undefined,
+    page_location: typeof window !== "undefined" ? window.location.pathname : undefined,
+    ...utmSpread()
+  });
+}
+
+// A visitor shared a car listing (WhatsApp share / copy link / deep-link).
+export function trackShareEvent(kind: "whatsapp" | "copy" | "link", context: string, carName?: string): void {
+  trackGA4(`share_${kind}`, {
+    context,
+    car_name: carName || undefined,
+    ...utmSpread()
+  });
+}
+
+// Diagnostics used by the Admin dashboard so the owner can SEE whether GA4 is
+// actually wired up — the #1 silent reason a site "gets no leads" is that the
+// analytics is misconfigured and the data is simply not being collected.
+export interface AnalyticsDiagnostics {
+  ga4Id: string;
+  ga4Enabled: boolean;
+  ga4Reason: string;
+}
+
+export function getAnalyticsDiagnostics(): AnalyticsDiagnostics {
+  const ga4Id = getGa4MeasurementId();
+  const valid = isValidGa4Id(ga4Id);
+  let reason: string;
+  if (valid) {
+    reason = "GA4 is active with a valid Measurement ID.";
+  } else {
+    reason =
+      "GA4 is NOT collecting data. Set VITE_GA4_MEASUREMENT_ID (build env) or the AdminCMS " +
+      "'googleAnalyticsId' setting to a real ID — placeholders such as G-1STCARS2026 are ignored.";
+  }
+  return { ga4Id, ga4Enabled: valid, ga4Reason: reason };
 }

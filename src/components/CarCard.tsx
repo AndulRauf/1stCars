@@ -6,6 +6,7 @@ import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
 import { buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
+import { trackShareEvent } from "@/src/lib/analytics";
 
 interface CarCardProps {
   key?: string | number;
@@ -183,12 +184,14 @@ export function CarCard({
                   e.stopPropagation();
                   const message = buildCarShareMessage(car);
                   if (navigator.share) {
+                    trackShareEvent("whatsapp", "car_card", `${car.brand} ${car.model}`);
                     navigator.share({
                       title: `${car.brand} ${car.model} | 1stCars`,
                       text: message,
                       url: carShareLink(car)
                     }).catch(() => {});
                   } else {
+                    trackShareEvent("copy", "car_card", `${car.brand} ${car.model}`);
                     navigator.clipboard.writeText(buildCarShareFullMessage(car)).then(() => {
                       toast.success(`Car card copied — paste it in WhatsApp!`);
                     }).catch(() => {});

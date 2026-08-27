@@ -620,7 +620,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       report_electronics: reportData.categories[3]?.summary || "",
       report_interior: reportData.categories[5]?.summary || "",
       report_120_json: JSON.stringify(reportData),
-      report_150_json: JSON.stringify(reportData),
+      // report_150_json is legacy (pre-120-point). It is no longer written to
+      // keep the 120-point report as the single canonical payload. Historical
+      // rows are preserved by refine_supabase_v2.sql section E.
       notes: reportData.notes,
       is_certified: reportData.isCertified
     }).eq("id", inspectionId);

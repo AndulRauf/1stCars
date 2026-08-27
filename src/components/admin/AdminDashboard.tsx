@@ -1,9 +1,10 @@
 import * as React from "react";
 import { 
   Gavel, ClipboardList, Users, Car, UserCheck, Bell, BookOpen,
-  Plus, CheckCircle2, TrendingUp, TrendingDown, Minus
+  Plus, CheckCircle2, TrendingUp, TrendingDown, Minus, BarChart3
 } from "lucide-react";
 import { CMSModule } from "./adminNavData";
+import { getAnalyticsDiagnostics } from "@/src/lib/analytics";
 
 interface AdminDashboardProps {
   cars: any[];
@@ -125,8 +126,36 @@ export function AdminDashboard({
     { label: "Reports & Analytics", icon: TrendingUp, mod: "reports" as CMSModule, status: "all", tone: "bg-slate-800 text-white hover:bg-slate-700" }
   ];
 
+  // Live analytics health — surfaces the #1 silent cause of "no leads": GA4
+  // not actually collecting data because the Measurement ID is missing/placeholder.
+  const ga4 = React.useMemo(() => getAnalyticsDiagnostics(), []);
+  const ga4Tone = ga4.ga4Enabled
+    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+    : "bg-amber-50 border-amber-300 text-amber-900";
+  const ga4Dot = ga4.ga4Enabled ? "bg-emerald-500" : "bg-amber-500 animate-pulse";
+
   return (
     <div className="space-y-4">
+      {/* Analytics health banner */}
+      <div className={`border rounded-2xl px-4 py-3 text-[11px] font-bold flex items-start gap-2.5 ${ga4Tone}`}>
+        <BarChart3 className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="uppercase tracking-widest text-[9px] font-black">
+              Tracking status: <span className={`inline-flex items-center gap-1 ${ga4.ga4Enabled ? "text-emerald-700" : "text-rose-600"}`}><span className={`w-1.5 h-1.5 rounded-full ${ga4Dot}`} /> GA4 {ga4.ga4Enabled ? "ON" : "OFF"}</span>
+            </span>
+            <code className="bg-black/10 px-1.5 py-0.5 rounded-md font-mono text-[10px]">{ga4.ga4Id || "—"}</code>
+            <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline text-[10px] font-black uppercase tracking-wide">Open GA4</a>
+          </div>
+          <p className={`mt-1 font-medium ${ga4.ga4Enabled ? "opacity-80" : ""}`}>{ga4.ga4Reason}</p>
+          {!ga4.ga4Enabled && (
+            <p className="mt-1 opacity-90 font-bold">
+              Action: add a real <code>VITE_GA4_MEASUREMENT_ID</code> (Vercel → Environment Variables → redeploy) or set the AdminCMS website setting "Google Analytics ID". Until then, no visitor data reaches Google Analytics.
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* Quick actions strip */}
       <div className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">
