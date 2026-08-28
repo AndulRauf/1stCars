@@ -15,11 +15,13 @@ type UtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 // Known placeholder values that must never be treated as a real GA4 ID.
 const PLACEHOLDER_GA4_IDS = new Set(["G-1STCARS2026", "G-XXXXXXXXXX", "G-XXXXXXXXXXX"]);
 
-// The real, active 1stCars GA4 Measurement ID (added by the owner). Used as a
+// The real, active 1stCars GA4 Measurement ID — this is the ID that Google
+// Analytics reports the property expects the site to be tagged with
+// (GA4 Home shows exactly this ID in the "No data received" hint). Used as a
 // code-level fallback so analytics works out-of-the-box after redeploy, even if
 // the VITE_GA4_MEASUREMENT_ID build/env var has not been set yet. It can still
 // be overridden by an env var / the AdminCMS website setting when provided.
-const PRODUCTION_GA4_ID = "G-MGWJ1RDHDL";
+const PRODUCTION_GA4_ID = "G-2Z1JPEBR0R";
 
 // A real GA4 Measurement ID looks like G- followed by exactly 10 alphanumerics
 // (e.g. G-ABCDE12345).
