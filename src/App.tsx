@@ -1138,7 +1138,7 @@ export default function App() {
                     onClick={() => handleNavigate("buy_cars")}
                     className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-2xl shadow-lg shadow-[#2E7D32]/20 cursor-pointer inline-flex items-center gap-2"
                   >
-                    <span>View All {filteredCars.length} Cars in Inventory</span>
+                    <span>View All</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
