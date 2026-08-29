@@ -307,7 +307,7 @@ export default function App() {
     highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
     seoTitle: "1stCars - Certified Car Marketplace",
     seoDescription: "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",
-    googleAnalyticsId: "G-1STCARS2026",
+    googleAnalyticsId: "",
     buyButtonText: "Buy Certified Cars",
     sellButtonText: "Sell Your Car",
     filterHeadingText: "Refine Selection",

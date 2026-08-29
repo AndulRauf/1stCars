@@ -20,7 +20,7 @@ const PLACEHOLDER_GA4_IDS = new Set(["G-1STCARS2026", "G-XXXXXXXXXX", "G-XXXXXXX
 // (GA4 Home shows exactly this ID in the "No data received" hint). Used as a
 // code-level fallback so analytics works out-of-the-box after redeploy, even if
 // the VITE_GA4_MEASUREMENT_ID build/env var has not been set yet. It can still
-// be overridden by an env var / the AdminCMS website setting when provided.
+// be overridden by the VITE_GA4_MEASUREMENT_ID env var when provided.
 const PRODUCTION_GA4_ID = "G-2Z1JPEBR0R";
 
 // A real GA4 Measurement ID looks like G- followed by exactly 10 alphanumerics
@@ -50,23 +50,10 @@ export function isValidGa4Id(id: string): boolean {
   return GA4_ID_PATTERN.test(trimmed);
 }
 
-function readSettingsGa4Id(): string {
-  try {
-    const raw = localStorage.getItem("1stcars_cms_website_settings");
-    if (!raw) return "";
-    const parsed = JSON.parse(raw);
-    const id = parsed?.googleAnalyticsId;
-    return typeof id === "string" && id.trim() ? id.trim() : "";
-  } catch {
-    return "";
-  }
-}
-
 // Resolve the GA4 Measurement ID. Priority:
 //   1. VITE_GA4_MEASUREMENT_ID env var (recommended for production builds)
-//   2. The CMS "googleAnalyticsId" website setting (editable in AdminCMS without code)
-//   3. The bundled production ID (PRODUCTION_GA4_ID) — so analytics works even
-//      before the env var / CMS setting is filled in.
+//   2. The bundled production ID (PRODUCTION_GA4_ID) — so analytics works even
+//      before the env var is filled in.
 // Only valid IDs are accepted; placeholders such as G-1STCARS2026 are ignored.
 export function getGa4MeasurementId(): string {
   const envId = ((import.meta.env?.VITE_GA4_MEASUREMENT_ID as string) || "").trim();
@@ -75,14 +62,6 @@ export function getGa4MeasurementId(): string {
     console.warn(
       "[Analytics] VITE_GA4_MEASUREMENT_ID is invalid or a placeholder — ignoring it.",
       envId
-    );
-  }
-  const settingsId = readSettingsGa4Id();
-  if (isValidGa4Id(settingsId)) return settingsId;
-  if (settingsId) {
-    console.warn(
-      "[Analytics] AdminCMS googleAnalyticsId is invalid or a placeholder — GA4 disabled.",
-      settingsId
     );
   }
   if (isValidGa4Id(PRODUCTION_GA4_ID)) return PRODUCTION_GA4_ID;
@@ -352,8 +331,8 @@ export function getAnalyticsDiagnostics(): AnalyticsDiagnostics {
     reason = "GA4 is active with a valid Measurement ID.";
   } else {
     reason =
-      "GA4 is NOT collecting data. Set VITE_GA4_MEASUREMENT_ID (build env) or the AdminCMS " +
-      "'googleAnalyticsId' setting to a real ID — placeholders such as G-1STCARS2026 are ignored.";
+      "GA4 is NOT collecting data. Set VITE_GA4_MEASUREMENT_ID (build env) to a real ID — " +
+      "placeholders such as G-1STCARS2026 are ignored.";
   }
   return { ga4Id, ga4Enabled: valid, ga4Reason: reason };
 }
