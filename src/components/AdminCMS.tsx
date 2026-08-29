@@ -32,7 +32,7 @@ import { AutomationControlCenter } from "./admin/AutomationControlCenter";
 import { automationService } from "@/src/lib/automation";
 import { CMSModule } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
-import { PAGE_CONTENT_DEFAULTS } from "@/src/lib/pageContentDefaults";
+import { PAGE_CONTENT_DEFAULTS, normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
 import { AdminAuctions } from "./auctions/AdminAuctions";
 import { auctionService, AuctionActor } from "@/src/lib/auctions";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
@@ -1099,42 +1099,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         const webRow = sData.find((s: any) => s.key === "website_settings");
         if (webRow && webRow.value) {
           try {
-            const parsed = JSON.parse(webRow.value);
-            // Normalize known demo/admin-default copy back to canonical so the
-            // admin never sees or re-saves the placeholder text.
-            const canonicalCopy: Record<string, string> = {
-    heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
-              highlight1Title: "Single Owned",
-              highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
-              highlight2Title: "Non Accident Trusted",
-              highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
-              highlight3Title: "Genuine KM",
-              highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
-            };
-            const nonCanonical: Record<string, string> = {
-              heroSubtitle: "Inspired by rigorous pre-owned standards, reimagined for the ultimate experience. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
-              highlight1Title: "120-Point Inspection",
-              highlight2Title: "Single Owned, Non Accident Trusted*",
-              highlight3Title: "Aggregator Marketplace",
-            };
-            for (const key of Object.keys(nonCanonical)) {
-              if (parsed[key] === nonCanonical[key]) {
-                parsed[key] = canonicalCopy[key];
-                const descKey = key.replace("Title", "Desc");
-                if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
-              }
-            }
-            // Force canonical marketing copy so legacy stored values can never
-            // re-introduce the "luxury" wording on the live site.
-            parsed.heroSubtitle = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
-            parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
-            parsed.brandSlogan = "The Premium Pre-Owned Hub";
-            parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
-            parsed.seoTitle = "1stCars - Certified Car Marketplace";
-            parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
-            parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
-            parsed.testimonialSubheadingText = "We have completed over 280+ deliveries. Read reviews from verified car owners.";
-            parsed.ctaSubheadingText = "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.";
+            const parsed = normalizeWebsiteSettings(JSON.parse(webRow.value));
             setWebsiteSettings((prev: any) => ({ ...prev, ...parsed }));
             localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           } catch (e) {

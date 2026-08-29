@@ -2,6 +2,7 @@ import * as React from "react";
 import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { isHiddenPage } from "@/src/lib/utils";
+import { normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
 
 interface FooterProps {
   onViewChange?: (view: any, pageId?: string) => void;
@@ -28,18 +29,11 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
       const stored = localStorage.getItem("1stcars_cms_website_settings");
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
-          if (!parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar")) {
-            parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
-            parsed.supportPhone = "+91 8866377722";
-            parsed.supportEmail = "support@1stcars.com";
-            localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
-          }
-          // Force canonical marketing copy so stale cached values can never
-          // re-introduce the "luxury" wording in the footer.
-          parsed.brandSlogan = "The Premium Pre-Owned Hub";
-          parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
-          parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
+          const parsed = normalizeWebsiteSettings(JSON.parse(stored));
+          // Persist the corrected contact details / legacy-copy values so the
+          // fix sticks across reloads (idempotent — genuine admin edits pass
+          // through unchanged).
+          localStorage.setItem("1stcars_cms_website_settings", JSON.stringify(parsed));
           setSettings((prev) => ({ ...prev, ...parsed }));
         } catch (e) {
           console.error("Failed to parse website settings in Footer", e);

@@ -3,6 +3,8 @@
 // an admin edits a value. They live in the same `website_settings` blob as the
 // existing theme/branding/SEO settings.
 
+import { sanitizeSettings } from "./utils";
+
 export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   // ---- About Us ----
   aboutHeroBadge: "ABOUT 1STCARS",
@@ -213,4 +215,136 @@ export function getPageContent(overrides?: Record<string, string | undefined>): 
     }
   }
   return merged;
+}
+
+// ---------------------------------------------------------------------------
+// Website settings normalization (shared by App / AdminCMS / Footer).
+// ---------------------------------------------------------------------------
+// AdminCMS exposes many marketing fields for editing (hero, brand, footer, SEO,
+// and section subheadings). Older builds / demo data wrote "luxury"-worded or
+// demo placeholder copy into those fields; legacy code also force-canonicalized
+// them on every load — which silently discarded genuine admin edits on refresh.
+// We now swap a stored value to canonical copy ONLY on an exact match with a
+// known legacy string, so CMS-authored copy survives page reloads.
+
+const CANONICAL_MARKETING_COPY: Record<string, string> = {
+  heroSubtitle:
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+  footerText: "© 2026 1stCars Marketplace. All rights reserved.",
+  brandSlogan: "The Premium Pre-Owned Hub",
+  brandDescription:
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+  seoTitle: "1stCars - Certified Car Marketplace",
+  seoDescription:
+    "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",
+  certifiedSubheadingText:
+    "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
+  testimonialSubheadingText:
+    "We have completed over 280+ deliveries. Read reviews from verified car owners.",
+  ctaSubheadingText:
+    "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
+  buyCarsSubheadingText:
+    "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.",
+};
+
+// Exact legacy demo/luxury values that must be replaced with canonical copy.
+const LEGACY_MARKETING_COPY: Record<string, string[]> = {
+  heroSubtitle: [
+    "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    "Inspired by rigorous standards, reimagined for ultimate convenience.",
+    "Inspired by rigorous pre-owned standards, reimagined for the ultimate experience. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+  ],
+  footerText: ["© 2026 1stCars Luxury Marketplace. All rights reserved."],
+  brandSlogan: ["The Luxury Pre-Owned Hub"],
+  brandDescription: [
+    "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
+  ],
+  seoTitle: ["1stCars - Certified Luxury Car Marketplace"],
+  seoDescription: [
+    "The premier platform to buy and sell certified luxury pre-owned vehicles with a 120-Point Certificate.",
+  ],
+  certifiedSubheadingText: [
+    "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned luxury.",
+  ],
+  testimonialSubheadingText: [
+    "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
+  ],
+  ctaSubheadingText: [
+    "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.",
+  ],
+};
+
+// Legacy highlight pillar Titles (exact matches) → canonical Title + Desc pair.
+const LEGACY_HIGHLIGHT_COPY: Record<string, { title: string; desc: string }> = {
+  "120-Point Inspection": {
+    title: "Single Owned",
+    desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
+  },
+  "Single Owned, Non Accident Trusted*": {
+    title: "Non Accident Trusted",
+    desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
+  },
+  "Aggregator Marketplace": {
+    title: "Genuine KM",
+    desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
+  },
+};
+
+/**
+ * Normalizes a parsed `website_settings` blob for safe rendering:
+ *  - strips retired marketing phrases (`sanitizeSettings`),
+ *  - replaces demo contact details / logo placeholders,
+ *  - swaps ONLY exact known legacy demo/luxury copy for the canonical version.
+ * Genuine admin edits are left untouched, so CMS content survives refreshes.
+ */
+export function normalizeWebsiteSettings(parsed: any): any {
+  if (!parsed || typeof parsed !== "object") return parsed;
+  const next = sanitizeSettings(parsed);
+
+  // Demo contact details that must never render on the live site.
+  const isDemoAddress =
+    !next.supportAddress ||
+    next.supportAddress.includes("Los Angeles") ||
+    next.supportAddress.includes("Greenwood") ||
+    next.supportAddress.includes("722") ||
+    next.supportAddress.includes("Bhatar");
+  if (isDemoAddress) {
+    next.supportAddress =
+      "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
+    next.supportPhone = "+91 8866377722";
+    next.supportEmail = "support@1stcars.com";
+  }
+  if (
+    typeof next.buyCarsSubheadingText === "string" &&
+    next.buyCarsSubheadingText.includes("owned directly")
+  ) {
+    next.buyCarsSubheadingText = CANONICAL_MARKETING_COPY.buyCarsSubheadingText;
+  }
+  if (!next.logoUrl || next.logoUrl === "🏎️ 1stCars" || next.logoUrl === "⭐") {
+    next.logoUrl = "/logo.png";
+  }
+
+  // Swap only exact legacy demo/luxury values back to canonical copy.
+  for (const key of Object.keys(LEGACY_MARKETING_COPY)) {
+    const value = next[key];
+    if (typeof value === "string" && LEGACY_MARKETING_COPY[key].includes(value)) {
+      next[key] = CANONICAL_MARKETING_COPY[key];
+    }
+  }
+
+  // Legacy highlight pillar titles → canonical Title + Desc pair.
+  const highlightKeys: Array<[string, string]> = [
+    ["highlight1Title", "highlight1Desc"],
+    ["highlight2Title", "highlight2Desc"],
+    ["highlight3Title", "highlight3Desc"],
+  ];
+  for (const [titleKey, descKey] of highlightKeys) {
+    const legacy = LEGACY_HIGHLIGHT_COPY[next[titleKey]];
+    if (legacy) {
+      next[titleKey] = legacy.title;
+      if (typeof next[descKey] === "string") next[descKey] = legacy.desc;
+    }
+  }
+
+  return next;
 }

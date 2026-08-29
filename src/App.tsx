@@ -2,7 +2,8 @@ import * as React from "react";
 import { toast } from "@/src/lib/toast";
 import { Navbar } from "@/src/components/layout/Navbar";
 import { CarCard } from "@/src/components/CarCard";
-import { cn, sanitizeSettings } from "@/src/lib/utils";
+import { cn } from "@/src/lib/utils";
+import { normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
 import { Footer } from "@/src/components/layout/Footer";
 import { WhatsAppFloatingButton } from "@/src/components/WhatsAppFloatingButton";
 import { Button } from "@/src/components/ui/Button";
@@ -340,60 +341,11 @@ export default function App() {
 
   const loadSettingsAndCMSData = React.useCallback(async () => {
     if (typeof window !== "undefined") {
-      // Normalize demo placeholders that must never render on the live site.
+      // Normalize demo placeholders / legacy demo copy. Genuine AdminCMS edits
+      // are preserved (only exact legacy/demo values are swapped for canonical
+      // copy), so CMS-driven text now survives refreshes.
       const sanitize = (parsed: any) => {
-        // Strip retired marketing phrases from stored CMS copy
-        // (e.g. "standard buyback guarantee") so they never render.
-        parsed = sanitizeSettings(parsed);
-        const isDemoAddress = !parsed.supportAddress || parsed.supportAddress.includes("Los Angeles") || parsed.supportAddress.includes("Greenwood") || parsed.supportAddress.includes("722") || parsed.supportAddress.includes("Bhatar");
-        if (isDemoAddress) {
-          parsed.supportAddress = "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India";
-          parsed.supportPhone = "+91 8866377722";
-          parsed.supportEmail = "support@1stcars.com";
-        }
-        if (!parsed.logoUrl || parsed.logoUrl === "🏎️ 1stCars" || parsed.logoUrl === "⭐") {
-          parsed.logoUrl = "/logo.png";
-        }
-        // Restore canonical homepage copy. These exact strings are demo/admin
-        // defaults that were written to the settings row by older saves or the
-        // legacy footer migration rule; they must never render on the site.
-        const canonicalCopy: Record<string, string> = {
-    heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
-          highlight1Title: "Single Owned",
-          highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
-          highlight2Title: "Non Accident Trusted",
-          highlight2Desc: "Zero structural or chassis frame damages. Vetted strictly by paint-depth laser diagnostics.",
-          highlight3Title: "Genuine KM",
-          highlight3Desc: "Mileage certified 100% authentic through advanced ECU sweeps and historical service logs.",
-        };
-        const nonCanonical: Record<string, string> = {
-          heroSubtitle: "Inspired by rigorous standards, reimagined for ultimate convenience.",
-          highlight1Title: "120-Point Inspection",
-          highlight2Title: "Single Owned, Non Accident Trusted*",
-          highlight3Title: "Aggregator Marketplace",
-        };
-        for (const key of Object.keys(nonCanonical)) {
-          if (parsed[key] === nonCanonical[key]) {
-            parsed[key] = canonicalCopy[key];
-            const descKey = key.replace("Title", "Desc");
-            if (canonicalCopy[descKey]) parsed[descKey] = canonicalCopy[descKey];
-          }
-        }
-        // Lock the hero heading and subtitle to the canonical copy regardless
-        // of stored DB/CMS values.
-        parsed.heroTitle = "Certified Cars";
-        parsed.heroSubtitle = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
-        // Force canonical marketing copy so legacy stored values can never
-        // re-introduce the "luxury" wording on the live site.
-        parsed.footerText = "© 2026 1stCars Marketplace. All rights reserved.";
-        parsed.brandSlogan = "The Premium Pre-Owned Hub";
-        parsed.brandDescription = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
-        parsed.seoTitle = "1stCars - Certified Car Marketplace";
-        parsed.seoDescription = "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.";
-        parsed.certifiedSubheadingText = "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.";
-        parsed.testimonialSubheadingText = "We have completed over 280+ deliveries. Read reviews from verified car owners.";
-        parsed.ctaSubheadingText = "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.";
-        return parsed;
+        return normalizeWebsiteSettings(parsed);
       };
       const apply = (parsed: any) => {
         setWebsiteSettings(prev => ({ ...prev, ...parsed }));
