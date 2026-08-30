@@ -1235,14 +1235,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
-                    { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "1 Brand" },
-                    { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "2 Model" },
-                    { step: 3, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "3 Variant" },
-                    { step: 4, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "4 Year" },
-                    { step: 5, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "5 Fuel" },
-                    { step: 6, label: selectedRTO ? `✔ ${selectedRTO}` : "6 RTO" },
-                    { step: 7, label: selectedBrand && selectedModel && selectedRTO && selectedKMs ? `✔ KMs` : "7 KMs" },
-                    { step: 8, label: "8 Verify" }
+                    { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "Brand" },
+                    { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "Model" },
+                    { step: 3, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "Variant" },
+                    { step: 4, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
+                    { step: 5, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "Fuel" },
+                    { step: 6, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
+                    { step: 7, label: selectedBrand && selectedModel && selectedRTO && selectedKMs ? `✔ KMs` : "KMs" },
+                    { step: 8, label: "Verify" }
                   ].map((item) => {
                     const isCompleted = wizardStep > item.step;
                     const isActive = wizardStep === item.step;
