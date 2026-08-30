@@ -80,6 +80,45 @@ function hasTrackingConsent(): boolean {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Google Consent Mode v2
+//
+// GA4 is opt-out (tracking ON by default), so we explicitly signal "granted"
+// to gtag.js — both as the boot-time default (in initGA4) and again on every
+// explicit consent choice (src/lib/consent.ts). Consent Mode is the standard
+// way gtag.js knows it is allowed to transmit; without it the tag manager has
+// no deliberate consent signal, which is exactly the silent failure mode that
+// showed queued dataLayer commands but zero network collection requests.
+// ---------------------------------------------------------------------------
+
+type ConsentPurpose =
+  | "ad_storage"
+  | "ad_user_data"
+  | "ad_personalization"
+  | "analytics_storage";
+
+// Push the visitor's current choice to gtag.js via the official Consent Mode
+// "update" command. Safe to call before gtag.js has loaded — the command is
+// queued in the dataLayer and replayed when the loader boots. When consent is
+// revoked, gtag.js stops sending hits AND drops its gcs consent cookie.
+export function updateConsent(granted: boolean): void {
+  if (typeof window === "undefined") return;
+  window.dataLayer = window.dataLayer || [];
+  if (typeof window.gtag !== "function") {
+    window.gtag = function (...args: unknown[]) {
+      (window.dataLayer as unknown[]).push(args);
+    };
+  }
+  const state: "granted" | "denied" = granted ? "granted" : "denied";
+  const purposes: Record<ConsentPurpose, "granted" | "denied"> = {
+    ad_storage: state,
+    ad_user_data: state,
+    ad_personalization: state,
+    analytics_storage: state
+  };
+  window.gtag("consent", "update", purposes);
+  debugLog(`consent ${state}`);
+}
 // Inject the gtag.js loader exactly once and configure GA4. Reuses an existing
 // window.gtag if one is already present (no duplicate initialization). Safe to
 // call repeatedly — no-ops when no valid Measurement ID is configured OR when
@@ -106,6 +145,18 @@ export function initGA4(): void {
     script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
     document.head.appendChild(script);
   }
+
+  // Google Consent Mode v2: declare the opt-out default as an explicit
+  // "granted" BEFORE the tag boots so the very first page_view it sends is
+  // allowed. wait_for_update keeps the hit queued for up to 500ms so a "Turn
+  // Off" click at boot (updateConsent(false)) still prevents transmission.
+  window.gtag("consent", "default", {
+    ad_storage: "granted",
+    ad_user_data: "granted",
+    ad_personalization: "granted",
+    analytics_storage: "granted",
+    wait_for_update: 500
+  });
 
   // send_page_view: false → we fire page_view ourselves per SPA route so the
   // initial load and every pushState navigation produce exactly one page_view.

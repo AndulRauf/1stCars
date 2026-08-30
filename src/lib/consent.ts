@@ -1,4 +1,4 @@
-import { initGA4 } from "@/src/lib/analytics";
+import { initGA4, updateConsent } from "@/src/lib/analytics";
 import { initMetaPixel } from "@/src/lib/metaPixel";
 
 // Analytics/tracking consent (DPDP-aligned, opt-out model).
@@ -22,6 +22,9 @@ export function getConsentStatus(): ConsentStatus {
 export function setConsentStatus(status: "granted" | "denied"): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(CONSENT_KEY, status);
+  // Mirror the stored choice into Google Consent Mode v2 so gtag.js transmits
+  // only while granted (and drops its gcs consent cookie when revoked).
+  updateConsent(status === "granted");
   if (status === "granted") {
     initAnalyticsAfterConsent();
   }
