@@ -3,7 +3,7 @@ import {
   Heart, Calendar, CreditCard, Clock, ShieldCheck, 
   Trash2, ArrowRight, DollarSign, Hammer, 
 Upload, Check, Pencil, Eye, X,
-  RefreshCw, ClipboardList, Car, Bell, Gavel,
+  RefreshCw, ClipboardList, Car, Gavel,
 LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock,
   PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
@@ -18,6 +18,7 @@ import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { auctionService, AuctionActor } from "@/src/lib/auctions";
 import { AdminCMS } from "./AdminCMS";
+import { LiveSystemAlertsHub } from "./LiveSystemAlertsHub";
 import { DealerAuctions } from "./auctions/DealerAuctions";
 import { SellerAuctions } from "./auctions/SellerAuctions";
 import { toast } from "@/src/lib/toast";
@@ -517,63 +518,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         {/* LOADING STATE */}
         <div className="relative">
           <div className="space-y-5">
-            {/* Live System Alerts Feed (Rule 1-6 Alerts Hub) */}
+            {/* Live System Alerts Hub — redesigned: compact feed + full-screen command center */}
             {userNotifs.length > 0 && (
-              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <Bell className="h-5 w-5 text-[#2E7D32] animate-bounce" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center animate-pulse">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-black text-slate-800 text-sm uppercase tracking-wider">Live System Alerts Hub</h3>
-                  </div>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={markAllRead} 
-                      className="text-[10px] font-bold text-[#2E7D32] hover:underline uppercase tracking-wider bg-transparent border-0 cursor-pointer"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-72 overflow-y-auto pr-2">
-                  {userNotifs.map((notif) => (
-                    <div 
-                      key={notif.id} 
-                      className={`border rounded-2xl p-4 text-xs font-semibold flex flex-col justify-between gap-3 transition-all text-left ${
-                        notif.is_read 
-                          ? "bg-[#FAF9F6] border-slate-100 text-slate-500 opacity-85" 
-                          : "bg-[#2E7D32]/5 border-[#2E7D32]/10 text-slate-800 shadow-xs"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex justify-between items-start gap-2">
-                          <span className="font-black tracking-tight text-slate-900 text-xs">{notif.title}</span>
-                          {!notif.is_read && (
-                            <span className="bg-rose-500 w-1.5 h-1.5 rounded-full shrink-0 mt-1" />
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-600 mt-1 font-medium leading-relaxed">{notif.message}</p>
-                        <p className="text-[9px] text-slate-400 font-mono mt-2">{new Date(notif.created_at).toLocaleTimeString()}</p>
-                      </div>
-                      {!notif.is_read && (
-                        <button 
-                          onClick={() => markRead(notif.id)} 
-                          className="text-[10px] font-black text-left text-[#2E7D32] hover:underline uppercase tracking-wider bg-transparent border-0 cursor-pointer self-start"
-                        >
-                          Dismiss Alert
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <LiveSystemAlertsHub
+                notifications={userNotifs}
+                unreadCount={unreadCount}
+                onMarkRead={markRead}
+                onMarkAllRead={markAllRead}
+                roleName={currentUser.role}
+              />
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
