@@ -1344,9 +1344,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       </button>
                     )}
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs text-slate-400 font-bold">
-                      <div>Step 1 of 8</div>
-                    </div>
                   </div>
                 )}
 
