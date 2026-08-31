@@ -134,6 +134,24 @@ export function CarDetailsView({
   // Buy Now / Reserve checkout sheet state
   const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
 
+  // If the visitor just returned from Google OAuth (launched from the booking
+  // modal via "Sign in with Google"), re-open the Booking modal so the
+  // auto-filled name & email from their Google account are ready to submit.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open_booking") === "1") {
+      params.delete("open_booking");
+      const nextSearch = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
+      );
+      setBookingModalType("test_drive");
+      setIsBookingModalOpen(true);
+    }
+  }, []);
+
   React.useEffect(() => {
     if (!car) return;
     trackMetaEvent("ViewContent", {

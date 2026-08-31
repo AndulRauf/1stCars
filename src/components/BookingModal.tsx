@@ -11,6 +11,18 @@ import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 
+// Official multi-color Google "G" logo (lucide has no brand icons).
+function GoogleG({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.7 39.7 16.3 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.3C41.5 36.3 44 31.2 44 24c0-1.3-.1-2.6-.4-3.9z" />
+    </svg>
+  );
+}
+
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -54,6 +66,7 @@ export function BookingModal({
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [googleLoading, setGoogleLoading] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [submitError, setSubmitError] = React.useState("");
   const [leadRefId, setLeadRefId] = React.useState("");
@@ -70,6 +83,41 @@ export function BookingModal({
       setCity(selectedCity || car?.cities?.[0] || car?.location || "Surat");
     }
   }, [isOpen, initialType, car, selectedCity]);
+
+  // Auto-fill the buyer's Full Name & Email from an active Google / Supabase
+  // session so the user never has to type them. Covers both cases:
+  //  1. Already signed in (session restored via getSession on open).
+  //  2. Just returned from the Google OAuth redirect (SIGNED_IN fires and the
+  //     fields update live while the modal re-opens).
+  React.useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
+    const applySessionUser = (sessionUser: any) => {
+      if (!sessionUser?.email || cancelled) return;
+      const meta = sessionUser.user_metadata || {};
+      const metaName = meta.name || meta.full_name || meta.given_name;
+      const fallbackName = sessionUser.name || sessionUser.email.split("@")[0] || "";
+      const autoName = metaName || fallbackName;
+      // Only fill empty fields so hand-typed values are never overwritten.
+      setName((prev) => prev || autoName);
+      setEmail(sessionUser.email);
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data }: any) => applySessionUser(data?.session?.user))
+      .catch(() => {});
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+      applySessionUser(session?.user);
+    });
+
+    return () => {
+      cancelled = true;
+      sub?.subscription?.unsubscribe();
+    };
+  }, [isOpen]);
 
   // Countdown timer for OTP
   React.useEffect(() => {
@@ -122,6 +170,36 @@ export function BookingModal({
       toast.success("Mobile number verified successfully!");
     } else {
       toast.error("Invalid OTP code. Please try again or use auto-fill.");
+    }
+  };
+
+  // Sign in with Google so Full Name & Email are pulled from the Google account
+  // automatically. Uses the same Supabase OAuth redirect flow already used by
+  // AuthModal, but returns to the same car page and re-opens the booking modal.
+  const handleGoogleLogin = async () => {
+    setSubmitError("");
+    if (!isRealSupabase) {
+      toast.error("Google sign-in is available with the live database. You can continue by typing your details above.");
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      // Keep the buyer on this exact car page after Google redirects back and
+      // flag the return so CarDetailsView re-opens the booking modal with the
+      // auto-filled name & email ready to submit.
+      const url = new URL(window.location.href);
+      url.searchParams.set("open_booking", "1");
+      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: url.toString() },
+      });
+      if (oauthErr) {
+        setGoogleLoading(false);
+        toast.error(oauthErr.message || "Google sign-in failed. Is the Google provider enabled in Supabase Auth?");
+      }
+    } catch (err: any) {
+      setGoogleLoading(false);
+      toast.error(err?.message || "Google sign-in failed. Please try again.");
     }
   };
 
@@ -275,22 +353,31 @@ export function BookingModal({
 
       void (async () => {
         try {
-          const { error: authError } = await resolveAutoSignIn(
-            supabase,
-            userEmail,
-            autoPassword,
-            {
-              data: {
-                name: userName,
-                mobile: userMobile,
-                role: "Buyer",
-                city: userCity,
-              },
-            }
-          );
+          // If this email already owns the active session (e.g. the buyer just
+          // signed in with Google), skip the auto sign-up/sign-in below - the
+          // account is already authenticated on this device and the random
+          // fallback password would only fail.
+          const { data: currentSession } = await supabase.auth.getSession();
+          const activeEmail = currentSession?.session?.user?.email?.toLowerCase();
 
-          if (authError) {
-            console.warn("Auto sign in error during booking:", authError);
+          if (activeEmail !== userEmail) {
+            const { error: authError } = await resolveAutoSignIn(
+              supabase,
+              userEmail,
+              autoPassword,
+              {
+                data: {
+                  name: userName,
+                  mobile: userMobile,
+                  role: "Buyer",
+                  city: userCity,
+                },
+              }
+            );
+
+            if (authError) {
+              console.warn("Auto sign in error during booking:", authError);
+            }
           }
         } catch (authErr) {
           console.warn("Auto sign in error during booking:", authErr);
@@ -496,6 +583,24 @@ export function BookingModal({
               <span className="text-xs font-black text-[#2E7D32] uppercase tracking-wider">Book Test Drive</span>
             </div>
 
+
+            {/* Sign in with Google - pulls Full Name & Email from the account */}
+            <div className="space-y-2">
+              <Button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading || isSubmitting}
+                className="w-full bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-xs font-extrabold h-11 rounded-xl cursor-pointer shadow-sm flex items-center justify-center gap-2.5"
+              >
+                <GoogleG className="h-4 w-4 shrink-0" />
+                {googleLoading ? "Connecting to Google..." : "Sign in with Google & Auto-fill Details"}
+              </Button>
+              <div className="flex items-center gap-2">
+                <span className="h-px flex-1 bg-slate-200" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">or fill the form manually</span>
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+            </div>
 
             {/* Input 1: Buyer Full Name */}
             <div className="space-y-1">
