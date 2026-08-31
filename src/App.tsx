@@ -206,12 +206,7 @@ export default function App() {
         let city: string = user.user_metadata?.city || user.city || "Mumbai";
         let approvalState: { is_approved?: boolean; status?: string } | null = null;
         try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id, name, email, mobile, role, city, is_approved, status")
-            .eq("id", user.id)
-            .maybeSingle();
-          if (profile) {
+          const applyProfile = (profile: any) => {
             role = profile.role || role;
             name = profile.name || name;
             mobile = profile.mobile || mobile;
@@ -220,6 +215,24 @@ export default function App() {
               is_approved: profile.is_approved,
               status: profile.status
             };
+          };
+          const { data: profile, error: profileErr } = await supabase
+            .from("profiles")
+            .select("id, name, email, mobile, role, city, is_approved, status")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (profile) {
+            applyProfile(profile);
+          } else if (profileErr) {
+            // Older databases predate the is_approved / status columns
+            // (PostgREST 400 PGRST205). Retry with base columns so login still
+            // resolves the profile and only the approval gate stays unknown.
+            const { data: base } = await supabase
+              .from("profiles")
+              .select("id, name, email, mobile, role, city")
+              .eq("id", user.id)
+              .maybeSingle();
+            if (base) applyProfile(base);
           }
         } catch (e) {
           // Profile lookup is best-effort; fall back to token metadata.

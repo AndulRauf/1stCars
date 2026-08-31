@@ -730,6 +730,10 @@ ON CONFLICT (slug) DO NOTHING;
 -- Sellers need an approval gate; AdminCMS + AuthModal set this.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true NOT NULL;
 
+-- Dealer review status (pending_approval / Approved) that AuthModal + AdminCMS
+-- read and write on the profile; kept nullable for legacy rows (NULL = not flagged).
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS status TEXT;
+
 -- Phone-OTP signups create auth users with a `phone` but no `email`.
 -- The profile's email must be nullable (UNIQUE still allows multiple NULLs
 -- in Postgres) so the signup trigger doesn't fail for phone-only users.

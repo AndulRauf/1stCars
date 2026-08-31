@@ -32,7 +32,8 @@ wins its type — running them out of order silently changes the schema:
 4. auction_engine.sql
 5. sales_crm_phase1.sql
 6. seed_faq.sql (optional)
-7. refine_supabase_v2.sql   <- consolidated safe refinements (run last)
+7. refine_supabase_v2.sql   <- consolidated safe refinements
+8. add_profiles_approval_columns.sql  <- quick-fix: profiles approval/status/verified columns
 ```
 
 Notably, `sales_notifications.assigned_to` is declared `TEXT` in `schema.sql`
@@ -128,3 +129,7 @@ seeded in the background (once per browser per user).
   `localStorage.setItem("1stcars_use_mock_db", "true")`.
 - Never expose the **service_role** key in the frontend — only the **anon** key
   belongs in `VITE_` variables.
+- **`400 PGRST205 "Could not find the 'status'/'is_approved' column of 'profiles'"`**
+  in the Network tab = the live database predates the profile approval columns.
+  Fix: run [`public/add_profiles_approval_columns.sql`](public/add_profiles_approval_columns.sql)
+  in the Supabase SQL Editor (or simply re-run `public/schema.sql`).

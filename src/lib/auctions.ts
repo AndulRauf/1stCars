@@ -331,8 +331,14 @@ async function ensureCarForInspection(inspectionId: string, startingBid: number)
 }
 
 async function verifiedDealerIds(): Promise<string[]> {
-  const { data } = await (supabase as any).from("profiles").select("id, role, is_verified, is_approved");
-  return (data || [])
+  // Older databases predate profiles.is_verified / is_approved (PostgREST 400
+  // PGRST205), so retry with the base columns when the full projection fails.
+  let rows: any[] | null = null;
+  ({ data: rows } = await (supabase as any).from("profiles").select("id, role, is_verified, is_approved"));
+  if (!rows) {
+    ({ data: rows } = await (supabase as any).from("profiles").select("id, role"));
+  }
+  return (rows || [])
     .filter((p: any) => p.role === "Dealer" && p.is_verified !== false && p.is_approved !== false)
     .map((p: any) => p.id);
 }
