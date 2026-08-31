@@ -711,7 +711,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [address, setAddress] = React.useState("");
   const [preferredDate, setPreferredDate] = React.useState("");
   const [preferredTime, setPreferredTime] = React.useState("10:00 AM - 12:00 PM");
-  const [customRegSuffix, setCustomRegSuffix] = React.useState("");
 
   // OTP Verification States
   const [otpSent, setOtpSent] = React.useState(false);
@@ -1003,10 +1002,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
-    // Construct registration number with custom suffix or a clear "to be
-    // recorded on-site" placeholder — never a fabricated plate.
-    const finalRegSuffix = customRegSuffix.trim() ? customRegSuffix.toUpperCase().replace(/[^A-Z0-9-]/g, "") : "XX-0000";
-    const computedReg = `${selectedRTO}-${finalRegSuffix}`;
+    // Registration number is auto-set as a clear "to be recorded on-site"
+    // placeholder — never a fabricated plate. The inspector records the real
+    // plate during the doorstep visit.
+    const computedReg = `${selectedRTO}-XX-0000`;
 
     // Smart default fallbacks for removed fields
     const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
@@ -2011,24 +2010,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
-                      {/* Registration Number Suffix (optional) — replaces the old fake plate */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">REGISTRATION SUFFIX (OPTIONAL)</label>
-                        <div className="relative">
-                          <Tag className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder={`e.g. AB-1234 — auto-set as ${selectedRTO}-XX-0000 until the inspector records the real plate`}
-                            type="text"
-                            maxLength={12}
-                            value={customRegSuffix}
-                            onChange={(e) => setCustomRegSuffix(e.target.value.toUpperCase())}
-                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                        <p className="text-[10px] text-slate-400 font-semibold">
-                          Leave blank if you don't know it — the inspector records the actual number at your doorstep.
-                        </p>
-                      </div>
                     </div>
 
                     <div className="pt-4">
