@@ -4,7 +4,7 @@ import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { toast } from "@/src/lib/toast";
-import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
@@ -195,11 +195,11 @@ export function BookingModal({
       });
       if (oauthErr) {
         setGoogleLoading(false);
-        toast.error(oauthErr.message || "Google sign-in failed. Is the Google provider enabled in Supabase Auth?");
+        toast.error(friendlyOAuthErrorMessage(oauthErr, "Google sign-in failed. Please try again."));
       }
     } catch (err: any) {
       setGoogleLoading(false);
-      toast.error(err?.message || "Google sign-in failed. Please try again.");
+      toast.error(friendlyOAuthErrorMessage(err, "Google sign-in failed. Please try again."));
     }
   };
 

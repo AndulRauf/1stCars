@@ -22,6 +22,18 @@ export const isMissingSupabaseEnv = !supabaseUrl || !supabaseAnonKey;
 
 export const isRealSupabase = !isMissingSupabaseEnv && !useMockOverride;
 
+// Google OAuth errors from Supabase are sometimes opaque (e.g. SQLSTATE-level
+// JSON like "Unsupported provider: provider is not enabled"). Map the known
+// "Google provider not enabled in Auth settings" failure to an actionable,
+// customer-friendly message instead of showing the raw error text.
+export function friendlyOAuthErrorMessage(err: any, fallback: string): string {
+  const raw = String(err?.message || "").toLowerCase();
+  if (raw.includes("unsupported provider") || raw.includes("provider is not enabled")) {
+    return "Google sign-in hasn't been turned on yet. Please type your details in the form below — or contact us and we'll enable it right away.";
+  }
+  return err?.message || fallback;
+}
+
 // True when a production build would otherwise fall back to the mock database.
 export const isProdMockBlocked = isProdBuild && isMissingSupabaseEnv;
 

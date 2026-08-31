@@ -3,7 +3,7 @@ import { X, ShieldCheck, Mail, User, Phone, MapPin, Database, Check, Award, Uplo
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
-import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 
@@ -257,10 +257,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         }
       });
       if (oauthErr) {
-        setError(oauthErr.message || "Google sign-in failed. Is the Google provider enabled in Supabase Auth?");
+        setError(friendlyOAuthErrorMessage(oauthErr, "Google sign-in failed. Please try again."));
       }
     } catch (err: any) {
-      setError(err?.message || "Google sign-in failed. Please try again.");
+      setError(friendlyOAuthErrorMessage(err, "Google sign-in failed. Please try again."));
     } finally {
       setLoading(false);
     }
