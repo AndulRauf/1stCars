@@ -138,6 +138,9 @@ export function initGA4(): void {
     };
   }
 
+  // NOTE: index.html already ships the standard Google tag (gtag.js) with
+  // id="gtag-js". If it is ever removed there, this fallback re-adds the loader
+  // here; the id guard keeps the tag from ever being injected twice.
   if (!document.getElementById("gtag-js")) {
     const script = document.createElement("script");
     script.id = "gtag-js";
