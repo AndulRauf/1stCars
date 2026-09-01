@@ -1774,6 +1774,25 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         if (error) throw error;
       } else if (currentListModule === "users") {
         await supabase.from("profiles").delete().eq("id", id);
+      } else if (currentListModule === "dealers" || currentListModule === "inspectors" || currentListModule === "sales") {
+        // These modules merge real Supabase profile rows (role = Dealer /
+        // Inspector / Sales Associate) back into the admin list on every reload,
+        // so a local-only delete would be resurrected immediately. Delete the
+        // backing profile row too (dealers / dealer_applications cascade off it).
+        const localKey = currentListModule === "sales" ? "sales_associates" : currentListModule;
+        const peopleList = getStoredMockList(localKey);
+        const localNext = peopleList.filter((item: any) => item.id !== id);
+        localStorage.setItem(`1stcars_cms_${localKey}`, JSON.stringify(localNext));
+        if (currentListModule === "dealers") setDealers(localNext);
+        if (currentListModule === "inspectors") setInspectors(localNext);
+        if (currentListModule === "sales") setSalesAssociates(localNext);
+        // Best-effort cleanup of optional sibling rows (each guarded so a missing
+        // table or RLS gap on one never blocks the profile delete that follows).
+        if (currentListModule === "dealers") {
+          try { await supabase.from("dealer_applications").delete().eq("user_id", id); } catch (e) { console.warn("AdminCMS: dealer_applications cleanup skipped:", e); }
+          try { await supabase.from("dealers").delete().eq("id", id); } catch (e) { console.warn("AdminCMS: dealers cleanup skipped:", e); }
+        }
+        await supabase.from("profiles").delete().eq("id", id);
       } else if (currentListModule === "inspections") {
         await supabase.from("inspections").delete().eq("id", id);
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
