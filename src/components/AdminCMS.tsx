@@ -1792,7 +1792,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           try { await supabase.from("dealer_applications").delete().eq("user_id", id); } catch (e) { console.warn("AdminCMS: dealer_applications cleanup skipped:", e); }
           try { await supabase.from("dealers").delete().eq("id", id); } catch (e) { console.warn("AdminCMS: dealers cleanup skipped:", e); }
         }
-        await supabase.from("profiles").delete().eq("id", id);
+        const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", id);
+        if (profileDeleteError) throw profileDeleteError;
       } else if (currentListModule === "inspections") {
         await supabase.from("inspections").delete().eq("id", id);
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
@@ -1867,9 +1868,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       }, 0);
       loadCMSData();
       if (onReloadAllData) onReloadAllData();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting from CMS:", err);
-      toast.error("Delete failed. The record could not be removed from the database — check the Supabase RLS policy for this table, then try again.");
+      const detail = err?.message || err?.details || "";
+      toast.error(
+        `Delete failed. The record could not be removed from the database — check the Supabase RLS policy for this table, then try again.${detail ? ` (${detail})` : ""}`
+      );
     } finally {
       setIsLoading(false);
     }
