@@ -93,11 +93,55 @@ export function trackMetaPageView(): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Payload sanitizer — the single defense layer between any caller and the
+// Meta Pixel. Meta rejects events whose `currency` is not a valid 3-letter
+// ISO 4217 code (1stCars ALWAYS transacts in "INR") and whose `value` is not
+// a plain number. Car data (prices) can arrive from Supabase, the Admin CMS
+// localStorage snapshot, or APIs, so nothing dynamic is trusted: currency is
+// forced to "INR" and value is coerced to a finite number (a formatted string
+// like "₹5,00,000" becomes 500000; an unparseable value is dropped).
+// ---------------------------------------------------------------------------
+
+function coerceNumericValue(raw: unknown): number | null {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  if (typeof raw === "string") {
+    const parsed = Number(raw.replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function sanitizeMetaPayload(data?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!data || typeof data !== "object") return data;
+  const next: Record<string, unknown> = { ...data };
+  const hasCurrency = "currency" in next;
+  const hasValue = "value" in next;
+
+  if (hasValue) {
+    const numeric = coerceNumericValue(next.value);
+    if (numeric === null) {
+      // A non-numeric value can never reach Meta; drop it (and its orphaned
+      // currency) rather than send a string like "₹5,00,000".
+      delete next.value;
+      if (hasCurrency) delete next.currency;
+    } else {
+      next.value = numeric;
+    }
+  }
+
+  // Any event that carries (or carried) a value/currency must always declare
+  // the valid INR code — never undefined, null, "", "₹", "Rs", "$" or others.
+  if (hasCurrency || "value" in next) next.currency = "INR";
+
+  return next;
+}
+
 export function trackMetaEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
   if (trackingOptedOut()) return;
   try {
-    window.fbq("track", event, data);
+    window.fbq("track", event, sanitizeMetaPayload(data));
     // @ts-ignore
     if (import.meta.env?.DEV) console.log(`[Meta] ${event} fired`, data ?? "");
   } catch (e) {
@@ -109,7 +153,7 @@ export function trackMetaCustomEvent(event: string, data?: Record<string, unknow
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
   if (trackingOptedOut()) return;
   try {
-    window.fbq("trackCustom", event, data);
+    window.fbq("trackCustom", event, sanitizeMetaPayload(data));
     // @ts-ignore
     if (import.meta.env?.DEV) console.log(`[Meta] custom event fired: ${event}`, data ?? "");
   } catch (e) {
