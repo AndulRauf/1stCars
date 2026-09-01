@@ -31,6 +31,14 @@ export function friendlyOAuthErrorMessage(err: any, fallback: string): string {
   if (raw.includes("unsupported provider") || raw.includes("provider is not enabled")) {
     return "Google sign-in hasn't been turned on yet. Please type your details in the form below — or contact us and we'll enable it right away.";
   }
+  // Supabase rejects any redirectTo that is not on the Auth → URL
+  // Configuration → Redirect URLs allowlist. This is the most common reason
+  // Google sign-in works in one flow (e.g. the AuthModal, which redirects to
+  // /role_dashboards) but fails in another (the booking modal, which
+  // redirects back to the car-details URL WITH a query string).
+  if (raw.includes("redirect") && (raw.includes("not allowed") || raw.includes("invalid") || raw.includes("not on the list"))) {
+    return "Google sign-in redirect isn't allowlisted yet. Add this exact page URL (and a /** wildcard version of the domain) under Supabase → Authentication → URL Configuration → Redirect URLs.";
+  }
   return err?.message || fallback;
 }
 
