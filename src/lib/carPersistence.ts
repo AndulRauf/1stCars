@@ -57,6 +57,33 @@ export function buildCarRecord(record: any): any {
   return { ...core, payload: rest };
 }
 
+// Merge a Supabase `cars` row with its JSONB `payload` column into the flat
+// record shape the UI renders/edits. Physical columns deliberately win over
+// their (possibly stale) payload copies — e.g. an approved car keeps
+// payload.status "pending" while the column says "available" — EXCEPT for the
+// image fields: buildCarRecord stores photos ONLY inside payload (the
+// uploadCarImages output), so a live database that ALSO has physical
+// image_url/images columns (added manually for the OG-preview API) carries
+// NULL/placeholder there. Letting that NULL shadow the payload erased every
+// photo from the public car cards.
+export function flattenCarRow(row: any): any {
+  const payload = (row && row.payload) || {};
+  const merged: any = { ...payload, ...row };
+  const hasUsableImages = (list: any) => Array.isArray(list) && list.length > 0;
+  const isRealImage = (v: any) =>
+    typeof v === "string" && v !== "🚙" && v !== "⭐" &&
+    (v.startsWith("http") || v.startsWith("/") || v.startsWith("data:"));
+  // Photos: only trust the row copy when it actually holds images; otherwise
+  // fall back to the payload copy so uploaded photos always survive.
+  if (!hasUsableImages(merged.images) && hasUsableImages(payload.images)) {
+    merged.images = payload.images;
+  }
+  if (!isRealImage(merged.image_url) && isRealImage(payload.image_url)) {
+    merged.image_url = payload.image_url;
+  }
+  return merged;
+}
+
 export function errorMessage(err: any): string {
   if (!err) return "";
   if (typeof err === "string") return err;

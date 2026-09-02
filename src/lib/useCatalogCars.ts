@@ -1,5 +1,6 @@
 import * as React from "react";
 import { supabase } from "@/src/lib/supabaseClient";
+import { flattenCarRow } from "@/src/lib/carPersistence";
 import { Car } from "@/src/types";
 
 // Cache key for the DB catalog so the merged list paints instantly on next
@@ -16,9 +17,12 @@ const isRealUrl = (value?: string | null) =>
 // defaults for every field the UI relies on (emi, mileage, owners, images, ...).
 function normalizeDbCar(row: any): Car {
   // Real-mode rows store the rich record (images, price_breakup, inspection,
-  // ...) in a JSONB "payload" column; merge it under the row so every field the
-  // UI expects is available no matter which mode produced the row.
-  const data = { ...(row.payload || {}), ...row };
+  // ...) in a JSONB "payload" column; flatten it under the row so every field
+  // the UI expects is available no matter which mode produced the row.
+  // flattenCarRow keeps physical columns authoritative EXCEPT for photos,
+  // which live only in payload — a NULL physical image_url/images column must
+  // not shadow them (that erased all car card photos).
+  const data = flattenCarRow(row);
   const price = Number(data.price) || 0;
   const kmDriven = Number(data.km_driven ?? data.mileage) || 0;
   const imageUrl = isRealUrl(data.image_url) ? data.image_url : undefined;

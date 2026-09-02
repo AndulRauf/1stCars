@@ -14,7 +14,7 @@ import {
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { deleteRecordFromSupabase, readDeletedTestimonialNames } from "@/src/lib/cmsSync";
 import { isHiddenPage } from "@/src/lib/utils";
-import { saveCar, deleteCar, buildCarRecord, errorMessage } from "@/src/lib/carPersistence";
+import { saveCar, deleteCar, buildCarRecord, flattenCarRow, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -1201,7 +1201,11 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       // keeps payload.status "pending" while the column says "available" — and
       // writing that stale copy back trips the DB status-guard trigger with
       // "Invalid vehicle status transition", silently failing featured/any edits.
-      initialData = { ...(item.payload || {}), ...item };
+      //
+      // flattenCarRow is payload-wins ONLY for the image fields, so editing a
+      // car whose photos live in payload (all CMS-created cars) never wipes
+      // them just because the physical image_url/images columns are NULL.
+      initialData = flattenCarRow(item);
       if (!Array.isArray(initialData.images)) {
         initialData.images = initialData.image_url && initialData.image_url !== "🚙" 
           ? [initialData.image_url] 

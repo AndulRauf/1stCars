@@ -23,8 +23,12 @@ export default async function handler(req: any, res: any) {
 
   if (carId) {
     try {
+      // select=* keeps this resilient to schema drift: photos live in the
+      // JSONB `payload` column (see buildCarRecord), while some live databases
+      // ALSO carry physical image_url/images columns that stay NULL. Reading
+      // the whole row lets us resolve the best photo from either location.
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/cars?select=id,title,brand,model,year,price,city,image_url,images&id=eq.${carId}&limit=1`,
+        `${supabaseUrl}/rest/v1/cars?select=*&id=eq.${carId}&limit=1`,
         { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
       );
       if (response.ok) {
@@ -37,14 +41,23 @@ export default async function handler(req: any, res: any) {
           description = `${carName}${priceText} — 1stCars Certified. 120-point inspected, transparent history, doorstep delivery across Gujarat.`;
           redirect = `/buy-cars?carId=${encodeURIComponent(carId)}`;
 
-          const images: any[] = Array.isArray(car.images) ? car.images : [];
+          // Resolve the photo exactly like flattenCarRow does on the client:
+          // the row's copies win only when they actually hold usable values,
+          // otherwise the payload copies (where buildCarRecord stores photos).
+          const payloadRecord = (car && typeof car === "object" && car.payload) || {};
+          const rowImages = Array.isArray(car.images) ? car.images : null;
+          const payloadImages = Array.isArray(payloadRecord.images) ? payloadRecord.images : null;
+          const images: any[] = (rowImages && rowImages.length > 0 ? rowImages : payloadImages) || [];
+          const pickUrl = (v: any) =>
+            typeof v === "string" && v !== "🚙" && v !== "⭐" ? v : "";
+          const rawImageUrl = pickUrl(car.image_url) || pickUrl(payloadRecord.image_url);
           const candidate =
             images.find((u: any) => typeof u === "string" && u.startsWith("http")) ||
-            (typeof car.image_url === "string" && car.image_url.startsWith("http") ? car.image_url : null);
+            (rawImageUrl.startsWith("http") ? rawImageUrl : null);
           if (candidate) {
             image = candidate;
-          } else if (typeof car.image_url === "string" && car.image_url.startsWith("/")) {
-            image = `${origin}${car.image_url}`;
+          } else if (rawImageUrl.startsWith("/")) {
+            image = `${origin}${rawImageUrl}`;
           }
         }
       }

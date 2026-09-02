@@ -26,7 +26,7 @@ import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { Inspection120FormModal } from "./Inspection120FormModal";
 import { Full120PointReport } from "@/src/data/inspection120Data";
 import { CreateCarWizard } from "./CreateCarWizard";
-import { saveCar, errorMessage } from "@/src/lib/carPersistence";
+import { saveCar, errorMessage, flattenCarRow } from "@/src/lib/carPersistence";
 import { brandData as defaultBrandData, BRAND_LOGOS as defaultBrandLogos } from "./SellCarView";
 import {
   SellCatalog, catalogFromLegacy, mergeCatalog, getStoredSellCatalog, DEFAULT_POPULAR_SELL_BRANDS
@@ -367,7 +367,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   }, [carRows, currentUser.id]);
 
   const openEditOwnCar = (car: any) => {
-    const data = { ...(car.payload || {}), ...car };
+    // Payload-aware flatten so photos in payload survive the edit round-trip.
+    const data = flattenCarRow(car);
     setEditingOwnCar(car);
     setOwnCarDraft({
       variant: data.variant || "",
@@ -399,7 +400,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
     setIsSavingOwnCar(true);
     try {
-      const current = { ...(editingOwnCar.payload || {}), ...editingOwnCar };
+      // Payload-aware flatten: keeps payload photos/inspection/etc. intact so
+      // the partial draft below never erases them on save.
+      const current = flattenCarRow(editingOwnCar);
       const mergedRecord = {
         ...current,
         ...draft,
