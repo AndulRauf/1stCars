@@ -156,15 +156,20 @@ export function CarCard({
         onTouchEnd={handleTouchEnd}
       >
         {/* Dynamic Angle Gradient Background */}
+        {/* Photo mode uses "contain" so the ENTIRE car is always visible (no
+            cropping); the letterboxed area gets a clean studio backdrop. */}
         <div 
           className={cn(
             "w-full h-full flex flex-col justify-between p-2.5 sm:p-5 text-white transition-all duration-500",
-            !angles[activeImageIndex].url && angles[activeImageIndex].bgClass
+            angles[activeImageIndex].url
+              ? "bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200"
+              : angles[activeImageIndex].bgClass
           )}
           style={angles[activeImageIndex].url ? {
             backgroundImage: `url(${angles[activeImageIndex].url})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center"
+            backgroundSize: "contain",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
           } : undefined}
         >
           {/* Top Bar inside Gallery */}

@@ -1061,7 +1061,7 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 text-left">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="rounded-3xl bg-white border border-slate-100 overflow-hidden animate-pulse">
-                  <div className="h-28 sm:h-44 bg-slate-200" />
+                  <div className="h-28 sm:h-auto sm:aspect-[4/3] bg-slate-200" />
                   <div className="p-4 space-y-2.5">
                     <div className="h-3.5 bg-slate-200 rounded w-3/4" />
                     <div className="h-3 bg-slate-200 rounded w-1/2" />

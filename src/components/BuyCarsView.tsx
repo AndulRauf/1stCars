@@ -716,7 +716,7 @@ export function BuyCarsView({
                     {/* Skeleton Image Gallery */}
                     <div className={cn(
                       "bg-slate-200/60 relative",
-                      isListView ? "w-full h-28 md:h-auto md:w-2/5 md:min-h-[160px]" : "w-full h-28 sm:h-48 md:h-52"
+                      isListView ? "w-full h-28 md:h-auto md:w-2/5 md:min-h-[160px]" : "w-full h-28 sm:h-auto sm:aspect-[4/3]"
                     )}>
                       <div className="absolute top-3 left-3 w-20 h-5 bg-slate-300 rounded-full" />
                       <div className="absolute top-3 right-3 w-7 h-7 bg-slate-300 rounded-full" />
