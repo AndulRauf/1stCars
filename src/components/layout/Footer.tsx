@@ -105,7 +105,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
 
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 md:pb-12">
           
           {/* Brand Col */}
           <div className="lg:col-span-2 flex flex-col space-y-5">
@@ -188,7 +188,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2E7D32]/10 pt-8 mt-12 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
+        <div className="border-t border-[#2E7D32]/10 pt-8 mt-8 md:mt-12 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
           <p>{settings.footerText.includes("©") ? settings.footerText : `© ${currentYear} ${settings.footerText}`}</p>
         </div>
 
