@@ -127,11 +127,14 @@ export function CarCard({
   const stats = [
     { label: "Year", value: car.year, icon: Calendar },
     { label: "Fuel", value: car.fuel, icon: Fuel },
-    { label: "Transmission", value: car.transmission, icon: Award },
     { label: "KM Driven", value: `${car.mileage.toLocaleString("en-IN")} km`, icon: Gauge },
+    { label: "Transmission", value: car.transmission, icon: Award },
     { label: "Variant", value: car.variant || "Standard", icon: SlidersHorizontal },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
+  // Top-3 key facts rendered as one compact chip row on mobile (the full
+  // 6-stat grid is desktop-only) so ~3 cards fit on a single phone screen.
+  const mobileStats = stats.slice(0, 3);
 
   return (
     <div
@@ -145,7 +148,9 @@ export function CarCard({
       <div
         className={cn(
           "relative overflow-hidden flex-shrink-0 select-none",
-          isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full aspect-[4/3]"
+          isListView
+            ? "w-full h-28 md:h-auto md:w-2/5 md:min-h-[160px]"
+            : "w-full h-28 sm:h-auto sm:aspect-[4/3]"
         )}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -279,7 +284,7 @@ export function CarCard({
       </div>
 
       {/* Content Panel */}
-      <div className="flex-1 p-3.5 sm:p-5 flex flex-col justify-between">
+      <div className="flex-1 p-3 sm:p-5 flex flex-col justify-between">
         <div>
           {/* Header & Title */}
           <div className="flex items-start justify-between mb-1.5">
@@ -301,10 +306,10 @@ export function CarCard({
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 my-2 sm:my-3" />
+          <div className="hidden sm:block h-px bg-slate-100 my-3" />
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-y-2 gap-x-1 text-left my-2 sm:my-3">
+          {/* Stats Grid (desktop only — mobile uses the compact chip row below) */}
+          <div className="hidden sm:grid grid-cols-3 gap-y-2 gap-x-1 text-left my-3">
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
@@ -321,6 +326,20 @@ export function CarCard({
                     </span>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+
+          {/* Compact key-facts chip row (mobile only) — keeps the card short
+              enough that ~3 cards fit on one phone screen */}
+          <div className="sm:hidden flex flex-wrap items-center gap-x-3 gap-y-1 text-left my-1.5">
+            {mobileStats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <span key={stat.label} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                  <Icon className="h-3 w-3 text-[#2E7D32] shrink-0" />
+                  <span className="tracking-wide">{stat.value}</span>
+                </span>
               );
             })}
           </div>

@@ -716,13 +716,13 @@ export function BuyCarsView({
                     {/* Skeleton Image Gallery */}
                     <div className={cn(
                       "bg-slate-200/60 relative",
-                      isListView ? "w-full md:w-2/5 min-h-[160px]" : "w-full h-36 sm:h-48 md:h-52"
+                      isListView ? "w-full h-28 md:h-auto md:w-2/5 md:min-h-[160px]" : "w-full h-28 sm:h-48 md:h-52"
                     )}>
                       <div className="absolute top-3 left-3 w-20 h-5 bg-slate-300 rounded-full" />
                       <div className="absolute top-3 right-3 w-7 h-7 bg-slate-300 rounded-full" />
                     </div>
                     {/* Skeleton Content Pane */}
-                    <div className="flex-1 p-3.5 sm:p-5 flex flex-col justify-between">
+                    <div className="flex-1 p-3 sm:p-5 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <div className="space-y-1.5">
@@ -734,14 +734,20 @@ export function BuyCarsView({
                             <div className="w-16 h-2.5 bg-slate-200 rounded ml-auto" />
                           </div>
                         </div>
-                        <div className="h-px bg-slate-100 my-2 sm:my-3" />
-                        <div className="grid grid-cols-3 gap-2 my-2 sm:my-3">
+                        <div className="hidden sm:block h-px bg-slate-100 my-3" />
+                        <div className="hidden sm:grid grid-cols-3 gap-2 my-3">
                           {Array.from({ length: 6 }).map((_, sIdx) => (
                             <div key={sIdx} className="space-y-1">
                               <div className="w-6 h-2 bg-slate-200 rounded" />
                               <div className="w-12 h-3 bg-slate-200 rounded" />
                             </div>
                           ))}
+                        </div>
+                        {/* Mobile: compact single-row key-facts placeholder */}
+                        <div className="sm:hidden flex gap-3 my-2">
+                          <div className="w-14 h-2.5 bg-slate-200 rounded" />
+                          <div className="w-16 h-2.5 bg-slate-200 rounded" />
+                          <div className="w-20 h-2.5 bg-slate-200 rounded" />
                         </div>
                       </div>
                       <div className="pt-2.5 sm:pt-3.5 border-t border-slate-100 flex gap-2">
