@@ -82,6 +82,12 @@ export function CarCard({
   isListView = false,
 }: CarCardProps) {
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
+  // A photo URL that fails to load (broken storage link) falls back to the
+  // stylized gradient placeholder instead of showing a broken image.
+  const [imageFailed, setImageFailed] = React.useState(false);
+  React.useEffect(() => {
+    setImageFailed(false);
+  }, [activeImageIndex, car.id]);
   const touchStartX = React.useRef<number | null>(null);
   const angles = (getCarPhotos(car) || getCarAngleImages(car)) as Array<{ title: string; text: string; url?: string; bgClass?: string }>;
 
@@ -147,33 +153,46 @@ export function CarCard({
       {/* Premium Image Gallery Panel */}
       <div
         className={cn(
-          "relative overflow-hidden flex-shrink-0 select-none",
-          isListView
-            ? "w-full h-28 md:h-auto md:w-2/5 md:min-h-[160px]"
-            : "w-full h-28 sm:h-auto sm:aspect-[4/3]"
+          "relative overflow-hidden flex-shrink-0 select-none w-full bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200",
+          isListView && "md:w-2/5 md:min-h-[160px]"
         )}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Dynamic Angle Gradient Background */}
-        {/* Photo mode uses "contain" so the ENTIRE car is always visible (no
-            cropping); the letterboxed area gets a clean studio backdrop. */}
-        <div 
-          className={cn(
-            "w-full h-full flex flex-col justify-between p-2.5 sm:p-5 text-white transition-all duration-500",
-            angles[activeImageIndex].url
-              ? "bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200"
-              : angles[activeImageIndex].bgClass
-          )}
-          style={angles[activeImageIndex].url ? {
-            backgroundImage: `url(${angles[activeImageIndex].url})`,
-            backgroundSize: "contain",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat"
-          } : undefined}
-        >
+        {angles[activeImageIndex].url && !imageFailed ? (
+          /* Full photo at its natural aspect ratio — the whole car is always
+             visible with NO cropping and NO empty space around it. */
+          <img
+            src={angles[activeImageIndex].url}
+            alt={`${car.brand} ${car.model}`}
+            className="block w-full h-auto object-contain"
+            draggable={false}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          /* No photo uploaded: stylized gradient placeholder panel */
+          <div
+            className={cn(
+              "relative w-full h-28 sm:h-auto sm:aspect-[4/3] text-white",
+              isListView && "md:h-auto md:aspect-[4/3]",
+              angles[activeImageIndex].bgClass
+            )}
+          >
+            {/* Aesthetic Mock Vector Vehicle Silhouette Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none p-8 select-none">
+              <svg viewBox="0 0 100 50" className="w-10/12 text-white fill-current">
+                <path d="M15 35 L12 35 C10 35 8 33 8 31 L8 25 C8 22 10 20 12 18 L25 10 C28 8 32 7 35 7 L65 7 C69 7 73 9 75 12 L85 22 C88 24 90 27 90 31 L90 35 C88 35 86 35 85 35 C82 32 78 32 75 35 C72 38 75 42 78 42 C81 42 84 39 85 37 L90 37 L92 37 C94 37 95 36 95 34 L95 28 C95 24 93 21 90 19 L82 10 C79 6 74 4 69 4 L31 4 C26 4 21 6 18 10 L8 21 C6 23 5 26 5 29 L5 34 C5 36 6 37 8 37 L15 37 C16 39 19 42 22 42 C25 42 28 38 25 35 Z" />
+                <circle cx="22" cy="35" r="5" />
+                <circle cx="78" cy="35" r="5" />
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* Overlay: badges & actions (top) + angle caption (bottom) */}
+        <div className="absolute inset-0 flex flex-col justify-between p-2.5 sm:p-5 pointer-events-none z-10">
           {/* Top Bar inside Gallery */}
-          <div className="flex items-center justify-between z-10 w-full">
+          <div className="flex items-center justify-between w-full">
             {car.status === "sold" ? (
               <Badge className="bg-rose-600 hover:bg-rose-600 text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md flex items-center gap-1">
                 Sold
@@ -188,7 +207,7 @@ export function CarCard({
               </Badge>
             ) : <div />}
 
-            <div className="flex items-center gap-1 ml-auto">
+            <div className="flex items-center gap-1 ml-auto pointer-events-auto">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -231,19 +250,8 @@ export function CarCard({
             </div>
           </div>
 
-          {/* Aesthetic Mock Vector Vehicle Silhouette Overlay */}
-          {!angles[activeImageIndex].url && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none p-8 select-none">
-              <svg viewBox="0 0 100 50" className="w-10/12 text-white fill-current">
-                <path d="M15 35 L12 35 C10 35 8 33 8 31 L8 25 C8 22 10 20 12 18 L25 10 C28 8 32 7 35 7 L65 7 C69 7 73 9 75 12 L85 22 C88 24 90 27 90 31 L90 35 C88 35 86 35 85 35 C82 32 78 32 75 35 C72 38 75 42 78 42 C81 42 84 39 85 37 L90 37 L92 37 C94 37 95 36 95 34 L95 28 C95 24 93 21 90 19 L82 10 C79 6 74 4 69 4 L31 4 C26 4 21 6 18 10 L8 21 C6 23 5 26 5 29 L5 34 C5 36 6 37 8 37 L15 37 C16 39 19 42 22 42 C25 42 28 38 25 35 Z" />
-                <circle cx="22" cy="35" r="5" />
-                <circle cx="78" cy="35" r="5" />
-              </svg>
-            </div>
-          )}
-
           {/* Label indicating Angle */}
-          <div className="z-10 mt-auto text-left bg-black/30 px-2 py-1 rounded-lg backdrop-blur-xs border border-white/10 hidden sm:block">
+          <div className="text-left bg-black/30 px-2 py-1 rounded-lg backdrop-blur-xs border border-white/10 hidden sm:block">
             <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
               {angles[activeImageIndex].title}
             </p>
@@ -256,21 +264,21 @@ export function CarCard({
         {/* Gallery Navigation Controls */}
         <button
           onClick={handlePrevImage}
-          className="absolute left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Previous angle"
         >
           <ChevronLeft className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
         </button>
         <button
           onClick={handleNextImage}
-          className="absolute right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Next angle"
         >
           <ChevronRight className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
         </button>
 
         {/* Slide Indicator Dots */}
-        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-10">
+        <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex space-x-1 z-20">
           {angles.map((_, idx) => (
             <button
               key={idx}
