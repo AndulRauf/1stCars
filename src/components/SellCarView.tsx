@@ -729,14 +729,25 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [googleLoading, setGoogleLoading] = React.useState(false);
   const [googleSignedIn, setGoogleSignedIn] = React.useState(false);
 
-  // If the seller just returned from Google OAuth (launched from Step ó 8),
-  // restore the wizard state they filled in before the redirect — the full-page
-  // OAuth redirect wipes React state — and jump straight back to Step ó 8 soup
-  // their car details are preserved and the Gmail auto-filled name/email are ready.
+  // If the seller just returned from Google OAuth (launched from the Sell Car
+  // form's "Sign in with Gmail" button), restore the wizard state they filled
+  // in before the redirect — the full-page OAuth redirect wipes React state —
+  // and jump straight back to Step 8 with their car details preserved and the
+  // Gmail auto-filled name/email ready to submit.
+  //
+  // This runs when EITHER the expected open_sell_car=1 flag is in the URL, or
+  // the wizard state is still sitting in sessionStorage (Supabase fell back to
+  // its default Site URL because the exact /sell-car redirect URL was missing
+  // from the Auth → URL Configuration → Redirect URLs allowlist; App.tsx then
+  // bounces the seller back to /sell-car where this effect picks it up).
 
   React.useEffect(() => {
+    const pendingState = sessionStorage.getItem("1stcars_sell_car_form_state");
     const params = new URLSearchParams(window.location.search);
-    if (params.get("open_sell_car") === "1") {
+    const hasReturnFlag = params.get("open_sell_car") === "1";
+    if (!hasReturnFlag && !pendingState) return;
+
+    if (hasReturnFlag) {
       params.delete("open_sell_car");
       const nextSearch = params.toString();
       window.history.replaceState(
@@ -744,40 +755,38 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         "",
         nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
       );
+    }
 
-      // Restore the pre-redirect wizard form state saved by handleGoogleLogin.
-
+    // Restore the pre-redirect wizard form state saved by handleGoogleLogin.
+    if (pendingState) {
       try {
-        const stored = sessionStorage.getItem("1stcars_sell_car_form_state");
-        if (stored) {
-          const p = JSON.parse(stored);
-          if (p.wizardStep) setWizardStep(p.wizardStep);
-          if (p.selectedBrand) setSelectedBrand(p.selectedBrand);
-          if (p.selectedModel) setSelectedModel(p.selectedModel);
-          if (typeof p.selectedYear === "number") setSelectedYear(p.selectedYear);
-          if (p.selectedFuel) setSelectedFuel(p.selectedFuel);
-          if (p.selectedTransmission) setSelectedTransmission(p.selectedTransmission);
-          if (p.selectedVariant) setSelectedVariant(p.selectedVariant);
-          if (p.selectedRTO) setSelectedRTO(p.selectedRTO);
-          if (p.selectedKMs) setSelectedKMs(p.selectedKMs);
-          if (p.name) setName(p.name);
-          if (p.email) setEmail(p.email);
-          if (p.mobile) setMobile(p.mobile);
-          if (p.address) setAddress(p.address);
-          if (p.preferredDate) setPreferredDate(p.preferredDate);
-          if (p.preferredTime) setPreferredTime(p.preferredTime);
-          if (p.brandSearch) setBrandSearch(p.brandSearch);
-          if (p.modelSearch) setModelSearch(p.modelSearch);
-          if (p.rtoSearch) setRtoSearch(p.rtoSearch);
-          if (typeof p.showAllBrands === "boolean") setShowAllBrands(p.showAllBrands);
-        }
+        const p = JSON.parse(pendingState);
+        if (p.wizardStep) setWizardStep(p.wizardStep);
+        if (p.selectedBrand) setSelectedBrand(p.selectedBrand);
+        if (p.selectedModel) setSelectedModel(p.selectedModel);
+        if (typeof p.selectedYear === "number") setSelectedYear(p.selectedYear);
+        if (p.selectedFuel) setSelectedFuel(p.selectedFuel);
+        if (p.selectedTransmission) setSelectedTransmission(p.selectedTransmission);
+        if (p.selectedVariant) setSelectedVariant(p.selectedVariant);
+        if (p.selectedRTO) setSelectedRTO(p.selectedRTO);
+        if (p.selectedKMs) setSelectedKMs(p.selectedKMs);
+        if (p.name) setName(p.name);
+        if (p.email) setEmail(p.email);
+        if (p.mobile) setMobile(p.mobile);
+        if (p.address) setAddress(p.address);
+        if (p.preferredDate) setPreferredDate(p.preferredDate);
+        if (p.preferredTime) setPreferredTime(p.preferredTime);
+        if (p.brandSearch) setBrandSearch(p.brandSearch);
+        if (p.modelSearch) setModelSearch(p.modelSearch);
+        if (p.rtoSearch) setRtoSearch(p.rtoSearch);
+        if (typeof p.showAllBrands === "boolean") setShowAllBrands(p.showAllBrands);
       } catch (e) {
         console.warn("Failed to restore Sell Car form state after Gmail login:", e);
       }
-      sessionStorage.removeItem("1stcars_sell_car_form_state");
-      setGoogleSignedIn(true);
-      toast.success("Signed in with Gmail — name & email auto-filled!");
     }
+    sessionStorage.removeItem("1stcars_sell_car_form_state");
+    setGoogleSignedIn(true);
+    toast.success("Signed in with Gmail — name & email auto-filled!");
   }, []);
 
   // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
