@@ -971,7 +971,20 @@ function createFatalStub(message: string): any {
 
 // Instantiate the appropriate client
 export const supabase = isRealSupabase
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      // PKCE flow: the one-time auth code travels in the URL query string
+      // (?code=...) instead of tokens in the fragment. This is what the
+      // Vercel rewrite guard in vercel.json keys on (code/state/error) to let
+      // the Google callback reach the SPA instead of the crawler preview API.
+      // detectSessionInUrl lets the client finish the OAuth exchange on the
+      // redirect back; persistSession keeps the user signed in across refresh.
+      auth: {
+        flowType: "pkce",
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   : (isProdMockBlocked
       ? createFatalStub(
           "[1stCars] Production is missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. " +

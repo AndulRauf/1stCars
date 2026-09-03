@@ -21,6 +21,17 @@ export default async function handler(req: any, res: any) {
   let image = `${origin}/og-image.jpg?v=5`;
   let redirect = "/";
 
+  // OAuth callback guard (defense-in-depth): if this endpoint is ever reached
+  // with Supabase PKCE params (code/state/error) or the booking re-open flag,
+  // they must NEVER be swallowed by the crawler redirect — forward them so the
+  // SPA can finish the Google sign-in. Normally vercel.json routes these to
+  // the SPA before they reach here, but this protects direct hits too.
+  const oauthCode = String(req.query.code || "");
+  const oauthState = String(req.query.state || "");
+  const oauthError = String(req.query.error || "");
+  const openBooking = req.query.open_booking === "1";
+  const hasOAuthParams = !!(oauthCode || oauthState || oauthError || openBooking);
+
   if (carId) {
     try {
       // select=* keeps this resilient to schema drift: photos live in the
@@ -66,6 +77,19 @@ export default async function handler(req: any, res: any) {
     }
   }
 
+  // Forward any OAuth/booking query params that reached here (defense-in-depth)
+  // so a direct hit never drops the Supabase PKCE code or the booking re-open
+  // flag. The SPA then finishes the exchange and/or re-opens the modal.
+  const passthrough = new URLSearchParams();
+  if (oauthError) passthrough.set("error", oauthError);
+  if (oauthCode) passthrough.set("code", oauthCode);
+  if (oauthState) passthrough.set("state", oauthState);
+  if (openBooking) passthrough.set("open_booking", "1");
+  const passthroughStr = passthrough.toString();
+  if (passthroughStr) {
+    redirect += (redirect.includes("?") ? "&" : "?") + passthroughStr;
+  }
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -93,6 +117,8 @@ export default async function handler(req: any, res: any) {
 </html>`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=600, s-maxage=3600");
+  // OAuth callbacks must never be cached — a stale CDN copy would drop the
+  // auth code. Crawler previews keep the short public cache as before.
+  res.setHeader("Cache-Control", hasOAuthParams ? "no-store" : "public, max-age=600, s-maxage=3600");
   res.status(200).send(html);
 }

@@ -10,6 +10,7 @@ import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
+import { buildOAuthRedirectUrl } from "@/src/lib/router";
 
 // Official multi-color Google "G" logo (lucide has no brand icons).
 function GoogleG({ className }: { className?: string }) {
@@ -184,14 +185,13 @@ export function BookingModal({
     }
     setGoogleLoading(true);
     try {
-      // Keep the buyer on this exact car page after Google redirects back and
-      // flag the return so CarDetailsView re-opens the booking modal with the
-      // auto-filled name & email ready to submit.
-      const url = new URL(window.location.href);
-      url.searchParams.set("open_booking", "1");
+      // Keep the buyer on this exact page after Google redirects back and flag
+      // the return so CarDetailsView re-opens the booking modal with the
+      // auto-filled name & email ready to submit. Centralized in the router so
+      // both modals share one origin/dashboard source of truth.
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: url.toString() },
+        options: { redirectTo: buildOAuthRedirectUrl({ returnToCurrent: true }) },
       });
       if (oauthErr) {
         setGoogleLoading(false);

@@ -6,6 +6,7 @@ import { UserRole } from "@/src/lib/db";
 import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { buildOAuthRedirectUrl } from "@/src/lib/router";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -253,7 +254,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/role_dashboards` : undefined
+          redirectTo: buildOAuthRedirectUrl()
         }
       });
       if (oauthErr) {

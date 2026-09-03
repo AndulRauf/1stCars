@@ -99,7 +99,7 @@ export function parseCurrentUrl(): RouteParams {
   }
 
   // Route 4: Dashboards / Portal
-  if (pathname === "/dashboard" || pathname === "/account" || pathname === "/role-dashboards" || pathname === "/my-account" || pathname === "/admin" || pathname === "/login" || pathname === "/portal" || pathname === "/admin-panel") {
+  if (pathname === "/dashboard" || pathname === "/account" || pathname === "/role-dashboards" || pathname === "/role_dashboards" || pathname === "/my-account" || pathname === "/admin" || pathname === "/login" || pathname === "/portal" || pathname === "/admin-panel") {
     return { view: "role_dashboards" };
   }
 
@@ -283,4 +283,26 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
     default:
       return brand;
   }
+}
+
+/**
+ * Build the OAuth redirectTo URL for Google sign-in — the single source of
+ * truth used by both AuthModal and BookingModal so the origin / dashboard
+ * path never drift apart.
+ *
+ * - default (AuthModal): land on the canonical role dashboard after login.
+ *   formatUrl("role_dashboards") === "/admin", which parseCurrentUrl maps back
+ *   to the role_dashboards view — buyer / seller / dealer / admin / inspector /
+ *   sales associate all route through here and render their own panel by role.
+ * - returnToCurrent (BookingModal): stay on the exact page the user was on and
+ *   flag open_booking so CarDetailsView re-opens the modal after the redirect.
+ */
+export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean }): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  if (opts?.returnToCurrent) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("open_booking", "1");
+    return url.toString();
+  }
+  return `${window.location.origin}${formatUrl("role_dashboards")}`;
 }

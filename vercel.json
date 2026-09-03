@@ -2,7 +2,13 @@
   "rewrites": [
     {
       "source": "/cars/:id",
-      "destination": "/api/car-preview/:id"
+      "destination": "/api/car-preview/:id",
+      "missing": [
+        { "type": "query", "key": "code" },
+        { "type": "query", "key": "state" },
+        { "type": "query", "key": "error" },
+        { "type": "query", "key": "open_booking" }
+      ]
     },
     {
       "source": "/(.*)",
