@@ -21,6 +21,7 @@ import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
   loadSellCatalogFromSupabase, SellCatalog
 } from "@/src/lib/sellFormData";
+import { CITIES_DATA } from "@/src/data/cars";
 
 interface SellCarViewProps {
   onNavigateToDashboard: (profile?: Profile) => void;
@@ -1779,8 +1780,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             className="h-11 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
                           >
                             <option value="" disabled>Select your city</option>
-                            {gujaratRTOs.map((rto) => (
-                              <option key={`${rto.code}-${rto.city}`} value={rto.city}>{rto.city}</option>
+                            {CITIES_DATA.filter((c) => c !== "All Cities").map((c) => (
+                              <option key={c} value={c}>{c}</option>
                             ))}
                           </select>
                         </div>
