@@ -11,6 +11,7 @@ import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 import { generateDerivedEmail } from "@/src/lib/utils";
+import { CITIES_DATA } from "@/src/data/cars";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -643,11 +644,9 @@ export function BookingModal({
                   className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32]"
                 >
                   <option value="Surat">Surat (Main Hub)</option>
-                  <option value="Bharuch">Bharuch</option>
-                  <option value="Vadodara">Vadodara</option>
-                  <option value="Vapi">Vapi</option>
-                  <option value="Ahmedabad">Ahmedabad</option>
-                  <option value="Rajkot">Rajkot</option>
+                  {CITIES_DATA.filter((c) => c !== "All Cities").map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
 
