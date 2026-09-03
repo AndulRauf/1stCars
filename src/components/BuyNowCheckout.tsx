@@ -633,7 +633,7 @@ export function BuyNowCheckout({
             onClick={otpSent ? () => setOtpSent(false) : onClose}
             className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Checkout"}
+            <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Bookings"}
           </button>
         </div>
 
