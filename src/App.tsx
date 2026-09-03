@@ -496,6 +496,13 @@ export default function App() {
     setConsentStatusState(choice);
   };
 
+  // Auto-accept analytics consent on page load (same path as clicking "Keep
+  // On") so GA4 / Meta Pixel initialize immediately without user interaction.
+  React.useEffect(() => {
+    setConsentStatus("granted");
+    setConsentStatusState("granted");
+  }, []);
+
   // Global simulated SMS state
   const [globalSimulatedSms, setGlobalSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
 
@@ -758,7 +765,7 @@ export default function App() {
       {/* Tracking Consent Banner — GA4 / Meta Pixel stay dormant until the
           visitor accepts (DPDP/GDPR-aligned). */}
       {consentStatus === "undecided" && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-lg px-5 py-4">
+        <div className="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-lg px-5 py-4">
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex flex-col gap-3">
             <p className="text-xs leading-relaxed text-slate-200 font-medium">
               We use cookies and analytics (Google Analytics, Meta Pixel) to understand how visitors use
