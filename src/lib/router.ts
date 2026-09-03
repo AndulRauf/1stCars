@@ -296,13 +296,16 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
  *   sales associate all route through here and render their own panel by role.
  * - returnToCurrent (BookingModal): stay on the exact page the user was on and
  *   flag open_booking so CarDetailsView re-opens the modal after the redirect.
+ * - sellCar (SellCarView Step 8): return to /sell-car so the seller returns to
+ *   the form. The wizard state (car details, name/email) is restored from
+ *   sessionStorage by SellCarView on arrival, so NO query flag is appended —
+ *   keeping the redirect URL free of query params avoids Supabase's allowlist
+ *   matcher rejecting it (which causes a silent fallback to the Site URL).
  */
 export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean; sellCar?: boolean }): string | undefined {
   if (typeof window === "undefined") return undefined;
   if (opts?.sellCar) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("open_sell_car", "1");
-    return url.toString();
+    return `${window.location.origin}${formatUrl("sell_car")}`;
   }
   if (opts?.returnToCurrent) {
     const url = new URL(window.location.href);

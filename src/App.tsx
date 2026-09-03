@@ -251,13 +251,14 @@ export default function App() {
         } as any);
 
         // Gmail → Sell Car fallback: the Sell Car form's "Sign in with Gmail"
-        // button passes redirectTo=/sell-car?open_sell_car=1. If that URL is
-        // missing from the Supabase Auth → URL Configuration → Redirect URLs
-        // allowlist, Supabase ignores it and falls back to the default Site
-        // URL (e.g. http://localhost:3000/), which strands the saved wizard
-        // state in sessionStorage. When a session shows up while that state is
-        // pending and the seller isn't already on the sell car page, bounce
-        // them back to /sell-car where SellCarView restores the wizard.
+        // button passes redirectTo=/sell-car (no query params — see
+        // buildOAuthRedirectUrl). If that path is missing from the Supabase
+        // Auth → URL Configuration → Redirect URLs allowlist, Supabase ignores
+        // it and falls back to the default Site URL (e.g. http://localhost:3000/),
+        // which strands the saved wizard state in sessionStorage. When a
+        // session shows up while that state is pending and the seller isn't
+        // already on the sell car page, bounce them back to /sell-car where
+        // SellCarView restores the wizard.
         if (!disposed) {
           try {
             if (
