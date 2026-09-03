@@ -301,21 +301,11 @@ export function BookingModal({
       const currentTDs = JSON.parse(localStorage.getItem("1stcars_test_drives") || "[]");
       localStorage.setItem("1stcars_test_drives", JSON.stringify([testDriveEntry, ...currentTDs]));
 
-      // 2. Auto-assign the lead to the Sales Associate who uploaded this car
-      //    (leads for admin-published/demo cars stay in the shared pool).
-      const owner = await resolveLeadOwner(car);
-      if (owner) {
-        leadRecord.assigned_to = owner.id;
-        leadRecord.assigned_to_name = owner.name || "";
-      }
-
-      // 3. Save to localStorage "1stcars_sales_leads" for Admin CMS Buyer
-      //    Enquiries — persisted AFTER auto-assignment so the record carries
-      //    the same owner as the Supabase row (mock-mode fallback source).
+      // Save to localStorage immediately (no network cost)
       const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
-      // 4. Save to Supabase table sales_notifications (source of truth for Sales/Admin desk)
+      // Insert the lead into Supabase (critical path — must succeed before showing success).
       const { error: insertError } = await insertLeadWithAssignment({
         name: name.trim(),
         mobile: mobile.trim(),
@@ -327,19 +317,13 @@ export function BookingModal({
         car_model: car?.model,
         type: bookingType,
         status: "pending",
-        assigned_to: owner?.id || null,
-        assigned_to_name: owner?.name || null,
         notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
       });
 
       if (insertError) {
-        // The lead did NOT reach the Sales desk — surface a real failure instead of a false success.
         throw new Error(insertError.message || "Could not save your request to the database.");
       }
 
-      // Lead is persisted — show the confirmation immediately. Everything
-      // below (auto sign-in, automation event, notifications) runs in the
-      // background so the submit never blocks on extra network round-trips.
       setIsSubmitted(true);
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
 
@@ -352,11 +336,25 @@ export function BookingModal({
       });
 
       void (async () => {
+        // Auto-assign the lead in the background — never blocks the UI.
         try {
-          // If this email already owns the active session (e.g. the buyer just
-          // signed in with Google), skip the auto sign-up/sign-in below - the
-          // account is already authenticated on this device and the random
-          // fallback password would only fail.
+          const owner = await resolveLeadOwner(car);
+          if (owner) {
+            const existingLeads = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+            const updated = existingLeads.map((l: any) =>
+              l.id === refId ? { ...l, assigned_to: owner.id, assigned_to_name: owner.name || "" } : l
+            );
+            localStorage.setItem("1stcars_sales_leads", JSON.stringify(updated));
+            await supabase
+              .from("sales_notifications")
+              .update({ assigned_to: owner.id, assigned_to_name: owner.name || "" })
+              .eq("id", refId);
+          }
+        } catch (assignErr) {
+          console.warn("Background lead assignment failed:", assignErr);
+        }
+
+        try {
           const { data: currentSession } = await supabase.auth.getSession();
           const activeEmail = currentSession?.session?.user?.email?.toLowerCase();
 
@@ -374,7 +372,6 @@ export function BookingModal({
                 },
               }
             );
-
             if (authError) {
               console.warn("Auto sign in error during booking:", authError);
             }
@@ -383,9 +380,6 @@ export function BookingModal({
           console.warn("Auto sign in error during booking:", authErr);
         }
 
-        // Record the automation event (idempotent; on the live DB the AFTER INSERT
-        // trigger already recorded it, so the RPC is a no-op and only the local
-        // engine consumes this for mock/pre-migration databases).
         void automationService.emitEvent({
           type: "lead.created",
           sourceTable: "sales_notifications",
@@ -403,7 +397,6 @@ export function BookingModal({
           }
         }).catch((err) => console.warn("Automation event emission failed:", err));
 
-        // Trigger system notifications
         try {
           if (bookingType === "test_drive") {
             await notificationService.triggerTestDriveBooked({

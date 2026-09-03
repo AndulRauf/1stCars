@@ -438,18 +438,6 @@ function isUnknownColumnError(message?: string): boolean {
   );
 }
 
-// Detect Row-Level-Security / permission failures. These can come from the
-// INSERT itself OR from the RETURNING (.select()) clause reading the row back.
-function isRlsError(message?: string): boolean {
-  if (!message) return false;
-  return (
-    /row.?level security policy/i.test(message) ||
-    /permission denied/i.test(message) ||
-    /violates row-level security/i.test(message)
-  );
-}
-
-
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
@@ -1000,63 +988,33 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     // Find RTO city name
     const rtoDetails = gujaratRTOs.find(r => r.code === selectedRTO);
     const resolvedCity = rtoDetails ? rtoDetails.city : "Gujarat";
-
-    // Resolve name early so we can use it for the auto Seller account
     const preliminaryName = name.trim();
 
-    // Ensure the seller is signed in so they land on the Seller Dashboard (not the login gateway)
-    // after submitting. Mirrors the Buyer auto-registration flow used in BookingModal.
+    // Quick check if already signed in (no network trip for auto sign-in here).
     let user: any = null;
     let autoEmail = "";
     let autoPassword = "";
     try {
-    user = (await supabase.auth.getUser()).data?.user;
-    if (!user) {
-      const sellerEmail = email.trim();
-      // Reuse a previously stored auto-password for this email so repeat
-      // submissions can sign back into the SAME auto-created Seller account.
-      // Generating a fresh password each time breaks sign-in once the account
-      // already exists (the stored credential hash would no longer match),
-      // which is what left the seller unauthenticated and bounced to the login
-      // popup after tapping "Go to Seller Dashboard".
-      const candidatePassword = getOrCreateAutoPassword(sellerEmail);
-
-
-      const { user: signedInUser, error: authError } = await resolveAutoSignIn(
-        supabase,
-        sellerEmail,
-        candidatePassword,
-        {
-          data: {
-            name: preliminaryName,
-            email: email.trim(),
-            mobile: mobile,
-            role: "Seller",
-            city: resolvedCity
-          }
-        }
-      );
-
-      if (authError) {
-        console.warn("Auto Seller sign-in error during inspection submit:", authError);
+      user = (await supabase.auth.getUser()).data?.user;
+      if (user) {
+        autoEmail = email.trim();
+        autoPassword = localStorage.getItem(getAutoPasswordKey(autoEmail)) || "";
+      } else {
+        autoEmail = email.trim();
+        autoPassword = getOrCreateAutoPassword(autoEmail);
       }
-      user = signedInUser || null;
-      autoEmail = sellerEmail;
-      autoPassword = candidatePassword;
-    } else {
-      autoEmail = email.trim();
-      autoPassword = localStorage.getItem(getAutoPasswordKey(autoEmail)) || "";
-    }
-    sellerAutoAuthRef.current = {
-      email: autoEmail,
-      password: autoPassword,
-      signedIn: Boolean(user),
-      name: preliminaryName,
-      mobile: mobile,
-      city: resolvedCity
-    };
+      sellerAutoAuthRef.current = {
+        email: autoEmail,
+        password: autoPassword,
+        signedIn: Boolean(user),
+        name: preliminaryName,
+        mobile: mobile,
+        city: resolvedCity
+      };
     } catch (authErr) {
-      console.warn("Auto Seller sign-in threw during inspection submit:", authErr);
+      console.warn("Auth check failed during inspection submit:", authErr);
+      autoEmail = email.trim();
+      autoPassword = getOrCreateAutoPassword(autoEmail);
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
@@ -1100,124 +1058,89 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      // `.select()` returns the newly-created row(s) — including the DB-generated
-      // id — so the follow-up inspector notification references the real record.
-      let { data, error } = await supabase.from("inspections").insert([inspectionRecord]).select();
+      // Fast, minimal insert — no `.select()` round-trip on the critical path.
+      let { error } = await supabase.from("inspections").insert([inspectionRecord]);
 
       // Schema-mismatch recovery: an older live database may be missing the
-      // optional denormalized columns (seller_email / notes / overall_score /
-      // report_*). PostgREST then rejects the insert with an "unknown column"
-      // error (PGRST204). Rather than failing the whole submission, retry with
-      // ONLY the columns guaranteed by the base schema so the seller's request
-      // still gets saved. seller_name / seller_mobile are NOT NULL in the base
-      // schema and must never be dropped.
+      // optional denormalized columns. Retry with only the base columns.
       if (error && isUnknownColumnError(error.message)) {
-        const {
-          seller_email, notes, ...baseRecord
-        } = inspectionRecord;
+        const { seller_email, notes, ...baseRecord } = inspectionRecord;
         console.warn(
           "Inspections insert rejected an optional column — retrying with base columns only.",
           error.message
         );
-        ({ data, error } = await supabase.from("inspections").insert([baseRecord]).select());
-      }
-
-      // RLS on the RETURNING (.select()) clause can block reading the row back
-      // even when the INSERT itself is allowed — e.g. an anonymous lead whose
-      // seller_id is NULL is filtered out by the "Sellers read own inspections"
-      // SELECT policy. Retry the write WITHOUT asking for the row back so a
-      // successful save is never reported as a failure.
-      if (error && (isRlsError(error.message) || isUnknownColumnError(error.message))) {
-        console.warn(
-          "Inspections insert with RETURNING was blocked — retrying insert without .select().",
-          error.message
-        );
-        const { error: insertOnlyError } = await supabase
-          .from("inspections")
-          .insert([inspectionRecord]);
-        if (insertOnlyError && isUnknownColumnError(insertOnlyError.message)) {
-          const {
-            seller_email, notes, ...baseRecord
-          } = inspectionRecord;
-          const { error: baseInsertError } = await supabase
-            .from("inspections")
-            .insert([baseRecord]);
-          error = baseInsertError;
-        } else {
-          error = insertOnlyError;
-        }
-        // We could not read the row back, but the insert succeeded — continue
-        // with the locally-built record so the seller still sees confirmation.
-        data = null;
+        ({ error } = await supabase.from("inspections").insert([baseRecord]));
       }
 
       if (error) {
-        // Insert failed — do NOT show a false success screen.
         throw new Error(error.message || "Could not save your inspection request.");
       }
 
-
-      // Anonymous submissions (no auto-created session) may see an empty
-      // result from .select() because RLS filters the RETURNING rows — fall
-      // back to the record we built locally so the flow never crashes.
-      const inserted = Array.isArray(data) && data.length > 0 ? data[0] : (data && data.id ? data : inspectionRecord);
-
+      const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const inserted: any = { ...inspectionRecord, id: inspectionId };
       setCreatedRequest(inserted);
 
-      // Show success immediately — the seller should not wait on background
-      // notification dispatch (inspector alerts). Fire-and-forget so the UI is snappy.
+      // Show success immediately — never block the UI on the follow-up calls.
       setFormStep("success");
       toast.success("Your inspection will contact you shortly!");
 
-      // Meta conversion — fires ONLY after the Supabase insert succeeds. No PII.
+      // Meta + GA4 conversions (no PII) fire right after a successful insert.
       trackMetaEvent("Lead", {
         content_name: `${selectedBrand} ${selectedModel}`,
         content_category: "Sell Car / Inspection"
       });
-
-      // GA4 conversion — MOST IMPORTANT event. Fires only after the Supabase
-      // insert succeeds, alongside the Meta Lead. No PII is sent to GA4.
       trackSellerLeadSubmit();
 
-      // Trigger inspector notifications in the background (non-blocking).
-      void notificationService.triggerInspectionSubmitted({
-        id: inserted?.id || "insp-temp-id",
-        sellerName: finalName,
-        brand: selectedBrand,
-        model: selectedModel,
-        city: resolvedCity,
-        preferred_date: finalDate
-      }).catch((err) => console.warn("Background inspection notification failed:", err));
+      // Auto sign-in so the seller lands on the Seller Dashboard — runs in the
+      // background and never blocks the submission itself.
+      void (async () => {
+        try {
+          if (!user) {
+            await resolveAutoSignIn(supabase, autoEmail, autoPassword, {
+              data: {
+                name: preliminaryName,
+                email: email.trim(),
+                mobile: mobile,
+                role: "Seller",
+                city: resolvedCity
+              }
+            });
+          }
+        } catch (authErr) {
+          console.warn("Auto Seller sign-in error during inspection submit:", authErr);
+        }
 
-      // Record the event for the automation engine (idempotent). On the live
-      // DB the AFTER INSERT trigger records it server-side, so the RPC is a
-      // no-op; the local engine (mock / pre-migration databases) executes the
-      // same rules client-side.
-      void automationService.emitEvent({
-        type: "inspection.created",
-        sourceTable: "inspections",
-        sourceId: inserted?.id,
-        payload: {
-          inspection_id: inserted?.id,
-          city: resolvedCity,
+        void notificationService.triggerInspectionSubmitted({
+          id: inserted?.id || "insp-temp-id",
+          sellerName: finalName,
           brand: selectedBrand,
           model: selectedModel,
-          variant: selectedVariant,
-          year: selectedYear,
-          km_driven: computedKms,
-          seller_name: finalName,
-          seller_mobile: mobile,
-          seller_email: finalEmail,
-          preferred_date: finalDate,
-          preferred_time: finalTime
-        }
-      }).catch((err) => console.warn("Automation event emission failed:", err));
+          city: resolvedCity,
+          preferred_date: finalDate
+        }).catch((err) => console.warn("Background inspection notification failed:", err));
 
-      // Redirect to seller dashboard after 3 seconds. Navigation is always
-      // attempted (not gated on the initial auto-sign-in) because the sign-in
-      // may only complete on the second attempt after the profile row exists;
-      // if it still fails the success screen's "Go to Seller Dashboard" button
-      // (and the pre-filled login fallback) remains available.
+        void automationService.emitEvent({
+          type: "inspection.created",
+          sourceTable: "inspections",
+          sourceId: inserted?.id,
+          payload: {
+            inspection_id: inserted?.id,
+            city: resolvedCity,
+            brand: selectedBrand,
+            model: selectedModel,
+            variant: selectedVariant,
+            year: selectedYear,
+            km_driven: computedKms,
+            seller_name: finalName,
+            seller_mobile: mobile,
+            seller_email: finalEmail,
+            preferred_date: finalDate,
+            preferred_time: finalTime
+          }
+        }).catch((err) => console.warn("Automation event emission failed:", err));
+      })();
+
+      // Redirect to seller dashboard after 3 seconds.
       redirectTimerRef.current = window.setTimeout(() => {
         void navigateToSellerDashboard();
       }, 3000);
