@@ -1,6 +1,6 @@
 import * as React from "react";
 import { 
-  Car, ShieldCheck, Clock, Calendar, CheckCircle2, 
+  Car, ShieldCheck, Clock, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
   Search, ArrowLeft, Tag
@@ -698,8 +698,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [email, setEmail] = React.useState("");
   const [mobile, setMobile] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [preferredDate, setPreferredDate] = React.useState("");
-  const [preferredTime, setPreferredTime] = React.useState("10:00 AM - 12:00 PM");
+  const [preferredDate] = React.useState("");
+  const [preferredTime] = React.useState("10:00 AM - 12:00 PM");
 
   // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
   const [calcBrand, setCalcBrand] = React.useState("");
@@ -1714,40 +1714,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               <option key={`${rto.code}-${rto.city}`} value={rto.city}>{rto.city}</option>
                             ))}
                           </select>
-                        </div>
-                      </div>
-
-                      {/* Preferred Date + Time Row */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
-                          <div className="relative">
-                            <Calendar className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                            <Input
-                              type="date"
-                              min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
-                              value={preferredDate}
-                              onChange={(e) => setPreferredDate(e.target.value)}
-                              required
-                              className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED TIME *</label>
-                          <div className="relative">
-                            <Clock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                            <select
-                              value={preferredTime}
-                              onChange={(e) => setPreferredTime(e.target.value)}
-                              required
-                              className="h-11 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
-                            >
-                              {["10:00 AM - 12:00 PM", "12:00 PM - 02:00 PM", "02:00 PM - 04:00 PM", "04:00 PM - 06:00 PM", "06:00 PM - 08:00 PM"].map((slot) => (
-                                <option key={slot} value={slot}>{slot}</option>
-                              ))}
-                            </select>
-                          </div>
                         </div>
                       </div>
 
