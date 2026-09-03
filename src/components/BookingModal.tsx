@@ -185,6 +185,16 @@ export function BookingModal({
     }
     setGoogleLoading(true);
     try {
+      // Remember that we must re-open the booking modal when the browser
+      // returns from Google. The redirectTo carries NO query param (Supabase's
+      // redirect allowlist rejects them, silently falling back to the Site
+      // URL), so survive the full-page OAuth redirect via sessionStorage.
+      try {
+        sessionStorage.setItem("1stcars_return_to_booking", "1");
+      } catch (e) {
+        // sessionStorage unavailable (private mode) — booking modal just
+        // won't auto-reopen; details are still autofilled on next open.
+      }
       // Keep the buyer on this exact page after Google redirects back and flag
       // the return so CarDetailsView re-opens the booking modal with the
       // auto-filled name & email ready to submit. Centralized in the router so

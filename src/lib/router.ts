@@ -290,17 +290,25 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
  * truth used by both AuthModal and BookingModal so the origin / dashboard
  * path never drift apart.
  *
+ * Redirect URLs are matched by Supabase allowing paths WITHOUT query params
+ * (or via an explicit /** wildcard). Appending a query param to redirectTo is
+ * the documented cause of allowlist rejection — Supabase then silently falls
+ * back to the configured Site URL, which strands the "return to booking"
+ * intent. So NONE of these redirects carry a query flag. Instead the "return
+ * intent" (re-open the booking modal / is it a sell-car return) is persisted
+ * in sessionStorage by the caller *before* the redirect and consumed on
+ * arrival by the target view.
+ *
  * - default (AuthModal): land on the canonical role dashboard after login.
  *   formatUrl("role_dashboards") === "/admin", which parseCurrentUrl maps back
  *   to the role_dashboards view — buyer / seller / dealer / admin / inspector /
  *   sales associate all route through here and render their own panel by role.
- * - returnToCurrent (BookingModal): stay on the exact page the user was on and
- *   flag open_booking so CarDetailsView re-opens the modal after the redirect.
+ * - returnToCurrent (BookingModal): stay on the exact page the user was on.
+ *   BookingModal sets a sessionStorage flag so CarDetailsView re-opens the
+ *   modal after the redirect (no query param in the URL).
  * - sellCar (SellCarView Step 8): return to /sell-car so the seller returns to
  *   the form. The wizard state (car details, name/email) is restored from
- *   sessionStorage by SellCarView on arrival, so NO query flag is appended —
- *   keeping the redirect URL free of query params avoids Supabase's allowlist
- *   matcher rejecting it (which causes a silent fallback to the Site URL).
+ *   sessionStorage by SellCarView on arrival.
  */
 export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean; sellCar?: boolean }): string | undefined {
   if (typeof window === "undefined") return undefined;
@@ -308,9 +316,7 @@ export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean; sellCa
     return `${window.location.origin}${formatUrl("sell_car")}`;
   }
   if (opts?.returnToCurrent) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("open_booking", "1");
-    return url.toString();
+    return `${window.location.origin}${window.location.pathname}`;
   }
   return `${window.location.origin}${formatUrl("role_dashboards")}`;
 }

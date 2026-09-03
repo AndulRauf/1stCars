@@ -137,16 +137,31 @@ export function CarDetailsView({
   // If the visitor just returned from Google OAuth (launched from the booking
   // modal via "Sign in with Google"), re-open the Booking modal so the
   // auto-filled name & email from their Google account are ready to submit.
+  // The intent is carried in sessionStorage (NOT a ?open_booking= query param)
+  // because query params in the OAuth redirectTo make Supabase reject it and
+  // silently fall back to the Site URL.
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("open_booking") === "1") {
-      params.delete("open_booking");
-      const nextSearch = params.toString();
-      window.history.replaceState(
-        null,
-        "",
-        nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
-      );
+    let shouldReopen = false;
+    try {
+      shouldReopen = sessionStorage.getItem("1stcars_return_to_booking") === "1";
+      if (shouldReopen) sessionStorage.removeItem("1stcars_return_to_booking");
+    } catch (e) {
+      // sessionStorage unavailable — fall back to the query-param check below
+    }
+    if (!shouldReopen) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("open_booking") === "1") {
+        params.delete("open_booking");
+        const nextSearch = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
+        );
+        shouldReopen = true;
+      }
+    }
+    if (shouldReopen) {
       setBookingModalType("test_drive");
       setIsBookingModalOpen(true);
     }
