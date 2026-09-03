@@ -368,7 +368,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
               onClick={onNavigateToInventory}
               className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Reserve Now</span>
+              <span>Book Now</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

@@ -494,7 +494,7 @@ export function BookingModal({
               </div>
               <div>
                 <h3 className="font-black text-lg text-slate-900 tracking-tight">
-                  {bookingType === "test_drive" ? "Book Test Drive" : "Acquire Vehicle (Reserve Now)"}
+                  {bookingType === "test_drive" ? "Book Test Drive" : "Acquire Vehicle (Book Now)"}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                   1stCars Concierge Doorstep & Showroom Experience
