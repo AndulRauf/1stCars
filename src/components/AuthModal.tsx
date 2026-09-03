@@ -3,10 +3,9 @@ import { X, ShieldCheck, Mail, User, Phone, MapPin, Database, Check, Award, Uplo
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { UserRole } from "@/src/lib/db";
-import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
-import { buildOAuthRedirectUrl } from "@/src/lib/router";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -236,32 +235,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
       // Never fabricate a login: a thrown error means the backend could not
       // authenticate us, so surface it instead of minting a fake user.
       setError(err?.message || "Authentication failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Google OAuth sign-in (real Supabase only — the mock client has no OAuth).
-  const handleGoogleLogin = async () => {
-    setError("");
-    setSuccess("");
-    if (!isRealSupabase) {
-      setError("Google sign-in is only available when connected to real Supabase. Use the demo accounts instead.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: buildOAuthRedirectUrl()
-        }
-      });
-      if (oauthErr) {
-        setError(friendlyOAuthErrorMessage(oauthErr, "Google sign-in failed. Please try again."));
-      }
-    } catch (err: any) {
-      setError(friendlyOAuthErrorMessage(err, "Google sign-in failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -536,7 +509,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             </h2>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
               {mode === "login" 
-                ? "Sign in securely with your Google account." 
+                ? "Sign in securely with your email and password." 
                 : mode === "register" 
                 ? "Join as an Elite customer, dealer, or system representative." 
                 : "Provide your email to receive standard reset parameters."}
@@ -820,26 +793,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 </div>
               )}
 
-              <div className="space-y-1">
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center gap-2.5 text-xs font-black text-slate-700 transition-all cursor-pointer disabled:opacity-60"
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/>
-                    <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52Z"/>
-                  </svg>
-                  Continue with Google
-                </button>
-                <div className="flex items-center gap-3 pt-1">
-                  <span className="flex-1 h-px bg-slate-200" />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">or use email</span>
-                  <span className="flex-1 h-px bg-slate-200" />
-                </div>
+              <div className="flex items-center gap-3">
+                <span className="flex-1 h-px bg-slate-200" />
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">or use email</span>
+                <span className="flex-1 h-px bg-slate-200" />
               </div>
 
               <div className="space-y-1">

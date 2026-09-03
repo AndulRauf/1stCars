@@ -7,12 +7,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
-import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
+import { supabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
-import { buildOAuthRedirectUrl } from "@/src/lib/router";
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
@@ -481,18 +480,6 @@ const gujaratRTOs = [
   { code: "GJ-38", city: "Bavla" }
 ];
 
-// Official multi-color Google "G" logo (lucide has no brand icons).
-function GoogleG({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.7 39.7 16.3 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.3C41.5 36.3 44 31.2 44 24c0-1.3-.1-2.6-.4-3.9z" />
-    </svg>
-  );
-}
-
 export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller }: SellCarViewProps) {
   // Remembers the auto-created Seller account so "Go to Seller Dashboard" can
   // re-sign-in quietly instead of dropping the seller onto the login popup.
@@ -713,70 +700,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [preferredDate, setPreferredDate] = React.useState("");
   const [preferredTime, setPreferredTime] = React.useState("10:00 AM - 12:00 PM");
 
-  // Google (Gmail) sign-in state
-  const [googleLoading, setGoogleLoading] = React.useState(false);
-  const [googleSignedIn, setGoogleSignedIn] = React.useState(false);
-
-  // If the seller just returned from Google OAuth (launched from the Sell Car
-  // form's "Sign in with Gmail" button), restore the wizard state they filled
-  // in before the redirect — the full-page OAuth redirect wipes React state —
-  // and jump straight back to Step 8 with their car details preserved and the
-  // Gmail auto-filled name/email ready to submit.
-  //
-  // This runs when EITHER the expected open_sell_car=1 flag is in the URL, or
-  // the wizard state is still sitting in sessionStorage (Supabase fell back to
-  // its default Site URL because the exact /sell-car redirect URL was missing
-  // from the Auth → URL Configuration → Redirect URLs allowlist; App.tsx then
-  // bounces the seller back to /sell-car where this effect picks it up).
-
-  React.useEffect(() => {
-    const pendingState = sessionStorage.getItem("1stcars_sell_car_form_state");
-    const params = new URLSearchParams(window.location.search);
-    const hasReturnFlag = params.get("open_sell_car") === "1";
-    if (!hasReturnFlag && !pendingState) return;
-
-    if (hasReturnFlag) {
-      params.delete("open_sell_car");
-      const nextSearch = params.toString();
-      window.history.replaceState(
-        null,
-        "",
-        nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
-      );
-    }
-
-    // Restore the pre-redirect wizard form state saved by handleGoogleLogin.
-    if (pendingState) {
-      try {
-        const p = JSON.parse(pendingState);
-        if (p.wizardStep) setWizardStep(p.wizardStep);
-        if (p.selectedBrand) setSelectedBrand(p.selectedBrand);
-        if (p.selectedModel) setSelectedModel(p.selectedModel);
-        if (typeof p.selectedYear === "number") setSelectedYear(p.selectedYear);
-        if (p.selectedFuel) setSelectedFuel(p.selectedFuel);
-        if (p.selectedTransmission) setSelectedTransmission(p.selectedTransmission);
-        if (p.selectedVariant) setSelectedVariant(p.selectedVariant);
-        if (p.selectedRTO) setSelectedRTO(p.selectedRTO);
-        if (p.selectedKMs) setSelectedKMs(p.selectedKMs);
-        if (p.name) setName(p.name);
-        if (p.email) setEmail(p.email);
-        if (p.mobile) setMobile(p.mobile);
-        if (p.address) setAddress(p.address);
-        if (p.preferredDate) setPreferredDate(p.preferredDate);
-        if (p.preferredTime) setPreferredTime(p.preferredTime);
-        if (p.brandSearch) setBrandSearch(p.brandSearch);
-        if (p.modelSearch) setModelSearch(p.modelSearch);
-        if (p.rtoSearch) setRtoSearch(p.rtoSearch);
-        if (typeof p.showAllBrands === "boolean") setShowAllBrands(p.showAllBrands);
-      } catch (e) {
-        console.warn("Failed to restore Sell Car form state after Gmail login:", e);
-      }
-    }
-    sessionStorage.removeItem("1stcars_sell_car_form_state");
-    setGoogleSignedIn(true);
-    toast.success("Signed in with Gmail — name & email auto-filled!");
-  }, []);
-
   // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
   const [calcBrand, setCalcBrand] = React.useState("");
   const [calcYear, setCalcYear] = React.useState("2021");
@@ -803,46 +726,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const finalValue = estimateCarValue(calcBrand.trim(), Number(calcYear), mileageNum);
     setCalcEstimatedValue(finalValue);
     toast.success(`Instant valuation compiled for your ${calcBrand}!`);
-  };
-
-  // Google (Gmail) sign-in replaces the old mobile OTP gate — see
-  // handleGoogleLogin below for the OAuth redirect logic.
-
-  const handleGoogleLogin = async () => {
-    if (!isRealSupabase) {
-      toast.error("Gmail sign-in is available with the live database. You can continue by typing your details above.");
-      return;
-    }
-    setGoogleLoading(true);
-
-    // Preserve the wizard state across the full-page OAuth redirect — React
-    // state would otherwise be wiped when Google returns the browser here..
-    try {
-      sessionStorage.setItem("1stcars_sell_car_form_state", JSON.stringify({
-        wizardStep,
-        selectedBrand, selectedModel, selectedYear, selectedFuel, selectedTransmission,
-        selectedVariant, selectedRTO, selectedKMs,
-        name, email, mobile, address, preferredDate, preferredTime,
-        brandSearch, modelSearch, rtoSearch, showAllBrands
-      }));
-    } catch (e) {
-      // sessionStorage unavailable (private mode etc.) — Gmail login still
-      // works, the wizard just restarts at the beginning on the way back..
-    }
-
-    try {
-      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: buildOAuthRedirectUrl({ sellCar: true }) },
-      });
-      if (oauthErr) {
-        setGoogleLoading(false);
-        toast.error(friendlyOAuthErrorMessage(oauthErr, "Google sign-in failed. Please try again."));
-      }
-    } catch (err: any) {
-      setGoogleLoading(false);
-      toast.error(friendlyOAuthErrorMessage(err, "Google sign-in failed. Please try again."));
-    }
   };
 
   const [dbBrands, setDbBrands] = React.useState<any[]>([]);
@@ -1824,39 +1707,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
-                      {/* Gmail (Google) auto-fill — replaces the old mobile OTP step */}
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-slate-200" />
-                        </div>
-                        <div className="relative flex justify-center text-xs font-bold text-slate-400">
-                          <span className="bg-white px3">OR</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">CONTINUE WITH GMAIL *</label>
-                        <Button
-                          type="button"
-                          onClick={handleGoogleLogin}
-                          disabled={googleLoading || isSubmitting}
-                          className="w-full bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-xs font-extrabold h-11 rounded-xl cursor-pointer shadow-sm flex items-center justify-center gap-2.5"
-                        >
-                          <GoogleG className="h-4 w-4 shrink-0" />
-                          {googleLoading ? "Connecting to Google..." : googleSignedIn ? "Signed in with Gmail" : "Sign in with Gmail & Auto-fill Details"}
-                        </Button>
-                        <p className="text-[10px] text-slate-400 font-semibold leading-snug">
-                          Your Full Name & Email are auto-filled from your Gmail account, so you can skip typing them manually.
-
-
-                        </p>
-                      </div>
-
                       
 
                       
+
                     </div>
-
                     <div className="space-y-4 border-t border-slate-100 pt-5">
                       {/* Doorstep City Dropdown */}
                       <div className="space-y-1.5">
