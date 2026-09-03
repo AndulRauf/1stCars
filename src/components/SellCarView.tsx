@@ -7,11 +7,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase, friendlyOAuthErrorMessage } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
+import { buildOAuthRedirectUrl } from "@/src/lib/router";
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
@@ -492,6 +493,18 @@ const gujaratRTOs = [
   { code: "GJ-38", city: "Bavla" }
 ];
 
+// Official multi-color Google "G" logo (lucide has no brand icons).
+function GoogleG({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.7 39.7 16.3 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.3C41.5 36.3 44 31.2 44 24c0-1.3-.1-2.6-.4-3.9z" />
+    </svg>
+  );
+}
+
 export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToSeller }: SellCarViewProps) {
   // Remembers the auto-created Seller account so "Go to Seller Dashboard" can
   // re-sign-in quietly instead of dropping the seller onto the login popup.
@@ -712,13 +725,60 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [preferredDate, setPreferredDate] = React.useState("");
   const [preferredTime, setPreferredTime] = React.useState("10:00 AM - 12:00 PM");
 
-  // OTP Verification States
-  const [otpSent, setOtpSent] = React.useState(false);
-  const [otpCode, setOtpCode] = React.useState("");
-  const [enteredOtp, setEnteredOtp] = React.useState("");
-  const [otpVerified, setOtpVerified] = React.useState(false);
-  const [resendCountdown, setResendCountdown] = React.useState(0);
-  const [otpSending, setOtpSending] = React.useState(false);
+  // Google (Gmail) sign-in state
+  const [googleLoading, setGoogleLoading] = React.useState(false);
+  const [googleSignedIn, setGoogleSignedIn] = React.useState(false);
+
+  // If the seller just returned from Google OAuth (launched from Step ó 8),
+  // restore the wizard state they filled in before the redirect — the full-page
+  // OAuth redirect wipes React state — and jump straight back to Step ó 8 soup
+  // their car details are preserved and the Gmail auto-filled name/email are ready.
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open_sell_car") === "1") {
+      params.delete("open_sell_car");
+      const nextSearch = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
+      );
+
+      // Restore the pre-redirect wizard form state saved by handleGoogleLogin.
+
+      try {
+        const stored = sessionStorage.getItem("1stcars_sell_car_form_state");
+        if (stored) {
+          const p = JSON.parse(stored);
+          if (p.wizardStep) setWizardStep(p.wizardStep);
+          if (p.selectedBrand) setSelectedBrand(p.selectedBrand);
+          if (p.selectedModel) setSelectedModel(p.selectedModel);
+          if (typeof p.selectedYear === "number") setSelectedYear(p.selectedYear);
+          if (p.selectedFuel) setSelectedFuel(p.selectedFuel);
+          if (p.selectedTransmission) setSelectedTransmission(p.selectedTransmission);
+          if (p.selectedVariant) setSelectedVariant(p.selectedVariant);
+          if (p.selectedRTO) setSelectedRTO(p.selectedRTO);
+          if (p.selectedKMs) setSelectedKMs(p.selectedKMs);
+          if (p.name) setName(p.name);
+          if (p.email) setEmail(p.email);
+          if (p.mobile) setMobile(p.mobile);
+          if (p.address) setAddress(p.address);
+          if (p.preferredDate) setPreferredDate(p.preferredDate);
+          if (p.preferredTime) setPreferredTime(p.preferredTime);
+          if (p.brandSearch) setBrandSearch(p.brandSearch);
+          if (p.modelSearch) setModelSearch(p.modelSearch);
+          if (p.rtoSearch) setRtoSearch(p.rtoSearch);
+          if (typeof p.showAllBrands === "boolean") setShowAllBrands(p.showAllBrands);
+        }
+      } catch (e) {
+        console.warn("Failed to restore Sell Car form state after Gmail login:", e);
+      }
+      sessionStorage.removeItem("1stcars_sell_car_form_state");
+      setGoogleSignedIn(true);
+      toast.success("Signed in with Gmail — name & email auto-filled!");
+    }
+  }, []);
 
   // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
   const [calcBrand, setCalcBrand] = React.useState("");
@@ -748,42 +808,44 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     toast.success(`Instant valuation compiled for your ${calcBrand}!`);
   };
 
-  React.useEffect(() => {
-    let timer: any;
-    if (resendCountdown > 0) {
-      timer = setInterval(() => {
-        setResendCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [resendCountdown]);
+  // Google (Gmail) sign-in replaces the old mobile OTP gate — see
+  // handleGoogleLogin below for the OAuth redirect logic.
 
-  const handleSendOtp = async () => {
-    if (!name.trim()) {
-      toast.error("Please enter your full name.");
+  const handleGoogleLogin = async () => {
+    if (!isRealSupabase) {
+      toast.error("Gmail sign-in is available with the live database. You can continue by typing your details above.");
       return;
     }
-    if (!email.trim() || !email.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return;
+    setGoogleLoading(true);
+
+    // Preserve the wizard state across the full-page OAuth redirect — React
+    // state would otherwise be wiped when Google returns the browser here..
+    try {
+      sessionStorage.setItem("1stcars_sell_car_form_state", JSON.stringify({
+        wizardStep,
+        selectedBrand, selectedModel, selectedYear, selectedFuel, selectedTransmission,
+        selectedVariant, selectedRTO, selectedKMs,
+        name, email, mobile, address, preferredDate, preferredTime,
+        brandSearch, modelSearch, rtoSearch, showAllBrands
+      }));
+    } catch (e) {
+      // sessionStorage unavailable (private mode etc.) — Gmail login still
+      // works, the wizard just restarts at the beginning on the way back..
     }
-    if (!mobile || mobile.length !== 10) {
-      toast.error("Please enter a valid 10-digit mobile number.");
-      return;
+
+    try {
+      const { error: oauthErr } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: buildOAuthRedirectUrl({ sellCar: true }) },
+      });
+      if (oauthErr) {
+        setGoogleLoading(false);
+        toast.error(friendlyOAuthErrorMessage(oauthErr, "Google sign-in failed. Please try again."));
+      }
+    } catch (err: any) {
+      setGoogleLoading(false);
+      toast.error(friendlyOAuthErrorMessage(err, "Google sign-in failed. Please try again."));
     }
-    setOtpSending(true);
-    const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
-    setOtpCode(generatedCode);
-    
-    setTimeout(() => {
-      setOtpSent(true);
-      setOtpSending(false);
-      setResendCountdown(30);
-      // The code is intentionally NOT echoed back in the toast; in the demo the
-      // simulated-SMS banner below surfaces it for testing, on a live gateway
-      // the real message goes to the seller's phone.
-      toast.success("Verification SMS sent to your mobile number!");
-    }, 1000);
   };
 
   const [dbBrands, setDbBrands] = React.useState<any[]>([]);
@@ -923,10 +985,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
-    if (!otpVerified) {
-      toast.error("Please verify your mobile number with OTP first.");
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -1029,7 +1087,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       preferred_date: finalDate,
       preferred_time: finalTime,
       status: "pending" as const,
-      notes: "Newly requested inspection with verified mobile OTP from modern Gujarat Sell Car flow."
+      notes: "New inspection request from the Gujarat Sell Car form."
     };
 
     try {
@@ -1794,12 +1852,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             placeholder="Enter your full name"
                             type="text"
                             value={name}
-                            onChange={(e) => {
-                              if (!otpVerified) {
-                                setName(e.target.value);
-                              }
-                            }}
-                            disabled={otpVerified}
+                            onChange={(e) => setName(e.target.value)}
                             required
                             className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
                           />
@@ -1815,12 +1868,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             placeholder="Enter your email address"
                             type="email"
                             value={email}
-                            onChange={(e) => {
-                              if (!otpVerified) {
-                                setEmail(e.target.value.trim());
-                              }
-                            }}
-                            disabled={otpVerified}
+                            onChange={(e) => setEmail(e.target.value.trim())}
                             required
                             className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
                           />
@@ -1830,122 +1878,51 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       {/* Mobile Input Row */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">MOBILE NUMBER *</label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                            <Input
-                              placeholder="Enter 10-digit mobile"
-                              type="tel"
-                              maxLength={10}
-                              value={mobile}
-                              onChange={(e) => {
-                                if (!otpVerified) {
-                                  setMobile(e.target.value.replace(/\D/g, ""));
-                                }
-                              }}
-                              disabled={otpVerified}
-                              required
-                              className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                            />
-                          </div>
-
-                          {!otpVerified && (
-                            <Button
-                              type="button"
-                              onClick={handleSendOtp}
-                              disabled={otpSending || !mobile || mobile.length !== 10}
-                              className="h-11 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs px-4 rounded-xl shrink-0"
-                            >
-                              {otpSending ? "Sending..." : otpSent ? "Resend" : "Send OTP"}
-                            </Button>
-                          )}
+                        <div className="relative">
+                          <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Enter 10-digit mobile"
+                            type="tel"
+                            maxLength={10}
+                            value={mobile}
+                            onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                            required
+                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
                         </div>
                       </div>
 
-                      {/* OTP Verification Input Row */}
-                      {otpSent && !otpVerified && (
-                        <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-3.5">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">Enter 4-Digit OTP Code</label>
-                            <Input
-                              placeholder="e.g. 1234"
-                              type="text"
-                              maxLength={4}
-                              value={enteredOtp}
-                              onChange={(e) => {
-                                const val = e.target.value.replace(/\D/g, "");
-                                setEnteredOtp(val);
-                                // Auto verify if exact
-                                if (val === otpCode) {
-                                  setOtpVerified(true);
-                                  toast.success("Mobile number verified successfully!");
-                                }
-                              }}
-                              className="h-11 rounded-xl text-center text-lg font-black tracking-widest border-slate-300"
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
-                            <div>
-                              {resendCountdown > 0 ? (
-                                <span>Resend in <strong className="text-slate-800">{resendCountdown}s</strong></span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={handleSendOtp}
-                                  className="text-[#2E7D32] hover:underline cursor-pointer"
-                                >
-                                  Resend Code
-                                </button>
-                              )}
-                            </div>
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (enteredOtp === otpCode) {
-                                    setOtpVerified(true);
-                                    toast.success("Mobile number verified successfully!");
-                                  } else {
-                                    toast.error("Incorrect OTP. Please check the code sent via SMS.");
-                                  }
-                                }}
-                                className="text-white bg-[#2E7D32] px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer"
-                              >
-                                Verify OTP
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Simulated SMS banner. A real gateway sends the code to
-                              the seller's phone; here we surface it for testing. */}
-                          <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2">
-                            <p className="text-[10px] font-bold text-slate-500 leading-snug">
-                              Demo SMS: <span className="text-slate-800">+91 {mobile}</span> — your 1stCars verification code is{" "}
-                              <strong className="text-[#2E7D32]">{otpCode}</strong>.
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEnteredOtp(otpCode);
-                                setOtpVerified(true);
-                                toast.success("OTP autofilled and mobile verified!");
-                              }}
-                              className="shrink-0 text-[#2E7D32] border border-[#2E7D32]/30 bg-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-pointer hover:bg-[#2E7D32] hover:text-white transition-all"
-                            >
-                              ⚡ Autofill
-                            </button>
-                          </div>
+                      {/* Gmail (Google) auto-fill — replaces the old mobile OTP step */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-slate-200" />
                         </div>
-                      )}
-
-                      {/* Verified success notification */}
-                      {otpVerified && (
-                        <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-2.5 text-[#2E7D32] text-xs font-black">
-                          <CheckCircle2 className="h-5 w-5 text-[#2E7D32] shrink-0" />
-                          <span>Mobile verified successfully! Your car details are ready for pricing.</span>
+                        <div className="relative flex justify-center text-xs font-bold text-slate-400">
+                          <span className="bg-white px3">OR</span>
                         </div>
-                      )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">CONTINUE WITH GMAIL *</label>
+                        <Button
+                          type="button"
+                          onClick={handleGoogleLogin}
+                          disabled={googleLoading || isSubmitting}
+                          className="w-full bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-xs font-extrabold h-11 rounded-xl cursor-pointer shadow-sm flex items-center justify-center gap-2.5"
+                        >
+                          <GoogleG className="h-4 w-4 shrink-0" />
+                          {googleLoading ? "Connecting to Google..." : googleSignedIn ? "Signed in with Gmail" : "Sign in with Gmail & Auto-fill Details"}
+                        </Button>
+                        <p className="text-[10px] text-slate-400 font-semibold leading-snug">
+                          Your Full Name & Email are auto-filled from your Gmail account, so you can skip typing them manually.
+
+
+                        </p>
+                      </div>
+
+                      
+
+                      
                     </div>
 
                     <div className="space-y-4 border-t border-slate-100 pt-5">
@@ -2007,12 +1984,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="pt-4">
                       <Button
                         type="submit"
-                        disabled={isSubmitting || !otpVerified}
-                        className={`w-full py-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl h-13 transition-all ${
-                          otpVerified 
-                            ? "bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-[#2E7D32]/20 cursor-pointer" 
-                            : "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200"
-                        }`}
+                        disabled={isSubmitting}
+                        className="w-full py-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl h-13 transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-[#2E7D32]/20 cursor-pointer"
                       >
                         {isSubmitting ? "Registering Valuation..." : "Submit my car details"}
                       </Button>

@@ -297,8 +297,13 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
  * - returnToCurrent (BookingModal): stay on the exact page the user was on and
  *   flag open_booking so CarDetailsView re-opens the modal after the redirect.
  */
-export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean }): string | undefined {
+export function buildOAuthRedirectUrl(opts?: { returnToCurrent?: boolean; sellCar?: boolean }): string | undefined {
   if (typeof window === "undefined") return undefined;
+  if (opts?.sellCar) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("open_sell_car", "1");
+    return url.toString();
+  }
   if (opts?.returnToCurrent) {
     const url = new URL(window.location.href);
     url.searchParams.set("open_booking", "1");
