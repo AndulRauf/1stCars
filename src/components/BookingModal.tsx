@@ -643,7 +643,6 @@ export function BookingModal({
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full h-10 bg-white border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2E7D32]"
                 >
-                  <option value="Surat">Surat</option>
                   {CITIES_DATA.filter((c) => c !== "All Cities").map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
