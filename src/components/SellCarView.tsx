@@ -674,6 +674,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [formStep, setFormStep] = React.useState<"form" | "success">("form");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [createdRequest, setCreatedRequest] = React.useState<any>(null);
+  const [partialLeadId, setPartialLeadId] = React.useState<string | null>(null);
 
   // Search queries for each stage
   const [brandSearch, setBrandSearch] = React.useState("");
@@ -850,6 +851,48 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     "2,00,000+ Km"
   ];
 
+  // Partial lead capture — save the mobile + brand + model as soon as these are
+  // known (right after Brand & Model), so a visitor who drops off mid-form still
+  // leaves a recoverable lead. The returned row id is reused later to UPDATE the
+  // same record with the full inspection details on final submit.
+  const handleMobileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    if (!mobile || mobile.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from("inspections")
+        .insert([
+          {
+            seller_mobile: mobile,
+            brand: selectedBrand,
+            model: selectedModel,
+            status: "partial",
+            notes: "Partial lead — form in progress"
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || "Could not save your progress.");
+      }
+      setPartialLeadId(data?.id ?? null);
+      setWizardStep(4);
+    } catch (err) {
+      console.error("Error saving partial lead:", err);
+      toast.error("We couldn't save your progress, but you can continue.");
+      setWizardStep(4);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Submit flow
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -942,18 +985,24 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      // Fast, minimal insert — no `.select()` round-trip on the critical path.
-      let { error } = await supabase.from("inspections").insert([inspectionRecord]);
+      // If a partial lead was captured earlier, UPDATE that same row with the
+      // full inspection details; otherwise do a fresh INSERT. The fast path
+      // avoids a `.select()` round-trip on the critical path.
+      let { error } = partialLeadId
+        ? await supabase.from("inspections").update(inspectionRecord).eq("id", partialLeadId)
+        : await supabase.from("inspections").insert([inspectionRecord]);
 
       // Schema-mismatch recovery: an older live database may be missing the
       // optional denormalized columns. Retry with only the base columns.
       if (error && isUnknownColumnError(error.message)) {
         const { seller_email, notes, ...baseRecord } = inspectionRecord;
         console.warn(
-          "Inspections insert rejected an optional column — retrying with base columns only.",
+          "Inspection write rejected an optional column — retrying with base columns only.",
           error.message
         );
-        ({ error } = await supabase.from("inspections").insert([baseRecord]));
+        ({ error } = partialLeadId
+          ? await supabase.from("inspections").update(baseRecord).eq("id", partialLeadId)
+          : await supabase.from("inspections").insert([baseRecord]));
       }
 
       if (error) {
@@ -1101,12 +1150,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   {[
                     { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "Brand" },
                     { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "Model" },
-                    { step: 3, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "Variant" },
-                    { step: 4, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
-                    { step: 5, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "Fuel" },
-                    { step: 6, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
-                    { step: 7, label: selectedBrand && selectedModel && selectedRTO && selectedKMs ? `✔ KMs` : "KMs" },
-                    { step: 8, label: "Verify" }
+                    { step: 3, label: mobile ? `✔ ${mobile}` : "Mobile" },
+                    { step: 4, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "Variant" },
+                    { step: 5, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
+                    { step: 6, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "Fuel" },
+                    { step: 7, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
+                    { step: 8, label: selectedBrand && selectedModel && selectedRTO && selectedKMs ? `✔ KMs` : "KMs" },
+                    { step: 9, label: "Verify" }
                   ].map((item) => {
                     const isCompleted = wizardStep > item.step;
                     const isActive = wizardStep === item.step;
@@ -1134,7 +1184,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-8">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
-                    style={{ width: `${(wizardStep / 8) * 100}%` }}
+                    style={{ width: `${(wizardStep / 9) * 100}%` }}
                   />
                 </div>
 
@@ -1299,8 +1349,58 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 3: SELECT VARIANT */}
+                {/* STEP 3: MOBILE NUMBER (partial lead capture) */}
                 {wizardStep === 3 && (
+                  <form onSubmit={handleMobileSubmit} className="space-y-6">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
+                        <span>Selected Car:</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel}</span>
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Your mobile number?</h3>
+                      <p className="text-xs text-slate-400 font-semibold">We'll reach you with a competitive cash quote — and save your progress so you never lose it.</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">MOBILE NUMBER *</label>
+                      <div className="relative">
+                        <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                        <Input
+                          placeholder="Enter 10-digit mobile"
+                          type="tel"
+                          maxLength={10}
+                          value={mobile}
+                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+                          required
+                          className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl h-13 transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-[#2E7D32]/20 cursor-pointer"
+                      >
+                        {isSubmitting ? "Saving progress..." : "Continue"}
+                      </Button>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(2)}
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* STEP 4: SELECT VARIANT */}
+                {wizardStep === 4 && (
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
@@ -1325,7 +1425,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               type="button"
                               onClick={() => {
                                 setSelectedVariant(v);
-                                setWizardStep(4);
+                                setWizardStep(5);
                               }}
                               className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
                                 isSelected
@@ -1355,7 +1455,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         />
                         <Button
                           type="button"
-                          onClick={() => setWizardStep(4)}
+                          onClick={() => setWizardStep(5)}
                           className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold px-4"
                         >
                           Next
@@ -1375,8 +1475,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 4: SELECT YEAR */}
-                {wizardStep === 4 && (
+                {/* STEP 5: SELECT YEAR */}
+                {wizardStep === 5 && (
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
@@ -1397,7 +1497,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               setSelectedYear(y);
-                              setWizardStep(5);
+                              setWizardStep(6);
                             }}
                             className={`p-3.5 rounded-xl border text-center text-xs font-black transition-all ${
                               isSelected
@@ -1414,7 +1514,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(3)}
+                        onClick={() => setWizardStep(4)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -1423,8 +1523,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 5: SELECT FUEL */}
-                {wizardStep === 5 && (
+                {/* STEP 6: SELECT FUEL */}
+                {wizardStep === 6 && (
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
@@ -1471,7 +1571,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               setSelectedFuel(f);
-                              setWizardStep(6);
+                              setWizardStep(7);
                             }}
                             className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
                               isSelected
@@ -1489,7 +1589,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(4)}
+                        onClick={() => setWizardStep(5)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -1498,8 +1598,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 6: GUJARAT RTO ONLY */}
-                {wizardStep === 6 && (
+                {/* STEP 7: GUJARAT RTO ONLY */}
+                {wizardStep === 7 && (
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
@@ -1531,7 +1631,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               setSelectedRTO(r.code);
-                              setWizardStep(7);
+                              setWizardStep(8);
                             }}
                             className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
                               isSelected
@@ -1561,7 +1661,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(5)}
+                        onClick={() => setWizardStep(6)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -1570,8 +1670,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 7: SELECT KM DRIVEN */}
-                {wizardStep === 7 && (
+                {/* STEP 8: SELECT KM DRIVEN */}
+                {wizardStep === 8 && (
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
@@ -1592,7 +1692,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               setSelectedKMs(k);
-                              setWizardStep(8);
+                              setWizardStep(9);
                             }}
                             className={`p-3.5 rounded-xl border text-center text-[11px] font-bold tracking-tight transition-all ${
                               isSelected
@@ -1609,7 +1709,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(6)}
+                        onClick={() => setWizardStep(7)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
@@ -1618,8 +1718,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 8: CONTACT DETAILS & SUBMISSION */}
-                {wizardStep === 8 && (
+                {/* STEP 9: CONTACT DETAILS & SUBMISSION */}
+                {wizardStep === 9 && (
                   <form onSubmit={handleFinalSubmit} className="space-y-6">
                     <div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight">Almost done — verify your details</h3>
@@ -1665,27 +1765,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
-                      {/* Mobile Input Row */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">MOBILE NUMBER *</label>
-                        <div className="relative">
-                          <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder="Enter 10-digit mobile"
-                            type="tel"
-                            maxLength={10}
-                            value={mobile}
-                            onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                            required
-                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                      </div>
-
-                      
-
-                      
-
                     </div>
                     <div className="space-y-4 border-t border-slate-100 pt-5">
                       {/* Doorstep City Dropdown */}
@@ -1722,7 +1801,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(7)}
+                        onClick={() => setWizardStep(8)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
