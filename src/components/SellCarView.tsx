@@ -1257,7 +1257,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-2xl">{m.image}</span>
                               <div>
                                 <h4 className="font-bold text-xs text-slate-900 leading-tight">{m.name}</h4>
                                 <p className="text-[10px] text-slate-400 mt-0.5 leading-none font-bold">
@@ -1296,7 +1295,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 2 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1373,7 +1371,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 3 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1422,7 +1419,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 4 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1498,7 +1494,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 5 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1571,7 +1566,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 6 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1620,7 +1614,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 7 of 8</div>
                     </div>
                   </div>
                 )}
@@ -1635,9 +1628,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
                     {/* Car specs overview card */}
                     <div className="p-5 bg-gradient-to-r from-emerald-50 to-[#FAF9F6] border border-slate-200/60 rounded-2xl flex items-center gap-4 text-slate-800">
-                      <div className="h-12 w-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-slate-100 shadow-xs shrink-0">
-                        🚙
-                      </div>
                       <div className="min-w-0">
                         <span className="text-[10px] bg-[#2E7D32]/10 text-[#2E7D32] font-black uppercase px-2 py-0.5 rounded">
                           GJ REGISTRATION: {selectedRTO}
@@ -1737,7 +1727,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
-                      <div className="text-slate-400">Step 8 of 8</div>
                     </div>
                   </form>
                 )}
