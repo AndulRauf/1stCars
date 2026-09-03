@@ -754,7 +754,7 @@ export function BuyNowCheckout({
               disabled={isSendingOtp}
               className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-sm uppercase tracking-wider h-12 rounded-2xl shadow-md shadow-[#2E7D32]/20 cursor-pointer"
             >
-              {isSendingOtp ? "Sending OTP..." : "Verify mobile to pay"}
+              {isSendingOtp ? "Sending OTP..." : "Book Now"}
             </Button>
           ) : (
             <Button
