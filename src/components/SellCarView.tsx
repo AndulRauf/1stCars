@@ -1,7 +1,7 @@
 import * as React from "react";
 import { 
   Car, ShieldCheck, Clock, Calendar, CheckCircle2, 
-  Sparkles, ShieldAlert, ChevronRight, User, Mail, Phone, 
+  Sparkles, ShieldAlert, ChevronRight, User, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
   Search, ArrowLeft, Tag
 } from "lucide-react";
@@ -14,6 +14,7 @@ import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { generateDerivedEmail } from "@/src/lib/utils";
 import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
 import {
@@ -857,14 +858,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       toast.error("Please enter your full name.");
       return;
     }
-    if (!email.trim() || !email.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
     if (!mobile || mobile.length !== 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
+
+    // Email is collected in a later version — derive one from the mobile number
+    // so inspection records and auto-account creation keep working.
+    const resolvedEmail = email.trim() || generateDerivedEmail(mobile);
 
     setIsSubmitting(true);
 
@@ -880,10 +881,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     try {
       user = (await supabase.auth.getUser()).data?.user;
       if (user) {
-        autoEmail = email.trim();
+        autoEmail = resolvedEmail;
         autoPassword = localStorage.getItem(getAutoPasswordKey(autoEmail)) || "";
       } else {
-        autoEmail = email.trim();
+        autoEmail = resolvedEmail;
         autoPassword = getOrCreateAutoPassword(autoEmail);
       }
       sellerAutoAuthRef.current = {
@@ -896,7 +897,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       };
     } catch (authErr) {
       console.warn("Auth check failed during inspection submit:", authErr);
-      autoEmail = email.trim();
+      autoEmail = resolvedEmail;
       autoPassword = getOrCreateAutoPassword(autoEmail);
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
@@ -908,7 +909,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     // Smart default fallbacks for removed fields
     const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
-    const finalEmail = email.trim() || user?.email || "";
+    const finalEmail = resolvedEmail || user?.email || "";
     const finalAddress = address ? `Home Doorstep Inspection in ${address}` : `Home Doorstep Inspection near RTO ${selectedRTO} (${resolvedCity})`;
     const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
     const finalTime = preferredTime || "11:00 AM - 01:00 PM";
@@ -982,7 +983,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
             await resolveAutoSignIn(supabase, autoEmail, autoPassword, {
               data: {
                 name: preliminaryName,
-                email: email.trim(),
+                email: resolvedEmail,
                 mobile: mobile,
                 role: "Seller",
                 city: resolvedCity
@@ -1668,22 +1669,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            required
-                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Email Input Row */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">EMAIL ID *</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder="Enter your email address"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value.trim())}
                             required
                             className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
                           />

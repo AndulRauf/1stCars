@@ -51,3 +51,15 @@ export function sanitizeSettings(parsed: any): any {
   }
   return parsed;
 }
+
+/**
+ * Builds a stable, unique email from a mobile number when the visible email
+ * field is hidden from a form (email collection is deferred to a later
+ * version). The derived email keeps lead records and auto-account creation
+ * working without requiring the visitor to type one.
+ */
+export function generateDerivedEmail(mobile: string): string {
+  const digits = (mobile || "").replace(/\D/g, "").slice(-10);
+  return `${digits || "visitor"}@buyer.local`;
+}
+

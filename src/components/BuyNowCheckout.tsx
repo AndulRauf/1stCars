@@ -339,10 +339,6 @@ export function BuyNowCheckout({
       toast.error("Please enter your full name.");
       return;
     }
-    if (!buyerEmail.trim() || !buyerEmail.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
     if (!buyerMobile || buyerMobile.length !== 10) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
@@ -395,10 +391,6 @@ export function BuyNowCheckout({
   const handleContinueToPay = async () => {
     if (!buyerName.trim()) {
       toast.error("Please enter your full name.");
-      return;
-    }
-    if (!buyerEmail.trim() || !buyerEmail.includes("@")) {
-      toast.error("Please enter a valid email address.");
       return;
     }
     if (!buyerMobile || buyerMobile.replace(/\D/g, "").length < 10) {
@@ -699,13 +691,6 @@ export function BuyNowCheckout({
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
                   placeholder="Your full name *"
-                  className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
-                />
-                <input
-                  type="email"
-                  value={buyerEmail}
-                  onChange={(e) => setBuyerEmail(e.target.value.trim())}
-                  placeholder="Your email address *"
                   className="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2E7D32]"
                 />
                 <div className="relative">

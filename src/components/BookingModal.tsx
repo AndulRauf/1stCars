@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X, Calendar, Clock, MapPin, Check, Phone, Mail, ShieldCheck, Car as CarIcon, Sparkles, Send, CheckCircle2 } from "lucide-react";
+import { X, Calendar, Clock, MapPin, Check, Phone, ShieldCheck, Car as CarIcon, Sparkles, Send, CheckCircle2 } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -10,6 +10,7 @@ import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
+import { generateDerivedEmail } from "@/src/lib/utils";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -174,9 +175,10 @@ export function BookingModal({
       return;
     }
 
+    // Email is intentionally collected in a later version — derive one from the
+    // mobile number so lead records and auto-account creation keep working.
     if (!email.trim() || !email.includes("@")) {
-      toast.error("Please enter a valid Gmail / Email address.");
-      return;
+      setEmail(generateDerivedEmail(mobile));
     }
 
     // Auto verify OTP if user hasn't manually clicked verify but filled
@@ -455,10 +457,6 @@ export function BookingModal({
                   {isOtpVerified && <span className="text-emerald-600 font-normal"> ✓</span>}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200/70">
-                <span className="text-slate-400 font-black uppercase text-[10px]">Gmail / Email</span>
-                <span className="text-slate-900 font-black">{email}</span>
-              </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-black uppercase text-[10px]">Schedule Slot</span>
                 <span className="text-slate-900 font-black">{preferredDate} ({preferredTime})</span>
@@ -631,21 +629,6 @@ export function BookingModal({
                   Our concierge will verify this number when they call you to confirm your slot.
                 </p>
               )}
-            </div>
-
-            {/* Input 3: Gmail / Email Address */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                <Mail className="h-3 w-3 text-[#2E7D32]" /> Email Address *
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. buyer@gmail.com"
-                required
-                className="h-10 text-xs font-bold rounded-xl"
-              />
             </div>
 
             {/* City & Preferred Date/Time Row */}
