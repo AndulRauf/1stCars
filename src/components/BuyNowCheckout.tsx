@@ -231,8 +231,8 @@ export function BuyNowCheckout({
   React.useEffect(() => {
     if (isSubmitted) {
       const timer = setTimeout(() => {
-        onClose();
         onNavigateToDashboard?.();
+        onClose();
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -588,7 +588,7 @@ export function BuyNowCheckout({
             <p className="text-sm text-slate-500 mt-2">Your Sales Assistant will contact you shortly.</p>
           </div>
           <div className="space-y-2 pt-2">
-            <Button onClick={() => { onClose(); onNavigateToDashboard?.(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
+            <Button onClick={() => { onNavigateToDashboard?.(); onClose(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
             <p className="text-[10px] text-slate-400 font-bold text-center">Redirecting you to your Buyer Dashboard in a moment…</p>
           </div>
         </div>

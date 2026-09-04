@@ -183,10 +183,6 @@ export function Navbar({
   const handleLinkClick = (e: React.MouseEvent, view: any, href: string) => {
     e.preventDefault();
     if (view === "sell_car" || view === "role_dashboards") {
-      if (view === "role_dashboards" && !currentUser) {
-        onAuthClick?.("login");
-        return;
-      }
       onViewChange?.(view);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;

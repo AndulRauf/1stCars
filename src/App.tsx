@@ -737,26 +737,15 @@ export default function App() {
             </div>
             <button
               onClick={() => {
-                if (!authModal.isOpen) {
-                  setAuthModal({ isOpen: true, mode: "login" });
-                  // small timeout to let AuthModal mount event listener
-                  setTimeout(() => {
-                    const event = new CustomEvent("1stcars_autofill_otp", {
-                      detail: { code: globalSimulatedSms.code }
-                    });
-                    window.dispatchEvent(event);
-                  }, 150);
-                } else {
-                  const event = new CustomEvent("1stcars_autofill_otp", {
-                    detail: { code: globalSimulatedSms.code }
-                  });
-                  window.dispatchEvent(event);
-                }
+                const event = new CustomEvent("1stcars_autofill_otp", {
+                  detail: { code: globalSimulatedSms.code }
+                });
+                window.dispatchEvent(event);
                 setGlobalSimulatedSms(null);
               }}
               className="mt-1 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg py-2 transition-all cursor-pointer shadow-lg shadow-[#2E7D32]/20"
             >
-              ⚡ {!authModal.isOpen ? "Autofill & Sign In:" : "Autofill OTP Code:"} {globalSimulatedSms.code}
+              ⚡ Autofill OTP Code: {globalSimulatedSms.code}
             </button>
           </div>
         </div>
@@ -915,14 +904,6 @@ export default function App() {
             <p className="text-sm text-slate-500 mt-2 mb-6">
               You must be signed in to access the private user & staff dashboards or Admin CMS.
             </p>
-            <div className="flex flex-col gap-3 w-full">
-              <Button
-                onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
-                className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase rounded-xl py-3.5 shadow-md"
-              >
-                Sign In To Continue
-              </Button>
-            </div>
           </div>
         )
       ) : currentView === "firstmark_certification" ? (

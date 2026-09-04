@@ -123,8 +123,8 @@ export function BookingModal({
   React.useEffect(() => {
     if (isSubmitted) {
       const timer = setTimeout(() => {
-        onClose();
         onNavigateToDashboard?.();
+        onClose();
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -468,10 +468,10 @@ export function BookingModal({
               <Button
                 type="button"
                 onClick={() => {
-                  onClose();
                   if (onNavigateToDashboard) {
                     onNavigateToDashboard();
                   }
+                  onClose();
                 }}
                 className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-black text-xs uppercase tracking-wider h-12 rounded-xl cursor-pointer shadow-md shadow-[#2E7D32]/20 flex items-center justify-center gap-2"
               >
