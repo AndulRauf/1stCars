@@ -13,6 +13,7 @@ import { useCatalogCars } from "@/src/lib/useCatalogCars";
 import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackShareEvent } from "@/src/lib/analytics";
+import { Profile } from "@/src/lib/db";
 
 
 interface CarDetailsViewProps {
@@ -22,7 +23,7 @@ interface CarDetailsViewProps {
   savedCars: string[];
   onSaveToggle: (id: string, model: string) => void;
   onNavigateToSalesPortal: () => void;
-  onNavigateToDashboard?: () => void;
+  onNavigateToDashboard?: (profile?: Profile) => void;
 }
 
 export function CarDetailsView({

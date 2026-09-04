@@ -9,6 +9,7 @@ import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackWhatsAppClick } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
+import { Profile } from "@/src/lib/db";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ interface BuyNowCheckoutProps {
   selectedCity?: string;
   savedCars?: string[];
   onSaveToggle?: (id: string, model: string) => void;
-  onNavigateToDashboard?: () => void;
+  onNavigateToDashboard?: (profile?: Profile) => void;
 }
 
 const MIN_BOOKING_TOKEN = 3000;
@@ -188,6 +189,7 @@ export function BuyNowCheckout({
   const [buyerName, setBuyerName] = React.useState("");
   const [buyerEmail, setBuyerEmail] = React.useState("");
   const [buyerMobile, setBuyerMobile] = React.useState("");
+  const [buyerProfile, setBuyerProfile] = React.useState<Profile | null>(null);
 
   // Mobile OTP verification state
   const [otpSent, setOtpSent] = React.useState(false);
@@ -231,12 +233,12 @@ export function BuyNowCheckout({
   React.useEffect(() => {
     if (isSubmitted) {
       const timer = setTimeout(() => {
-        onNavigateToDashboard?.();
+        onNavigateToDashboard?.(buyerProfile ?? undefined);
         onClose();
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [isSubmitted, onClose, onNavigateToDashboard]);
+  }, [isSubmitted, onClose, onNavigateToDashboard, buyerProfile]);
 
   // OTP resend countdown timer
   React.useEffect(() => {
@@ -406,6 +408,15 @@ export function BuyNowCheckout({
     try {
       await processCheckout(car, selectedCity, buyerName, buyerEmail, buyerMobile, refId, vehicleTitle, totalPrice, fmt, "", "", "Pending", onSaveToggle, savedCars);
       setIsSubmitted(true);
+      setBuyerProfile({
+        id: "",
+        name: buyerName.trim(),
+        email: buyerEmail.trim(),
+        mobile: buyerMobile.trim(),
+        role: "Buyer",
+        city: selectedCity || car.cities?.[0] || car.location || "Surat",
+        created_at: new Date().toISOString()
+      });
       toast.success("Reservation started! Our team will connect with you to complete the payment.");
     } catch (err) {
       console.error("Buy now checkout error:", err);
@@ -430,6 +441,15 @@ export function BuyNowCheckout({
       try {
         await processCheckout(car, selectedCity, buyerName, buyerEmail, buyerMobile, refId, vehicleTitle, totalPrice, fmt, upiRef.trim(), upiSettings.upiId, "Payment Submitted", onSaveToggle, savedCars);
         setIsSubmitted(true);
+        setBuyerProfile({
+          id: "",
+          name: buyerName.trim(),
+          email: buyerEmail.trim(),
+          mobile: buyerMobile.trim(),
+          role: "Buyer",
+          city: selectedCity || car.cities?.[0] || car.location || "Surat",
+          created_at: new Date().toISOString()
+        });
         toast.success("Payment submitted! Our team will contact you shortly.");
       } catch (err) {
         const message = err instanceof Error ? err.message : "Something went wrong.";
@@ -588,7 +608,7 @@ export function BuyNowCheckout({
             <p className="text-sm text-slate-500 mt-2">Your Sales Assistant will contact you shortly.</p>
           </div>
           <div className="space-y-2 pt-2">
-            <Button onClick={() => { onNavigateToDashboard?.(); onClose(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
+            <Button onClick={() => { onNavigateToDashboard?.(buyerProfile ?? undefined); onClose(); }} className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white rounded-xl font-black text-xs uppercase tracking-wider h-11">Go to Buyer Dashboard</Button>
             <p className="text-[10px] text-slate-400 font-bold text-center">Redirecting you to your Buyer Dashboard in a moment…</p>
           </div>
         </div>

@@ -12,6 +12,7 @@ import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { CITIES_DATA } from "@/src/data/cars";
+import { Profile } from "@/src/lib/db";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface BookingModalProps {
   selectedCity?: string;
   savedCars?: string[];
   onSaveToggle?: (id: string, model: string) => void;
-  onNavigateToDashboard?: () => void;
+  onNavigateToDashboard?: (profile?: Profile) => void;
 }
 
 export function BookingModal({
@@ -59,6 +60,7 @@ export function BookingModal({
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [submitError, setSubmitError] = React.useState("");
   const [leadRefId, setLeadRefId] = React.useState("");
+  const [buyerProfile, setBuyerProfile] = React.useState<Profile | null>(null);
 
 
   // Reset state on open/close or initialType change
@@ -69,6 +71,7 @@ export function BookingModal({
       setIsOtpVerified(false);
       setIsOtpSent(false);
       setEnteredOtp("");
+      setBuyerProfile(null);
       setCity(selectedCity || car?.cities?.[0] || car?.location || "Surat");
     }
   }, [isOpen, initialType, car, selectedCity]);
@@ -123,12 +126,12 @@ export function BookingModal({
   React.useEffect(() => {
     if (isSubmitted) {
       const timer = setTimeout(() => {
-        onNavigateToDashboard?.();
+        onNavigateToDashboard?.(buyerProfile ?? undefined);
         onClose();
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [isSubmitted, onClose, onNavigateToDashboard]);
+  }, [isSubmitted, onClose, onNavigateToDashboard, buyerProfile]);
 
   if (!isOpen) return null;
 
@@ -285,6 +288,15 @@ export function BookingModal({
       }
 
       setIsSubmitted(true);
+      setBuyerProfile({
+        id: "",
+        name: userName,
+        email: userEmail,
+        mobile: userMobile,
+        role: "Buyer",
+        city: userCity,
+        created_at: new Date().toISOString()
+      });
       toast.success("Your inquiry is submitted! One of our team members will connect with you shortly.");
 
       trackMetaEvent(bookingType === "test_drive" ? "Lead" : "InitiateCheckout", {
@@ -469,7 +481,7 @@ export function BookingModal({
                 type="button"
                 onClick={() => {
                   if (onNavigateToDashboard) {
-                    onNavigateToDashboard();
+                    onNavigateToDashboard(buyerProfile ?? undefined);
                   }
                   onClose();
                 }}

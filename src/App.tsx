@@ -857,7 +857,11 @@ export default function App() {
           onNavigateToSalesPortal={() => {
             handleNavigate("sales_dashboard");
           }}
-          onNavigateToDashboard={() => {
+          onNavigateToDashboard={(profile) => {
+            // Buyer flow (test drive / buy now) passes the freshly auto-created
+            // Buyer profile; push it into App state so the Buyer dashboard
+            // renders immediately instead of showing "Access Restricted".
+            if (profile) setCurrentUser(profile);
             handleNavigate("role_dashboards");
           }}
         />
