@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { 
   Car, ShieldCheck, Clock, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Phone, 
@@ -1108,19 +1108,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     <div className="bg-[#FAF9F6] min-h-screen pb-20 text-left">
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-10 md:pb-14 overflow-hidden border-b border-[#2E7D32]/15">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
           <div className="inline-flex">
-            <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
-              <Tag className="h-4 w-4" /> SELL YOUR CAR
+            <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-white/70 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5 shadow-sm">
+              <Tag className="h-3.5 w-3.5" /> SELL YOUR CAR
             </span>
           </div>
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter leading-none">
+          <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">
             {settings.sellCarBannerTitle}
           </h1>
-          <p className="text-xs sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
             {settings.sellCarBannerDesc}
           </p>
         </div>
@@ -1138,10 +1136,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 
                 {/* Header */}
                 <div className="mb-6">
-                  <h2 className="text-2xl font-black text-slate-950 tracking-tight leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight leading-tight">
                     {settings.sellCarFormHeading}
                   </h2>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-sm text-slate-500 font-medium mt-1.5 leading-relaxed">
                     {settings.sellCarFormSubheading}
                   </p>
                 </div>
@@ -1167,7 +1165,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         type="button"
                         onClick={() => handleJumpToStep(item.step)}
                         disabled={!isCompleted}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap shrink-0 border ${
                           isCompleted
                             ? "bg-emerald-50 border-emerald-200 text-[#2E7D32] cursor-pointer hover:bg-emerald-100"
                             : isActive
@@ -1182,7 +1180,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-8">
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-7">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
                     style={{ width: `${(wizardStep / 9) * 100}%` }}
@@ -1193,8 +1191,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {wizardStep === 1 && (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Which brand is your car?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Pick your car brand to get started</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which brand is your car?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick your car brand to get started</p>
                     </div>
 
                     {/* Search field */}
@@ -1209,7 +1207,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     </div>
 
                     {/* Grid of brand tiles */}
-                    <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                       {(showAllBrands ? filteredBrands : filteredBrands.slice(0, 12)).map((b) => {
                         const isSelected = selectedBrand === b;
                         const matchingDbBrand = dbBrands.find(brand => brand.name === b);
@@ -1253,7 +1251,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       <button
                         type="button"
                         onClick={() => setShowAllBrands(true)}
-                        className="w-full py-3 text-xs font-black uppercase tracking-widest text-[#2E7D32] bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+                        className="w-full h-11 text-[11px] font-black uppercase tracking-widest text-[#2E7D32] bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors cursor-pointer"
                       >
                         View all brands
                       </button>
@@ -1270,8 +1268,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Brand:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Which model?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Select your car's model from the list</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which model?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Select your car's model from the list</p>
                     </div>
 
                     {/* Search field */}
@@ -1338,11 +1336,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(1)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1358,8 +1356,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Your mobile number?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">We'll reach you with a competitive cash quote — and save your progress so you never lose it.</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Your mobile number?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">We'll reach you with a competitive cash quote — and save your progress so you never lose it.</p>
                     </div>
 
                     <div className="space-y-1.5">
@@ -1373,26 +1371,26 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                           value={mobile}
                           onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                           required
-                          className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
                         />
                       </div>
                     </div>
 
-                    <div className="pt-4">
+                    <div className="pt-2">
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl h-13 transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-[#2E7D32]/20 cursor-pointer"
+                        className="w-full h-12 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-lg shadow-[#2E7D32]/20 cursor-pointer"
                       >
                         {isSubmitting ? "Saving progress..." : "Continue"}
                       </Button>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(2)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1408,8 +1406,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Pick your variant</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Select trim level / variant standard</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Pick your variant</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Select trim level / variant standard</p>
                     </div>
 
                     {/* Variant Options */}
@@ -1447,28 +1445,28 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       <label className="block text-[11px] font-black uppercase text-slate-500 tracking-wider mb-2">
                         Don't see your variant? Type here:
                       </label>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Input
                           placeholder="e.g. LXI Option, Premium Dualtone"
                           value={selectedVariant}
                           onChange={(e) => setSelectedVariant(e.target.value)}
-                          className="h-10 bg-white"
+                          className="h-11 bg-white flex-1"
                         />
                         <Button
                           type="button"
                           onClick={() => setWizardStep(5)}
-                          className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold px-4"
+                          className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[11px] font-black uppercase tracking-wider px-5 h-11"
                         >
                           Next
                         </Button>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(2)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1484,8 +1482,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Which year is your car?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Select manufacturing year on RC plate</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which year is your car?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Select manufacturing year on RC plate</p>
                     </div>
 
                     {/* Grid of years */}
@@ -1512,11 +1510,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       })}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(4)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1532,8 +1530,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Fuel &amp; transmission</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Pick the gearbox, then tap your fuel type</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Fuel &amp; transmission</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the gearbox, then tap your fuel type</p>
                     </div>
 
                     {/* Transmission toggle */}
@@ -1587,11 +1585,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       })}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(5)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1607,8 +1605,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Where is the car registered?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Pick the Gujarat RTO office on your number plate</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Where is the car registered?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the Gujarat RTO office on your number plate</p>
                     </div>
 
                     {/* RTO Search Field */}
@@ -1659,11 +1657,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(6)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1679,8 +1677,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span>Selected Car:</span>
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel} · {selectedRTO}</span>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">How many kms driven?</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Provide close estimate of total odometer reading</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">How many kms driven?</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Provide close estimate of total odometer reading</p>
                     </div>
 
                     {/* Grid of KM options */}
@@ -1707,11 +1705,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       })}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(7)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1723,17 +1721,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {wizardStep === 9 && (
                   <form onSubmit={handleFinalSubmit} className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Almost done — verify your details</h3>
-                      <p className="text-xs text-slate-400 font-semibold">Please complete doorstep booking credentials</p>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Almost done — verify your details</h3>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Please complete doorstep booking credentials</p>
                     </div>
 
                     {/* Car specs overview card */}
-                    <div className="p-5 bg-gradient-to-r from-emerald-50 to-[#FAF9F6] border border-slate-200/60 rounded-2xl flex items-center gap-4 text-slate-800">
+                    <div className="p-4 bg-gradient-to-r from-emerald-50 to-[#FAF9F6] border border-slate-200/60 rounded-2xl text-slate-800">
                       <div className="min-w-0">
                         <span className="text-[10px] bg-[#2E7D32]/10 text-[#2E7D32] font-black uppercase px-2 py-0.5 rounded">
                           GJ REGISTRATION: {selectedRTO}
                         </span>
-                        <h4 className="font-black text-sm text-slate-900 mt-1">
+                        <h4 className="font-black text-sm text-slate-900 mt-1.5">
                           {selectedBrand} {selectedModel} · {selectedVariant}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
@@ -1742,8 +1740,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       </div>
                     </div>
 
-                    <div className="p-4 bg-amber-50/60 border border-amber-100 rounded-xl flex gap-2.5">
-                      <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="p-3.5 bg-amber-50/60 border border-amber-100 rounded-xl flex gap-2.5">
+                      <ShieldCheck className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-amber-800 leading-relaxed font-semibold">
                         Your mobile number stays strictly private — used purely to coordinate inspector dispatch and confirm competitive cash quotes.
                       </p>
@@ -1761,13 +1759,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            className="h-11 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
                           />
                         </div>
                       </div>
 
                     </div>
-                    <div className="space-y-4 border-t border-slate-100 pt-5">
+                    <div className="space-y-4 border-t border-slate-100 pt-4">
                       {/* Doorstep City Dropdown */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">CITY *</label>
@@ -1777,7 +1775,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             required
-                            className="h-11 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
+                            className="h-12 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
                           >
                             <option value="" disabled>Select your city</option>
                             {CITIES_DATA.filter((c) => c !== "All Cities").map((c) => (
@@ -1793,17 +1791,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl h-13 transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-[#2E7D32]/20 cursor-pointer"
+                        className="w-full h-12 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-lg shadow-[#2E7D32]/20 cursor-pointer"
                       >
                         {isSubmitting ? "Registering Valuation..." : "Submit my car details"}
                       </Button>
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs font-bold">
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setWizardStep(8)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800"
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </button>
@@ -1813,24 +1811,24 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
               </div>
             ) : (
-              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-8 md:p-12 text-center shadow-md space-y-6">
-                <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
-                  <CheckCircle2 className="h-10 w-10" />
+              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-7 md:p-10 text-center shadow-sm space-y-5">
+                <div className="h-14 w-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                  <CheckCircle2 className="h-9 w-9" />
                 </div>
                 
                 <div className="space-y-2">
-                  <span className="text-[#2E7D32] font-black text-xs uppercase tracking-widest">Appointment Confirmed</span>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Inspection Request has been created!</h2>
-                  <p className="text-xs text-slate-500 max-w-lg mx-auto">
+                  <span className="text-[#2E7D32] font-black text-[11px] uppercase tracking-widest">Appointment Confirmed</span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">Your Inspection Request has been created!</h2>
+                  <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
                     We have successfully registered your vehicle <strong>{createdRequest?.reg_number}</strong> ({createdRequest?.brand} {createdRequest?.model}) in the database.
                   </p>
                 </div>
 
-                <div className="max-w-md mx-auto bg-[#FAF9F6] border border-slate-100 rounded-2xl p-6 text-left space-y-3">
-                  <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2 text-xs font-black text-slate-900 uppercase tracking-wider">
-                    <ClipboardCheck className="h-4.5 w-4.5 text-[#2E7D32]" /> Lead Confirmation Details
+                <div className="max-w-md mx-auto bg-[#FAF9F6] border border-slate-100 rounded-2xl p-5 text-left space-y-3">
+                  <div className="flex items-center gap-2 border-b border-slate-200/50 pb-2 text-[11px] font-black text-slate-900 uppercase tracking-wider">
+                    <ClipboardCheck className="h-4 w-4 text-[#2E7D32]" /> Lead Confirmation Details
                   </div>
-                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs font-bold text-slate-600">
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] font-bold text-slate-600">
                     <div>Seller Name:</div>
                     <div className="text-slate-800 text-right">{createdRequest?.seller_name}</div>
                     
@@ -1844,7 +1842,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="text-[#2E7D32] text-right">{createdRequest?.preferred_date} ({createdRequest?.preferred_time})</div>
 
                     <div>Address:</div>
-                    <div className="text-slate-800 text-right line-clamp-1">{createdRequest?.address}</div>
+                    <div className="text-slate-800 text-right truncate">{createdRequest?.address}</div>
 
                     <div>Status:</div>
                     <div className="text-right">
@@ -1875,17 +1873,17 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </ul>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <Button
                     onClick={() => { void navigateToSellerDashboard(); }}
-                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold uppercase tracking-wider px-6 rounded-xl h-11"
+                    className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-black uppercase tracking-wider px-6 rounded-xl h-11"
                   >
                     Go to Seller Dashboard
                   </Button>
                   <Button
                     variant="outline"
                     onClick={onBackToHome}
-                    className="border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider px-6 rounded-xl h-11 bg-white"
+                    className="border-slate-200 text-slate-700 text-xs font-black uppercase tracking-wider px-6 rounded-xl h-11 bg-white"
                   >
                     Back to Browse Cars
                   </Button>
@@ -1896,11 +1894,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           </div>
 
           {/* Right Column: Spinny Trust Badges & FAQ */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-5">
             
             {/* Trust Badges */}
-            <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-5">
-              <h3 className="font-black text-slate-900 text-base tracking-tight border-b border-slate-100 pb-3 uppercase text-[11px] tracking-widest text-[#2E7D32]">
+            <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-5 shadow-sm space-y-4">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-[#2E7D32] border-b border-slate-100 pb-3">
                 Why Sell with 1stCars?
               </h3>
 
@@ -1929,11 +1927,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 ].map((badge, idx) => (
                   <div key={idx} className="flex gap-3 text-left">
                     <div className="h-9 w-9 bg-emerald-50 text-[#2E7D32] rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-                      <badge.icon className="h-4.5 w-4.5" />
+                      <badge.icon className="h-4 w-4" />
                     </div>
                     <div>
                       <h4 className="font-bold text-xs text-slate-900">{badge.title}</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed font-semibold">{badge.desc}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed font-medium">{badge.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -1956,68 +1954,65 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
         {/* Sell or Trade-In In 3 Simple Steps section - BELOW THE FORM so the
             form is the first thing visitors see after the hero */}
-        <div className="mt-12 bg-white p-6 sm:p-8 md:p-10 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
+        <div className="mt-10 bg-white p-5 sm:p-7 md:p-9 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-8">
             <span className="inline-block bg-[#2E7D32]/10 text-[#2E7D32] px-3.5 py-1 text-[11px] font-black tracking-widest uppercase rounded-full">
               SELL YOUR CAR
             </span>
-            <h2 className="font-sans text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter text-slate-900 leading-none">
+            <h2 className="font-sans text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900 leading-tight">
               Sell or Trade-In In 3 Simple Steps
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+            <p className="text-sm sm:text-base text-slate-500 font-medium leading-relaxed">
               We leverage professional evaluators and an elite 180+ dealer network. No listing hassle, no shady strangers, complete transparency.
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto space-y-5 text-left">
+          <div className="max-w-4xl mx-auto space-y-4 text-left">
             {/* Step 1 Item */}
-            <div className="flex items-start space-x-4 sm:space-x-5 bg-[#FAF9F6] p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-xs relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base sm:text-lg shrink-0">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+              <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 01
               </div>
-              <div className="space-y-2 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Book Free Inspection</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              <div className="space-y-1.5 flex-grow min-w-0">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Book Free Inspection</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
                   Complete our quick form and choose your preferred date, time &amp; location home, office, or inspection center.
                 </p>
               </div>
             </div>
 
             {/* Step 2 Item */}
-            <div className="flex items-start space-x-4 sm:space-x-5 bg-[#FAF9F6] p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-xs relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base sm:text-lg shrink-0">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+              <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 02
               </div>
-              <div className="space-y-1 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Choose How to Sell</h3>
-                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs font-bold">
+              <div className="space-y-1.5 flex-grow min-w-0">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Choose How to Sell</h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs font-bold">
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
                     <span className="text-slate-800 block font-black">Instant Offer</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Get a direct cash offer from 1stCars.</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Get a direct cash offer from 1stCars.</span>
                   </li>
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
                     <span className="text-slate-800 block font-black">Dealer Auction</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">180+ dealers compete for your car.</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">180+ dealers compete for your car.</span>
                   </li>
                   <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
                     <span className="text-slate-800 block font-black">Direct Deal</span>
-                    <span className="text-[10px] font-semibold text-slate-500 mt-0.5">Sell car directly to buyer.</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Sell car directly to buyer.</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             {/* Step 3 Item */}
-            <div className="flex items-start space-x-4 sm:space-x-5 bg-[#FAF9F6] p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-xs relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-[#2E7D32]/5 rounded-bl-full" />
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base sm:text-lg shrink-0">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+              <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 03
               </div>
-              <div className="space-y-1 flex-grow">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">Get Paid Same Day</h3>
-                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              <div className="space-y-1.5 flex-grow min-w-0">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Paid Same Day</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
                   Get instant bank transfer, loan settlement support, and zero-hassle ownership transfer. We handle the paperwork for you.
                 </p>
               </div>
