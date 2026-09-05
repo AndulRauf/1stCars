@@ -325,32 +325,61 @@ export const notificationService = {
   },
 
   /**
-   * Rule 4: Buyer books test drive → Notify Sales Associate.
-   * Recipients: All Sales Associates.
+   * Rule 4: Buyer books test drive → Notify ALL Admins (pending test-drive
+   * request) and Sales Associates, with full buyer + vehicle details.
+   * Recipients: All Admins and all Sales Associates.
    */
   async triggerTestDriveBooked(booking: {
     buyerName: string;
+    buyerMobile?: string;
+    buyerEmail?: string;
+    buyerCity?: string;
+    carId?: string | null;
     carTitle: string;
     preferredDate: string;
     preferredTime: string;
+    notes?: string;
   }) {
-    const { data: associates } = await supabase
+    const { data: staff } = await supabase
       .from("profiles")
-      .select("id")
-      .eq("role", "Sales Associate");
+      .select("id, role")
+      .in("role", ["Admin", "Sales Associate"]);
 
-    const staffList = associates || [{ id: "u-sales" }];
+    // Real profiles only in real mode — a fake recipient id would trip the
+    // notifications.recipient_id FK. Demo mode keeps its localStorage mirror.
+    let recipients: { id: string }[] = staff && staff.length > 0
+      ? staff
+      : (!isRealSupabase ? [{ id: "u-admin" }, { id: "u-sales" }] : []);
 
-    // Dispatch notifications to all staff in parallel (much faster than
-    // awaiting each insert sequentially).
+    const buyerContact = [booking.buyerName, booking.buyerMobile, booking.buyerCity]
+      .filter(Boolean).join(" · ") || "A buyer";
+
+    const adminMessage =
+      `🚨 PENDING TEST DRIVE REQUEST\n` +
+      `Buyer: ${buyerContact}${booking.buyerEmail ? ` · ${booking.buyerEmail}` : ""}\n` +
+      `Car: ${booking.carTitle}\n` +
+      `Slot: ${booking.preferredDate} at ${booking.preferredTime}${booking.notes ? `\nNotes: ${booking.notes}` : ""}\n` +
+      `Open Admin → Leads & Enquiries → Test Drive Requests to review & assign a sales associate.`;
+
+    const associateMessage =
+      `${booking.buyerName}${booking.buyerMobile ? ` (${booking.buyerMobile})` : ""} requested a test drive for the ${booking.carTitle} on ${booking.preferredDate} at ${booking.preferredTime}${booking.buyerCity ? ` in ${booking.buyerCity}` : ""}.`;
+
     await Promise.all(
-      staffList.map((staff: { id: string }) =>
+      recipients.map((r: { id: string; role?: string }) =>
         this.createNotification({
-          recipientId: staff.id,
-          title: "Test Drive Request Scheduled",
-          message: `${booking.buyerName} requested a doorstep test drive for the ${booking.carTitle} on ${booking.preferredDate} at ${booking.preferredTime}.`,
-          type: "action",
-          metadata: { car_title: booking.carTitle, date: booking.preferredDate }
+          recipientId: r.id,
+          title: r.role === "Admin" ? "🚨 Pending Test Drive Request" : "Test Drive Request Scheduled",
+          message: r.role === "Admin" ? adminMessage : associateMessage,
+          type: r.role === "Admin" ? "alert" : "action",
+          metadata: {
+            car_id: booking.carId,
+            car_title: booking.carTitle,
+            date: booking.preferredDate,
+            time: booking.preferredTime,
+            buyer_name: booking.buyerName,
+            buyer_mobile: booking.buyerMobile,
+            buyer_city: booking.buyerCity
+          }
         })
       )
     );

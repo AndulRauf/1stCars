@@ -66,9 +66,16 @@ export async function resolveLeadOwner(car: { id?: string | null; brand?: string
 // Insert a lead into sales_notifications including auto-assignment.
 // If the live database predates the `assigned_to` migration, retry the
 // insert without the new columns so bookings never fail.
+// Returns { data, error, row } so callers can read the DB-generated id.
 export async function insertLeadWithAssignment(lead: any) {
   const first = await supabase.from("sales_notifications").insert([lead]);
-  if (!first.error) return first;
+  if (!first.error) {
+    return {
+      data: first.data,
+      error: first.error as any,
+      row: Array.isArray(first.data) && first.data.length > 0 ? first.data[0] : null
+    };
+  }
 
   const msg = String(first.error.message || JSON.stringify(first.error));
   if (/assigned_to|schema cache|does not exist/i.test(msg)) {
@@ -77,8 +84,45 @@ export async function insertLeadWithAssignment(lead: any) {
     if (!retry.error) {
       console.warn("Lead inserted without assigned_to (run the schema migration to enable auto-assignment).");
     }
-    return retry;
+    return {
+      data: retry.data,
+      error: retry.error as any,
+      row: Array.isArray(retry.data) && retry.data.length > 0 ? retry.data[0] : null
+    };
   }
 
-  return first;
+  return { data: first.data, error: first.error as any, row: null };
+}
+
+// Best-effort guarantee that the currently signed-in auth user has a
+// profiles row. The audit_trail.actor_user_id foreign key points at
+// public.profiles(id), and the booking triggers call automation_audit(),
+// so a signed-in buyer without a profile would roll back the whole lead
+// INSERT. Anonymous visitors are a no-op (return null immediately).
+export async function ensureProfileExists(supabaseClient: any = supabase): Promise<string | null> {
+  try {
+    const { data: session } = await supabaseClient.auth.getSession();
+    if (!session?.session?.user?.id) return null;
+    const { data, error } = await supabaseClient.rpc("ensure_profile");
+    if (!error) return data || null;
+    // RPC not deployed yet — fall back to a lightweight check + upsert so
+    // bookings never break on older databases.
+    const { data: existing } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("id", session.session.user.id)
+      .maybeSingle();
+    if (existing?.id) return existing.id;
+    await supabaseClient.from("profiles").insert({
+      id: session.session.user.id,
+      name: session.session.user.user_metadata?.name || "Customer",
+      email: session.session.user.email || null,
+      mobile: session.session.user.user_metadata?.mobile || null,
+      role: "Buyer",
+      city: session.session.user.user_metadata?.city || "Mumbai"
+    }).then(() => undefined).catch(() => undefined);
+    return session.session.user.id;
+  } catch {
+    return null;
+  }
 }

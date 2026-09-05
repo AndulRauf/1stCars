@@ -9,7 +9,7 @@ import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
-import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
+import { resolveLeadOwner, insertLeadWithAssignment, ensureProfileExists } from "@/src/lib/leadAssignment";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { CITIES_DATA } from "@/src/data/cars";
 import { Profile } from "@/src/lib/db";
@@ -269,7 +269,12 @@ export function BookingModal({
       localStorage.setItem("1stcars_sales_leads", JSON.stringify([leadRecord, ...existingLeads]));
 
       // Insert the lead into Supabase (critical path — must succeed before showing success).
-      const { error: insertError } = await insertLeadWithAssignment({
+      // If an auth session already exists (repeat booking / Google sign-in),
+      // make sure that auth user has a profiles row BEFORE the lead insert —
+      // the audit_trail.actor_user_id FK points at public.profiles(id) and a
+      // missing profile would roll back the entire booking (best-effort).
+      await ensureProfileExists();
+      const inserted = await insertLeadWithAssignment({
         name: name.trim(),
         mobile: mobile.trim(),
         city: city || "Surat",
@@ -282,6 +287,10 @@ export function BookingModal({
         status: "pending",
         notes: `Gmail: ${email.trim()} | Ref: ${refId} | ${notes.trim()}`
       });
+      const insertError = inserted?.error;
+      // The database generates the real UUID id (refId is a display-only
+      // reference). Used below for assignment updates against the DB row.
+      const dbLeadId = inserted?.row?.id;
 
       if (insertError) {
         throw new Error(insertError.message || "Could not save your request to the database.");
@@ -320,7 +329,7 @@ export function BookingModal({
             await supabase
               .from("sales_notifications")
               .update({ assigned_to: owner.id, assigned_to_name: owner.name || "" })
-              .eq("id", refId);
+              .eq("id", dbLeadId || refId);
           }
         } catch (assignErr) {
           console.warn("Background lead assignment failed:", assignErr);
@@ -373,9 +382,14 @@ export function BookingModal({
           if (bookingType === "test_drive") {
             await notificationService.triggerTestDriveBooked({
               buyerName: name.trim(),
+              buyerMobile: mobile.trim(),
+              buyerEmail: email.trim(),
+              buyerCity: city || "Surat",
+              carId: car?.id,
               carTitle: vehicleTitle,
               preferredDate: preferredDate,
-              preferredTime: preferredTime
+              preferredTime: preferredTime,
+              notes: notes.trim()
             });
           } else {
             await notificationService.triggerCarReserved({

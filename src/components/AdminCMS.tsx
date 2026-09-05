@@ -603,6 +603,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   // 120-Point Inspection Report editor inside the Car edit modal
   const [isCar120ModalOpen, setIsCar120ModalOpen] = React.useState(false);
 
+  // Test-drive / booking lead → Sales Associate assignment modal
+  const [assignLeadModal, setAssignLeadModal] = React.useState<{ lead: any } | null>(null);
+
   const handleSave120Report = async (inspectionId: string, reportData: Full120PointReport) => {
     // Promote pre-completion inspections to "completed" so they become
     // auction-eligible (the auction engine requires overall_score, and the
@@ -1762,6 +1765,60 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     } catch (err) {
       console.error("Error submitting CMS form:", err);
       toast.error(`Failed to save ${currentListModule}: ${errorMessage(err)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Assign a test-drive / booking lead to a Sales Associate (Admin action)
+  const handleAssignLead = async (associateId: string) => {
+    const lead = assignLeadModal?.lead;
+    if (!lead || !associateId) return;
+
+    const associate = [...salesAssociates, ...(users || []).filter((u: any) => u.role === "Sales Associate")]
+      .find((a: any) => String(a.id) === String(associateId));
+    const associateName = associate?.name || associate?.email || "Sales Associate";
+
+    setIsLoading(true);
+    try {
+      const leadId = lead.id || null;
+
+      // Update the source of truth (sales_notifications) when present.
+      if (leadId) {
+        await supabase
+          .from("sales_notifications")
+          .update({ assigned_to: associateId, assigned_to_name: associateName })
+          .eq("id", leadId);
+      }
+
+      // Mirror into the legacy localStorage lead list so the appointment tab /
+      // local fallback stays in sync.
+      const legacy = JSON.parse(localStorage.getItem("1stcars_sales_leads") || "[]");
+      const updatedLegacy = legacy.map((l: any) =>
+        String(l.id) === String(lead.id)
+          ? { ...l, assigned_to: associateId, assigned_to_name: associateName }
+          : l
+      );
+      localStorage.setItem("1stcars_sales_leads", JSON.stringify(updatedLegacy));
+
+      // Update AdminCMS local state so the table reflects it immediately.
+      setSalesLeads((prev) => prev.map((l: any) =>
+        String(l.id) === String(lead.id)
+          ? { ...l, assigned_to: associateId, assigned_to_name: associateName }
+          : l
+      ));
+
+      // Refresh the raw list used by the unified Leads module.
+      try {
+        const { data: fresh } = await supabase.from("sales_notifications").select();
+        if (fresh && fresh.length > 0) setSalesLeads(fresh);
+      } catch { /* keep current state */ }
+
+      toast.success(`Lead #${String(lead.id).slice(0, 8)} assigned to ${associateName}.`);
+      setAssignLeadModal(null);
+    } catch (err) {
+      console.error("Error assigning lead:", err);
+      toast.error("Failed to assign lead. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -3633,7 +3690,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       {(currentListModule === "test_drive_requests" || currentListModule === "booking_requests") && (
                         <div>
                           <p className="font-black text-slate-800">{item.name || (currentListModule === "test_drive_requests" ? "Test Drive Request" : "Booking Request")} ({item.mobile || "N/A"})</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Vehicle: {item.vehicle || item.model || "General Inquiry"} • City: {item.city || "Surat"}</p>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Vehicle: {item.car_brand ? `${item.car_brand} ${item.car_model || ""}`.trim() : (item.vehicle || item.model || "General Inquiry")} • City: {item.city || "Surat"}</p>
+                          {item.assigned_to && (
+                            <p className="text-[10px] font-black mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              <UserCheck className="h-3 w-3" /> Assigned: {item.assigned_to_name || "Sales Associate"}
+                            </p>
+                          )}
+                          {item.email && (
+                            <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate max-w-[220px]">Email: {item.email}</p>
+                          )}
                         </div>
                       )}
 
@@ -3875,6 +3940,20 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                             <FileText className="h-3 w-3" />
                             View Resume
                           </a>
+                        )}
+                        {(currentListModule === "test_drive_requests" || currentListModule === "booking_requests") && (
+                          <button
+                            onClick={() => setAssignLeadModal({ lead: item })}
+                            className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                              item.assigned_to
+                                ? "bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                                : "bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100"
+                            }`}
+                            title={item.assigned_to ? `Assigned to ${item.assigned_to_name || "sales associate"} — re-assign` : "Assign this lead to a Sales Associate"}
+                          >
+                            <UserCheck className="h-3 w-3" />
+                            {item.assigned_to ? `Assigned: ${item.assigned_to_name || "Yes"}` : "Assign"}
+                          </button>
                         )}
                         <button
                           onClick={() => openEditModal(item)}
@@ -5970,6 +6049,114 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-wider h-10 px-6 rounded-xl cursor-pointer"
               >
                 Close Preview
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Test-Drive / Booking Lead to a Sales Associate */}
+      {assignLeadModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-[#2E7D32]" /> Assign Lead
+              </h3>
+              <button
+                onClick={() => setAssignLeadModal(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Full buyer + car details shown to the admin */}
+            <div className="bg-[#FAF9F6] border border-slate-100 rounded-2xl p-4 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Ref</span>
+                <span className="font-mono text-[#2E7D32] font-bold">#{String(assignLeadModal.lead.id || "").substring(0, 10)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Buyer</span>
+                <span className="font-black text-slate-800">{assignLeadModal.lead.name || "—"} ({assignLeadModal.lead.mobile || "—"})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Car</span>
+                <span className="font-bold text-slate-700">{assignLeadModal.lead.car_brand || "1stCars"} {assignLeadModal.lead.car_model || assignLeadModal.lead.model || assignLeadModal.lead.vehicle || ""}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Slot</span>
+                <span className="font-bold text-slate-700">{assignLeadModal.lead.preferred_date || "Flexible"} {assignLeadModal.lead.preferred_time ? `• ${assignLeadModal.lead.preferred_time}` : ""}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">City</span>
+                <span className="font-bold text-slate-700">{assignLeadModal.lead.city || "Surat"}</span>
+              </div>
+              {(assignLeadModal.lead.email) && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Email</span>
+                  <span className="font-bold text-slate-700 truncate max-w-[220px]">{assignLeadModal.lead.email}</span>
+                </div>
+              )}
+              {assignLeadModal.lead.notes && (
+                <div className="pt-1 border-t border-slate-200/70">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Notes</p>
+                  <p className="text-slate-600 font-medium break-words whitespace-pre-wrap">{assignLeadModal.lead.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sales Associate picker */}
+            {(() => {
+              const associates = salesAssociates.length > 0
+                ? salesAssociates
+                : (users || []).filter((u: any) => u.role === "Sales Associate");
+              if (associates.length === 0) {
+                return (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 font-bold">
+                    No Sales Associates found. Add one under People &amp; Access → Sales Associates first.
+                  </div>
+                );
+              }
+              return (
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                  {associates.map((sa: any) => (
+                    <button
+                      key={sa.id}
+                      onClick={() => handleAssignLead(sa.id)}
+                      disabled={isLoading}
+                      className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        sa.is_approved === false
+                          ? "opacity-50 cursor-not-allowed border-slate-200"
+                          : "border-slate-200 hover:border-[#2E7D32] hover:bg-[#2E7D32]/5"
+                      }`}
+                      title={`Assign to ${sa.name || sa.email}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="h-9 w-9 rounded-full bg-gradient-to-br from-[#2E7D32] to-[#4CAF50] text-white text-xs font-black flex items-center justify-center shrink-0">
+                          {(sa.name || sa.email || "?").slice(0, 1).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-slate-800 truncate">{sa.name || "Unnamed Associate"}</p>
+                          <p className="text-[10px] text-slate-500 font-bold truncate">{sa.email || sa.role || "Sales Associate"}</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#2E7D32] shrink-0">
+                        Assign →
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                onClick={() => setAssignLeadModal(null)}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-wider h-10 px-6 rounded-xl cursor-pointer"
+              >
+                Cancel
               </Button>
             </div>
           </div>

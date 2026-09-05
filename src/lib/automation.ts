@@ -683,9 +683,14 @@ export const automationService = {
     } catch {
       actorId = null;
     }
-    try {
+
+    // The audit_trail.actor_user_id FK points at public.profiles(id), but
+    // actorId comes from auth.getUser() (auth.users). When the signed-in
+    // user has no profile row the insert would be rejected, so we retry
+    // with a NULL actor instead of letting the audit call fail the request.
+    const tryInsert = async (safeActor: string | null) => {
       const { error } = await supabase.from("audit_trail").insert([{
-        actor_user_id: actorId,
+        actor_user_id: safeActor,
         action: input.action,
         entity_type: input.entityType,
         entity_id: input.entityId || null,
@@ -693,7 +698,25 @@ export const automationService = {
         new_status: input.newStatus || null,
         metadata: input.metadata || {}
       }]);
-      if (!error) return;
+      return error;
+    };
+
+    try {
+      const error = await tryInsert(actorId);
+      if (!error || !/foreign key|fkey|actor_user_id/i.test(String(error.message))) {
+        if (error) {
+          console.warn("[automation] recordAudit failed on first attempt:", error.message);
+          // Fall back to the local ledger so the caller still sees the event.
+          this.appendLog("warn", "audit", `${input.action} (${input.entityType}/${input.entityId || "-"})`, input.metadata || {});
+        }
+        return;
+      }
+      // Foreign-key failure (actor has no profile) → retry as a guest row.
+      const retryError = await tryInsert(null);
+      if (retryError) {
+        this.appendLog("warn", "audit", `${input.action} (${input.entityType}/${input.entityId || "-"})`, input.metadata || {});
+      }
+      return;
     } catch {
       // fall through
     }
