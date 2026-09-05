@@ -281,7 +281,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     sellButtonText: "Sell Your Car",
     searchButtonText: "Search",
     valuationButtonText: "Get Instant Valuation",
-    detailsButtonText: "Details & Booking",
+    detailsButtonText: "See Details",
     inspectionButtonText: "Book Instant Free Inspection",
     filterHeadingText: "Find Your Certified Dream Car",
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
@@ -4811,7 +4811,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Details & Booking Card CTA</label>
+                      <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">See Details Card CTA</label>
                       <input 
                         type="text" 
                         value={websiteSettings.detailsButtonText || ""}
@@ -5052,7 +5052,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">Details & Booking CTA button</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">See Details CTA button</label>
                     <input 
                       type="text" 
                       value={websiteSettings.detailsButtonText || ""}

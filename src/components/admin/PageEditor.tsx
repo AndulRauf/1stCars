@@ -73,7 +73,7 @@ const TEXT_FIELDS: { key: string; label: string; textarea?: boolean; full?: bool
     { key: "buyCarsSubheadingText", label: "Buy Cars Page Subtitle", textarea: true, full: true },
     { key: "filterHeadingText", label: "Filter Sidebar Heading" },
     { key: "searchButtonText", label: "Search Button Text" },
-    { key: "detailsButtonText", label: "Details & Booking Button Text" },
+    { key: "detailsButtonText", label: "See Details Button Text" },
     { key: "inspectionButtonText", label: "Inspection Booking Button Text" },
     { key: "valuationButtonText", label: "Valuation Button Text" }
   ],

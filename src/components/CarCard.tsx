@@ -365,7 +365,7 @@ export function CarCard({
             onClick={() => onViewDetails?.(car.id)}
             className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-8 sm:h-9 rounded-lg sm:rounded-xl px-2 shadow-md shadow-[#2E7D32]/10"
           >
-            Details & Book
+            See Details
           </Button>
         </div>
       </div>

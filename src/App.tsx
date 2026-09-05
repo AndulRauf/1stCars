@@ -329,7 +329,7 @@ export default function App() {
     searchButtonText: "Search Fleet",
     buyCarsHeadingText: "Explore Our Handpicked Certified Fleet",
     buyCarsSubheadingText: "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.",
-    detailsButtonText: "Details & Booking",
+    detailsButtonText: "See Details",
     inspectionButtonText: "Book Showroom Inspection",
     valuationButtonText: "Calculate Valuation",
     sellCarBannerTitle: "Sell Your Car Instantly From Home",
