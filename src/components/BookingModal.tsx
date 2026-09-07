@@ -13,6 +13,7 @@ import { resolveLeadOwner, insertLeadWithAssignment, ensureProfileExists } from 
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { CITIES_DATA } from "@/src/data/cars";
 import { Profile } from "@/src/lib/db";
+import { getSavedCarsLocal, setSavedCarsLocal, setSavedCarForSession } from "@/src/lib/savedCars";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -236,13 +237,15 @@ export function BookingModal({
       const userCity = city || "Surat";
       const autoPassword = getOrCreateAutoPassword(userEmail);
 
-      // Automatically add vehicle to favorite/saved cars list
+      // Automatically add vehicle to favorite/saved cars list — kept in the
+      // localStorage cache AND (when a session exists) the Supabase
+      // `saved_cars` table so the Buyer dashboard shows it on every device.
       if (car?.id) {
-        const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
+        const existingSaved = getSavedCarsLocal();
         if (!existingSaved.includes(car.id)) {
-          const updatedSaved = [car.id, ...existingSaved];
-          localStorage.setItem("1stcars_saved_cars", JSON.stringify(updatedSaved));
+          setSavedCarsLocal([car.id, ...existingSaved]);
         }
+        void setSavedCarForSession(car.id, true);
         if (onSaveToggle && !savedCars?.includes(car.id)) {
           onSaveToggle(car.id, car.model);
         }

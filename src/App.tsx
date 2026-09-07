@@ -51,6 +51,7 @@ import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
 import { supabase, isRealSupabase, isProdMockBlocked } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+import { getSavedCarsLocal, setSavedCarsLocal, loadSavedCarsFromDb, setSavedCarInDb } from "@/src/lib/savedCars";
 import { captureUtm, trackPageView } from "@/src/lib/analytics";
 import { trackMetaPageView } from "@/src/lib/metaPixel";
 import { maybeAutoSeedDatabase } from "@/src/lib/seeder";
@@ -97,13 +98,17 @@ export default function App() {
   const [selectedBrand, setSelectedBrand] = React.useState<string>("");
   const [selectedModel, setSelectedModel] = React.useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = React.useState<string | undefined>(undefined);
-  const [savedCars, setSavedCars] = React.useState<string[]>(["car-1", "car-3"]); // pre-saved for delightful onboarding
+  const [savedCars, setSavedCars] = React.useState<string[]>(() => getSavedCarsLocal());
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
   const [selectedCity, setSelectedCity] = React.useState<string>("Surat");
 
   // Live catalog = static curated list + cars uploaded/published via the CMS
   // (they live in the Supabase "cars" table, so they must be merged in here).
   const { cars: catalogCars, loading: catalogLoading, error: catalogError, refresh: refreshCatalog } = useCatalogCars();
+
+  // Saved cars: seeded from localStorage (which src/lib/db.ts initialises with
+  // the demo favourites), so the wishlist survives refreshes even before login;
+  // Supabase sync happens in the login-reconciliation effect below.
 
   // Keep a stable ref so navigation callbacks (used by many children) can read
   // the latest catalog without changing identity on every inventory refresh.
@@ -268,6 +273,40 @@ export default function App() {
       maybeAutoSeedDatabase(currentUser as any);
     }
   }, [currentUser]);
+
+  // Login reconciliation: pull the signed-in buyer's saved cars from Supabase
+  // (cross-device persistence) and back-fill any local-only saves into their
+  // account so cars favourited before logging in are never lost. Guarded —
+  // when Supabase is unavailable or the saved_cars table/RLS is not deployed
+  // yet, the local cache simply wins and nothing breaks.
+  React.useEffect(() => {
+    const userId = currentUser?.id;
+    if (!userId) return;
+    let disposed = false;
+    void (async () => {
+      try {
+        const dbSaved = await loadSavedCarsFromDb(userId);
+        if (disposed) return;
+        const local = getSavedCarsLocal();
+        if (dbSaved) {
+          const merged = [...new Set([...dbSaved, ...local])];
+          setSavedCars(merged);
+          setSavedCarsLocal(merged);
+          const missing = local.filter((id) => !dbSaved.includes(id));
+          for (const carId of missing) {
+            void setSavedCarInDb(userId, carId, true);
+          }
+        } else {
+          setSavedCars(local);
+        }
+      } catch {
+        setSavedCars(getSavedCarsLocal());
+      }
+    })();
+    return () => {
+      disposed = true;
+    };
+  }, [currentUser?.id]);
 
   // Auction engine maintenance poller: starts SCHEDULED auctions at their
   // starts_at and auto-closes LIVE/EXTENDED ones whose ends_at has passed.
@@ -554,13 +593,21 @@ export default function App() {
     }, 4000);
   };
 
-  // Saved cars interaction
+  // Saved cars interaction — persisted to localStorage instantly and (for the
+  // signed-in buyer) to Supabase `saved_cars` so the collection survives
+  // refresh / re-login on any device. Mock mode / older DBs simply skip the
+  // remote write and keep working from the local cache.
   const toggleSaveCar = (id: string, carModel: string) => {
-    if (savedCars.includes(id)) {
-      setSavedCars(savedCars.filter(item => item !== id));
+    const isSaved = savedCars.includes(id);
+    const next = isSaved ? savedCars.filter(item => item !== id) : [...savedCars, id];
+    setSavedCars(next);
+    setSavedCarsLocal(next);
+    if (currentUser?.id && id) {
+      void setSavedCarInDb(currentUser.id, id, !isSaved);
+    }
+    if (isSaved) {
       triggerToast(`Removed ${carModel} from your saved inventory`);
     } else {
-      setSavedCars([...savedCars, id]);
       triggerToast(`Saved ${carModel} to your wishlist!`);
     }
   };

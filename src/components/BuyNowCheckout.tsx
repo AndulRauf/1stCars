@@ -10,6 +10,7 @@ import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackWhatsAppClick } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 import { Profile } from "@/src/lib/db";
+import { getSavedCarsLocal, setSavedCarsLocal, setSavedCarForSession } from "@/src/lib/savedCars";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -58,10 +59,11 @@ const processCheckout = async (
   }
 
   if (car.id) {
-    const existingSaved = JSON.parse(localStorage.getItem("1stcars_saved_cars") || "[]");
+    const existingSaved = getSavedCarsLocal();
     if (!existingSaved.includes(car.id)) {
-      localStorage.setItem("1stcars_saved_cars", JSON.stringify([car.id, ...existingSaved]));
+      setSavedCarsLocal([car.id, ...existingSaved]);
     }
+    void setSavedCarForSession(car.id, true);
     if (onSaveToggle && !existingSaved.includes(car.id)) onSaveToggle(car.id, car.model);
   }
 

@@ -14,7 +14,7 @@ import {
   Profile, Inspection, 
   Offer, SalesNotification
 } from "@/src/lib/db";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { auctionService, AuctionActor } from "@/src/lib/auctions";
 import { AdminCMS } from "./AdminCMS";
@@ -38,6 +38,61 @@ import { SalesFollowUps } from "@/src/components/sales/SalesFollowUps";
 import { SalesPipeline } from "@/src/components/sales/SalesPipeline";
 import { SalesActivities } from "@/src/components/sales/SalesActivities";
 import { SalesAppointments } from "@/src/components/sales/SalesAppointments";
+import { getSavedCarsLocal, setSavedCarsLocal, loadSavedCarsFromDb, setSavedCarInDb } from "@/src/lib/savedCars";
+
+// ---- Buyer-dashboard data helpers -----------------------------------------
+// The Buyer Dashboard reads a signed-in buyer's bookings from Supabase
+// (sales_notifications — where BookingModal / BuyNowCheckout already persist
+// them) so refresh / re-login on any device keeps the history. localStorage
+// stays as the cache + mock-mode source; when both exist the DB wins and the
+// local cache is only used as a fallback (older DBs / RLS not deployed yet).
+
+const normMobile = (m: any) => String(m || "").replace(/\D/g, "").slice(-10);
+
+const safeParseLocalArray = (key: string): any[] => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Recover the drive-away amount BuyNowCheckout stores inside the lead notes
+// ("Token ₹6,000 | Total ₹24,00,000 | Ref …") — sales_notifications has no
+// price column, so the order card falls back to ₹0 when absent.
+const parseAmountFromNotes = (notes: any): number => {
+  try {
+    const m = String(notes || "").match(/Total\s*₹?\s*([\d.,]+)/);
+    return m ? parseInt(m[1].replace(/[^\d]/g, ""), 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
+};
+
+// Lead row -> Buyer Dashboard "My Test Drive Bookings" card.
+const testDriveFromLead = (l: any) => ({
+  id: l.id,
+  status: l.status || "scheduled",
+  car_title: `${l.car_brand || ""} ${l.car_model || "Vehicle"}`.trim(),
+  car_id: l.car_id,
+  date: l.preferred_date,
+  time: l.preferred_time,
+  buyer_name: l.name,
+  buyer_mobile: l.mobile
+});
+
+// Lead row -> Buyer Dashboard "Active Deposits & Bookings" card.
+const orderFromLead = (l: any) => ({
+  id: l.id,
+  status:
+    l.status === "payment_submitted" ? "Payment Submitted" :
+    l.status === "booked" ? "Booking Confirmed" :
+    "Booking Received",
+  car_title: `${l.car_brand || ""} ${l.car_model || "Vehicle"}`.trim(),
+  date: l.preferred_date || (l.created_at || "").slice(0, 10),
+  price: parseAmountFromNotes(l.notes)
+});
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -183,15 +238,56 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       if (lds) setLeads(lds);
       if (Array.isArray(crs)) setCarRows(crs);
 
-      // Buyer collections
-      const saved = localStorage.getItem("1stcars_saved_cars");
-      setSavedCars(saved ? JSON.parse(saved) : []);
+      // Buyer collections — Supabase is the source of truth for a signed-in
+      // buyer (cross-device persistence); localStorage stays as the mock-mode
+      // cache / fallback so an older database never breaks the dashboard.
+      const localSaved = getSavedCarsLocal();
+      let savedList = localSaved;
+      let tdList = safeParseLocalArray("1stcars_test_drives");
+      let orderList = safeParseLocalArray("1stcars_orders");
 
-      const tds = localStorage.getItem("1stcars_test_drives");
-      setTestDrives(tds ? JSON.parse(tds) : []);
+      if (isRealSupabase && currentUser?.id) {
+        try {
+          const dbSaved = await loadSavedCarsFromDb(currentUser.id);
+          if (dbSaved) {
+            savedList = [...new Set([...dbSaved, ...localSaved])];
+            setSavedCarsLocal(savedList);
+          }
+        } catch (e) {
+          console.warn("[buyer] saved-cars sync skipped:", e);
+        }
 
-      const ords = localStorage.getItem("1stcars_orders");
-      setOrders(ords ? JSON.parse(ords) : []);
+        // The buyer's own bookings live in sales_notifications (written by
+        // BookingModal / BuyNowCheckout). RLS scopes the read to this buyer
+        // via profiles.mobile (see public/saved_cars.sql); if the policy is
+        // not deployed yet the query errors and we keep the local cache.
+        try {
+          const { data: dbLeads, error: leadsErr } = await supabase
+            .from("sales_notifications")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (!leadsErr && Array.isArray(dbLeads)) {
+            const myMobile = normMobile(currentUser.mobile);
+            const mine = myMobile
+              ? dbLeads.filter(
+                  (l: any) =>
+                    normMobile(l.mobile) === myMobile &&
+                    (l.type === "test_drive" || l.type === "buy_now") &&
+                    String(l.status || "") !== "cancelled"
+                )
+              : [];
+            if (myMobile) {
+              tdList = mine.filter((l: any) => l.type === "test_drive").map(testDriveFromLead);
+              orderList = mine.filter((l: any) => l.type === "buy_now").map(orderFromLead);
+            }
+          }
+        } catch (e) {
+          console.warn("[buyer] Supabase lead sync skipped:", e);
+        }
+      }
+      setSavedCars(savedList);
+      setTestDrives(tdList);
+      setOrders(orderList);
 
       // Refresh top level state as well
       if (onReloadAllData) {
@@ -218,11 +314,27 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     }
   }, [currentUser]);
 
-  // Handle Buyer: Cancel Test Drive
+  // Handle Buyer: Cancel Test Drive — removes the slot locally and, for
+  // Supabase-sourced bookings, marks the lead cancelled on the server when RLS
+  // allows it (public/saved_cars.sql); staff-restricted DBs keep the local
+  // removal and never throw.
   const handleCancelTestDrive = (id: string) => {
     const updated = testDrives.filter(td => td.id !== id);
     setTestDrives(updated);
-    localStorage.setItem("1stcars_test_drives", JSON.stringify(updated));
+    try {
+      localStorage.setItem("1stcars_test_drives", JSON.stringify(updated));
+    } catch {
+      /* non-fatal */
+    }
+    if (isRealSupabase && id) {
+      void (async () => {
+        try {
+          await supabase.from("sales_notifications").update({ status: "cancelled" }).eq("id", id);
+        } catch (err) {
+          console.warn("[buyer] cancel test-drive sync skipped:", err);
+        }
+      })();
+    }
   };
 
   // Handle Seller: Accept / Decline Dealer Offer
@@ -813,7 +925,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                           </div>
                           <div className="text-right">
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount Paid</p>
-                            <p className="text-base font-black text-slate-900">₹{ord.price.toLocaleString()}</p>
+                            <p className="text-base font-black text-slate-900">₹{Number(ord.price || 0).toLocaleString()}</p>
                           </div>
                         </div>
                       ))}
