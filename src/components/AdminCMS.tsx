@@ -1544,6 +1544,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             `${currentListModule} needs a valid ${missing.map((f) => f.replace(/_/g, " ")).join(" and ")} — enter the record's real id (e.g. the car's UUID shown in the list).`
           );
         }
+        // Persist to Supabase — this branch previously only validated the FKs
+        // and fell through to the mock-table map (which does not cover these
+        // modules), so "Add New Record" / Edit toasted success but wrote nothing.
+        if (formMode === "add") {
+          const { error: saveErr } = await supabase.from(currentListModule).insert([recordToSave]);
+          if (saveErr) throw saveErr;
+        } else {
+          const { error: saveErr } = await supabase.from(currentListModule).update(recordToSave).eq("id", editingId);
+          if (saveErr) throw saveErr;
+        }
       } else if (activeModule === "auctions") {
         // Canonical engine only — never write the auction table directly.
         const actor: AuctionActor = { userId: currentUser?.id || "admin", role: currentUser?.role || "Admin" };
@@ -2739,7 +2749,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
     const matchStatus = 
       statusFilter === "all" || 
-      String(item.status || item.role || item.category || "").toLowerCase() === statusFilter.toLowerCase();
+      String(item.status || item.role || item.payment_status || item.category || "").toLowerCase() === statusFilter.toLowerCase();
 
     return matchSearch && matchStatus;
   });
@@ -3708,6 +3718,22 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">Car: {item.brand} {item.model} ({item.year}) • Reg: {item.reg_number || "Pending"}</p>
                         </div>
                       )}
+                      {(currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") && (
+                        <div className="max-w-md">
+                          {currentListModule === "purchases" && (
+                            <>
+                              <p className="font-black text-slate-800">₹{(Number(item.amount_paid) || 0).toLocaleString()} • {item.payment_method || "UPI"}</p>
+                              <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "—").slice(0, 8)} • Car: {String(item.car_id || "—").slice(0, 8)}</p>
+                            </>
+                          )}
+                          {currentListModule === "test_drives" && (
+                            <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "—").slice(0, 8)} • Car: {String(item.car_id || "—").slice(0, 8)} • Slot: {item.preferred_date || "—"} ({item.preferred_time || "—"})</p>
+                          )}
+                          {currentListModule === "crm_activities" && (
+                            <p className="text-[11px] text-slate-500 italic">"{item.subject || item.activity_type || "Activity"}{item.detail ? ` — ${item.detail}` : ""}"</p>
+                          )}
+                        </div>
+                      )}
                       {currentListModule === "dealers" && (
                         <div>
                           <p className="font-black text-slate-800">{item.dealership_name || item.name} ({item.mobile})</p>
@@ -3752,7 +3778,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                         </div>
                       )}
                       {/* Generic fallback metadata values */}
-                      {!["cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands", "career_applications"].includes(currentListModule) && (
+                      {![ "cars", "users", "inspections", "auctions", "dealers", "testimonials", "faqs", "expenses", "pages", "footer_links", "brands", "career_applications", "test_drives", "purchases", "crm_activities"].includes(currentListModule) && (
                         <div>
                           <p className="font-black text-slate-800">{item.email || item.name || item.manager || item.state || item.category || ""}</p>
                           <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.notes || item.address || item.support_number || item.question || ""}</p>
@@ -3833,7 +3859,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                         </div>
                       )}
                       {/* Generic fallback attributes */}
-                      {!["cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands", "career_applications"].includes(currentListModule) && (
+                      {![ "cars", "dealers", "expenses", "auctions", "pages", "footer_links", "brands", "career_applications", "test_drives", "purchases", "crm_activities"].includes(currentListModule) && (
                         <div>
                           <p className="font-mono text-[10px] text-slate-500">{item.variant || item.region || item.shift || item.category || item.rate || ""}</p>
                         </div>
@@ -3853,13 +3879,13 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                         </div>
                       ) : (
                         <span className={`text-[9px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full ${
-                          String(item.status || item.role || "active").toLowerCase() === "available" || String(item.status || item.role || "active").toLowerCase() === "completed" || String(item.status || item.role || "active").toLowerCase() === "approved" || String(item.status || item.role || "active").toLowerCase() === "admin"
+                          ["available", "completed", "approved", "admin"].includes(String(item.status || item.role || item.payment_status || item.activity_type || "active").toLowerCase())
                             ? "bg-emerald-100 text-emerald-700"
-                            : String(item.status || item.role || "active").toLowerCase() === "pending" || String(item.status || item.role || "active").toLowerCase() === "assigned"
+                            : ["pending", "assigned", "submitted"].includes(String(item.status || item.role || item.payment_status || item.activity_type || "active").toLowerCase())
                             ? "bg-amber-100 text-amber-700"
                             : "bg-indigo-100 text-indigo-700"
                         }`}>
-                          {item.status || item.role || "Active"}
+                          {item.status || item.role || item.payment_status || item.activity_type || "Active"}
                         </span>
                       )}
                     </td>
@@ -3903,12 +3929,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                               120-Pt Report
                             </button>
                             <button
-                              onClick={() => setSelected120Inspection(item)}
+                              onClick={() => handleNavigateToModule("auctions")}
                               className="px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                              title="Open the 120-Point report, then start the B2B Dealer Auction from there"
+                              title="Open Live Auctions to create the B2B Dealer Auction from a certified inspection"
                             >
                               <Gavel className="h-3 w-3" />
-                              Review &amp; Auction
+                              Live Auctions
                             </button>
                             <button
                               onClick={() => setSelected120Inspection(item)}
