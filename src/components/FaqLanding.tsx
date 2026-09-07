@@ -78,7 +78,6 @@ const CATEGORY_ORDER = [
   "Inspection",
   "Certification",
   "Financing",
-  "Test drive",
   "Payments",
   "Delivery",
   "Account & safety",
