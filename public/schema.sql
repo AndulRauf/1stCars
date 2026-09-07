@@ -445,11 +445,31 @@ CREATE POLICY "Staff reads/updates sell requests" ON public.sell_requests FOR SE
 
 -- 8. Inspections Policies
 DROP POLICY IF EXISTS "Sellers read own inspections" ON public.inspections;
-CREATE POLICY "Sellers read own inspections" ON public.inspections FOR SELECT USING (auth.uid() = seller_id);
+-- Sellers may read their own inspections: (a) rows owned by their profile, (b) rows
+-- submitted before the auto-created Seller account existed (matched by the mobile/email
+-- the Sell Car form used), and (c) staff/inspectors see every row for the pipeline.
+CREATE POLICY "Sellers read own inspections" ON public.inspections FOR SELECT USING (
+  auth.uid() = seller_id
+  OR seller_email = (SELECT email FROM public.profiles WHERE id = auth.uid())
+  OR seller_mobile = (SELECT mobile FROM public.profiles WHERE id = auth.uid())
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+);
 DROP POLICY IF EXISTS "Inspectors view assigned" ON public.inspections;
 CREATE POLICY "Inspectors view assigned" ON public.inspections FOR ALL USING (auth.uid() = inspector_id OR public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 DROP POLICY IF EXISTS "Staff creates inspections" ON public.inspections;
 CREATE POLICY "Staff creates inspections" ON public.inspections FOR INSERT WITH CHECK (public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Seller'));
+-- Sellers may promote/update their own pending inspections (partial-lead → full
+-- submission path, and the post-sign-in seller_id backfill so the dashboard shows rows that
+-- were submitted anonymously before their auto-created Seller account existed). Staff and
+-- inspectors keep exclusive control over assigning/completing inspections.
+DROP POLICY IF EXISTS "Sellers update own inspections" ON public.inspections;
+CREATE POLICY "Sellers update own inspections" ON public.inspections FOR UPDATE
+  USING (
+    auth.uid() = seller_id
+    OR seller_email = (SELECT email FROM public.profiles WHERE id = auth.uid())
+    OR seller_mobile = (SELECT mobile FROM public.profiles WHERE id = auth.uid())
+  )
+  WITH CHECK (status IN ('pending', 'partial'));
 -- The public Sell Car form is an anonymous lead submission (the mobile OTP is
 -- a client-side mock), so the auto-created Seller sign-in may not always yield
 -- a session. Allow visitors to submit a PENDING inspection request the same way

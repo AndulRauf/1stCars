@@ -956,9 +956,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <p className="text-xs text-slate-400 mt-0.5">Real-time tracking of Spinny-style home inspections logged for your account.</p>
                   </div>
 
-                  {inspections.filter(i => i.seller_id === currentUser.id || i.seller_mobile === currentUser.mobile).length > 0 ? (
+                  {(() => {
+                    const myInspections = inspections.filter(i => i.seller_id === currentUser.id || (i.seller_mobile && i.seller_mobile === currentUser.mobile) || (!!i.seller_email && !!currentUser.email && i.seller_email.toLowerCase() === currentUser.email.toLowerCase()));
+                    return myInspections.length > 0 ? (
                     <div className="space-y-4">
-                      {inspections.filter(i => i.seller_id === currentUser.id || i.seller_mobile === currentUser.mobile).map(item => (
+                      {myInspections.map(item => (
                         <div key={item.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] space-y-3">
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/50 pb-3">
                             <div>
@@ -998,7 +1000,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <p className="text-xs text-slate-500 font-bold">No active inspection requests found.</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">Submit your vehicle parameters through the Sell Car link!</p>
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               )}
 

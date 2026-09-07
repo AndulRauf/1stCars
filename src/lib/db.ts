@@ -158,6 +158,7 @@ export interface Inspection {
   seller_id?: string;
   seller_name: string;
   seller_mobile: string;
+  seller_email?: string | null;
   reg_number: string;
   brand: string;
   model: string;

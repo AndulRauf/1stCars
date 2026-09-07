@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { toast } from "@/src/lib/toast";
@@ -439,6 +439,18 @@ function isUnknownColumnError(message?: string): boolean {
   );
 }
 
+// RLS / table-grant write rejections surfaced by PostgREST (e.g. an UPDATE attempt on
+// a database that predates the seller-update policy, or an anonymous visitor who has no
+// UPDATE grant on inspections). The submission must fall back to a fresh INSERT instead
+// of failing, sothat the Sell Car form always lands.
+function isRlsBlockedWrite(message?: string): boolean {
+  if (!message) return false;
+  return (
+    /row.?level security policy/i.test(message) ||
+    /permission denied/i.test(message)
+  );
+}
+
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 const gujaratRTOs = [
@@ -516,7 +528,34 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     trackViewSellCar();
   }, []);
 
+  // Link inspection rows submitted anonymously (seller_id NULL, before the auto
+  // Seller account existed) to this seller once their account is confirmed, so the
+  // Seller dashboard (and its RLS-scoped reads) can show them. Matches by the
+  // derived email and/or the mobile number used in the form. On the mock database the
+  // dashboard already matches rows by mobile, so this only runs against real Supabase.
+
+  const linkInspectionsToSeller = async (user: { id: string; email?: string } | null | undefined, mobile: string) => {
+    if (!user?.id || !isRealSupabase) return;
+    const email = String(user.email || "").trim().toLowerCase();
+    const m = String(mobile || "").replace(/\D/g, "");
+    if (!email && !m) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const updates = [
+        email ? supabase.from("inspections").update({ seller_id: user.id }).eq("seller_email", email).is("seller_id", null) : null,
+        m ? supabase.from("inspections").update({ seller_id: user.id }).eq("seller_mobile", m).is("seller_id", null) : null
+      ].filter(Boolean);
+      if (updates.length > 0) await Promise.all(updates);
+    } catch (e) {
+      console.warn("Failed to link inspections to seller:", e);
+    }
+  };
+ 
   const navigateToSellerDashboard = React.useCallback(async () => {
+    if (redirectTimerRef.current !== null) {
+      window.clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
     // Re-resolve the authoritative profile (fresh role) so the Seller
     // dashboard renders even if the App-level auth listener resolved the
     // role before the seller sign-up / role promotion completed.
@@ -606,6 +645,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
 
     if (user) {
+      // Backfill seller_id onto any inspection rows this seller submitted while
+      // anonymous (the auto account did not exist yet at insert time), so the
+      // RLS-scoped dashboard query returns them.
+      await linkInspectionsToSeller(user, mobile);
       const profile = await resolveProfile(user);
       onNavigateToDashboard(profile);
       return;
@@ -866,24 +909,38 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
-        .from("inspections")
-        .insert([
-          {
-            seller_mobile: mobile,
-            brand: selectedBrand,
-            model: selectedModel,
-            status: "partial",
-            notes: "Partial lead — form in progress"
-          }
-        ])
-        .select()
-        .single();
+      // Partial-lead capture runs only for signed-in users. Anonymous visitors have
+      // no UPDATE grant on inspections, so a partial row they create now could never
+      // be promoted to the full inspection at final submit — it would just leave a
+      // duplicate "pending" lead behind. Their auto-created Seller account is made at
+      // final submit,and the completed row is linked back to it then (seller_id backfill).
+      let partialUser: any = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) partialUser = user;
+      } catch { /* best-effort — falls through to the plain continue flow */ }
 
-      if (error) {
-        throw new Error(error.message || "Could not save your progress.");
+      if (partialUser) {
+        const { data, error } = await supabase
+          .from("inspections")
+          .insert([
+            {
+              seller_id: partialUser.id,
+              seller_mobile: mobile,
+              brand: selectedBrand,
+              model: selectedModel,
+              status: "pending",
+              notes: "Partial lead — form in progress"
+            }
+          ])
+          .select()
+          .single();
+
+        if (error) {
+          throw new Error(error.message || "Could not save your progress.");
+        }
+        setPartialLeadId(data?.id ?? null);
       }
-      setPartialLeadId(data?.id ?? null);
       setWizardStep(4);
     } catch (err) {
       console.error("Error saving partial lead:", err);
@@ -989,6 +1046,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // If a partial lead was captured earlier, UPDATE that same row with the
       // full inspection details; otherwise do a fresh INSERT. The fast path
       // avoids a `.select()` round-trip on the critical path.
+      // A partial row is only captured for signed-in users (anonymous visitors have no
+      // UPDATE grant on inspections), so "partialLeadId" implies an authenticated submit.
+      const canPromotePartial = Boolean(partialLeadId && user);
       let { error } = partialLeadId
         ? await supabase.from("inspections").update(inspectionRecord).eq("id", partialLeadId)
         : await supabase.from("inspections").insert([inspectionRecord]);
@@ -1007,7 +1067,20 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       }
 
       if (error) {
-        throw new Error(error.message || "Could not save your inspection request.");
+        if (!canPromotePartial) {
+          throw new Error(error.message || "Could not save your inspection request.");
+        }
+        // RLS / grant recovery: never fail the submission when the partial-row UPDATE
+        // was blocked (e.g. an out-of-date live DB missing the seller-update policy) —
+        // insert a fresh row so the Sell Car form always lands.
+        if (isRlsBlockedWrite(error.message) || isUnknownColumnError(error.message)) {
+          const { seller_email, notes, ...baseRecord } = inspectionRecord;
+          console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", error.message);
+          ({ error } = await supabase.from("inspections").insert(isUnknownColumnError(error.message) ? [baseRecord] : [inspectionRecord]));
+        }
+        if (error) {
+          throw new Error(error.message || "Could not save your inspection request.");
+        }
       }
 
       const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -1030,7 +1103,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       void (async () => {
         try {
           if (!user) {
-            await resolveAutoSignIn(supabase, autoEmail, autoPassword, {
+            const autoResult = await resolveAutoSignIn(supabase, autoEmail, autoPassword, {
               data: {
                 name: preliminaryName,
                 email: resolvedEmail,
@@ -1039,6 +1112,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 city: resolvedCity
               }
             });
+            if (!autoResult?.error && autoResult?.user) {
+              user = autoResult.user;
+              // Link the just-created Seller account to the inspection row (submitted
+              // anonymously above with seller_id NULL), so the dashboard can show it.
+              await linkInspectionsToSeller(autoResult.user, mobile);
+            }
           }
         } catch (authErr) {
           console.warn("Auto Seller sign-in error during inspection submit:", authErr);

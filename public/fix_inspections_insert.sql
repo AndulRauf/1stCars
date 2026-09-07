@@ -62,12 +62,23 @@ CREATE POLICY "Staff creates inspections"
 --    their own; staff/inspectors see all. Without a SELECT policy the
 --    RETURNING clause of an insert is filtered out and can error.
 DROP POLICY IF EXISTS "Sellers read own inspections" ON public.inspections;
-CREATE POLICY "Sellers read own inspections"
-  ON public.inspections FOR SELECT
+CREATE POLICY "Sellers read own inspections" ON public.inspections FOR SELECT USING (
+  auth.uid() = seller_id
+  OR seller_email = (SELECT email FROM public.profiles WHERE id = auth.uid())
+  OR seller_mobile = (SELECT mobile FROM public.profiles WHERE id = auth.uid())
+  OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
+);
+-- Sellers may promote/update their own pending inspections (partial-lead → full
+-- submission path, and the post-sign-in seller_id backfill so the dashboard shows rows
+-- that were submitted anonymously before their auto-created Seller account existed).
+DROP POLICY IF EXISTS "Sellers update own inspections" ON public.inspections;
+CREATE POLICY "Sellers update own inspections" ON public.inspections FOR UPDATE
   USING (
-    seller_id IS NOT DISTINCT FROM auth.uid()
-    OR public.get_auth_user_role() IN ('Admin', 'Sales Associate', 'Inspector')
-  );
+    auth.uid() = seller_id
+    OR seller_email = (SELECT email FROM public.profiles WHERE id = auth.uid())
+    OR seller_mobile = (SELECT mobile FROM public.profiles WHERE id = auth.uid())
+  )
+  WITH CHECK (status IN ('pending', 'partial'));
 
 -- 8) Table-level grants. Without these, inserts fail with
 --    "permission denied for table inspections" regardless of RLS.

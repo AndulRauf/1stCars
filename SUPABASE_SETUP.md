@@ -122,6 +122,13 @@ seeded in the background (once per browser per user).
   [`public/schema.sql`](public/schema.sql) in the Supabase SQL Editor (the file is
   idempotent) — it drops/recreates that policy and grants
   `INSERT, SELECT ON public.inspections TO anon`. Then hard-refresh the site.
+- **Submitted an inspection but the Seller Dashboard shows "No active inspection
+  requests"** — anonymous visitors submit before their auto-created Seller account
+  exists, so the row's `seller_id` is NULL. The app now backfills `seller_id` after
+  auto sign-in,and the RLS policies above let the seller read/update rows matched by their
+  mobile/email. Existing live DBs need the newer policies: re-run
+  [`public/fix_inspections_insert.sql`](public/fix_inspections_insert.sql) in the
+  Supabase SQL Editor (idempotent), then hard-refresh the site.
 
 ### Notes
 - **Mock vs real:** if either env var is empty the app falls back to the mock.
