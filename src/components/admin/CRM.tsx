@@ -1150,7 +1150,7 @@ export function CRM({
                     </Button>
                   )}
                   {item.kind === "inspection" && inspectors.length === 0 && (
-                    <p className="text-[10px] text-slate-400 font-bold">No Inspector profiles exist yet — add one under People & Access → Inspectors.</p>
+                    <p className="text-[10px] text-slate-400 font-bold">No Inspector profiles exist yet — add one under Users / Staff → Inspectors.</p>
                   )}
                   {item.kind === "offer" && item.record?.inspection_id && (
                     <Button

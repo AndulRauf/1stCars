@@ -453,6 +453,12 @@ function isRlsBlockedWrite(message?: string): boolean {
 
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
+// A valid Indian 10-digit mobile: digits only and a leading 6–9. Used by
+// both the partial-lead capture and the final submit so a plausible-but-junk
+// number (e.g. "0123456789" or "5555555555") never reaches dispatch.
+const isValidMobile = (value: string): boolean =>
+  /^[6-9]\d{9}$/.test(String(value || ""));
+
 const gujaratRTOs = [
   { code: "GJ-1", city: "Ahmedabad" },
   { code: "GJ-2", city: "Mehsana" },
@@ -902,7 +908,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const handleMobileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!mobile || mobile.length !== 10) {
+    if (!isValidMobile(mobile)) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
@@ -959,7 +965,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       toast.error("Please enter your full name.");
       return;
     }
-    if (!mobile || mobile.length !== 10) {
+    if (!isValidMobile(mobile)) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
@@ -1709,6 +1715,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               setSelectedRTO(r.code);
+                              // Default the doorstep inspection city to the car's
+                              // registration city so the dispatch city and address
+                              // never silently disagree. The user can still change it.
+                              setAddress(r.city);
                               setWizardStep(8);
                             }}
                             className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${

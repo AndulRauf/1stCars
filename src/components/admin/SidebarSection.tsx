@@ -1,11 +1,12 @@
 import * as React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { NavSection, NavItem, CMSModule } from "./adminNavData";
+import { NavSection, NavItem, CMSModule, isNavItemActive } from "./adminNavData";
 
 interface SidebarSectionProps {
   section: NavSection;
   activeModule: CMSModule;
-  onSelectModule: (id: CMSModule) => void;
+  statusFilter?: string;
+  onSelectModule: (id: CMSModule, deepFilter?: string) => void;
   isCollapsed: boolean;
   searchQuery: string;
   isExpanded: boolean;
@@ -15,6 +16,7 @@ interface SidebarSectionProps {
 export function SidebarSection({
   section,
   activeModule,
+  statusFilter = "all",
   onSelectModule,
   isCollapsed,
   searchQuery,
@@ -63,13 +65,13 @@ export function SidebarSection({
       {(shouldExpand || isCollapsed) && (
         <div className="mt-1 space-y-0.5">
           {filteredItems.map(item => {
-            const isActive = activeModule === item.id;
+            const isActive = isNavItemActive(item, activeModule, statusFilter);
             const Icon = item.icon;
 
             return (
               <button
-                key={item.id}
-                onClick={() => onSelectModule(item.id)}
+                key={`${item.id}-${item.deepFilter || "all"}`}
+                onClick={() => onSelectModule(item.id, item.deepFilter)}
                 title={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer ${
                   isCollapsed ? "justify-center" : "justify-between"

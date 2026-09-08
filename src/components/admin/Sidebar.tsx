@@ -8,7 +8,7 @@ import { SidebarSection } from "./SidebarSection";
 
 interface SidebarProps {
   activeModule: CMSModule;
-  onSelectModule: (module: CMSModule) => void;
+  onSelectModule: (module: CMSModule, deepFilter?: string) => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
   onReloadData?: () => void;
@@ -17,6 +17,8 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   /** Role scope for persisted UI state so each role keeps its own sidebar prefs. */
   roleKey?: string;
+  /** Current list filter — lets deep-filtered entries (Buyer/Seller customers) highlight accurately. */
+  statusFilter?: string;
 }
 
 export function Sidebar({
@@ -28,7 +30,8 @@ export function Sidebar({
   isLoadingData,
   isCollapsed: externalIsCollapsed,
   onToggleCollapse: externalOnToggleCollapse,
-  roleKey = "default"
+  roleKey = "default",
+  statusFilter = "all"
 }: SidebarProps) {
   // Namespaced storage keys: each role keeps its own collapse/expansion prefs.
   const collapseKey = `1stcars_admin_sidebar_collapsed_${roleKey}`;
@@ -59,12 +62,17 @@ export function Sidebar({
     // stays compact and the module list is easy to scan.
     return {
       "Overview": true,
-      "Leads & Sales": false,
-      "Inventory & Catalog": false,
-      "Quality & Trust": false,
-      "People & Access": false,
-      "Finance & Operations": false,
-      "Website & Content": false
+      "CRM & Leads": false,
+      "Cars": false,
+      "Inspections": false,
+      "Auctions": false,
+      "Buyers": false,
+      "Sellers": false,
+      "Dealers": false,
+      "Orders / Payments": false,
+      "Users / Staff": false,
+      "Content / FAQ": false,
+      "Settings": false
     };
   });
 
@@ -92,17 +100,17 @@ export function Sidebar({
   // Auto-expand the section that owns the active module so the current page
   // is always visible in the sidebar (e.g. navigating from a dashboard card).
   React.useEffect(() => {
-    const { sectionTitle } = getSectionAndItemForModule(activeModule);
+    const { sectionTitle } = getSectionAndItemForModule(activeModule, statusFilter);
     setExpandedSections(prev => {
       if (prev[sectionTitle]) return prev;
       const next = { ...prev, [sectionTitle]: true };
       localStorage.setItem(expansionsKey, JSON.stringify(next));
       return next;
     });
-  }, [activeModule]);
+  }, [activeModule, statusFilter]);
 
-  const handleSelect = (mod: CMSModule) => {
-    onSelectModule(mod);
+  const handleSelect = (mod: CMSModule, deepFilter?: string) => {
+    onSelectModule(mod, deepFilter);
     if (onCloseMobile) onCloseMobile();
   };
 
@@ -197,6 +205,7 @@ export function Sidebar({
               key={section.title}
               section={section}
               activeModule={activeModule}
+              statusFilter={statusFilter}
               onSelectModule={handleSelect}
               isCollapsed={isCollapsed && !isMobileOpen}
               searchQuery={searchQuery}

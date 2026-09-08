@@ -3,8 +3,10 @@ import {
   Gavel, ClipboardList, Users, Car, UserCheck, Bell, BookOpen,
   Plus, CheckCircle2, TrendingUp, TrendingDown, Minus, BarChart3
 } from "lucide-react";
-import { CMSModule } from "./adminNavData";
+import { CMSModule, READY_CAR_STATUSES } from "./adminNavData";
 import { getAnalyticsDiagnostics } from "@/src/lib/analytics";
+import { isHiddenPage } from "@/src/lib/utils";
+import { AUCTION_OPEN_STATES } from "@/src/lib/auctions";
 
 interface AdminDashboardProps {
   cars: any[];
@@ -15,7 +17,7 @@ interface AdminDashboardProps {
   pages: any[];
   salesLeads: any[];
   expenses: any[];
-  onNavigate: (mod: CMSModule, status?: string) => void;
+  onNavigate: (mod: CMSModule, status?: string, openAdd?: boolean) => void;
 }
 
 const DAY_MS = 86400000;
@@ -98,32 +100,38 @@ export function AdminDashboard({
     return [];
   }, [salesLeads]);
 
-  const activeAuctionsCount = auctions.filter((a) => ["LIVE", "EXTENDED", "CLOSING"].includes(a.status)).length;
+  const activeAuctionsCount = auctions.filter((a) => AUCTION_OPEN_STATES.includes(a.status)).length;
   const pendingInspsCount = inspections.filter((i) => i.status === "pending").length;
   const pendingCarsCount = cars.filter((c) => String(c.status || "").toLowerCase() === "pending").length;
-  const totalExpensesLogged = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const totalUnreadAlerts = notifications.filter((n) => !n.is_read).length;
   const inventoryValue = cars.reduce((sum, c) => sum + (Number(c.price) || 0), 0);
   const soldCount = cars.filter((c) => String(c.status || "").toLowerCase() === "sold").length;
-  const readyCarsCount = cars.filter((c) => ["available", "listed", "inspection_completed", "ready_for_sale"].includes(String(c.status || "").toLowerCase())).length;
+  const readyCarsCount = cars.filter((c) => READY_CAR_STATUSES.includes(String(c.status || "").toLowerCase())).length;
+  // Pages module lists only visible pages — the KPI must count the same set
+  // so clicking the card shows exactly the number displayed here.
+  const livePages = pages.filter((p) => !isHiddenPage(p));
+  const hiddenPagesCount = pages.length - livePages.length;
 
   const carSeries = dailyCounts(cars);
+  // Cards are ordered to mirror the sidebar flow (Leads → Cars → Inspections →
+  // Auctions → Users → Alerts → Pages); each opens the section that shows the
+  // exact data the number is computed from.
   const kpiCards = [
-    { label: "Active Auctions", val: String(activeAuctionsCount), desc: "Dealer bidding open", color: "bg-indigo-500/10 text-indigo-600", mod: "auctions" as CMSModule, status: "live", icon: Gavel, series: [], change: null },
-    { label: "Pending Evaluations", val: String(pendingInspsCount), desc: "Awaiting inspection", color: "bg-amber-500/10 text-amber-600", mod: "inspections" as CMSModule, status: "pending", icon: ClipboardList, series: dailyCounts(inspections), change: periodChange(inspections) },
+    { label: "Customer Leads", val: String(leads.length), desc: "Test-drive & booking enquiries", color: "bg-emerald-500/10 text-emerald-600", mod: "leads" as CMSModule, status: "all", icon: Users, series: dailyCounts(leads), change: periodChange(leads) },
     { label: "Inventory Value", val: `₹${(inventoryValue / 100000).toFixed(1)}L`, desc: `${cars.length} cars in catalog`, color: "bg-sky-500/10 text-sky-600", mod: "cars" as CMSModule, status: "all", icon: Car, series: carSeries, change: periodChange(cars) },
-    { label: "Customer Leads", val: String(leads.length), desc: "Open CRM desk enquiries", color: "bg-emerald-500/10 text-emerald-600", mod: "dashboard" as CMSModule, status: "all", icon: Users, series: dailyCounts(leads), change: periodChange(leads) },
-    { label: "Cars Ready to Sell", val: String(readyCarsCount), desc: pendingCarsCount > 0 ? `${pendingCarsCount} pending · ${soldCount} sold` : `${soldCount} sold this cycle`, color: pendingCarsCount > 0 ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600", mod: "cars" as CMSModule, status: pendingCarsCount > 0 ? "pending" : "all", icon: CheckCircle2, series: carSeries, change: periodChange(cars) },
+    { label: "Cars Ready to Sell", val: String(readyCarsCount), desc: pendingCarsCount > 0 ? `${pendingCarsCount} pending · ${soldCount} sold` : `${soldCount} sold this cycle`, color: pendingCarsCount > 0 ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600", mod: "cars" as CMSModule, status: "ready", icon: CheckCircle2, series: carSeries, change: periodChange(cars) },
+    { label: "Pending Evaluations", val: String(pendingInspsCount), desc: "Awaiting inspection", color: "bg-amber-500/10 text-amber-600", mod: "inspections" as CMSModule, status: "pending", icon: ClipboardList, series: dailyCounts(inspections), change: periodChange(inspections) },
+    { label: "Active Auctions", val: String(activeAuctionsCount), desc: "Open for dealer bidding", color: "bg-indigo-500/10 text-indigo-600", mod: "auctions" as CMSModule, status: "open", icon: Gavel, series: [], change: null },
     { label: "Registered Users", val: String(users.length), desc: `${users.filter((u) => u.role === "Dealer").length} dealers · ${users.filter((u) => u.role === "Sales Associate").length} sales reps`, color: "bg-violet-500/10 text-violet-600", mod: "users" as CMSModule, status: "all", icon: UserCheck, series: dailyCounts(users), change: periodChange(users) },
-    { label: "Unread Alerts", val: String(totalUnreadAlerts), desc: "Notification ledger", color: "bg-orange-500/10 text-orange-600", mod: "notifications" as CMSModule, status: "all", icon: Bell, series: dailyCounts(notifications), change: periodChange(notifications) },
-    { label: "Live Pages", val: String(pages.length), desc: `Expenses logged: ₹${totalExpensesLogged.toLocaleString()}`, color: "bg-teal-500/10 text-teal-600", mod: "pages" as CMSModule, status: "all", icon: BookOpen, series: [], change: null }
+    { label: "Unread Alerts", val: String(totalUnreadAlerts), desc: "Notification ledger", color: "bg-orange-500/10 text-orange-600", mod: "notifications" as CMSModule, status: "unread", icon: Bell, series: dailyCounts(notifications), change: periodChange(notifications) },
+    { label: "Live Pages", val: String(livePages.length), desc: hiddenPagesCount > 0 ? `${hiddenPagesCount} hidden page${hiddenPagesCount === 1 ? "" : "s"}` : "Custom CMS pages", color: "bg-teal-500/10 text-teal-600", mod: "pages" as CMSModule, status: "all", icon: BookOpen, series: [], change: null }
   ];
 
   const quickActions = [
-    { label: "Add New Car", icon: Plus, mod: "cars" as CMSModule, status: "all", tone: "bg-[#2E7D32] text-white hover:bg-[#25632a]" },
-    { label: "Approve Pending", icon: CheckCircle2, mod: "cars" as CMSModule, status: "pending", tone: "bg-[#ff5a07] text-white hover:bg-[#e04e00]" },
-    { label: "Live Auctions", icon: Gavel, mod: "auctions" as CMSModule, status: "live", tone: "bg-indigo-600 text-white hover:bg-indigo-700" },
-    { label: "Reports & Analytics", icon: TrendingUp, mod: "reports" as CMSModule, status: "all", tone: "bg-slate-800 text-white hover:bg-slate-700" }
+    { label: "Add New Car", icon: Plus, mod: "cars" as CMSModule, status: "all", openAdd: true, tone: "bg-[#2E7D32] text-white hover:bg-[#25632a]" },
+    { label: "Approve Pending", icon: CheckCircle2, mod: "cars" as CMSModule, status: "pending", openAdd: false, tone: "bg-[#ff5a07] text-white hover:bg-[#e04e00]" },
+    { label: "Live Auctions", icon: Gavel, mod: "auctions" as CMSModule, status: "open", openAdd: false, tone: "bg-indigo-600 text-white hover:bg-indigo-700" },
+    { label: "Reports & Analytics", icon: TrendingUp, mod: "reports" as CMSModule, status: "all", openAdd: false, tone: "bg-slate-800 text-white hover:bg-slate-700" }
   ];
 
   // Live analytics health — surfaces the #1 silent cause of "no leads": GA4
@@ -136,6 +144,57 @@ export function AdminDashboard({
 
   return (
     <div className="space-y-4">
+      {/* Quick actions strip */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">
+          Quick Actions
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => onNavigate(action.mod, action.status, action.openAdd)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs cursor-pointer transition-all hover:opacity-90 ${action.tone}`}
+            >
+              <action.icon className="h-3.5 w-3.5" /> {action.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KPI grid */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
+          Key Metrics — tap any card to open the underlying records
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {kpiCards.map((card, i) => (
+            <button
+              key={i}
+              onClick={() => onNavigate(card.mod, card.status)}
+              className="group p-4 rounded-2xl border bg-white border-slate-200/80 shadow-xs cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 text-left flex flex-col gap-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${card.color}`}>
+                  <card.icon className="h-5 w-5" />
+                </span>
+                {card.change !== null && <TrendChip change={card.change} />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">{card.label}</p>
+                <p className="text-xl font-black text-slate-900 mt-0.5 leading-none">{card.val}</p>
+              </div>
+              <div className="flex items-end justify-between gap-2 mt-auto">
+                <p className="text-[10px] text-slate-400 font-medium truncate">{card.desc}</p>
+                {card.series.length > 0 && (
+                  <Sparkline data={card.series} color={card.change !== null && card.change > 0 ? "#16a34a" : card.change !== null && card.change < 0 ? "#e11d48" : "#2E7D32"} />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Analytics health banner */}
       <div className={`border rounded-2xl px-4 py-3 text-[11px] font-bold flex items-start gap-2.5 ${ga4Tone}`}>
         <BarChart3 className="h-4 w-4 shrink-0 mt-0.5" />
@@ -154,52 +213,6 @@ export function AdminDashboard({
             </p>
           )}
         </div>
-      </div>
-
-      {/* Quick actions strip */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2">
-          Quick Actions
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          {quickActions.map((action) => (
-            <button
-              key={action.label}
-              onClick={() => onNavigate(action.mod, action.status)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs cursor-pointer transition-all hover:opacity-90 ${action.tone}`}
-            >
-              <action.icon className="h-3.5 w-3.5" /> {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* KPI grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpiCards.map((card, i) => (
-          <button
-            key={i}
-            onClick={() => onNavigate(card.mod, card.status)}
-            className="group p-4 rounded-2xl border bg-white border-slate-200/80 shadow-xs cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 text-left flex flex-col gap-2.5"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${card.color}`}>
-                <card.icon className="h-5 w-5" />
-              </span>
-              {card.change !== null && <TrendChip change={card.change} />}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 truncate">{card.label}</p>
-              <p className="text-xl font-black text-slate-900 mt-0.5 leading-none">{card.val}</p>
-            </div>
-            <div className="flex items-end justify-between gap-2 mt-auto">
-              <p className="text-[10px] text-slate-400 font-medium truncate">{card.desc}</p>
-              {card.series.length > 0 && (
-                <Sparkline data={card.series} color={card.change !== null && card.change > 0 ? "#16a34a" : card.change !== null && card.change < 0 ? "#e11d48" : "#2E7D32"} />
-              )}
-            </div>
-          </button>
-        ))}
       </div>
 
       {/* Sparse data hint */}

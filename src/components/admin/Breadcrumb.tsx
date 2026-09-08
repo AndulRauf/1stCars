@@ -5,12 +5,14 @@ import { Button } from "@/src/components/ui/Button";
 
 interface BreadcrumbProps {
   activeModule: CMSModule;
+  /** Current list filter so deep-filtered entries (Buyer/Seller customers) resolve to their own section. */
+  statusFilter?: string;
   onReload?: () => void;
   isLoading?: boolean;
 }
 
-export function Breadcrumb({ activeModule, onReload, isLoading }: BreadcrumbProps) {
-  const { sectionTitle, itemLabel, itemIcon: Icon } = getSectionAndItemForModule(activeModule);
+export function Breadcrumb({ activeModule, statusFilter, onReload, isLoading }: BreadcrumbProps) {
+  const { sectionTitle, itemLabel, itemIcon: Icon } = getSectionAndItemForModule(activeModule, statusFilter);
 
   return (
     <div className="bg-slate-900 border-b border-slate-800/80 text-white px-4 py-2.5 sm:px-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-3 mb-3">

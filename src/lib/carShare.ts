@@ -139,6 +139,8 @@ export const resetCarOgMeta = () => {
       else el.remove();
     }
   }
-  document.title = "1stCars - Premium Used Car Marketplace";
+  // Note: document.title is owned by the router (App.tsx), which re-applies
+  // the correct per-view title on every navigation. Do NOT overwrite it here
+  // or the freshly-navigated view's title would be clobbered.
   ogSnapshot = null;
 };

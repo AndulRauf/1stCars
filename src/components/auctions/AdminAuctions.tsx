@@ -20,6 +20,8 @@ import { formatINR, formatDateTime, AuctionStatusBadge, Stat } from "./AuctionBi
 interface AdminAuctionsProps {
   currentUser: { id: string; name?: string; role: string };
   onReloadAllData?: () => void;
+  /** Pre-set status filter from a dashboard KPI deep link ("open" = open for bidding). */
+  initialStatusFilter?: string;
 }
 
 interface DealerRow {
@@ -38,7 +40,7 @@ const toLocalInput = (iso: string): string => {
 };
 const fromLocalInput = (v: string): string => (v ? new Date(v).toISOString() : "");
 
-export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsProps) {
+export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilter }: AdminAuctionsProps) {
   const actor: AuctionActor = { userId: currentUser.id, role: currentUser.role };
   const [auctions, setAuctions] = React.useState<AuctionRecord[]>([]);
   const [cars, setCars] = React.useState<any[]>([]);
@@ -46,7 +48,7 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
   const [dealers, setDealers] = React.useState<DealerRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [statusFilter, setStatusFilter] = React.useState(initialStatusFilter || "all");
 
   const [showCreate, setShowCreate] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
@@ -373,7 +375,12 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
       v.title.toLowerCase().includes(q) ||
       v.city.toLowerCase().includes(q) ||
       a.id.toLowerCase().includes(q);
-    const matchStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchStatus =
+      statusFilter === "all" ||
+      // "open": dashboard "Active Auctions" deep link — same set the KPI counts.
+      (statusFilter === "open"
+        ? AUCTION_OPEN_STATES.includes(a.status)
+        : a.status === statusFilter);
     return matchSearch && matchStatus;
   });
 
@@ -440,6 +447,7 @@ export function AdminAuctions({ currentUser, onReloadAllData }: AdminAuctionsPro
             className="md:w-56 h-10 border border-slate-200 bg-white rounded-xl text-xs font-bold px-3 outline-none cursor-pointer"
           >
             <option value="all">All Statuses</option>
+            <option value="open">Open for bidding (LIVE / EXTENDED)</option>
             {Object.keys(AUCTION_STATUS_LABELS).map((s) => (
               <option key={s} value={s}>{AUCTION_STATUS_LABELS[s as keyof typeof AUCTION_STATUS_LABELS]}</option>
             ))}

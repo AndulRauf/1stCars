@@ -30,7 +30,7 @@ import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { AutomationControlCenter } from "./admin/AutomationControlCenter";
 import { automationService } from "@/src/lib/automation";
-import { CMSModule } from "./admin/adminNavData";
+import { CMSModule, READY_CAR_STATUSES } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS, normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
 import { AdminAuctions } from "./auctions/AdminAuctions";
@@ -582,6 +582,9 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const [isLoading, setIsLoading] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
+  // Module queued to auto-open its Add modal after a dashboard quick-action
+  // navigation (see handleNavigateToModule's `openAdd` flag).
+  const [pendingAddModule, setPendingAddModule] = React.useState<CMSModule | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
@@ -2773,9 +2776,15 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       return false;
     });
 
-    const matchStatus = 
-      statusFilter === "all" || 
-      String(item.status || item.role || item.payment_status || item.category || "").toLowerCase() === statusFilter.toLowerCase();
+    const matchStatus =
+      statusFilter === "all" ||
+      // "unread": System Alerts deep link — notification rows carry is_read, not status.
+      (statusFilter === "unread"
+        ? !item.is_read
+        : statusFilter === "ready"
+          ? // "ready": Cars "Ready to Sell" deep link — matches any sell-ready status.
+            READY_CAR_STATUSES.includes(String(item.status || "").toLowerCase())
+          : String(item.status || item.role || item.payment_status || item.category || "").toLowerCase() === statusFilter.toLowerCase());
 
     return matchSearch && matchStatus;
   });
@@ -2787,19 +2796,34 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     currentPage * itemsPerPage
   );
 
-  // Navigate to a module and reset list state (optionally pre-filtering by status)
-  const handleNavigateToModule = (mod: CMSModule, status: string = "all") => {
+  // Navigate to a module and reset list state (optionally pre-filtering by status).
+  // `openAdd` additionally pops the module's add-record modal as soon as the
+  // module has rendered — used by the dashboard "Add New Car" quick action so
+  // the button does what it says instead of just listing the catalog.
+  const handleNavigateToModule = (mod: CMSModule, status: string = "all", openAdd: boolean = false) => {
     setActiveModule(mod);
     setCurrentPage(1);
     setSearchQuery("");
     setStatusFilter(status);
+    setPendingAddModule(openAdd ? mod : null);
   };
+
+  // Deferred add-modal trigger: waits for the target module to become active so
+  // openAddModal() resolves the right record type (e.g. the car wizard for cars).
+  React.useEffect(() => {
+    if (!pendingAddModule || activeModule !== pendingAddModule) return;
+    setPendingAddModule(null);
+    openAddModal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAddModule, activeModule]);
+
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-slate-800 flex flex-col lg:flex-row text-left font-sans">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         activeModule={activeModule}
-        onSelectModule={(mod) => handleNavigateToModule(mod, "all")}
+        onSelectModule={(mod, deepFilter) => handleNavigateToModule(mod, deepFilter || "all")}
+        statusFilter={statusFilter}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         onReloadData={loadCMSData}
@@ -2858,7 +2882,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         </div>
 
         {/* Breadcrumb Path Header */}
-        <Breadcrumb activeModule={activeModule} />
+        <Breadcrumb activeModule={activeModule} statusFilter={statusFilter} />
 
         {/* Storage source indicator for the active module */}
         <div className="flex items-center gap-2">
@@ -3566,6 +3590,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       {activeModule === "auctions" && (
         <AdminAuctions
           currentUser={currentUser || { id: "admin", name: "Admin", role: "Admin" }}
+          initialStatusFilter={statusFilter}
           onReloadAllData={loadCMSData}
         />
       )}
@@ -3645,10 +3670,12 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               >
                 <option value="all">Filter By: All Statuses / Roles</option>
                 <option value="available">Status: Available</option>
+                <option value="ready">Status: Ready to Sell</option>
                 <option value="pending">Status: Pending</option>
                 <option value="completed">Status: Completed</option>
                 <option value="active">Status: Active</option>
                 <option value="assigned">Status: Assigned</option>
+                <option value="unread">Alerts: Unread</option>
                 <option value="Buyer">Role: Buyer</option>
                 <option value="Seller">Role: Seller</option>
                 <option value="Dealer">Role: Dealer</option>
