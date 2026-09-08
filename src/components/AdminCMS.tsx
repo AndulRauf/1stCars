@@ -1243,6 +1243,32 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     }
   };
 
+  // Job-application CVs live in the PRIVATE "resumes" storage bucket:
+  // anonymous visitors may upload but never read back (see
+  // public/fix_launch_security_storage_profiles.sql). New submissions
+  // persist the storage PATH in resume_url; older rows may hold a legacy
+  // public URL. Either way staff mint a short-lived signed URL on click.
+  const handleViewResume = async (item: any) => {
+    const raw = String(item.resume_url || "");
+    if (!raw) return;
+    // Legacy rows: extract the object path out of a full storage URL.
+    const fromUrl = raw.match(/\/object\/(?:public|authenticated|sign)\/resumes\/([^?]+)/);
+    const path = fromUrl ? decodeURIComponent(fromUrl[1]) : raw.replace(/^\/+/, "");
+    if (!path || path.includes("://")) {
+      // Not a resumes path (e.g. external/data URL) — open as-is.
+      window.open(raw, "_blank", "noopener,noreferrer");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.storage.from("resumes").createSignedUrl(path, 60 * 60);
+      if (error || !data?.signedUrl) throw error || new Error("No signed URL returned");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      console.warn("Resume signed URL failed; opening stored reference directly:", e);
+      window.open(raw, "_blank", "noopener,noreferrer");
+    }
+  };
+
   // Approve a car submitted by a Sales Associate: flips status from "pending"
   // to "available" so it appears live in the public catalog, and alerts the
   // associate who uploaded it.
@@ -3956,16 +3982,14 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           </button>
                         )}
                         {currentListModule === "career_applications" && item.resume_url && (
-                          <a
-                            href={item.resume_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => handleViewResume(item)}
                             className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border border-[#2E7D32]/30 text-[#2E7D32] bg-[#2E7D32]/5 hover:bg-[#2E7D32] hover:text-white transition-all cursor-pointer flex items-center gap-1"
                             title="Open the uploaded resume in a new tab"
                           >
                             <FileText className="h-3 w-3" />
                             View Resume
-                          </a>
+                          </button>
                         )}
                         {(currentListModule === "test_drive_requests" || currentListModule === "booking_requests") && (
                           <button

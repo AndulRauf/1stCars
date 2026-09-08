@@ -1,3 +1,8 @@
+> ⚠️ **THIS IS A DOCUMENTATION FILE — DO NOT RUN IT AS SQL.**
+> Supabase's SQL Editor will fail with `syntax error at or near "#"` because
+> `#` is not a PostgreSQL comment. Only paste the **`.sql`** files from
+> `public/` (listed in section 2 below) into the SQL Editor, never this file.
+
 # 1stCars — Real Backend (Supabase) Setup
 
 The app runs on an in-browser **mock database** until you provide real Supabase
@@ -34,6 +39,11 @@ wins its type — running them out of order silently changes the schema:
 6. seed_faq.sql (optional)
 7. refine_supabase_v2.sql   <- consolidated safe refinements
 8. add_profiles_approval_columns.sql  <- quick-fix: profiles approval/status/verified columns
+8. add_profiles_approval_columns.sql  <- quick-fix: profiles approval/status/verified columns
+9. fix_launch_security_storage_profiles.sql  <- REQUIRED: storage lockdown, private
+   "resumes" bucket with upload/review policies, and profiles SELECT for
+   authenticated users only (drop-in safe on any DB state, idempotent)
+
 ```
 
 Notably, `sales_notifications.assigned_to` is declared `TEXT` in `schema.sql`

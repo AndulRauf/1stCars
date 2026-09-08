@@ -374,8 +374,13 @@ RETURNS public.user_role AS $$
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- 1. Profiles Policies
+-- Profiles hold PII (name/email/mobile/role): SELECT is for AUTHENTICATED
+-- users only — anonymous visitors get nothing (anonymous buyer/seller
+-- booking lead flows never read profiles while signed out). Admins keep
+-- full control via "Admin manages all profiles" below.
 DROP POLICY IF EXISTS "Public profiles read" ON public.profiles;
-CREATE POLICY "Public profiles read" ON public.profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated profiles read" ON public.profiles;
+CREATE POLICY "Authenticated profiles read" ON public.profiles FOR SELECT TO authenticated USING (true);
 DROP POLICY IF EXISTS "Users edit own profile" ON public.profiles;
 CREATE POLICY "Users edit own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 DROP POLICY IF EXISTS "Admin manages all profiles" ON public.profiles;
@@ -794,11 +799,36 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('car-images', 'car-images', true), ('logos', 'logos', true)
 ON CONFLICT (id) DO NOTHING;
 
--- RLS policies for storage objects
+-- Private "resumes" bucket for job-application CVs (CareersView.tsx):
+-- visitors upload; only Admin / Sales Associate staff read them back.
+-- Forces public = false in case it was ever created public manually.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('resumes', 'resumes', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
+
+-- RLS policies for storage objects.
+-- "All Power" (FOR ALL USING (true) WITH CHECK (true)) was REMOVED — it
+-- gave anonymous visitors unrestricted read/write/delete on every bucket.
+DROP POLICY IF EXISTS "All Power" ON storage.objects;
+-- Visitors keep viewing the public media buckets (car photos + logos).
 DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id IN ('car-images', 'logos'));
-DROP POLICY IF EXISTS "All Power" ON storage.objects;
-CREATE POLICY "All Power" ON storage.objects FOR ALL USING (true) WITH CHECK (true);
+-- Authenticated staff/sellers manage the public media buckets.
+DROP POLICY IF EXISTS "Authenticated manage media buckets" ON storage.objects;
+CREATE POLICY "Authenticated manage media buckets" ON storage.objects
+  FOR ALL TO authenticated
+  USING (bucket_id IN ('car-images', 'logos'))
+  WITH CHECK (bucket_id IN ('car-images', 'logos'));
+-- Anonymous visitors may ONLY upload CVs into the private resumes bucket.
+DROP POLICY IF EXISTS "Visitors upload resumes" ON storage.objects;
+CREATE POLICY "Visitors upload resumes" ON storage.objects
+  FOR INSERT TO anon
+  WITH CHECK (bucket_id = 'resumes');
+-- Only Admin / Sales Associate staff may review (read) uploaded CVs.
+DROP POLICY IF EXISTS "Staff review resumes" ON storage.objects;
+CREATE POLICY "Staff review resumes" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (bucket_id = 'resumes' AND public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
 -- ====================================================
 -- 25. ROLE GRANTS

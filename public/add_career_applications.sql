@@ -42,9 +42,24 @@ CREATE POLICY "Staff manage career applications"
   USING (public.get_auth_user_role() IN ('Admin', 'Sales Associate'))
   WITH CHECK (public.get_auth_user_role() IN ('Admin', 'Sales Associate'));
 
--- Optional: private "resumes" storage bucket for uploaded CVs. Public buckets
--- are created from the Supabase Dashboard; if this bucket does not exist the
--- form still works and records only the resume file name.
+-- Private "resumes" storage bucket for uploaded CVs. Visitors may UPLOAD
+-- (INSERT) only; only Admin / Sales Associate staff may read CVs back for
+-- review — the Careers form stores the object path and the Admin panel
+-- opens a short-lived signed URL ("View Resume"). If this bucket does not
+-- exist the form still works and records only the resume file name.
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('resumes', 'resumes', false)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = false;
+
+-- Anonymous visitors may ONLY upload into the private resumes bucket;
+-- they can never read, update or delete anything in it.
+DROP POLICY IF EXISTS "Visitors upload resumes" ON storage.objects;
+CREATE POLICY "Visitors upload resumes" ON storage.objects
+  FOR INSERT TO anon
+  WITH CHECK (bucket_id = 'resumes');
+
+-- Only Admin / Sales Associate staff may review (read) uploaded CVs.
+DROP POLICY IF EXISTS "Staff review resumes" ON storage.objects;
+CREATE POLICY "Staff review resumes" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (bucket_id = 'resumes' AND public.get_auth_user_role() IN ('Admin', 'Sales Associate'));

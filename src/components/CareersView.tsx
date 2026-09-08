@@ -184,8 +184,10 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
   };
 
   const uploadResume = async (file: File): Promise<{ url: string; name: string }> => {
-    // The "resumes" storage bucket may not exist yet on the live backend — any
-    // upload failure is non-fatal (we still record the file name with the app).
+    // The "resumes" bucket is PRIVATE (public/fix_launch_security_storage_profiles.sql):
+    // visitors may upload but never read back, so we persist the storage PATH —
+    // the Admin panel mints a short-lived signed URL when staff click "View
+    // Resume". Any upload failure is non-fatal (we still record the file name).
     if (!isRealSupabase) return { url: "", name: file.name };
     try {
       const path = `applications/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
@@ -193,8 +195,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
         upsert: false
       });
       if (error) throw error;
-      const { data } = supabase.storage.from(RESUME_BUCKET).getPublicUrl(path);
-      return { url: data.publicUrl, name: file.name };
+      return { url: path, name: file.name };
     } catch (e) {
       console.warn("Resume upload skipped (bucket unavailable):", e);
       return { url: "", name: file.name };
