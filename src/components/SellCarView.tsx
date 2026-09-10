@@ -1996,22 +1996,22 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   { 
                     icon: ShieldCheck, 
                     title: "Free Doorstep Inspection", 
-                    desc: "No hidden checklist fees. Completely free scheduling at your convenience." 
+                    desc: "Get your car inspected at your doorstep at no cost." 
                   },
                   { 
                     icon: Clock, 
-                    title: "Offers in 1 Hours", 
-                    desc: "Once inspected, your vehicle goes into live custom bidding with 250+ certified dealers." 
+                    title: "Competitive Dealer Offers", 
+                    desc: "Get competitive offers from our verified dealer network after inspection." 
                   },
                   { 
                     icon: Sparkles, 
-                    title: "Instant Secure Payment", 
-                    desc: "No payment delay. Funds transferred directly to your bank account before handover." 
+                    title: "Fast & Secure Payment", 
+                    desc: "Once you accept the offer, payment is processed securely before handover." 
                   },
                   { 
                     icon: FileText, 
                     title: "Free RC Transfer & Paperwork", 
-                    desc: "100% legal coverage. All paperwork, registration transfers, and liabilities handled by us." 
+                    desc: "We handle the required paperwork and RC transfer for a simple, hassle-free sale." 
                   }
                 ].map((badge, idx) => (
                   <div key={idx} className="flex gap-3 text-left">
