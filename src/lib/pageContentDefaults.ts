@@ -224,7 +224,7 @@ const CANONICAL_MARKETING_COPY: Record<string, string> = {
   heroSubtitle:
     "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
   footerText: "© 2026 1stCars Marketplace. All rights reserved.",
-  brandSlogan: "The Premium Pre-Owned Hub",
+  brandSlogan: "Easy Way",
   brandDescription:
     "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
   seoTitle: "1stCars - Certified Car Marketplace",

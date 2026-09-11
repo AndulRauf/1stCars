@@ -266,7 +266,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     supportEmail: "support@1stcars.com",
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
-    brandSlogan: "The Premium Pre-Owned Hub",
+    brandSlogan: "Easy Way",
     brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
