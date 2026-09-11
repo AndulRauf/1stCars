@@ -2033,7 +2033,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 <ShieldAlert className="h-4 w-4" /> Bypassing Auto-Estimates
               </p>
               <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                Unlike primitive portals, <strong>1stCars does not use algorithmic price estimates</strong>. Auto-estimates often devalue high-spec features. Real market bidding from verified local dealers ensures you secure the actual true valuation of your car!
+                No algorithmic estimates. Get your car's true market value through real-time bids from verified local dealers.
               </p>
             </div>
 
