@@ -1537,7 +1537,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         } else {
           await supabase.from("profiles").update(profileRecord).eq("id", editingId);
         }
-      } else if (currentListModule === "inspections") {
+      } else if (currentListModule === "inspections" || currentListModule === "seller_enquiries") {
         // Strip the client-side text id so the real DB generates a valid UUID
         // (the inspections.id column is UUID and rejects "id-inspections-*").
         const { id: _inspId, ...recordToSave } = currentRecord;
@@ -1894,7 +1894,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         }
         const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", id);
         if (profileDeleteError) throw profileDeleteError;
-      } else if (currentListModule === "inspections") {
+      } else if (currentListModule === "inspections" || currentListModule === "seller_enquiries") {
         await supabase.from("inspections").delete().eq("id", id);
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
         await supabase.from(currentListModule).delete().eq("id", id);
