@@ -73,6 +73,10 @@ function parseFaqContent(md: string): ParsedFaq[] {
 }
 
 const CATEGORY_ORDER = [
+  "Buying a Car",
+  "Selling Your Car",
+  "Inspection & Dealer Network",
+  "Payment & Documentation",
   "Buying",
   "Selling",
   "Inspection",
@@ -124,11 +128,12 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
     return () => window.removeEventListener(PAGE_CONTENT_UPDATED_EVENT, apply);
   }, []);
 
+  const faqBadge = settings.faqPageBadge || "FAQ";
   const faqHeading = settings.faqPageHeading || "Frequently Asked Questions";
   const faqSubheading =
     settings.faqPageSubheading ||
     page.meta_description ||
-    "Find quick answers about buying, selling and certifying cars with 1stCars.";
+    "Everything you need to know about buying, selling and 1stMark Certified Cars with 1stCars.";
 
   React.useEffect(() => {
     let cancelled = false;
@@ -201,6 +206,8 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
     return (
       <div className="min-h-screen bg-background pb-16">
         <PageHero
+          label={faqBadge}
+          labelIcon={<HelpCircle className="h-4 w-4" />}
           title={faqHeading}
           subtitle={faqSubheading}
           ctas={[
@@ -296,6 +303,8 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
     <div className="bg-background min-h-screen text-slate-900">
       {/* Hero */}
       <PageHero
+        label={faqBadge}
+        labelIcon={<HelpCircle className="h-4 w-4" />}
         title={faqHeading}
         subtitle={faqSubheading}
         ctas={[
@@ -512,18 +521,21 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
 
       {/* Bottom CTA */}
       <CTASection
-        badge="STILL HAVE QUESTIONS?"
-        title="Still have questions? Get in touch with us."
-        subtitle="Our team is happy to help you with anything about buying, selling or certifying your car."
+        title="Still Have Questions?"
+        subtitle="Our team is here to help you with your car buying or selling journey."
         ctas={[
           {
-            label: "Contact Support",
+            label: "Buy Certified Cars",
+            onClick: onNavigateToInventory ?? onBackToHome,
+          },
+          { label: "Sell Your Car", onClick: onNavigateToSell ?? onBackToHome, variant: "ghost" },
+          {
+            label: "Contact Us",
             onClick: () => {
               window.location.href = "mailto:support@1stcars.com";
             },
+            variant: "ghost",
           },
-          { label: "Sell Your Car", onClick: onNavigateToSell ?? onBackToHome, variant: "ghost" },
-          { label: "Back to Home", onClick: onBackToHome, variant: "ghost" },
         ]}
       />
     </div>

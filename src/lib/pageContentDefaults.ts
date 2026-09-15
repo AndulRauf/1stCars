@@ -106,9 +106,10 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   certChecklistSubtitle: "Select a category to view all verified checkpoints",
 
   // ---- FAQ ----
-  faqPageHeading: "Questions? We've Got Answers.",
+  faqPageBadge: "FAQ",
+  faqPageHeading: "Frequently Asked Questions",
   faqPageSubheading:
-    "Find quick answers about buying, selling, inspections and 1stCars.",
+    "Everything you need to know about buying, selling and 1stMark Certified Cars with 1stCars.",
 };
 
 // Helpers used by the public views to read page copy.
@@ -123,47 +124,29 @@ export interface FaqItem {
 }
 
 // Default FAQ entries shared by the public /faq page and the Admin FAQ editor.
-// All answers reflect functionality already present on the website.
+// Curated to ~15 high-value objections with short, clear Indian English answers.
+// All answers reflect functionality already present on the website — no
+// warranty, buyback, guaranteed-sale or fixed-price claims are made here.
 export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
-  // Buying
-  { id: "fq-buy-1", category: "Buying", question: "How do I buy a car from 1stCars?", answer: "Browse available cars, open a vehicle's details and book a test drive where offered. A small refundable booking token then reserves the car and unlocks priority assistance." },
-  { id: "fq-buy-2", category: "Buying", question: "Can I book a test drive?", answer: "Yes — free of charge wherever the option is shown on the listing. Our concierge team arranges a convenient slot, and you decide on the booking token afterwards." },
-  { id: "fq-buy-3", category: "Buying", question: "Are the cars inspected?", answer: "Yes. Every certified car passes our 120-Point Inspection and receives an official Vehicle Grade before it goes live." },
-  { id: "fq-buy-4", category: "Buying", question: "What is included in the displayed price?", answer: "The drive-away price. A full cost breakup — including RC transfer and documentation charges — is shown at checkout. No hidden charges." },
-  { id: "fq-buy-5", category: "Buying", question: "How do I reserve a car?", answer: "Pay a refundable booking token equal to 1% of the vehicle value (min ₹3,000, max ₹10,000). It adjusts against the final price and is fully refundable per our policy." },
-  // Selling
-  { id: "fq-sell-1", category: "Selling", question: "How can I sell my car?", answer: "Submit your car details, book a free doorstep inspection, and let verified dealers compete in a live auction for your car. Listing is free — no hidden charges." },
-  { id: "fq-sell-2", category: "Selling", question: "Where does the inspection happen?", answer: "At your doorstep — our equipped team covers Surat, Vadodara, Bharuch and Vapi — or at an inspection centre, whichever suits you." },
-  { id: "fq-sell-3", category: "Selling", question: "How is my car valued?", answer: "Your car's details, condition and current market trends set the baseline; competing dealer bids then lift the final price." },
-  { id: "fq-sell-4", category: "Selling", question: "What documents do I need to sell?", answer: "RC, valid insurance, pollution certificate and your ID proof. Our team helps you gather and verify everything." },
-  { id: "fq-sell-5", category: "Selling", question: "How and when do I get paid?", answer: "As soon as you accept a dealer's offer, payment is processed and RC transfer is handled by 1stCars or its authorised partners." },
-  // Inspection
-  { id: "fq-insp-1", category: "Inspection", question: "What does the inspection cover?", answer: "Exterior, body and structure, mechanicals, electricals, interior, tyres and other key details — recorded in a transparent report." },
-  { id: "fq-insp-2", category: "Inspection", question: "How long does an inspection take?", answer: "Typically within 24 hours of your scheduled slot." },
-  { id: "fq-insp-5", category: "Inspection", question: "Do you check for odometer tampering?", answer: "Yes. Genuine kilometres are verified via ECU diagnostics and service-log sweeps; tampered odometers are auto-delisted." },
-  // Certification
-  { id: "fq-cert-1", category: "Certification", question: "What is the 1stMark Certificate?", answer: "Our certificate, signed off by a Master Engineer after a car passes the 120-Point Inspection. It confirms three pillars: Single Owner, Non-Accident and Genuine KM." },
-  { id: "fq-cert-2", category: "Certification", question: "Is certification a warranty?", answer: "No. It reflects the vehicle's condition at inspection time and is informational — not a mechanical warranty unless separately agreed in writing." },
-  { id: "fq-cert-3", category: "Certification", question: "How is a vehicle graded?", answer: "Across 12 mechanical and structural categories, with an official grade of A+, A, B+ or B." },
-  { id: "fq-cert-4", category: "Certification", question: "What happens if a car fails inspection?", answer: "It is not listed until the issues are fixed — or it is withdrawn. Only cars that meet our standards go live." },
-  // Financing
-  { id: "fq-fin-1", category: "Financing", question: "Can I get a car loan or EMI?", answer: "Yes. Every listing includes an EMI calculator, and our team guides you through financing with partner banks and NBFCs. We do not lend directly." },
-  { id: "fq-fin-2", category: "Financing", question: "What are the eligibility requirements?", answer: "Standard KYC — identity, address and income proof. Exact terms depend on the financier and the chosen model." },
-  // Payments
-  { id: "fq-pay-1", category: "Payments", question: "What payment methods are accepted?", answer: "Indian Rupees (INR) via UPI or bank transfer, as shown at checkout." },
-  { id: "fq-pay-3", category: "Payments", question: "How long do token refunds take?", answer: "7–10 working days to the original payment method, subject to our cancellation and damage policy." },
-  // Delivery
-  { id: "fq-del-1", category: "Delivery", question: "Do you offer home delivery?", answer: "Yes — delivery and ownership-transfer assistance across Gujarat for your purchased vehicle." },
-  { id: "fq-del-2", category: "Delivery", question: "How is RC transfer handled?", answer: "End-to-end by 1stCars or its authorised partners — our team coordinates all paperwork with you and the RTO. Charges appear in the price breakup." },
-  { id: "fq-del-3", category: "Delivery", question: "How long does RC transfer take?", answer: "It depends on RTO processing, which varies. We keep you updated at every step." },
-  // Account & safety
-  { id: "fq-acc-1", category: "Account & safety", question: "How do I create an account?", answer: "Sign up with your email or mobile number and verify via OTP. Choose your role — Buyer, Seller or Dealer." },
-  { id: "fq-acc-2", category: "Account & safety", question: "Is my personal data safe?", answer: "Yes. Your data is handled per our Privacy Policy; mobile numbers used for OTP and coordination stay private." },
-  { id: "fq-acc-4", category: "Account & safety", question: "Can I reset my password?", answer: "Yes — use account recovery and follow the verification steps sent to your registered email or mobile." },
-  // General
-  { id: "fq-gen-1", category: "General", question: "Where does 1stCars operate?", answer: "Across Gujarat — starting in Surat and serving Vadodara, Bharuch and Vapi — with more regions planned." },
-  { id: "fq-gen-2", category: "General", question: "How can I contact 1stCars?", answer: "Email support@1stcars.com, use the contact options on the website, or visit the Surat Experience Centre." },
-  { id: "fq-gen-3", category: "General", question: "What are the showroom timings?", answer: "Surat Experience Center: Monday–Sunday, 09:30 AM–08:30 PM. Other outlets are listed on the Location page." }
+  // ---- Buying a Car ----
+  { id: "fq-buy-1", category: "Buying a Car", question: "What is 1stCars?", answer: "1stCars is a technology-driven pre-owned car marketplace connecting buyers, sellers and verified dealers. We make buying and selling used cars simpler, more transparent and convenient." },
+  { id: "fq-buy-2", category: "Buying a Car", question: "What is a 1stMark Certified Car?", answer: "A 1stMark Certified Car is a vehicle that has undergone our 120-point inspection covering key mechanical, structural and functional areas before being listed as certified." },
+  { id: "fq-buy-3", category: "Buying a Car", question: "Are 1stMark cars single-owner vehicles?", answer: "Where specified as single-owner, the ownership details are verified against available vehicle and documentation records. Always check the individual vehicle listing for its specific details." },
+  { id: "fq-buy-4", category: "Buying a Car", question: "Are the kilometres verified?", answer: "We verify the available vehicle information using inspection checks and available service or vehicle-history records. The verification details are provided as part of the vehicle information where available." },
+  { id: "fq-buy-5", category: "Buying a Car", question: "Can I inspect or test drive a car before buying?", answer: "Yes, test drives can be arranged for eligible vehicles. Availability depends on the vehicle and location." },
+  // ---- Selling Your Car ----
+  { id: "fq-sell-1", category: "Selling Your Car", question: "How can I sell my car through 1stCars?", answer: "Start by submitting your car details through our Sell Your Car form. After verification, our team can arrange a free inspection and help you explore the best available selling option." },
+  { id: "fq-sell-2", category: "Selling Your Car", question: "Is the car inspection free?", answer: "Yes. 1stCars offers a free doorstep inspection for eligible sellers." },
+  { id: "fq-sell-3", category: "Selling Your Car", question: "How is my car's price determined?", answer: "We consider the vehicle's condition, age, kilometres, documentation and current market demand. Depending on the selling route, you may receive an offer from 1stCars or competitive offers through our verified dealer network." },
+  { id: "fq-sell-4", category: "Selling Your Car", question: "Do I have to accept the offer?", answer: "No. You remain in control of the decision. You can review the available offer and decide whether you want to proceed." },
+  // ---- Inspection & Dealer Network ----
+  { id: "fq-net-1", category: "Inspection & Dealer Network", question: "What does the 120-point inspection cover?", answer: "The inspection checks key mechanical, electrical, structural, exterior and interior aspects of the vehicle. The purpose is to identify the actual condition of the car before it is certified or offered." },
+  { id: "fq-net-2", category: "Inspection & Dealer Network", question: "Who buys cars through 1stCars?", answer: "Depending on the selling route, your car may be purchased by 1stCars, a verified dealer or an eligible buyer connected through the platform." },
+  { id: "fq-net-3", category: "Inspection & Dealer Network", question: "What is Dealer Auction?", answer: "Dealer Auction allows verified dealers in the 1stCars network to compete for eligible vehicles. This can help sellers discover competitive market offers." },
+  // ---- Payment & Documentation ----
+  { id: "fq-pay-1", category: "Payment & Documentation", question: "When will I receive payment?", answer: "Payment timing depends on the selected selling route and completion of the required documentation. The applicable payment process will be explained before the final handover." },
+  { id: "fq-pay-2", category: "Payment & Documentation", question: "Does 1stCars help with RC transfer?", answer: "Yes. 1stCars provides assistance with the required ownership-transfer documentation and RC transfer process as applicable to the transaction." },
+  { id: "fq-pay-3", category: "Payment & Documentation", question: "Are there any hidden charges?", answer: "We aim to keep the transaction transparent. Any applicable charges or deductions will be communicated before you proceed with the transaction." }
 ];
 
 export function getPageContent(overrides?: Record<string, string | undefined>): Record<string, string> {

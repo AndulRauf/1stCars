@@ -347,6 +347,7 @@ export function PageEditor({ websiteSettings, setWebsiteSettings, onSave }: Page
           </div>
 
           <div className="grid grid-cols-1 gap-4">
+            <Field label="FAQ Page Badge" value={websiteSettings.faqPageBadge || "FAQ"} full onChange={set("faqPageBadge")} />
             <Field label="FAQ Page Heading" value={websiteSettings.faqPageHeading || ""} full onChange={set("faqPageHeading")} />
             <Field label="FAQ Page Subtitle" value={websiteSettings.faqPageSubheading || ""} textarea full onChange={set("faqPageSubheading")} />
           </div>
