@@ -8,21 +8,21 @@ import { sanitizeSettings } from "./utils";
 export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   // ---- About Us ----
   aboutHeroBadge: "ABOUT 1STCARS",
-  aboutHeroHeading: "Making Pre-Owned Cars Simple.",
-  aboutHeroHighlight: "Simple.",
+  aboutHeroHeading: "Your Trusted Pre-Owned Car Marketplace",
+  aboutHeroHighlight: "",
   aboutHeroSubtitle:
-    "1stCars brings a simpler, more transparent way to buy and sell pre-owned cars.",
-  aboutBrowseButton: "Explore Cars",
+    "1stCars makes buying and selling pre-owned cars simple, transparent and convenient. Based in Surat, we connect car buyers, sellers and verified dealers through a technology-driven marketplace. Every 1stMark Certified Car goes through a detailed 120-point inspection, helping customers make their next car decision with greater confidence.",
+  aboutBrowseButton: "Explore Certified Cars",
   aboutBackButton: "Sell Your Car",
 
-  aboutM1Value: "120",
+  aboutM1Value: "120+",
   aboutM1Label: "Point Inspection",
-  aboutM2Value: "1000+",
-  aboutM2Label: "Elite Dealer Network",
+  aboutM2Value: "180+",
+  aboutM2Label: "Dealer Network",
   aboutM3Value: "0",
   aboutM3Label: "Hidden Fees",
-  aboutM4Value: "24Hr",
-  aboutM4Label: "Inspection Turnaround",
+  aboutM4Value: "",
+  aboutM4Label: "",
 
   aboutStoryBadge: "OUR STORY",
   aboutStoryHeading: "Built on a simple belief — buying a used car should feel safe.",
@@ -32,10 +32,10 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutStoryPara2: "",
   aboutVisionTitle: "Our Vision",
   aboutVisionText:
-    "To build a trusted pre-owned car marketplace where buying and selling feels simple, transparent and convenient.",
-  aboutMissionTitle: "Make every car transaction simpler.",
+    "To become India's most trusted destination for certified pre-owned vehicles.",
+  aboutMissionTitle: "Our Mission",
   aboutMissionText:
-    "From first search to final handover, we remove the guesswork so you can buy and sell with confidence.",
+    "To make the pre-owned car market more transparent, trustworthy and technology-driven \u2014 combining professional vehicle inspection with a simple customer experience.",
 
   aboutQuoteText:
     "\u201cWe don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",
@@ -48,31 +48,31 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutStat3Value: "100%",
   aboutStat3Label: "Verified Listings",
 
-  aboutValue1Title: "Transparency",
+  aboutValue1Title: "120-Point Inspection",
   aboutValue1Desc:
-    "Clear information helps people make better decisions.",
-  aboutValue2Title: "Trust",
+    "Every 1stMark Certified Car undergoes a detailed inspection covering key mechanical, structural and functional areas.",
+  aboutValue2Title: "Transparent Information",
   aboutValue2Desc:
-    "Every car decision should start with confidence.",
-  aboutValue3Title: "Simplicity",
+    "Customers get access to inspection details, vehicle information and available ownership history.",
+  aboutValue3Title: "Verified Network",
   aboutValue3Desc:
-    "Buying and selling should not feel complicated.",
-  aboutValue4Title: "Customer First",
+    "We connect customers with a network of verified dealers and buyers to make transactions more reliable.",
+  aboutValue4Title: "Simple Experience",
   aboutValue4Desc:
-    "We build around what buyers and sellers actually need.",
+    "From inspection to documentation, we aim to make every step easier and more convenient.",
 
-  aboutDiff1Title: "Vehicle Inspection",
+  aboutDiff1Title: "Certified Cars",
   aboutDiff1Desc:
-    "Every car passes our rigorous 120-point inspection across 12 vital vehicle areas before it is listed.",
-  aboutDiff2Title: "Transparent Information",
+    "Inspected vehicles with clear information before listing.",
+  aboutDiff2Title: "Fair Market Offers",
   aboutDiff2Desc:
-    "Complete inspection reports, genuine odometer readings and honest ownership history on every listing.",
-  aboutDiff3Title: "Fair Valuation",
+    "Competitive offers through our verified network.",
+  aboutDiff3Title: "Transparent Process",
   aboutDiff3Desc:
-    "Verified dealers compete through transparent bidding so sellers get fair market value.",
-  aboutDiff4Title: "Simple Process",
+    "Clear information without unnecessary complexity.",
+  aboutDiff4Title: "Customer First",
   aboutDiff4Desc:
-    "From doorstep inspection to doorstep delivery, every step is designed to be effortless.",
+    "A simple experience designed around convenience and confidence.",
 
   aboutStep1Title: "Doorstep Inspection",
   aboutStep1Desc:
