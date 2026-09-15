@@ -1896,6 +1896,17 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         if (profileDeleteError) throw profileDeleteError;
       } else if (currentListModule === "inspections" || currentListModule === "seller_enquiries") {
         await supabase.from("inspections").delete().eq("id", id);
+      } else if (currentListModule === "test_drive_requests" || currentListModule === "booking_requests") {
+        // These tabs list rows from salesLeads (Supabase `sales_notifications`
+        // table with a legacy localStorage fallback). Delete from both sources
+        // so the row disappears immediately and on the next reload.
+        await supabase.from("sales_notifications").delete().eq("id", id);
+        setSalesLeads(salesLeads.filter((lead: any) => lead.id !== id));
+        const legacyLeads = safeParseArray(localStorage.getItem("1stcars_sales_leads"));
+        localStorage.setItem(
+          "1stcars_sales_leads",
+          JSON.stringify(legacyLeads.filter((lead: any) => lead.id !== id))
+        );
       } else if (currentListModule === "test_drives" || currentListModule === "purchases" || currentListModule === "crm_activities") {
         await supabase.from(currentListModule).delete().eq("id", id);
       } else if (currentListModule === "auctions") {
