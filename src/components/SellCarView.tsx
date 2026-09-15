@@ -742,7 +742,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [selectedTransmission, setSelectedTransmission] = React.useState("Manual");
   const [selectedVariant, setSelectedVariant] = React.useState("Sportz");
   const [selectedRTO, setSelectedRTO] = React.useState("");
-  const [selectedKMs, setSelectedKMs] = React.useState("30,000 - 40,000 Km");
+  
 
   // Contact details & Booking address
   const [name, setName] = React.useState("");
@@ -882,25 +882,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     yearsList.push(y);
   }
 
-  // KM ranges
-  const kmRanges = [
-    "0 - 10,000 Km",
-    "10,000 - 20,000 Km",
-    "20,000 - 30,000 Km",
-    "30,000 - 40,000 Km",
-    "40,000 - 50,000 Km",
-    "50,000 - 60,000 Km",
-    "60,000 - 70,000 Km",
-    "70,000 - 80,000 Km",
-    "80,000 - 90,000 Km",
-    "90,000 - 1,00,000 Km",
-    "1,00,000 - 1,25,000 Km",
-    "1,25,000 - 1,50,000 Km",
-    "1,50,000 - 1,75,000 Km",
-    "1,75,000 - 2,00,000 Km",
-    "2,00,000+ Km"
-  ];
-
   // Partial lead capture — save the mobile + brand + model as soon as these are
   // known (right after Brand & Model), so a visitor who drops off mid-form still
   // leaves a recoverable lead. The returned row id is reused later to UPDATE the
@@ -1021,11 +1002,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
     const finalTime = preferredTime || "11:00 AM - 01:00 PM";
 
-    // Parse KM driven value — options are ranges like "30,000 - 40,000 Km";
-    // take the UPPER bound so "0 - 10,000 Km" never becomes 0 km.
-    const kmMatches = selectedKMs.match(/[\d,]+/g) || [];
-    const kmValues = kmMatches.map((n) => Number(n.replace(/,/g, ""))).filter((n) => !isNaN(n));
-    const computedKms = kmValues.length > 0 ? Math.max(...kmValues) : 35000;
+    const computedKms = 35000;
 
     const inspectionRecord = {
       seller_id: user?.id || null,
@@ -1239,8 +1216,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     { step: 5, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
                     { step: 6, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "Fuel" },
                     { step: 7, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
-                    { step: 8, label: selectedBrand && selectedModel && selectedRTO && selectedKMs ? `✔ KMs` : "KMs" },
-                    { step: 9, label: "Verify" }
+                    { step: 8, label: "Verify" }
                   ].map((item) => {
                     const isCompleted = wizardStep > item.step;
                     const isActive = wizardStep === item.step;
@@ -1268,7 +1244,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-7">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
-                    style={{ width: `${(wizardStep / 9) * 100}%` }}
+                    style={{ width: `${(wizardStep / 8) * 100}%` }}
                   />
                 </div>
 
@@ -1758,56 +1734,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </div>
                 )}
 
-                {/* STEP 8: SELECT KM DRIVEN */}
+                {/* STEP 8: CONTACT DETAILS & SUBMISSION */}
                 {wizardStep === 8 && (
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
-                        <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel} · {selectedRTO}</span>
-                      </div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">How many kms driven?</h3>
-                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Provide close estimate of total odometer reading</p>
-                    </div>
-
-                    {/* Grid of KM options */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                      {kmRanges.map((k) => {
-                        const isSelected = selectedKMs === k;
-                        return (
-                          <button
-                            key={k}
-                            type="button"
-                            onClick={() => {
-                              setSelectedKMs(k);
-                              setWizardStep(9);
-                            }}
-                            className={`p-3.5 rounded-xl border text-center text-[11px] font-bold tracking-tight transition-all ${
-                              isSelected
-                                ? "border-[#2E7D32] bg-emerald-50 text-[#2E7D32]"
-                                : "border-slate-100 hover:border-slate-300 bg-[#FAF9F6] text-slate-800"
-                            }`}
-                          >
-                            {k}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
-                      <button
-                        type="button"
-                        onClick={() => setWizardStep(7)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" /> Back
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 9: CONTACT DETAILS & SUBMISSION */}
-                {wizardStep === 9 && (
                   <form onSubmit={handleFinalSubmit} className="space-y-6">
                     <div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Almost done — verify your details</h3>
@@ -1824,7 +1752,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                           {selectedBrand} {selectedModel} · {selectedVariant}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                          {selectedYear} Manufacturing · {selectedFuel} · {selectedKMs} Odometer
+                          {selectedYear} Manufacturing · {selectedFuel}
                         </p>
                       </div>
                     </div>
@@ -1889,7 +1817,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
                       <button
                         type="button"
-                        onClick={() => setWizardStep(8)}
+                        onClick={() => setWizardStep(7)}
                         className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
                       >
                         <ArrowLeft className="h-3.5 w-3.5" /> Back
