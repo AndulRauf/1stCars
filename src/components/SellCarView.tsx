@@ -3,7 +3,7 @@ import {
   Car, ShieldCheck, Clock, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
-  Search, ArrowLeft, Tag
+  Search, ArrowLeft, Tag, UserCheck
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -684,10 +684,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   }, [onNavigateToDashboard]);
 
   const [settings, setSettings] = React.useState({
-    sellCarBannerTitle: "Sell Your Car Instantly From Home",
-    sellCarBannerDesc: "Book a 100% free home inspection, receive live bids from our verified dealer network, and complete the sale in 24 hours with free RC transfer.",
-    sellCarFormHeading: "Get Your Car Valued",
-    sellCarFormSubheading: "Fill in your car details and we'll get back to you with a competitive cash quote"
+    sellCarBannerTitle: "Sell Your Car. Get the Best Offer.",
+    sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with secure payment and RC transfer support.",
+    sellCarFormHeading: "Tell Us About Your Car",
+    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few minutes."
   });
 
   React.useEffect(() => {
@@ -1166,11 +1166,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
   };
 
+  // Prominent hero CTA scrolls the visitor straight to the form card.
+  const scrollToSellForm = () => {
+    document.getElementById("sell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="bg-[#FAF9F6] min-h-screen pb-20 text-left">
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-10 md:pb-14 overflow-hidden border-b border-[#2E7D32]/15">
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-16 sm:pt-20 pb-8 md:pb-10 overflow-hidden border-b border-[#2E7D32]/15">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
           <div className="inline-flex">
             <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-white/70 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5 shadow-sm">
@@ -1183,6 +1188,19 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           <p className="text-sm sm:text-base text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
             {settings.sellCarBannerDesc}
           </p>
+
+          {/* Primary CTA */}
+          <div className="flex flex-col items-center gap-3 pt-2 pb-1">
+            <Button
+              onClick={scrollToSellForm}
+              className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-widest rounded-full px-8 sm:px-10 h-12 sm:h-14 text-sm shadow-lg shadow-[#2E7D32]/30 w-full max-w-sm sm:w-auto"
+            >
+              Book Your Free Inspection
+            </Button>
+            <p className="text-[11px] sm:text-xs text-slate-600 font-bold">
+              Free Doorstep Inspection • Competitive Offers • Secure Payment • RC Transfer Support
+            </p>
+          </div>
         </div>
       </div>
 
@@ -1194,7 +1212,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           <div className="lg:col-span-8">
             
             {formStep === "form" ? (
-              <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 shadow-sm">
+              <div id="sell-form" className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 shadow-sm scroll-mt-24">
                 
                 {/* Header */}
                 <div className="mb-6">
@@ -1203,6 +1221,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   </h2>
                   <p className="text-sm text-slate-500 font-medium mt-1.5 leading-relaxed">
                     {settings.sellCarFormSubheading}
+                  </p>
+                  <p className="text-xs font-bold text-[#2E7D32] mt-3 flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 shrink-0" /> Free doorstep inspection — no obligation to sell
                   </p>
                 </div>
 
@@ -1810,7 +1831,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         disabled={isSubmitting}
                         className="w-full h-12 text-xs font-black uppercase tracking-widest rounded-xl transition-all bg-[#2E7D32] hover:bg-[#25632a] text-white shadow-lg shadow-[#2E7D32]/20 cursor-pointer"
                       >
-                        {isSubmitting ? "Registering Valuation..." : "Submit my car details"}
+                        {isSubmitting ? "Booking your free inspection..." : "Book My Free Inspection"}
                       </Button>
                     </div>
 
@@ -1885,7 +1906,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     </li>
                     <li className="flex gap-2 text-left">
                       <span className="text-[#2E7D32] font-bold">3.</span>
-                      <span>Post-inspection, verified elite dealers will compete in live bidding auctions.</span>
+                      <span>Post-inspection, verified dealers compete to offer you the best price.</span>
                     </li>
                   </ul>
                 </div>
@@ -1916,30 +1937,35 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
             {/* Trust Badges */}
             <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-5 shadow-sm space-y-4">
               <h3 className="text-[11px] font-black uppercase tracking-widest text-[#2E7D32] border-b border-slate-100 pb-3">
-                Why Sell with 1stCars?
+                Why Sell With 1stCars?
               </h3>
 
               <div className="space-y-4">
                 {[
                   { 
-                    icon: ShieldCheck, 
+                    icon: MapPin, 
                     title: "Free Doorstep Inspection", 
-                    desc: "Get your car inspected at your doorstep at no cost." 
+                    desc: "No inspection charges. Our evaluator comes to your preferred location." 
                   },
                   { 
-                    icon: Clock, 
-                    title: "Competitive Dealer Offers", 
-                    desc: "Get competitive offers from our verified dealer network after inspection." 
+                    icon: Tag, 
+                    title: "Competitive Market Offers", 
+                    desc: "Get offers based on your car's actual condition and current market demand." 
                   },
                   { 
-                    icon: Sparkles, 
-                    title: "Fast & Secure Payment", 
-                    desc: "Once you accept the offer, payment is processed securely before handover." 
+                    icon: UserCheck, 
+                    title: "Verified Buyers & Dealers", 
+                    desc: "Connect with our verified network instead of unknown buyers." 
+                  },
+                  { 
+                    icon: ShieldCheck, 
+                    title: "Secure Payment", 
+                    desc: "Once the deal is confirmed, payment is processed securely before handover." 
                   },
                   { 
                     icon: FileText, 
-                    title: "Free RC Transfer & Paperwork", 
-                    desc: "We handle the required paperwork and RC transfer for a simple, hassle-free sale." 
+                    title: "RC Transfer Support", 
+                    desc: "We help with the required documentation and ownership-transfer process." 
                   }
                 ].map((badge, idx) => (
                   <div key={idx} className="flex gap-3 text-left">
@@ -1955,13 +1981,19 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               </div>
             </div>
 
-            {/* Quick Pricing Alert */}
+            {/* Auto-Estimate */}
             <div className="bg-amber-50/70 border border-amber-200/50 rounded-2xl p-5 space-y-2 text-left">
               <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest flex items-center gap-1">
-                <ShieldAlert className="h-4 w-4" /> Bypassing Auto-Estimates
+                <ShieldAlert className="h-4 w-4" /> Don't Rely on an Auto-Estimate
+              </p>
+              <p className="text-base font-black text-slate-900 tracking-tight leading-snug">
+                Know What Your Car Is Really Worth.
               </p>
               <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                No algorithmic estimates. Get your car's true market value through real-time bids from verified local dealers.
+                Instead of relying only on an algorithmic estimate, we inspect your actual car and connect it with real buyers and dealers.
+              </p>
+              <p className="text-[11px] font-black text-amber-900 uppercase tracking-wider pt-1">
+                Your car. Its real condition. Real market offers.
               </p>
             </div>
 
@@ -1969,68 +2001,81 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
         </div>
 
-        {/* Sell or Trade-In In 3 Simple Steps section - BELOW THE FORM so the
-            form is the first thing visitors see after the hero */}
+        {/* How It Works section - BELOW THE FORM so the form is the first
+            thing visitors see after the hero */}
         <div className="mt-10 bg-white p-5 sm:p-7 md:p-9 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
           <div className="text-center space-y-3 max-w-2xl mx-auto mb-8">
             <span className="inline-block bg-[#2E7D32]/10 text-[#2E7D32] px-3.5 py-1 text-[11px] font-black tracking-widest uppercase rounded-full">
               SELL YOUR CAR
             </span>
             <h2 className="font-sans text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900 leading-tight">
-              Sell or Trade-In In 3 Simple Steps
+              How It Works
             </h2>
-            <p className="text-sm sm:text-base text-slate-500 font-medium leading-relaxed">
-              We leverage professional evaluators and an elite 180+ dealer network. No listing hassle, no shady strangers, complete transparency.
-            </p>
           </div>
 
           <div className="max-w-4xl mx-auto space-y-4 text-left">
-            {/* Step 1 Item */}
+            {/* Step 1 */}
             <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 01
               </div>
               <div className="space-y-1.5 flex-grow min-w-0">
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Book Free Inspection</h3>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Tell Us About Your Car</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Complete our quick form and choose your preferred date, time &amp; location home, office, or inspection center.
+                  Enter your car details and verify your mobile number. It only takes a few minutes.
                 </p>
               </div>
             </div>
 
-            {/* Step 2 Item */}
+            {/* Step 2 */}
             <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 02
               </div>
               <div className="space-y-1.5 flex-grow min-w-0">
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Choose How to Sell</h3>
-                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs font-bold">
-                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-slate-800 block font-black">Instant Offer</span>
-                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Get a direct cash offer from 1stCars.</span>
-                  </li>
-                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-slate-800 block font-black">Dealer Auction</span>
-                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">180+ dealers compete for your car.</span>
-                  </li>
-                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
-                    <span className="text-slate-800 block font-black">Direct Deal</span>
-                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Sell car directly to buyer.</span>
-                  </li>
-                </ul>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Your Car Inspected</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  Our professional evaluator inspects your car at your home, office or inspection centre — completely free.
+                </p>
               </div>
             </div>
 
-            {/* Step 3 Item */}
+            {/* Step 3 */}
             <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 03
               </div>
               <div className="space-y-1.5 flex-grow min-w-0">
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Paid Same Day</h3>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Choose Your Best Offer</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Get instant bank transfer, loan settlement support, and zero-hassle ownership transfer. We handle the paperwork for you.
+                  Based on the inspection, choose the best available option:
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs font-bold">
+                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-slate-800 block font-black">1stCars Offer</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Get a direct purchase offer from 1stCars, when available.</span>
+                  </li>
+                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-slate-800 block font-black">Dealer Auction</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Let verified dealers compete to offer you the best price.</span>
+                  </li>
+                  <li className="bg-white border border-slate-200/70 p-3 rounded-xl flex flex-col justify-between">
+                    <span className="text-slate-800 block font-black">Direct Buyer Deal</span>
+                    <span className="text-[10px] font-medium text-slate-500 mt-0.5">Where available, sell directly to a verified buyer.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+              <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
+                04
+              </div>
+              <div className="space-y-1.5 flex-grow min-w-0">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Paid &amp; Complete the Transfer</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  Accept the offer, receive secure payment, and get assistance with the required paperwork and RC transfer.
                 </p>
               </div>
             </div>
