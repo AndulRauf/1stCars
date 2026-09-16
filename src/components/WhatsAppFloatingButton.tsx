@@ -42,7 +42,7 @@ export function WhatsAppFloatingButton({ view, carName }: WhatsAppFloatingButton
       <button
         onClick={handleClick}
         aria-label="Chat on WhatsApp"
-        className="flex items-center whitespace-nowrap bg-white text-slate-800 text-sm font-semibold px-3 py-2 rounded-full shadow-lg shadow-black/10 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-slate-100 shrink-0"
+        className="flex items-center whitespace-nowrap bg-[#25D366] text-white text-sm font-semibold px-3 py-2 rounded-full shadow-lg shadow-black/10 hover:bg-[#20ba5a] hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white/30 shrink-0"
       >
         Chat on WhatsApp
       </button>
