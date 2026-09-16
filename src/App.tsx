@@ -1282,9 +1282,9 @@ export default function App() {
         }}
       />
 
-      {/* Floating WhatsApp Widget — home page only (removed from all user
-          dashboards and inner pages) */}
-      {currentView === "home" && (
+      {/* Floating WhatsApp Widget — home, Buy Cars and Sell Car pages
+          (removed from dashboards and other inner pages) */}
+      {(currentView === "home" || currentView === "buy_cars" || currentView === "sell_car") && (
         <WhatsAppFloatingButton view={currentView} />
       )}
 
