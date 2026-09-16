@@ -37,20 +37,21 @@ export function WhatsAppFloatingButton({ view, carName }: WhatsAppFloatingButton
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center group select-none origin-bottom-right scale-80">
-      {/* Tooltip / Label on Hover on Desktop */}
-      <div className="hidden sm:flex items-center mr-2 px-3 py-1.5 bg-slate-900/90 text-white text-xs font-bold rounded-xl backdrop-blur-md shadow-xl border border-white/10 opacity-90 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-x-1">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#25D366] animate-ping" />
-          Chat on WhatsApp: <strong className="text-[#25D366] font-extrabold">{formattedPhone}</strong>
-        </span>
-      </div>
+    <div className="fixed bottom-5 z-50 flex items-center gap-2 select-none origin-bottom-right scale-80 right-5 sm:right-5 max-w-[calc(100vw-24px)]">
+      {/* Chat on WhatsApp Label */}
+      <button
+        onClick={handleClick}
+        aria-label="Chat on WhatsApp"
+        className="flex items-center whitespace-nowrap bg-white text-slate-800 text-sm font-semibold px-3 py-2 rounded-full shadow-lg shadow-black/10 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-slate-100 shrink-0"
+      >
+        Chat on WhatsApp
+      </button>
 
       {/* Main WhatsApp Floating Circle Button */}
       <button
         onClick={handleClick}
         aria-label="Contact on WhatsApp +91 88663 77722"
-        className="relative bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 sm:p-4 rounded-full shadow-2xl shadow-[#25D366]/40 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center border-2 border-white/30 group"
+        className="relative bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 sm:p-4 rounded-full shadow-2xl shadow-[#25D366]/40 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center border-2 border-white/30 shrink-0"
       >
         {/* Pulsing Outer Glow */}
         <span className="absolute -inset-1 rounded-full bg-[#25D366]/30 animate-pulse pointer-events-none" />
