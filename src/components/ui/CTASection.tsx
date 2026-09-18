@@ -19,7 +19,7 @@ export interface CTASectionProps {
 }
 
 // Shared closing CTA band — dark slate gradient with green accents, the same
-// visual language as the home page sales associate CTA section.
+// visual language as the home page concierge CTA section.
 export function CTASection({ badge, title, subtitle, ctas, className }: CTASectionProps) {
   return (
     <section

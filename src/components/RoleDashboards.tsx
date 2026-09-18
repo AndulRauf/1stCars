@@ -863,7 +863,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Scheduled Test Drives</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Track your upcoming appointments with sales associates.</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Track your upcoming appointments with concierge associates.</p>
                   </div>
 
                   {testDrives.length > 0 ? (

@@ -137,7 +137,7 @@ export function BookingModal({
   if (!isOpen) return null;
 
   // Handle Send Mobile OTP — simulated OTP exists ONLY in mock/demo mode. On a
-  // real backend the sales associate verifies the number over the phone; the UI never
+  // real backend the concierge verifies the number over the phone; the UI never
   // pretends a production SMS verification happened.
   const handleSendOtp = () => {
     if (!mobile || mobile.replace(/\D/g, "").length < 10) {
@@ -454,7 +454,7 @@ export function BookingModal({
               </h3>
               
               <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-                Our certified 1stCars sales associate team in <strong className="text-slate-800">{city}</strong> has received your request and will reach out via phone & email.
+                Our certified 1stCars concierge team in <strong className="text-slate-800">{city}</strong> has received your request and will reach out via phone & email.
               </p>
             </div>
 
@@ -526,7 +526,7 @@ export function BookingModal({
                   {bookingType === "test_drive" ? "Book Test Drive" : "Acquire Vehicle (Book Now)"}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  1stCars Sales Associate Doorstep & Showroom Experience
+                  1stCars Concierge Doorstep & Showroom Experience
                 </p>
               </div>
             </div>
@@ -652,11 +652,11 @@ export function BookingModal({
                 </div>
               )}
 
-              {/* Real mode: number is verified by the sales associate on the call —
+              {/* Real mode: number is verified by the concierge on the call —
                   the UI must not pretend an SMS verification happened. */}
               {isRealSupabase && (
                 <p className="text-[10px] text-slate-400 font-semibold pt-0.5">
-                  Our sales associate will verify this number when they call you to confirm your slot.
+                  Our concierge will verify this number when they call you to confirm your slot.
                 </p>
               )}
             </div>
