@@ -657,6 +657,9 @@ export function BuyNowCheckout({
           >
             <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Bookings"}
           </button>
+          <button onClick={() => onClose()} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer" aria-label="Close checkout">
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <div className="px-5 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
