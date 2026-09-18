@@ -15,6 +15,44 @@ import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackShareEvent } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
 
+const isRealPhoto = (value?: string | null) =>
+  !!value &&
+  value !== "🚙" &&
+  value !== "⭐" &&
+  (value.startsWith("http") || value.startsWith("/") || value.startsWith("data:"));
+
+const similarCarPhotoUrl = (car: Car): string | null => {
+  if (Array.isArray(car.images) && isRealPhoto(car.images[0])) return car.images[0];
+  if (isRealPhoto(car.image_url)) return car.image_url;
+  return null;
+};
+
+function SimilarCarThumb({ car }: { car: Car }) {
+  const [failed, setFailed] = React.useState(false);
+  const url = similarCarPhotoUrl(car);
+  return (
+    <div
+      className={cn(
+        "w-24 h-24 rounded-xl flex-shrink-0 flex items-center justify-center p-3 text-white relative overflow-hidden",
+        car.brand === "Porsche" ? "bg-rose-950" : car.brand === "BMW" ? "bg-blue-950" : "bg-zinc-900"
+      )}
+    >
+      {url && !failed ? (
+        <img
+          key={url}
+          src={url}
+          alt={`${car.brand} ${car.model}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          draggable={false}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="text-[10px] font-black uppercase tracking-widest opacity-25">{car.brand}</span>
+      )}
+    </div>
+  );
+}
+
 
 interface CarDetailsViewProps {
   carId: string;
@@ -890,9 +928,7 @@ export function CarDetailsView({
                     onClick={() => onViewCar(simCar.id)}
                     className="group bg-white border border-slate-150 rounded-2xl p-4 flex gap-4 hover:shadow-lg transition-all cursor-pointer text-left"
                   >
-                    <div className={cn("w-24 h-24 rounded-xl flex-shrink-0 flex items-center justify-center p-3 text-white relative overflow-hidden", simCar.brand === "Porsche" ? "bg-rose-950" : simCar.brand === "BMW" ? "bg-blue-950" : "bg-zinc-900")}>
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-25">{simCar.brand}</span>
-                    </div>
+                    <SimilarCarThumb car={simCar} />
 
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
