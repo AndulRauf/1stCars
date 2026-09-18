@@ -50,6 +50,7 @@ export interface Car {
   fuelTank?: string;
   keyCount?: number;
   price_breakup?: { label: string; amount: number; desc?: string }[];
+  created_at?: string;
 }
 
 // NOTE: ViewType lives in @/src/lib/router (single source of truth for the

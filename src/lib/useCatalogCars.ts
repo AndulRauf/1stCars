@@ -73,6 +73,20 @@ function isListable(car: any) {
   return !car.status || car.status === "available";
 }
 
+// Newly uploaded cars sell first: newest publish date (created_at) always leads
+// the catalog, on every screen and every reload. Rows without a timestamp sink
+// to the bottom instead of breaking the order.
+function newestFirst(a: Car, b: Car): number {
+  const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+  const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+  return tb - ta;
+}
+
+const toListableCars = (data: any[]) => {
+  const listable = data.filter(isListable).map(normalizeDbCar);
+  return listable.sort(newestFirst);
+};
+
 export interface CatalogState {
   cars: Car[];
   loading: boolean;
@@ -90,7 +104,7 @@ export function useCatalogCars(): CatalogState {
       const raw = localStorage.getItem(DB_CACHE_KEY);
       if (raw) {
         const cached = JSON.parse(raw);
-        if (Array.isArray(cached)) return cached.filter(isListable).map(normalizeDbCar);
+        if (Array.isArray(cached)) return toListableCars(cached);
       }
     } catch (e) {
       // ignore corrupted cache
@@ -108,7 +122,10 @@ export function useCatalogCars(): CatalogState {
     const seq = ++seqRef.current;
     setLoading(true);
     try {
-      const { data, error: queryError } = await supabase.from("cars").select();
+      const { data, error: queryError } = await supabase
+        .from("cars")
+        .select()
+        .order("created_at", { ascending: false });
       if (seq !== seqRef.current) return;
       setLoading(false);
       if (queryError) {
@@ -120,7 +137,7 @@ export function useCatalogCars(): CatalogState {
           localStorage.setItem(DB_CACHE_KEY, JSON.stringify(data));
         }
         setError(null);
-        setCars(data.filter(isListable).map(normalizeDbCar));
+        setCars(toListableCars(data));
       }
     } catch (e: any) {
       if (seq !== seqRef.current) return;
@@ -139,7 +156,7 @@ export function useCatalogCars(): CatalogState {
       if (e.key === DB_CACHE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setCars(parsed.filter(isListable).map(normalizeDbCar));
+          if (Array.isArray(parsed)) setCars(toListableCars(parsed));
         } catch (err) {
           // ignore
         }
