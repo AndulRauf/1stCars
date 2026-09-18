@@ -644,12 +644,12 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
+            <div className="grid grid-cols-1 gap-5 lg:gap-8 items-start">
             
             {/* LEFT BAR: SUB-NAVIGATION */}
             {(currentUser.role as string) !== "Admin" && (
-              <div className={`${hubCollapsed ? "lg:col-span-1" : "lg:col-span-3"} bg-white border border-[#2E7D32]/10 rounded-3xl p-3 sm:p-4 lg:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all duration-200`}>
-              <div className={`flex items-center gap-2 ${hubCollapsed ? "flex-col" : "justify-between"}`}>
+              <div className="w-full bg-white border border-[#2E7D32]/10 rounded-3xl p-3 sm:p-4 lg:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all duration-200">
+              <div className="flex items-center justify-between gap-2">
                 {!hubCollapsed && (
                   <p className="text-xs font-bold text-[#2E7D32] px-2.5">Dashboard Hub</p>
                 )}
@@ -662,7 +662,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 </button>
               </div>
               
-              <div className="flex gap-1.5 overflow-x-auto lg:flex-col lg:gap-1 pb-1 lg:pb-0 scrollbar-none -mx-1 px-1 lg:mx-0 lg:px-0">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                 {/* BUYER LINKS */}
                 {currentUser.role === "Buyer" && (
                   <>
@@ -674,7 +674,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-3 py-2.5 justify-center" : "px-4 py-2.5 justify-center"} whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -698,7 +698,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-3 py-2.5 justify-center" : "px-4 py-2.5 justify-center"} whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -721,7 +721,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-3 py-2.5 justify-center" : "px-4 py-2.5 justify-center"} whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -743,7 +743,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-3 py-2.5 justify-center" : "px-4 py-2.5 justify-center"} whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -773,7 +773,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-3 py-2.5 justify-center" : "px-4 py-2.5 justify-center"} whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -806,7 +806,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           )}
 
             {/* RIGHT BAR: MAIN WORKSPACE CONTAINER */}
-            <div className={`${currentUser.role === "Admin" ? "lg:col-span-12" : hubCollapsed ? "lg:col-span-11" : "lg:col-span-9"} space-y-4 lg:space-y-6`}>
+            <div className="w-full space-y-4 lg:space-y-6">
               
               {/* =======================================================
                   1. BUYER DASHBOARD TABS 
