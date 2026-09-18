@@ -870,18 +870,18 @@ export function CarDetailsView({
                 {activeTab === "finance" && (
                   <div className="space-y-5">
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Interactive Financing Calculator</h3>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight">Interactive Financing Calculator</h3>
+                      <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                         Calculate monthly payments based on interest rate starting at <strong className="text-[#2E7D32]">5.49% APR</strong> with custom down payment slider.
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                       {/* Left: Down payment slider */}
                       <div className="space-y-3 text-left">
-                        <div className="flex justify-between">
-                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Down Payment</label>
-                          <span className="text-xs font-black text-[#2E7D32]">{formatMoney(downPayment)}</span>
+                        <div className="flex justify-between items-baseline">
+                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Down Payment</label>
+                          <span className="text-sm font-black text-[#2E7D32]">{formatMoney(downPayment)}</span>
                         </div>
                         <input
                           type="range"
@@ -890,9 +890,9 @@ export function CarDetailsView({
                           step="1000"
                           value={Math.min(Math.max(downPayment, 10000), Math.max(car.price - 10000, 10000))}
                           onChange={(e) => setDownPayment(parseInt(e.target.value))}
-                          className="w-full h-1.5 bg-slate-200 rounded-lg accent-[#2E7D32] cursor-pointer"
+                          className="w-full h-2 bg-slate-200 rounded-lg accent-[#2E7D32] cursor-pointer"
                         />
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                           <span>Min ₹10k</span>
                           <span>Max {formatMoney(Math.max(car.price - 10000, 10000))}</span>
                         </div>
@@ -900,14 +900,14 @@ export function CarDetailsView({
 
                       {/* Right: Loan Term choice */}
                       <div className="space-y-3 text-left">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Loan Tenure Period</label>
+                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest">Loan Tenure Period</label>
                         <div className="grid grid-cols-3 gap-2">
                           {[36, 48, 60].map((term) => (
                             <button
                               key={term}
                               onClick={() => setLoanTerm(term)}
                               className={cn(
-                                "py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer",
+                                "py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer",
                                 loanTerm === term
                                   ? "bg-[#2E7D32] text-white border-transparent"
                                   : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -917,20 +917,20 @@ export function CarDetailsView({
                             </button>
                           ))}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 leading-normal pt-1">
+                        <p className="text-[11px] font-bold text-slate-400 leading-normal pt-1">
                           Calculations based on 5.49% annual fixed interest. Final approval subject to bank partner evaluation.
                         </p>
                       </div>
                     </div>
 
                     {/* EMI Output summary */}
-                    <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                    <div className="flex items-center justify-between p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
                       <div>
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Financing Balance Amount</p>
-                        <p className="text-lg font-black text-slate-800">{formatMoney(car.price - downPayment)}</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Financing Balance Amount</p>
+                        <p className="text-xl font-black text-slate-800">{formatMoney(car.price - downPayment)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Est. Monthly EMI</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Est. Monthly EMI</p>
                         <p className="text-2xl font-black text-[#2E7D32]">{formatMoney(calculatedEmi)}<span className="text-xs font-bold text-slate-500">/mo</span></p>
                       </div>
                     </div>
