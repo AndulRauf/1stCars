@@ -150,7 +150,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         name: matchedDemo.name,
         email: matchedDemo.email,
         role: defaultRole,
-        city: "Mumbai"
+        city: "Surat"
       };
       setSuccess(`Authenticated as ${mockUser.role} (${mockUser.name})! Redirecting...`);
       setTimeout(() => {
@@ -181,7 +181,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           name: matchedDemo.name,
           email: demoEmail,
           role: defaultRole,
-          city: "Mumbai"
+          city: "Surat"
         };
 
         setSuccess(`Successfully logged in as ${finalUser.role || "Buyer"}!`);
@@ -199,7 +199,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           data: {
             name: matchedDemo.name,
             role: defaultRole,
-            city: "Mumbai"
+            city: "Surat"
           }
         }
       });
@@ -223,7 +223,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         name: matchedDemo.name,
         email: demoEmail,
         role: defaultRole,
-        city: "Mumbai"
+        city: "Surat"
       };
 
       setSuccess(`Authenticated as ${userObj.role} (${userObj.name})! Welcome...`);
@@ -284,7 +284,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
           name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "User",
           email: data.user.email || loginEmail.trim(),
           role: (data.user.user_metadata?.role as UserRole) || "Buyer",
-          city: data.user.user_metadata?.city || "Mumbai",
+          city: data.user.user_metadata?.city || "Surat",
           mobile: data.user.user_metadata?.mobile || ""
         };
 

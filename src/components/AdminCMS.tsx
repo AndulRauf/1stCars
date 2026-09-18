@@ -880,7 +880,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       // Set initial values if not initialized
       setDealers(getStored("dealers", [
         { id: "dl-1", name: "Elite Motors Bangalore", manager: "Vijay Mallya", rating: 4.8, city: "Bangalore", credits: 550000, active_bids: 3 },
-        { id: "dl-2", name: "Apex Prestige Cars", manager: "Rohit Shetty", rating: 4.5, city: "Mumbai", credits: 1200000, active_bids: 5 },
+        { id: "dl-2", name: "Apex Prestige Cars", manager: "Rohit Shetty", rating: 4.5, city: "Surat", credits: 1200000, active_bids: 5 },
         { id: "dl-3", name: "Delhi Luxury Wheels", manager: "Karan Johar", rating: 4.9, city: "Delhi NCR", credits: 750000, active_bids: 1 }
       ]));
 
@@ -912,7 +912,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       }
 
       setInspectors(getStored("inspectors", [
-        { id: "insp-u1", name: "Vikram Rathore", email: "inspector@1stcars.com", certified_level: "Master", region: "Mumbai", total_inspections: 148 },
+        { id: "insp-u1", name: "Vikram Rathore", email: "inspector@1stcars.com", certified_level: "Master", region: "Surat", total_inspections: 148 },
         { id: "insp-u2", name: "Ramesh Kumar", email: "ramesh@1stcars.com", certified_level: "Senior", region: "Delhi NCR", total_inspections: 89 }
       ]));
 
@@ -993,7 +993,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       }
 
       setCities(getStored("cities", [
-        { id: "c-1", name: "Mumbai", state: "Maharashtra", branch_manager: "Aakash Ambani", support_number: "022-44445555" },
+        { id: "c-1", name: "Surat", state: "Maharashtra", branch_manager: "Aakash Ambani", support_number: "022-44445555" },
         { id: "c-2", name: "Delhi NCR", state: "Delhi", branch_manager: "Rajesh Khanna", support_number: "011-22223333" },
         { id: "c-3", name: "Bangalore", state: "Karnataka", branch_manager: "Sudha Murty", support_number: "080-66667777" }
       ]));
@@ -1151,21 +1151,21 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       dashboard: {},
       crm: {},
       leads: {},
-      cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Mumbai", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
+      cars: { brand: "BMW", model: "X5 xDrive40i", variant: "M Sport", year: 2022, price: 9500000, km_driven: 15000, fuel: "Petrol", transmission: "Automatic", owner_count: 1, city: "Surat", reg_number: "MH02-FP-5005", color: "Carbon Black", insurance_type: "Comprehensive", overall_score: 9.2, status: "available", image_url: "🚙", images: [], price_breakup: [
         { label: "RC transfer price", amount: 10000, desc: "Seamless RC transfer services with RTO assistance" },
         { label: "Third party insurance", amount: 2474, desc: "Govt mandated insurance against third party damages" },
         { label: "Car Servicing Charges", amount: 11000, desc: "One-time fee for pre-sale car maintenance" }
       ] },
-      users: { name: "", email: "", mobile: "", password: "", role: "Buyer", city: "Mumbai" },
+      users: { name: "", email: "", mobile: "", password: "", role: "Buyer", city: "Surat" },
       test_drive_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Test Drive Request", preferred_date: "", preferred_time: "Morning", notes: "" },
       booking_requests: { name: "", mobile: "", city: "Surat", vehicle: "", type: "Buy Car / Reservation", preferred_date: "", preferred_time: "Morning", notes: "" },
 
       seller_enquiries: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", year: 2022, km_driven: 25000, city: "Surat", address: "", status: "pending", notes: "" },
       staff: { name: "", email: "", role: "Inspector", region: "Surat", status: "Active" },
-      dealers: { name: "", manager: "", rating: 5.0, city: "Mumbai", credits: 500000, active_bids: 0 },
+      dealers: { name: "", manager: "", rating: 5.0, city: "Surat", credits: 500000, active_bids: 0 },
       inspectors: { name: "", email: "", certified_level: "Senior", region: "Surat", total_inspections: 0 },
       sales: { name: "", email: "", active_leads: 0, closed_deals: 0, performance_score: 10.0 },
-      inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Mumbai", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
+      inspections: { seller_name: "", seller_mobile: "", reg_number: "", brand: "", model: "", variant: "", fuel: "Petrol", transmission: "Automatic", year: 2021, km_driven: 20000, city: "Surat", address: "", preferred_date: "2026-07-25", preferred_time: "10:00 AM - 12:00 PM", status: "pending", notes: "" },
       certifications: {},
       auctions: { starting_bid: 100000, reserve_price: 0, minimum_increment: 5000, extension_seconds: 120, max_extension_count: 5, starts_at: "", ends_at: "" },
       brands: { brand_name: "Porsche", model_name: "911 GT3 RS", category: "Coupe", engine: "4.0L Flat-6", power: "518 HP", logo_url: "⭐", is_popular: true, audience: "Buyer & Seller", status: "Active" },
@@ -1517,7 +1517,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 data: {
                   name: profileRecord.name || email.split("@")[0],
                   role: profileRecord.role || "Buyer",
-                  city: profileRecord.city || "Mumbai",
+                  city: profileRecord.city || "Surat",
                   mobile: profileRecord.mobile || ""
                 }
               }
@@ -2338,7 +2338,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
               fuel: rowData.fuel || "Petrol",
               transmission: rowData.transmission || "Automatic",
               owner_count: Number(rowData.owner_count) || 1,
-              city: rowData.city || "Mumbai",
+              city: rowData.city || "Surat",
               reg_number: rowData.reg_number || "MH-TEMP",
               color: rowData.color || "Black",
               insurance_type: rowData.insurance_type || "Comprehensive",

@@ -569,7 +569,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       let role: Profile["role"] = "Seller";
       let name: string = user?.user_metadata?.name || user?.name || user?.email?.split("@")[0] || "Seller";
       let mobile: string = user?.user_metadata?.mobile || user?.mobile || "";
-      let city: string = user?.user_metadata?.city || user?.city || "Mumbai";
+      let city: string = user?.user_metadata?.city || user?.city || "Surat";
       try {
         const { data: profile } = await supabase
           .from("profiles")
@@ -635,7 +635,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               email,
               mobile: mobile || "",
               role: "Seller",
-              city: city || "Mumbai"
+              city: city || "Surat"
             }
           }
         );
@@ -678,7 +678,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       email,
       mobile,
       role: "Seller",
-      city: city || "Mumbai",
+      city: city || "Surat",
       created_at: new Date().toISOString()
     });
   }, [onNavigateToDashboard]);

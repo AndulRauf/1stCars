@@ -119,7 +119,7 @@ export async function ensureProfileExists(supabaseClient: any = supabase): Promi
       email: session.session.user.email || null,
       mobile: session.session.user.user_metadata?.mobile || null,
       role: "Buyer",
-      city: session.session.user.user_metadata?.city || "Mumbai"
+      city: session.session.user.user_metadata?.city || "Surat"
     }).then(() => undefined).catch(() => undefined);
     return session.session.user.id;
   } catch {

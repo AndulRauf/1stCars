@@ -601,7 +601,7 @@ For questions, concerns, or feedback regarding these Terms, please contact:
         name: options?.data?.name || email.split("@")[0],
         mobile: options?.data?.mobile || "",
         role,
-        city: options?.data?.city || "Mumbai",
+        city: options?.data?.city || "Surat",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

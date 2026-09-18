@@ -208,7 +208,7 @@ export default function App() {
         let role: string = user.user_metadata?.role || user.role || "Buyer";
         let name: string = user.user_metadata?.name || user.name || user.email?.split("@")[0] || "User";
         let mobile: string = user.user_metadata?.mobile || user.mobile || "";
-        let city: string = user.user_metadata?.city || user.city || "Mumbai";
+        let city: string = user.user_metadata?.city || user.city || "Surat";
         let approvalState: { is_approved?: boolean; status?: string } | null = null;
         try {
           const applyProfile = (profile: any) => {
