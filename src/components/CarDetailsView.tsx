@@ -882,7 +882,7 @@ export function CarDetailsView({
 
             {/* SIMILAR CARS REC BLOCK */}
             <div className="space-y-5">
-              <h3 className="text-xl font-black text-slate-900 tracking-tight text-left">Explore Similar Masterpieces</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight text-left">Checkout This Also...</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {similarCars.map((simCar) => (
                   <div
