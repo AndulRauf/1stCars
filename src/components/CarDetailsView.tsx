@@ -335,7 +335,7 @@ export function CarDetailsView({
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-10">
+    <div className="bg-[#FAF9F6] min-h-screen pt-4 sm:pt-6 pb-24 md:pb-10">
 
 
       {schemaData && (
@@ -469,9 +469,18 @@ export function CarDetailsView({
 
               {/* Top badge row */}
               <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between">
-                <Badge className="bg-black/50 text-white border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
-                  {activeImageIndex + 1} / {angles.length}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onBack}
+                    className="md:hidden w-9 h-9 rounded-full border border-white/20 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 text-white"
+                    aria-label="Back"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <Badge className="bg-black/50 text-white border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
+                    {activeImageIndex + 1} / {angles.length}
+                  </Badge>
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={async () => {
@@ -642,7 +651,7 @@ export function CarDetailsView({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
                 {/* 1. Reg City & RTO */}
                 <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reg City & RTO</p>
@@ -812,7 +821,7 @@ export function CarDetailsView({
                       <div className="h-px bg-[#2E7D32]/10 my-2" />
 
                       <div className="flex flex-wrap items-center justify-between text-xs gap-3">
-                        <div className="flex items-center space-x-4 text-emerald-800 text-[11px] font-medium">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-emerald-800 text-[11px] font-medium">
                           <span>✓ 100% Non-Accident Frame</span>
                           <span>✓ Authentic Odometer</span>
                           <span>✓ Flood Free Guarantee</span>
@@ -820,7 +829,7 @@ export function CarDetailsView({
                         </div>
                         <button
                           onClick={downloadInspectionPdf}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all cursor-pointer shadow-sm w-full sm:w-auto"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           <span>Download PDF Certificate</span>
@@ -894,15 +903,15 @@ export function CarDetailsView({
                         <input
                           type="range"
                           min="10000"
-                          max={car.price - 10000}
+                          max={Math.max(car.price - 10000, 10000)}
                           step="1000"
-                          value={downPayment}
+                          value={Math.min(Math.max(downPayment, 10000), Math.max(car.price - 10000, 10000))}
                           onChange={(e) => setDownPayment(parseInt(e.target.value))}
                           className="w-full h-1.5 bg-slate-200 rounded-lg accent-[#2E7D32] cursor-pointer"
                         />
                         <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                           <span>Min ₹10k</span>
-                          <span>Max {formatMoney(car.price - 10000)}</span>
+                          <span>Max {formatMoney(Math.max(car.price - 10000, 10000))}</span>
                         </div>
                       </div>
 
@@ -985,7 +994,7 @@ export function CarDetailsView({
           {/* RIGHT PANEL: Sticky Booking Widget & Instant CTAs (4 columns) */}
           <div className="lg:col-span-4 lg:sticky lg:top-28 space-y-6">
             
-            <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-3">
+            <div className="hidden lg:block bg-white border border-[#2E7D32]/10 rounded-3xl p-6 shadow-sm space-y-3">
               <h3 className="font-black text-lg text-slate-900 tracking-tight text-left">Book This Car</h3>
               <Button
                 onClick={() => handleScrollToBooking("test_drive")}
@@ -1035,6 +1044,25 @@ export function CarDetailsView({
         onSaveToggle={onSaveToggle}
         onNavigateToDashboard={onNavigateToDashboard}
       />
+
+      {/* Mobile sticky action bar — Book Test Drive / Reserve Now stay reachable
+          without scrolling back up */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => handleScrollToBooking("test_drive")}
+            className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer"
+          >
+            Book Test Drive
+          </Button>
+          <Button
+            onClick={() => handleScrollToBooking("buy_now")}
+            className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer"
+          >
+            Reserve Now
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
