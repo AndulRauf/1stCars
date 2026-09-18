@@ -428,9 +428,6 @@ export function Navbar({
                     <span className="text-lg font-black tracking-tighter text-[#2E7D32] leading-none">
                       1stCars
                     </span>
-                    <span className="text-[8px] font-bold tracking-widest text-[#2E7D32]/60 uppercase">
-                      {settings.brandSlogan || "Premium Selection"}
-                    </span>
                   </div>
                 </div>
               ) : (
