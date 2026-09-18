@@ -655,7 +655,7 @@ export function BuyNowCheckout({
             onClick={otpSent ? () => setOtpSent(false) : onClose}
             className="flex items-center gap-1.5 text-sm font-bold text-slate-700 cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Bookings"}
+            <ArrowLeft className="h-4 w-4" /> {otpSent ? "Verify Mobile" : "Reserve"}
           </button>
           <button onClick={() => onClose()} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer" aria-label="Close checkout">
             <X className="h-5 w-5" />
