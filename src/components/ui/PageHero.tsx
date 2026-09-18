@@ -26,14 +26,14 @@ export function PageHero({ label, labelIcon, title, subtitle, ctas, className }:
   return (
     <div
       className={cn(
-        "bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20",
+        "bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-12 sm:pt-16 pb-10 md:pb-14 overflow-hidden border-b border-[#2E7D32]/20",
         className
       )}
     >
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5 animate-fade-up">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4 animate-fade-up">
         {label && (
           <div className="inline-flex">
             <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
@@ -54,7 +54,7 @@ export function PageHero({ label, labelIcon, title, subtitle, ctas, className }:
         )}
 
         {ctas && ctas.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             {ctas.map((cta, i) => {
               const classes =
                 cta.variant === "secondary"

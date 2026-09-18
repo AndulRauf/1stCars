@@ -81,13 +81,13 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory, onNavigateToS
       />
 
       {/* WHY 1STCARS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <SectionHeader
           badge="WHY 1STCARS"
           title="Built Around Trust"
           subtitle="We believe buying or selling a pre-owned car should be simple, transparent and fair."
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10 animate-fade-up">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-6 animate-fade-up">
           {WHY_CARDS.map((v) => {
             const Icon = v.icon;
             return (
@@ -107,12 +107,12 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory, onNavigateToS
       </div>
 
       {/* THE 1STCARS DIFFERENCE */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <SectionHeader
           badge="THE 1STCARS DIFFERENCE"
           title="Why Choose 1stCars?"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           {DIFFERENTIATORS.map((d) => (
             <div
               key={d.title}
@@ -129,10 +129,10 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory, onNavigateToS
       </div>
 
       {/* OUR MISSION */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-        <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden border border-[#2E7D32]/15">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div className="bg-gradient-to-br from-[#F1F6F1] to-[#E4EEE6] rounded-3xl p-8 md:p-10 shadow-xl relative overflow-hidden border border-[#2E7D32]/15">
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6 animate-fade-up">
+          <div className="relative z-10 max-w-3xl mx-auto text-center space-y-5 animate-fade-up">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 rounded-full text-[11px] font-black uppercase tracking-widest">
               <Target className="h-4 w-4" /> OUR MISSION
             </span>
@@ -159,7 +159,7 @@ export function AboutUsView({ onBackToHome, onNavigateToInventory, onNavigateToS
       </div>
 
       {/* OUR VISION */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <SectionHeader
           badge="OUR VISION"
           title={s.aboutVisionTitle}

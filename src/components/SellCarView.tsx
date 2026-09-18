@@ -1728,7 +1728,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               {r.code}
                             </span>
                             <div className="min-w-0">
-                              <h4 className="font-bold text-[11px] text-slate-900 truncate leading-tight">
+                              <h4 className="font-bold text-[11px] text-slate-900 leading-snug">
                                 {r.city}
                               </h4>
                             </div>
@@ -2003,8 +2003,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
         {/* How It Works section - BELOW THE FORM so the form is the first
             thing visitors see after the hero */}
-        <div className="mt-10 bg-white p-5 sm:p-7 md:p-9 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
-          <div className="text-center space-y-3 max-w-2xl mx-auto mb-8">
+        <div className="mt-8 bg-white p-5 sm:p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs" id="sell-steps">
+          <div className="text-center space-y-3 max-w-2xl mx-auto mb-6">
             <span className="inline-block bg-[#2E7D32]/10 text-[#2E7D32] px-3.5 py-1 text-[11px] font-black tracking-widest uppercase rounded-full">
               SELL YOUR CAR
             </span>
@@ -2015,7 +2015,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
           <div className="max-w-4xl mx-auto space-y-4 text-left">
             {/* Step 1 */}
-            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-4 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 01
               </div>
@@ -2028,7 +2028,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
             </div>
 
             {/* Step 2 */}
-            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-4 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 02
               </div>
@@ -2041,7 +2041,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
             </div>
 
             {/* Step 3 */}
-            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-4 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 03
               </div>
@@ -2068,7 +2068,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
             </div>
 
             {/* Step 4 */}
-            <div className="flex items-start gap-4 bg-[#FAF9F6] p-5 rounded-2xl border border-slate-100 relative overflow-hidden">
+            <div className="flex items-start gap-4 bg-[#FAF9F6] p-4 rounded-2xl border border-slate-100 relative overflow-hidden">
               <div className="h-10 w-10 rounded-xl bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-black text-base shrink-0">
                 04
               </div>

@@ -1025,7 +1025,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           
           {/* Hero Content */}
-          <div className="flex flex-col items-center justify-center space-y-5 max-w-4xl mx-auto">
+          <div className="flex flex-col items-center justify-center space-y-4 max-w-4xl mx-auto">
             <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] text-center">
               {websiteSettings.heroTitle && websiteSettings.heroTitle !== "Certified Cars" ? (
                 websiteSettings.heroTitle
@@ -1064,7 +1064,7 @@ export default function App() {
             </div>
 
             {/* Micro Trust points */}
-            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-slate-200/60 w-full max-w-md justify-center">
+            <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-200/60 w-full max-w-md justify-center">
               <div className="flex flex-col items-center">
                 <span className="text-xl font-black text-[#2E7D32] tracking-tighter shrink-0">{websiteSettings.highlight1Title || "1st-Owner"}</span>
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight mt-0.5 text-center" title={websiteSettings.highlight1Desc}>1 Premium Owner</span>
@@ -1085,7 +1085,7 @@ export default function App() {
 
       {/* 3. FEATURED CARS */}
       <Section ref={featuredCarsRef} bg="white" id="featured-cars" padding="lg" className="border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <h2 className="font-sans text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter text-slate-900 leading-none">
@@ -1120,7 +1120,7 @@ export default function App() {
               </Button>
             </div>
           ) : filteredCars.length > 0 ? (
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 text-left">
                 {filteredCars.slice(0, 8).map((car) => {
                   const isSaved = savedCars.includes(car.id);
@@ -1150,7 +1150,7 @@ export default function App() {
               )}
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-3xl p-12 text-center max-w-xl mx-auto border border-slate-200">
+            <div className="bg-slate-50 rounded-3xl p-8 text-center max-w-xl mx-auto border border-slate-200">
               <CarIcon className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-slate-900">No Vehicles Found in {selectedCity}</h3>
               <p className="text-sm text-slate-500 mt-2">
@@ -1168,7 +1168,7 @@ export default function App() {
 
       {/* 5. TESTIMONIALS */}
       <Section bg="muted" padding="lg" className="border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="secondary">{websiteSettings.testimonialBadgeText || "VIP CLUB FEEDBACK"}</Badge>
@@ -1182,7 +1182,7 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
             {testimonials.map((t, idx) => (
-              <Card key={t.id || idx} hoverEffect={false} className="bg-white border border-slate-100 rounded-3xl p-8 relative shadow-lg shadow-slate-200/30 flex flex-col justify-between">
+              <Card key={t.id || idx} hoverEffect={false} className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 relative shadow-lg shadow-slate-200/30 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex text-amber-500 space-x-0.5">
                     {[...Array(Number(t.rating) || 5)].map((_, i) => (
@@ -1193,7 +1193,7 @@ export default function App() {
                     "{t.content}"
                   </p>
                 </div>
-                <div className="flex items-center space-x-3.5 pt-6 mt-6 border-t border-slate-100">
+                <div className="flex items-center space-x-3.5 pt-5 mt-5 border-t border-slate-100">
                   <div className="h-10 w-10 bg-primary/10 text-[#2E7D32] font-black rounded-full flex items-center justify-center text-xs">
                     {t.photo && t.photo !== "👤" ? t.photo : (t.name || "U").substring(0, 2).toUpperCase()}
                   </div>
@@ -1209,11 +1209,11 @@ export default function App() {
       </Section>
 
       {/* 7. CTA SECTION */}
-      <Section id="contact-section" bg="dark" className="relative py-10 md:py-16 bg-linear-to-b from-slate-900 to-slate-950 overflow-hidden">
+      <Section id="contact-section" bg="dark" className="relative py-10 md:py-14 bg-linear-to-b from-slate-900 to-slate-950 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
           
           <div className="space-y-4 max-w-2xl mx-auto">
             <Badge variant="premium" className="bg-[#2E7D32] text-white border-none shadow-md shadow-[#2E7D32]/25">

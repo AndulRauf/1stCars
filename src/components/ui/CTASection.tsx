@@ -24,14 +24,14 @@ export function CTASection({ badge, title, subtitle, ctas, className }: CTASecti
   return (
     <section
       className={cn(
-        "relative py-12 md:py-16 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden mt-16 sm:mt-20",
+        "relative py-10 md:py-14 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden mt-12 sm:mt-16",
         className
       )}
     >
       <div className="absolute top-0 left-0 w-full h-full bg-[#2E7D32]/5 pointer-events-none" />
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6 animate-fade-up">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5 animate-fade-up">
         <div className="space-y-4 max-w-2xl mx-auto">
           {badge && (
             <span className="inline-block bg-[#2E7D32] text-white px-3.5 py-1.5 text-[11px] font-black tracking-widest uppercase rounded-full shadow-md shadow-[#2E7D32]/25">

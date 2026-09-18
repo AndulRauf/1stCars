@@ -472,7 +472,7 @@ export function CarDetailsView({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={onBack}
-                    className="md:hidden w-9 h-9 rounded-full border border-white/20 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 text-white"
+                    className="md:hidden w-10 h-10 rounded-full border border-white/20 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 text-white"
                     aria-label="Back"
                   >
                     <ArrowLeft className="h-4 w-4" />
@@ -505,7 +505,7 @@ export function CarDetailsView({
                         toast.info(`Direct link: ${shareUrl}`);
                       }
                     }}
-                    className="w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 border-white/20 text-white"
+                    className="w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 border-white/20 text-white"
                     aria-label="Share"
                   >
                     <Share2 className="h-4 w-4" />
@@ -513,7 +513,7 @@ export function CarDetailsView({
                   <button
                     onClick={() => onSaveToggle(car.id, `${car.brand} ${car.model}`)}
                     className={cn(
-                      "w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
+                      "w-10 h-10 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
                       savedCars.includes(car.id)
                         ? "bg-rose-500 border-rose-400 text-white"
                         : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
@@ -532,14 +532,14 @@ export function CarDetailsView({
               {/* Nav arrows */}
               <button
                 onClick={() => setActiveImageIndex((prev) => (prev - 1 + angles.length) % angles.length)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
                 aria-label="Previous"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setActiveImageIndex((prev) => (prev + 1) % angles.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all cursor-pointer z-10"
                 aria-label="Next"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -637,10 +637,10 @@ export function CarDetailsView({
         </div>
 
         {/* Primary Page Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* LEFT PANEL: Details tabs (8 columns) */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-6">
 
 
             {/* COMPLETE VEHICLE OVERVIEW SPECIFICATIONS GRID */}
@@ -690,15 +690,15 @@ export function CarDetailsView({
                 {/* 6. Color */}
                 <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Color</p>
-                  <p className="text-xs font-black text-slate-900 mt-1 truncate">{car.color || "GT Silver Metallic"}</p>
+                  <p className="text-xs font-black text-slate-900 mt-1 break-words">{car.color || "GT Silver Metallic"}</p>
                   <p className="text-[10px] font-bold text-slate-500 mt-0.5">Original Factory Paint</p>
                 </div>
 
                 {/* 7. Insurance */}
                 <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Insurance</p>
-                  <p className="text-xs font-black text-slate-900 mt-1 truncate">{car.insuranceValidity ? "Valid Insurance" : "Comprehensive"}</p>
-                  <p className="text-[10px] font-bold text-emerald-600 mt-0.5 truncate">{car.insuranceValidity || "Valid till March 2027"}</p>
+                  <p className="text-xs font-black text-slate-900 mt-1 break-words">{car.insuranceValidity ? "Valid Insurance" : "Comprehensive"}</p>
+                  <p className="text-[10px] font-bold text-emerald-600 mt-0.5 break-words">{car.insuranceValidity || "Valid till March 2027"}</p>
                 </div>
 
                 {/* 8. Ground Clearance & Boot */}
@@ -838,7 +838,7 @@ export function CarDetailsView({
                     </div>
 
                     {/* 120-Point Official 12 Category Modules (vertical accordion) */}
-                    <div className="space-y-2.5 pt-1">
+                    <div className="space-y-2">
                       {OFFICIAL_120_CATEGORIES.map((cat, idx) => {
                         const isOpen = expandedCategory === idx;
                         return (
@@ -867,7 +867,7 @@ export function CarDetailsView({
                             </button>
 
                             {isOpen && (
-                              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
+                              <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
                                 {cat.questions.map((q) => (
                                   <div key={q.id} className="flex items-start space-x-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
                                     <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />

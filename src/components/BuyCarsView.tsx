@@ -293,10 +293,10 @@ export function BuyCarsView({
     <div className="bg-[#FAF9F6] min-h-screen pb-20">
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-24 sm:pt-28 pb-12 md:pb-16 overflow-hidden border-b border-[#2E7D32]/20">
+      <div className="bg-gradient-to-b from-emerald-50 to-emerald-100 text-slate-900 relative pt-12 sm:pt-16 pb-10 md:pb-14 overflow-hidden border-b border-[#2E7D32]/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#2E7D32]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#2E7D32]/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
           <div className="inline-flex">
             <span className="px-4 py-1.5 text-[11px] font-black tracking-widest text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 uppercase rounded-full flex items-center gap-1.5">
               <Award className="h-4 w-4" /> 1STCARS CERTIFIED COLLECTION
@@ -311,9 +311,9 @@ export function BuyCarsView({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {/* Global Toolbar */}
-        <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 mb-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
           
           {/* Left search */}
           <div className="relative w-full md:w-96">
@@ -794,7 +794,7 @@ export function BuyCarsView({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80 pt-6 mt-10">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80 pt-4 mt-8">
                 <p className="text-xs font-semibold text-slate-500 text-center sm:text-left order-2 sm:order-1">
                   Showing Page <span className="font-bold text-slate-800">{currentPage}</span> of{" "}
                   <span className="font-bold text-slate-800">{totalPages}</span> — Curating{" "}

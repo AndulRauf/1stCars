@@ -551,7 +551,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   // dashboard until the Admin approves the application.
   if (currentUser.role === "Dealer" && dealerPending === true) {
     return (
-      <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
+<div className="bg-[#FAF9F6] min-h-screen pt-16 md:pt-20 pb-20 text-left">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white border border-amber-200 rounded-3xl shadow-sm p-6 sm:p-10 space-y-6 text-center">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center">

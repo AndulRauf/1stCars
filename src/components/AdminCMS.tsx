@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { deleteRecordFromSupabase, readDeletedTestimonialNames } from "@/src/lib/cmsSync";
-import { isHiddenPage } from "@/src/lib/utils";
+import { cn, isHiddenPage } from "@/src/lib/utils";
 import { saveCar, deleteCar, buildCarRecord, flattenCarRow, errorMessage } from "@/src/lib/carPersistence";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
@@ -173,6 +173,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   // Mobile drawer state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
+
+  // Mobile dashboard landing: tabs to split the merged Overview + CRM stack
+  // into two shorter scrolls instead of one endless page.
+  const [dashboardMobileTab, setDashboardMobileTab] = React.useState<"overview" | "crm">("overview");
 
   // Desktop sidebar collapsed state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState<boolean>(() => {
@@ -2914,35 +2918,62 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         {/* 1. MERGED DASHBOARD OVERVIEW (legacy admin dashboard + CRM center) */}
         {activeModule === "dashboard" && (
           <div className="space-y-4">
-            <AdminDashboard
-              cars={cars}
-              users={users}
-              auctions={auctions}
-              inspections={inspections}
-              notifications={notifications}
-              pages={pages}
-              salesLeads={salesLeads}
-              expenses={expenses}
-              onNavigate={handleNavigateToModule}
-            />
+            {/* Mobile-only tab split — prevents one infinite scroll on phones.
+                Both panels are always visible on lg+ screens. */}
+            <div className="lg:hidden bg-white border border-slate-100 rounded-2xl p-1.5 shadow-sm flex gap-1.5">
+              <button
+                onClick={() => setDashboardMobileTab("overview")}
+                className={cn(
+                  "flex-1 px-3.5 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap",
+                  dashboardMobileTab === "overview" ? "bg-[#2E7D32] text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"
+                )}
+              >
+                <Layout className="h-3.5 w-3.5" /> Overview
+              </button>
+              <button
+                onClick={() => setDashboardMobileTab("crm")}
+                className={cn(
+                  "flex-1 px-3.5 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all whitespace-nowrap",
+                  dashboardMobileTab === "crm" ? "bg-[#2E7D32] text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"
+                )}
+              >
+                <Users className="h-3.5 w-3.5" /> CRM
+              </button>
+            </div>
+
+            <div className={cn(dashboardMobileTab === "overview" ? "block" : "hidden", "lg:block")}>
+              <AdminDashboard
+                cars={cars}
+                users={users}
+                auctions={auctions}
+                inspections={inspections}
+                notifications={notifications}
+                pages={pages}
+                salesLeads={salesLeads}
+                expenses={expenses}
+                onNavigate={handleNavigateToModule}
+              />
+            </div>
 
             {/* CRM CENTER merged into the single dashboard */}
-            <CRM
-              profiles={users}
-              cars={cars}
-              inspections={inspections}
-              auctions={auctions}
-              notifications={notifications}
-              salesLeads={salesLeads}
-              offers={offers}
-              sellRequests={sellRequests}
-              inspectionReports={inspectionReports}
-              dealerBids={dealerBids}
-              parkSell={parkSell}
-              carImages={carImages}
-              onRefresh={loadCMSData}
-              hideKpis
-            />
+            <div className={cn(dashboardMobileTab === "crm" ? "block" : "hidden", "lg:block")}>
+              <CRM
+                profiles={users}
+                cars={cars}
+                inspections={inspections}
+                auctions={auctions}
+                notifications={notifications}
+                salesLeads={salesLeads}
+                offers={offers}
+                sellRequests={sellRequests}
+                inspectionReports={inspectionReports}
+                dealerBids={dealerBids}
+                parkSell={parkSell}
+                carImages={carImages}
+                onRefresh={loadCMSData}
+                hideKpis
+              />
+            </div>
           </div>
         )}
 
@@ -4954,7 +4985,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             </div>
 
             {/* LIVE DYNAMIC CARD PREVIEW */}
-            <div className="lg:col-span-5 space-y-6 sticky top-24">
+            <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
               <div className="p-6 bg-[#2E7D32]/10 text-slate-800 rounded-[32px] space-y-4 border border-[#2E7D32]/20 shadow-2xl">
                 <h4 className="font-black text-[#2E7D32] uppercase tracking-wider flex items-center gap-2 text-xs">
                   <Sparkles className="h-4 w-4 text-amber-500" /> Live Mock Website Card Preview

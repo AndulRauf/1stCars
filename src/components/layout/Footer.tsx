@@ -99,13 +99,13 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
   if (!locationSeen) quickLinks.push(b2bLink("b2b-fallback"));
 
   return (
-    <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-16 pb-8">
+    <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
 
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 md:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8 md:pb-10">
           
           {/* Brand Col */}
           <div className="lg:col-span-2 flex flex-col space-y-5">
@@ -188,7 +188,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2E7D32]/10 pt-8 mt-8 md:mt-12 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
+        <div className="border-t border-[#2E7D32]/10 pt-6 mt-6 md:mt-10 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
           <p>{settings.footerText.includes("©") ? settings.footerText : `© ${currentYear} ${settings.footerText}`}</p>
         </div>
 

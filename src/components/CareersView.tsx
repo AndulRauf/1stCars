@@ -289,14 +289,14 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
       />
 
       {/* 2. WHY 1STCARS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <SectionHeader
           badge="WHY 1STCARS?"
           badgeIcon={<Sparkles className="h-3.5 w-3.5" />}
           title="Why work with us?"
           subtitle="We are building a better way to buy and sell pre-owned cars — powered by technology, transparency and people."
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-10 animate-fade-up">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-6 animate-fade-up">
           {WHY_US.map((v) => {
             const Icon = v.icon;
             return (
@@ -316,14 +316,14 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
       </div>
 
       {/* 3. OPEN POSITIONS */}
-      <div id="careers-open-positions" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 scroll-mt-24">
+      <div id="careers-open-positions" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 scroll-mt-24">
         <SectionHeader
           badge="OPEN POSITIONS"
           badgeIcon={<Briefcase className="h-3.5 w-3.5" />}
           title="Open Positions"
           subtitle="We are currently hiring for the following roles."
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10 animate-fade-up">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 animate-fade-up">
           {POSITIONS.map((job) => (
             <div
               key={job.id}
@@ -341,7 +341,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
                 </div>
               </div>
 
-              <div className="mt-5 space-y-5">
+              <div className="mt-4 space-y-4">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 mb-2">About the Role</h4>
                   <p className="text-sm text-slate-600 font-medium leading-relaxed">{job.about}</p>
@@ -372,7 +372,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
                 </div>
               </div>
 
-              <div className="mt-auto pt-7">
+              <div className="mt-auto pt-5">
                 <Button
                   onClick={() => applyForPosition(job.title)}
                   className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs tracking-wider uppercase px-7 py-3.5 rounded-full shadow-md shadow-[#2E7D32]/25 w-full sm:w-auto"
@@ -386,14 +386,14 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
       </div>
 
       {/* 4. APPLICATION FORM */}
-      <div id="careers-application" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 scroll-mt-24">
+      <div id="careers-application" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 scroll-mt-24">
         <SectionHeader
           badge="APPLICATION"
           badgeIcon={<Send className="h-3.5 w-3.5" />}
           title="Submit Your Application"
           subtitle="Fill in the form below and our team will get back to you."
         />
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-10 shadow-xl shadow-slate-200/50 mt-10 animate-fade-up">
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 mt-6 animate-fade-up">
           {submitted ? (
             <div className="text-center py-10 space-y-4">
               <div className="mx-auto h-16 w-16 rounded-full bg-[#2E7D32]/10 flex items-center justify-center">
@@ -507,7 +507,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
       </div>
 
       {/* 5. LIFE AT 1STCARS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <SectionHeader
           badge="LIFE AT 1STCARS"
           badgeIcon={<HeartHandshake className="h-3.5 w-3.5" />}
@@ -519,7 +519,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
             </span>
           }
         />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-10 animate-fade-up">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6 animate-fade-up">
           {LIFE_POINTS.map((p) => {
             const Icon = p.icon;
             return (

@@ -138,9 +138,9 @@ export function CarCard({
     { label: "Variant", value: car.variant || "Standard", icon: SlidersHorizontal },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
-  // Top-3 key facts rendered as one compact chip row on mobile (the full
+  // Top-4 key facts rendered as one compact chip row on mobile (the full
   // 6-stat grid is desktop-only) so ~3 cards fit on a single phone screen.
-  const mobileStats = stats.slice(0, 3);
+  const mobileStats = stats.slice(0, 4);
 
   return (
     <div
@@ -226,11 +226,11 @@ export function CarCard({
                     }).catch(() => {});
                   }
                 }}
-                className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-black/30 hover:bg-[#2E7D32] border border-white/20 text-white backdrop-blur-md transition-all duration-300 cursor-pointer shadow-md"
+                className="w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-black/30 hover:bg-[#2E7D32] border border-white/20 text-white backdrop-blur-md transition-all duration-300 cursor-pointer shadow-md"
                 title="Share Car Page"
                 aria-label="Share Car"
               >
-                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Share2 className="h-4 w-4 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={(e) => {
@@ -238,14 +238,14 @@ export function CarCard({
                   onSaveToggle?.(car.id, `${car.brand} ${car.model}`);
                 }}
                 className={cn(
-                  "w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer shadow-md",
+                  "w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer shadow-md",
                   isSaved 
                     ? "bg-rose-500 border-rose-400 text-white" 
                     : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
                 )}
                 aria-label="Add to wishlist"
               >
-                <Heart className={cn("h-3.5 w-3.5 sm:h-4.5 sm:w-4.5", isSaved && "fill-current")} />
+                <Heart className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5", isSaved && "fill-current")} />
               </button>
             </div>
           </div>
@@ -264,17 +264,17 @@ export function CarCard({
         {/* Gallery Navigation Controls */}
         <button
           onClick={handlePrevImage}
-          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Previous angle"
         >
-          <ChevronLeft className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
+          <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </button>
         <button
           onClick={handleNextImage}
-          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Next angle"
         >
-          <ChevronRight className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
+          <ChevronRight className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </button>
 
         {/* Slide Indicator Dots */}
@@ -363,7 +363,7 @@ export function CarCard({
           <Button
             size="sm"
             onClick={() => onViewDetails?.(car.id)}
-            className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-8 sm:h-9 rounded-lg sm:rounded-xl px-2 shadow-md shadow-[#2E7D32]/10"
+            className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 shadow-md shadow-[#2E7D32]/10"
           >
             See Details
           </Button>

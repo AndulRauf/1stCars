@@ -60,7 +60,7 @@ export function SalesDashboardView({ onBackToInventory, currentUserId, userRole 
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
+    <div className="bg-[#FAF9F6] min-h-screen pt-16 md:pt-20 pb-20 text-left">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         {/* Title block */}
@@ -86,12 +86,12 @@ export function SalesDashboardView({ onBackToInventory, currentUserId, userRole 
         </div>
 
         {/* CRM navigation */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-2 shadow-sm flex flex-wrap gap-1.5">
+        <div className="bg-white border border-slate-100 rounded-2xl p-2 shadow-sm flex items-center gap-1.5 overflow-x-auto sm:flex-wrap no-scrollbar">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => { if (t.id !== "leads") setLeadCarFilter(null); setTab(t.id); }}
-              className={`px-3.5 h-9 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all ${
+              className={`px-3.5 h-9 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all whitespace-nowrap ${
                 tab === t.id ? "bg-[#2E7D32] text-white shadow-sm" : "text-slate-500 hover:bg-slate-50"
               }`}
             >

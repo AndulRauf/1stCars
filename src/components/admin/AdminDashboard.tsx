@@ -167,7 +167,7 @@ export function AdminDashboard({
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
           Key Metrics — tap any card to open the underlying records
         </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {kpiCards.map((card, i) => (
             <button
               key={i}
@@ -203,7 +203,7 @@ export function AdminDashboard({
             <span className="uppercase tracking-widest text-[9px] font-black">
               Tracking status: <span className={`inline-flex items-center gap-1 ${ga4.ga4Enabled ? "text-emerald-700" : "text-rose-600"}`}><span className={`w-1.5 h-1.5 rounded-full ${ga4Dot}`} /> GA4 {ga4.ga4Enabled ? "ON" : "OFF"}</span>
             </span>
-            <code className="bg-black/10 px-1.5 py-0.5 rounded-md font-mono text-[10px]">{ga4.ga4Id || "—"}</code>
+            <code className="bg-black/10 px-1.5 py-0.5 rounded-md font-mono text-[10px] break-all">{ga4.ga4Id || "—"}</code>
             <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline text-[10px] font-black uppercase tracking-wide">Open GA4</a>
           </div>
           <p className={`mt-1 font-medium ${ga4.ga4Enabled ? "opacity-80" : ""}`}>{ga4.ga4Reason}</p>
