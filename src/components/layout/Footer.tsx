@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowUpRight, Facebook, Instagram } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { isHiddenPage } from "@/src/lib/utils";
 import { normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
@@ -22,6 +22,8 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     brandSlogan: "Easy Way",
     brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     footerText: "© 2026 1stCars Marketplace. All rights reserved.",
+    facebook: "https://www.facebook.com/1stcars.in",
+    instagram: "https://www.instagram.com/1stcars.in",
   });
 
   React.useEffect(() => {
@@ -181,6 +183,39 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
                 </button>
               </li>
               {quickLinks}
+            </ul>
+          </div>
+
+          {/* Follow Us column: Social Links */}
+          <div>
+            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
+              Follow Us
+            </h5>
+            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
+              <li>
+                <a
+                  href={settings.facebook || "https://www.facebook.com/1stcars.in"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors flex items-center group"
+                >
+                  <Facebook className="h-4 w-4 mr-2 text-primary" />
+                  <span>Facebook</span>
+                  <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href={settings.instagram || "https://www.instagram.com/1stcars.in"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors flex items-center group"
+                >
+                  <Instagram className="h-4 w-4 mr-2 text-primary" />
+                  <span>Instagram</span>
+                  <ArrowUpRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-[1px] group-hover:-translate-y-[1px] transition-all duration-200" />
+                </a>
+              </li>
             </ul>
           </div>
 

@@ -15,6 +15,10 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutBrowseButton: "Explore Certified Cars",
   aboutBackButton: "Sell Your Car",
 
+  // ---- Social links (rendered in the footer) ----
+  facebook: "https://www.facebook.com/1stcars.in",
+  instagram: "https://www.instagram.com/1stcars.in",
+
   aboutM1Value: "120+",
   aboutM1Label: "Point Inspection",
   aboutM2Value: "180+",
