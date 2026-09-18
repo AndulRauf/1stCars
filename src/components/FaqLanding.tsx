@@ -529,13 +529,6 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
             onClick: onNavigateToInventory ?? onBackToHome,
           },
           { label: "Sell Your Car", onClick: onNavigateToSell ?? onBackToHome, variant: "ghost" },
-          {
-            label: "Contact Us",
-            onClick: () => {
-              window.location.href = "mailto:support@1stcars.com";
-            },
-            variant: "ghost",
-          },
         ]}
       />
     </div>
