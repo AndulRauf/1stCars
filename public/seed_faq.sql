@@ -24,7 +24,7 @@ DELETE FROM public.faq;
 INSERT INTO public.faq (question, answer, category, display_order) VALUES
   -- Buying
   ('How do I buy a car from 1stCars?', 'Browse available cars, open a vehicle''s details and book a test drive where offered. A small refundable booking token then reserves the car and unlocks priority assistance.', 'Buying', 1),
-  ('Can I book a test drive?', 'Yes — free of charge wherever the option is shown on the listing. Our concierge team arranges a convenient slot, and you decide on the booking token afterwards.', 'Buying', 2),
+  ('Can I book a test drive?', 'Yes — free of charge wherever the option is shown on the listing. Our associate team arranges a convenient slot, and you decide on the booking token afterwards.', 'Buying', 2),
   ('Are the cars inspected?', 'Yes. Every certified car passes our 120-Point Inspection and receives an official Vehicle Grade before it goes live.', 'Buying', 3),
   ('What is included in the displayed price?', 'The drive-away price. A full cost breakup — including RC transfer and documentation charges — is shown at checkout. No hidden charges.', 'Buying', 4),
   ('How do I reserve a car?', 'Pay a refundable booking token equal to 1% of the vehicle value (min ₹3,000, max ₹10,000). It adjusts against the final price and is fully refundable per our policy.', 'Buying', 5),
