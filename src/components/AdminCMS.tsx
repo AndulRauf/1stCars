@@ -3123,7 +3123,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                   <button
                     type="button"
                     onClick={() => setPaymentSettings({ ...paymentSettings, qrUrl: "" })}
-                    className="absolute -top-2 -right-2 p-1 bg-rose-500 hover:bg-rose-600 rounded-full text-white cursor-pointer shadow"
+                    className="absolute -top-2 -right-2 p-2 bg-rose-500 hover:bg-rose-600 rounded-full text-white cursor-pointer shadow"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -5770,7 +5770,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                                 price_breakup: prev.price_breakup.filter((_: any, i: number) => i !== idx)
                               }));
                             }}
-                            className="p-1.5 rounded-lg border border-slate-200 hover:border-rose-500 hover:text-rose-500 text-slate-400 bg-white cursor-pointer"
+className="p-2.5 rounded-lg border border-slate-200 hover:border-rose-500 hover:text-rose-500 text-slate-400 bg-white cursor-pointer"
                             title="Delete row"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -5999,7 +5999,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                                           };
                                         });
                                       }}
-                                      className="p-1 bg-rose-500 hover:bg-rose-600 rounded text-white cursor-pointer"
+                                      className="p-2 bg-rose-500 hover:bg-rose-600 rounded text-white cursor-pointer"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </button>

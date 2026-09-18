@@ -589,7 +589,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                       <button
                         type="button"
                         onClick={handleMockFallback}
-                        className="w-full py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                        className="w-full py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-xs rounded-lg transition-all cursor-pointer"
                       >
                         Bypass & Use Local Mock Database
                       </button>
@@ -706,7 +706,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                       <button
                         type="button"
                         onClick={() => setVisitingCardUrl("")}
-                        className="px-2.5 py-1 text-[10px] font-black text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0"
+                        className="px-3 py-2 text-xs font-black text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0"
                       >
                         Change
                       </button>
@@ -741,7 +741,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                       <button
                         type="button"
                         onClick={() => setAadharCardUrl("")}
-                        className="px-2.5 py-1 text-[10px] font-black text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0"
+                        className="px-3 py-2 text-xs font-black text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0"
                       >
                         Change
                       </button>

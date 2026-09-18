@@ -312,7 +312,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategoryIdx(idx)}
-                  className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border cursor-pointer ${
+                  className={`px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all border cursor-pointer ${
                     selectedCategoryIdx === idx 
                       ? "bg-[#2E7D32] text-white border-[#2E7D32]" 
                       : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-400"

@@ -390,7 +390,7 @@ export function FaqLanding({ page, onBackToHome, onNavigateToInventory, onNaviga
                       type="button"
                       onClick={() => setActiveCategory(cat)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer border",
+                        "px-4 py-2.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer border",
                         isActive
                           ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-md shadow-[#2E7D32]/10"
                           : "bg-white text-slate-600 border-slate-200 hover:border-[#2E7D32]/40 hover:text-[#2E7D32]"

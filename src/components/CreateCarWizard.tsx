@@ -1045,7 +1045,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
                         <button
                           type="button"
                           onClick={() => handleRemoveFeature(idx)}
-                          className="p-1 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

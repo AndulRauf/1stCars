@@ -364,7 +364,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                         onStartAuction(inspection, reportData);
                         toast.success("Inspection Approved! Vehicle listed in Dealer Auction.");
                       }}
-                      className="bg-indigo-900 hover:bg-indigo-800 text-white text-[10px] py-1 px-2.5 h-auto rounded-lg font-bold w-full mt-1 cursor-pointer"
+                      className="bg-indigo-900 hover:bg-indigo-800 text-white text-xs py-2 px-3 h-auto rounded-lg font-bold w-full mt-1 cursor-pointer"
                     >
                       Approve for Auction
                     </Button>

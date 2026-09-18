@@ -561,7 +561,7 @@ export function BuyCarsView({
                 <button
                   onClick={() => handleFilterChange("brand", "All")}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
+                    "px-3 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
                     filters.brand === "All"
                       ? "bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/10"
                       : "bg-[#FAF9F6] text-slate-600 hover:bg-slate-100 border border-slate-100"
@@ -574,7 +574,7 @@ export function BuyCarsView({
                     key={brand}
                     onClick={() => handleFilterChange("brand", brand)}
                     className={cn(
-                      "px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
+                      "px-3 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer",
                       filters.brand === brand
                         ? "bg-[#2E7D32] text-white shadow-md shadow-[#2E7D32]/10"
                         : "bg-[#FAF9F6] text-slate-600 hover:bg-slate-100 border border-slate-100"
@@ -598,7 +598,7 @@ export function BuyCarsView({
                     type="button"
                     onClick={() => handleFilterChange("city", city)}
                     className={cn(
-                      "px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer border",
+                      "px-3 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border",
                       filters.city === city
                         ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-md shadow-[#2E7D32]/10"
                         : "bg-[#FAF9F6] text-slate-600 hover:bg-slate-100 border-slate-100"

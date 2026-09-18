@@ -189,7 +189,7 @@ export function Sidebar({
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2 top-1.5 p-1.5 text-slate-400 hover:text-slate-600"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -227,7 +227,7 @@ export function Sidebar({
                 onClick={onReloadData}
                 disabled={isLoadingData}
                 title="Refresh CMS Data"
-                className="p-1.5 bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] rounded-lg transition-colors cursor-pointer"
+                className="p-2 bg-[#2E7D32]/10 hover:bg-[#2E7D32]/20 text-[#2E7D32] rounded-lg transition-colors cursor-pointer"
               >
                 <RefreshCw className={`h-3.5 w-3.5 text-[#2E7D32] ${isLoadingData ? "animate-spin" : ""}`} />
               </button>

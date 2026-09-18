@@ -365,7 +365,7 @@ export function Navbar({
               <button
                 type="button"
                 onClick={() => setIsCityModalOpen(true)}
-                className="bg-[#2E7D32]/10 border border-[#2E7D32]/20 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-2.5 py-1.5 flex items-center gap-1.5 cursor-pointer transition-all shrink-0"
+                className="bg-[#2E7D32]/10 border border-[#2E7D32]/20 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-3 py-2.5 flex items-center gap-1.5 cursor-pointer transition-all shrink-0"
                 title="Select City Hub"
               >
                 <MapPin className="h-3.5 w-3.5 text-[#2E7D32] shrink-0" />

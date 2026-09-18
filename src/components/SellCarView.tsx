@@ -1193,7 +1193,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           <div className="flex flex-col items-center gap-3 pt-2 pb-1">
             <Button
               onClick={scrollToSellForm}
-              className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-widest rounded-full px-8 sm:px-10 h-12 sm:h-14 text-sm shadow-lg shadow-[#2E7D32]/30 w-full max-w-sm sm:w-auto"
+              className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-widest rounded-full px-8 sm:px-10 h-12 text-sm shadow-lg shadow-[#2E7D32]/30 w-full max-w-sm sm:w-auto"
             >
               Book Your Free Inspection
             </Button>
@@ -1247,7 +1247,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         type="button"
                         onClick={() => handleJumpToStep(item.step)}
                         disabled={!isCompleted}
-                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all whitespace-nowrap shrink-0 border ${
+                        className={`px-3 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
                           isCompleted
                             ? "bg-emerald-50 border-emerald-200 text-[#2E7D32] cursor-pointer hover:bg-emerald-100"
                             : isActive

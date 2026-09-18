@@ -834,7 +834,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                             <Button 
                               onClick={onNavigateToInventory}
                               size="sm"
-                              className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[9px] font-black uppercase tracking-wider h-7 px-2.5 rounded-lg"
+                              className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 px-3 rounded-lg"
                             >
                               Details
                             </Button>
