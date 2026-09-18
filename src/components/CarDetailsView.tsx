@@ -472,17 +472,47 @@ export function CarDetailsView({
                 <Badge className="bg-black/50 text-white border-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
                   {activeImageIndex + 1} / {angles.length}
                 </Badge>
-                <button
-                  onClick={() => onSaveToggle(car.id, `${car.brand} ${car.model}`)}
-                  className={cn(
-                    "w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
-                    savedCars.includes(car.id)
-                      ? "bg-rose-500 border-rose-400 text-white"
-                      : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
-                  )}
-                >
-                  <Heart className={cn("h-4 w-4", savedCars.includes(car.id) && "fill-current")} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      const shareUrl = carShareLink(car);
+                      const message = buildCarShareMessage(car);
+                      if (navigator.share) {
+                        trackShareEvent("whatsapp", "car_details", `${car.brand} ${car.model}`);
+                        try {
+                          await navigator.share({
+                            title: `${car.year} ${car.brand} ${car.model} | 1stCars Certified`,
+                            text: message,
+                            url: shareUrl,
+                          });
+                          return;
+                        } catch (e) {}
+                      }
+                      trackShareEvent("copy", "car_details", `${car.brand} ${car.model}`);
+                      try {
+                        await navigator.clipboard.writeText(buildCarShareFullMessage(car));
+                        toast.success("Car card copied! Paste it anywhere to share.");
+                      } catch (err) {
+                        toast.info(`Direct link: ${shareUrl}`);
+                      }
+                    }}
+                    className="w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md bg-black/30 hover:bg-black/50 border-white/20 text-white"
+                    aria-label="Share"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => onSaveToggle(car.id, `${car.brand} ${car.model}`)}
+                    className={cn(
+                      "w-9 h-9 rounded-full border flex items-center justify-center transition-all cursor-pointer backdrop-blur-md",
+                      savedCars.includes(car.id)
+                        ? "bg-rose-500 border-rose-400 text-white"
+                        : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
+                    )}
+                  >
+                    <Heart className={cn("h-4 w-4", savedCars.includes(car.id) && "fill-current")} />
+                  </button>
+                </div>
               </div>
 
               {/* Caption sits on gradient — not on image */}
