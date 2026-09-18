@@ -356,8 +356,8 @@ export function CarDetailsView({
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Top navigation & Action bar */}
-        <div className="flex items-center justify-between gap-2 sm:gap-4 mb-6 sm:mb-8 bg-white/80 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl border border-slate-200/70 shadow-xs">
+        {/* Top navigation & Action bar (hidden on mobile) */}
+        <div className="hidden md:flex items-center justify-between gap-2 sm:gap-4 mb-6 sm:mb-8 bg-white/80 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl border border-slate-200/70 shadow-xs">
           <button
             onClick={onBack}
             className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl text-xs font-extrabold text-[#2E7D32] hover:bg-[#2E7D32]/10 transition-all uppercase tracking-wider cursor-pointer group shrink-0"
