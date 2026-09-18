@@ -231,7 +231,7 @@ const LEGACY_MARKETING_COPY: Record<string, string[]> = {
     "Inspired by rigorous pre-owned standards, reimagined for the ultimate experience. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
   ],
   footerText: ["© 2026 1stCars Luxury Marketplace. All rights reserved."],
-  brandSlogan: ["The Luxury Pre-Owned Hub"],
+  brandSlogan: ["The Luxury Pre-Owned Hub", "CARS YOU CAN TRUST.", "CARS YOU CAN TRUST"],
   brandDescription: [
     "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
   ],
