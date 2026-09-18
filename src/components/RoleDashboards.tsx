@@ -608,8 +608,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
               Welcome back, <span className="text-[#2E7D32]">{currentUser.name}</span>
             </h1>
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1">
-              🏢 Profile Role: <strong className="text-slate-800">{currentUser.role} Dashboard</strong> • Location: {currentUser.city}
+            <p className="text-xs text-slate-400 font-semibold flex items-center gap-1">
+              📍 Location: <strong className="text-slate-800">{currentUser.city}</strong>
             </p>
           </div>
 
