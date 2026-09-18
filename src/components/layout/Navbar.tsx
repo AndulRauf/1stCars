@@ -449,7 +449,7 @@ export function Navbar({
 
           {/* Mobile Links */}
           <div className="flex flex-col space-y-3">
-            <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <p className="px-4 text-xs font-bold text-slate-400">
               Browse
             </p>
             {navLinks.map((link) => (
@@ -461,7 +461,7 @@ export function Navbar({
                   handleLinkClick(e, link.view, link.href);
                 }}
                 className={cn(
-                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-3 px-4 rounded-xl transition-colors gap-3",
+                  "flex items-center justify-between text-[15px] font-semibold py-3 px-4 rounded-xl transition-colors gap-3",
                   currentView === link.view
                     ? "bg-[#2E7D32] text-white"
                     : "hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
@@ -484,7 +484,7 @@ export function Navbar({
                   onViewChange?.("custom_page", page.id);
                 }}
                 className={cn(
-                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-3 px-4 rounded-xl transition-colors gap-3",
+                  "flex items-center justify-between text-[15px] font-semibold py-3 px-4 rounded-xl transition-colors gap-3",
                   currentView === "custom_page"
                     ? "bg-[#2E7D32] text-white"
                     : "hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
@@ -504,7 +504,7 @@ export function Navbar({
         <div className="border-t border-slate-100 pt-6 flex flex-col space-y-3">
           {/* Mobile City Selector */}
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5">
               Operational Region (Gujarat Only)
             </label>
             <button
@@ -513,7 +513,7 @@ export function Navbar({
                 setIsOpen(false);
                 setIsCityModalOpen(true);
               }}
-              className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-sm font-bold px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
             >
               <div className="flex items-center gap-2.5">
                 <MapPin className="h-4 w-4 text-[#2E7D32] shrink-0" />
@@ -530,8 +530,8 @@ export function Navbar({
               setIsOpen(false);
               onSavedClick?.();
             }}
-            className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-xs font-black uppercase tracking-wider px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
-          >
+className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D32]/15 text-[#2E7D32] rounded-xl text-sm font-bold px-4 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+            >
             <div className="flex items-center gap-2.5">
               <Heart className="h-4 w-4 text-[#2E7D32] shrink-0 fill-[#2E7D32]/10" />
               <span>Saved Cars</span>
@@ -551,7 +551,7 @@ export function Navbar({
                     setIsOpen(false);
                     onViewChange?.("role_dashboards");
                   }}
-                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
+                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold h-12 rounded-xl shadow-xs"
                 >
                   Admin Panel
                 </Button>
@@ -562,7 +562,7 @@ export function Navbar({
                   setIsOpen(false);
                   onViewChange?.("role_dashboards");
                 }}
-                className="w-full text-[10px] font-black uppercase tracking-wider h-12 rounded-xl"
+                className="w-full text-xs font-bold h-12 rounded-xl"
               >
                 Dashboard
               </Button>
@@ -571,7 +571,7 @@ export function Navbar({
                   setIsOpen(false);
                   onLogout?.();
                 }}
-                className="w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-wider h-12 rounded-xl shadow-xs"
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold h-12 rounded-xl shadow-xs"
               >
                 Logout
               </Button>
