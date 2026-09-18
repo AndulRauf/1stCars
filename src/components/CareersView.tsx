@@ -3,14 +3,12 @@ import {
   Briefcase,
   Building2,
   CheckCircle2,
-  Flag,
   GraduationCap,
   HeartHandshake,
   MapPin,
   Rocket,
   Send,
   Sparkles,
-  TrendingUp,
   Upload,
   Wrench
 } from "lucide-react";
@@ -97,24 +95,6 @@ const WHY_US = [
     icon: Wrench,
     title: "Build With Us",
     desc: "Be part of a growing automotive technology company."
-  }
-];
-
-const LIFE_POINTS = [
-  {
-    icon: Flag,
-    title: "Ownership",
-    desc: "Take responsibility and make things happen."
-  },
-  {
-    icon: GraduationCap,
-    title: "Learning",
-    desc: "Learn from real challenges and real customers."
-  },
-  {
-    icon: TrendingUp,
-    title: "Growth",
-    desc: "Grow with the business and take on new opportunities."
   }
 ];
 
@@ -506,39 +486,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
         </div>
       </div>
 
-      {/* 5. LIFE AT 1STCARS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <SectionHeader
-          badge="LIFE AT 1STCARS"
-          badgeIcon={<HeartHandshake className="h-3.5 w-3.5" />}
-          title="Life at 1stCars"
-          subtitle={
-            <span className="space-y-2 block">
-              <strong className="block text-slate-700">Learn. Build. Grow.</strong>
-              Work with a team that combines automotive experience, technology and a customer-first mindset.
-            </span>
-          }
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6 animate-fade-up">
-          {LIFE_POINTS.map((p) => {
-            const Icon = p.icon;
-            return (
-              <div
-                key={p.title}
-                className="bg-white border border-slate-200/80 rounded-2xl p-6 space-y-3 shadow-xs hover:shadow-lg hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 transition-all duration-300"
-              >
-                <div className="p-3 rounded-xl bg-[#2E7D32] text-white w-fit shadow-md shadow-[#2E7D32]/25">
-                  <Icon className="h-6 w-6" />
-                </div>
-                <h3 className="font-black text-sm text-slate-900 tracking-tight">{p.title}</h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">{p.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 6. FINAL CTA */}
+      {/* 5. FINAL CTA */}
       <CTASection
         badge="JOIN THE TEAM"
         title="Ready to build with us?"
