@@ -634,7 +634,7 @@ export function CarDetailsView({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
                 {/* 1. Reg City & RTO */}
                 <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reg City & RTO</p>
