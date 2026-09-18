@@ -37,7 +37,7 @@ export function AuctionStatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border whitespace-nowrap",
+        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap",
         tones[status] || "bg-slate-100 text-slate-500 border-slate-200",
         status === "LIVE" && "animate-pulse",
         className
@@ -98,7 +98,7 @@ export function Stat({
   };
   return (
     <div className="bg-white border border-slate-100 rounded-xl p-3">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+      <p className="text-[11px] font-bold text-slate-500 leading-none">
         {label}
       </p>
       <p className={cn("text-base font-black mt-1.5 tabular-nums", tones[tone])}>{value}</p>

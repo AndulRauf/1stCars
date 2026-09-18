@@ -140,8 +140,8 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">Track your vehicles through live dealer bidding and settle results.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={reload} className="h-8 text-[10px] font-black uppercase tracking-wider rounded-xl" disabled={loading}>
-          <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Refresh
+        <Button variant="outline" size="sm" onClick={reload} className="h-9 text-xs font-bold rounded-xl" disabled={loading}>
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
 
@@ -163,7 +163,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
           <button
             key={t.id}
             onClick={() => setFilter(t.id)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border transition-colors cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
               filter === t.id
                 ? "bg-[#2E7D32] text-white border-[#2E7D32]"
                 : "bg-white text-slate-500 border-slate-200 hover:border-[#2E7D32]/40 hover:text-slate-700"
@@ -178,7 +178,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search your vehicles..."
-            className="w-full h-9 pl-9 pr-3 text-[11px] font-bold border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-[#2E7D32]"
+            className="w-full h-10 pl-9 pr-3 text-sm font-medium border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-[#2E7D32]"
           />
         </div>
       </div>
@@ -211,7 +211,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
 
                 <div>
                   <h4 className="font-black text-slate-900 text-base">{v.year} {v.title}</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-slate-500">
                     {v.city} • {v.km_driven?.toLocaleString() || "—"} KM • {v.fuel} • {v.transmission}
                   </p>
                 </div>
@@ -220,11 +220,11 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-white border border-slate-100 p-2.5 rounded-xl">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Starting</p>
+                    <p className="text-[10px] font-bold text-slate-500 leading-none">Starting</p>
                     <p className="text-sm font-black text-slate-800 mt-1">{formatINR(a.starting_bid)}</p>
                   </div>
                   <div className="bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
-                    <p className="text-[8px] font-black text-emerald-800 uppercase tracking-widest leading-none">Final / High Bid</p>
+                    <p className="text-[10px] font-bold text-emerald-800 leading-none">Final / High Bid</p>
                     <p className="text-sm font-black text-[#2E7D32] mt-1">{formatINR(a.current_highest_bid)}</p>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 {isReview && (
                   <div className="p-3 bg-violet-50 border border-violet-200 rounded-xl flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-violet-600 shrink-0" />
-                    <p className="text-[10px] font-bold text-violet-800">
+                    <p className="text-xs font-semibold text-violet-800">
                       The auction closed at <strong>{formatINR(a.current_highest_bid)}</strong>. Accept to proceed with the sale, or reject to keep your vehicle.
                     </p>
                   </div>
@@ -241,7 +241,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 {isSettled && a.status === "ACCEPTED" && (
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <p className="text-[10px] font-bold text-emerald-800">
+                    <p className="text-xs font-semibold text-emerald-800">
                       Sale settled at <strong>{formatINR(a.current_highest_bid)}</strong> — the winning dealer is completing payment.
                     </p>
                   </div>
@@ -249,31 +249,31 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 {isSettled && a.status === "REJECTED" && (
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                    <p className="text-[10px] font-bold text-rose-800">
+                    <p className="text-xs font-semibold text-rose-800">
                       Result rejected{a.ended_reason ? ` — ${a.ended_reason}` : ""}. Your vehicle has been released.
                     </p>
                   </div>
                 )}
                 {isSettled && a.status === "EXPIRED" && (
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <p className="text-[10px] font-bold text-slate-600">Auction expired without a confirmed sale.</p>
+                    <p className="text-xs font-semibold text-slate-600">Auction expired without a confirmed sale.</p>
                   </div>
                 )}
                 {isSettled && a.status === "CANCELLED" && (
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <p className="text-[10px] font-bold text-slate-600">Auction cancelled — vehicle released.</p>
+                    <p className="text-xs font-semibold text-slate-600">Auction cancelled — vehicle released.</p>
                   </div>
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="h-9 flex-1 text-[10px] font-black uppercase tracking-wider rounded-xl" onClick={() => setDetail(a)}>
+                  <Button variant="outline" size="sm" className="h-10 flex-1 text-xs font-bold rounded-xl" onClick={() => setDetail(a)}>
                     <ClipboardList className="h-3.5 w-3.5" /> Details
                   </Button>
                   {isReview && (
                     <>
                       <Button
                         size="sm"
-                        className="h-9 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl bg-[#2E7D32] hover:bg-[#25632a] text-white"
+                        className="h-10 px-4 text-xs font-bold rounded-xl bg-[#2E7D32] hover:bg-[#25632a] text-white"
                         onClick={() => { setConfirm({ auction: a, kind: "accept" }); setConfirmReason(""); }}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Accept
@@ -281,7 +281,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                       <Button
                         size="sm"
                         variant="destructive"
-                        className="h-9 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl"
+                        className="h-10 px-4 text-xs font-bold rounded-xl"
                         onClick={() => { setConfirm({ auction: a, kind: "reject" }); setConfirmReason(""); }}
                       >
                         <XCircle className="h-3.5 w-3.5" /> Reject
@@ -301,8 +301,8 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
           <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">
-                  {confirm.kind === "accept" ? "Accept Auction Result" : "Reject Auction Result"}
+                <h3 className="font-black text-lg text-slate-900">
+                  {confirm.kind === "accept" ? "Accept auction result" : "Reject auction result"}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-bold">{vehicleOf(confirm.auction).title} • #{confirm.auction.id.substring(0, 8)}</p>
               </div>
@@ -351,7 +351,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                   <span className="text-[9px] font-mono text-slate-400">#{detail.id}</span>
                 </div>
                 <h3 className="font-black text-xl text-slate-900 mt-1.5">{vehicleOf(detail).year} {vehicleOf(detail).title}</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <p className="text-xs font-semibold text-slate-500">
                   {vehicleOf(detail).city} • {formatDateTime(detail.starts_at)} → {formatDateTime(detail.ends_at)}
                 </p>
               </div>
@@ -362,22 +362,22 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
 
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Starting</p>
+                <p className="text-[10px] font-bold text-slate-500 leading-none">Starting</p>
                 <p className="text-sm font-black text-slate-800 mt-1">{formatINR(detail.starting_bid)}</p>
               </div>
               <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl">
-                <p className="text-[8px] font-black text-emerald-800 uppercase tracking-widest leading-none">High Bid</p>
+                <p className="text-[10px] font-bold text-emerald-800 leading-none">High Bid</p>
                 <p className="text-sm font-black text-[#2E7D32] mt-1">{formatINR(detail.current_highest_bid)}</p>
               </div>
               <div className="bg-white border border-slate-100 p-3 rounded-xl">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Reserve</p>
+                <p className="text-[10px] font-bold text-slate-500 leading-none">Reserve</p>
                 <p className="text-sm font-black text-slate-800 mt-1">{formatINR(detail.reserve_price)}</p>
               </div>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
               <div>
-                <p className="text-[9px] font-black text-indigo-700 uppercase tracking-widest">Winning Dealer</p>
+                <p className="text-[11px] font-bold text-indigo-700">Winning dealer</p>
                 <p className="text-sm font-black text-indigo-900 mt-0.5">{detail.winner_dealer_id ? `Dealer #${detail.winner_dealer_id.substring(0, 8)}` : "No confirmed winner yet"}</p>
               </div>
               <Wallet className="h-5 w-5 text-indigo-400" />
@@ -385,7 +385,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
 
             {payments.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Dealer Payments</p>
+                <p className="text-[11px] font-bold text-slate-500">Dealer payments</p>
                 {payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between border border-slate-100 rounded-xl p-3 bg-[#FAF9F6]">
                     <div>
@@ -394,7 +394,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                       </p>
                       <p className="text-[9px] text-slate-400 font-bold">{p.method || "—"} • {p.reference || ""}</p>
                     </div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
                       p.status === "RECEIVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                       p.status === "PENDING" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-500 border-slate-200"
                     }`}>{p.status}</span>
@@ -407,7 +407,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <Button
                   size="sm"
-                  className="h-9 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl bg-[#2E7D32] hover:bg-[#25632a] text-white"
+                  className="h-10 px-4 text-xs font-bold rounded-xl bg-[#2E7D32] hover:bg-[#25632a] text-white"
                   onClick={() => { setConfirm({ auction: detail, kind: "accept" }); setConfirmReason(""); }}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" /> Accept Result
@@ -415,7 +415,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="h-9 px-4 text-[10px] font-black uppercase tracking-wider rounded-xl"
+                  className="h-10 px-4 text-xs font-bold rounded-xl"
                   onClick={() => { setConfirm({ auction: detail, kind: "reject" }); setConfirmReason(""); }}
                 >
                   <XCircle className="h-3.5 w-3.5" /> Reject Result

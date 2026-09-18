@@ -651,7 +651,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               <div className={`${hubCollapsed ? "lg:col-span-1" : "lg:col-span-3"} bg-white border border-[#2E7D32]/10 rounded-3xl p-3 sm:p-4 lg:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all duration-200`}>
               <div className={`flex items-center gap-2 ${hubCollapsed ? "flex-col" : "justify-between"}`}>
                 {!hubCollapsed && (
-                  <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest px-2.5">Dashboard Hub</p>
+                  <p className="text-xs font-bold text-[#2E7D32] px-2.5">Dashboard Hub</p>
                 )}
                 <button
                   onClick={handleToggleHub}
@@ -674,7 +674,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -698,7 +698,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -721,7 +721,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -743,7 +743,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -773,7 +773,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`${hubCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3.5 py-2.5 lg:px-4 lg:py-3"} whitespace-nowrap shrink-0 lg:w-full lg:shrink text-left rounded-xl text-sm font-semibold flex items-center gap-3 transition-all cursor-pointer ${
                           activeTab === tab.id 
                             ? "bg-[#2E7D32] text-white" 
                             : "text-slate-500 hover:bg-slate-50"
@@ -791,11 +791,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               {/* Browse inventory help callout (hidden for Sales Associates & when hub is collapsed) */}
               {!hubCollapsed && currentUser.role !== "Sales Associate" && (
                 <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2 text-center">
-                  <p className="text-[9px] font-black text-[#2E7D32] uppercase tracking-widest">Public Catalog</p>
-                  <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">Want to browse standard certified cars?</p>
+                  <p className="text-[11px] font-bold text-[#2E7D32]">Public Catalog</p>
+                  <p className="text-xs font-medium text-slate-500 leading-relaxed">Want to browse standard certified cars?</p>
                   <Button
                     onClick={onNavigateToInventory}
-                    className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 rounded-lg"
+                    className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold h-9 rounded-lg"
                   >
                     Browse Cars
                   </Button>
@@ -953,28 +953,47 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Car Inspections</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Real-time tracking of Spinny-style home inspections logged for your account.</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Track your 120-point home inspections and certification status in real time.</p>
                   </div>
 
                   {(() => {
                     const myInspections = inspections.filter(i => i.seller_id === currentUser.id || (i.seller_mobile && i.seller_mobile === currentUser.mobile) || (!!i.seller_email && !!currentUser.email && i.seller_email.toLowerCase() === currentUser.email.toLowerCase()));
+                    const inspCount = (s: string) => myInspections.filter((i) => i.status === s).length;
                     return myInspections.length > 0 ? (
                     <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { label: "Total Requests", value: myInspections.length, tone: "text-[#2E7D32]" },
+                          { label: "Pending", value: inspCount("pending"), tone: "text-amber-600" },
+                          { label: "In Progress", value: inspCount("assigned"), tone: "text-blue-600" },
+                          { label: "Completed", value: inspCount("completed"), tone: "text-emerald-600" }
+                        ].map((st) => (
+                          <div key={st.label} className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                            <p className="text-[11px] font-bold text-slate-500 leading-none">{st.label}</p>
+                            <p className={`text-base font-black mt-1.5 tabular-nums ${st.tone}`}>{st.value}</p>
+                          </div>
+                        ))}
+                      </div>
+
                       {myInspections.map(item => (
                         <div key={item.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] space-y-3">
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/50 pb-3">
                             <div>
-                              <span className="text-[10px] font-mono text-slate-400">ID: {item.id}</span>
+                              <span className="text-[11px] font-mono text-slate-400">ID: {item.id}</span>
                               <h4 className="font-black text-slate-900 text-base">{item.year} {item.brand} {item.model}</h4>
-                              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{item.variant} • {item.reg_number}</p>
+                              <p className="text-xs font-semibold text-slate-500">{item.variant} • {item.reg_number}</p>
                             </div>
-                            <Badge className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border-none text-white ${
+                            <Badge className={`px-3 py-1 rounded-full text-[10px] font-bold border-none text-white ${
                               item.status === "pending" ? "bg-amber-600" :
                               item.status === "assigned" ? "bg-blue-600" :
                               item.status === "completed" ? "bg-emerald-600" :
                               item.status === "offered" ? "bg-sky-600" : "bg-purple-600"
                             }`}>
-                              {item.status}
+                              {item.status === "pending" ? "Pending" :
+                               item.status === "assigned" ? "In Progress" :
+                               item.status === "completed" ? "Completed" :
+                               item.status === "offered" ? "Offers Received" :
+                               item.status}
                             </Badge>
                           </div>
 
@@ -985,10 +1004,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
                           {item.overall_score && (
                             <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl space-y-1">
-                              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1">
-                                <ShieldCheck className="h-4 w-4 text-emerald-600" /> Inspector Score: {item.overall_score}/10
+                              <p className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                                <ShieldCheck className="h-4 w-4 text-emerald-600" /> Inspector score: {item.overall_score}/10
                               </p>
-                              <p className="text-[11px] text-slate-600 italic">" {item.notes} "</p>
+                              <p className="text-xs font-medium text-slate-600 italic">"{item.notes}"</p>
                             </div>
                           )}
                         </div>
@@ -1021,46 +1040,46 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                         return (
                           <div key={off.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div className="space-y-1">
-                              <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Dealer: {off.dealer_name}</span>
-                              <h4 className="font-black text-slate-900 text-sm">
-                                For: {associatedInsp ? `${associatedInsp.year} ${associatedInsp.brand} ${associatedInsp.model}` : "Custom Vehicle"}
-                              </h4>
-                              <p className="text-[11px] text-slate-400 font-bold">Bid Status: 
-                                <span className={`ml-1 uppercase text-[9px] font-black px-2 py-0.5 rounded-full ${
-                                  off.status === "pending" ? "bg-amber-100 text-amber-700" :
-                                  off.status === "accepted" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                                }`}>
-                                  {off.status}
-                                </span>
-                              </p>
-                            </div>
+                    <span className="text-xs font-bold text-[#2E7D32]">Dealer: {off.dealer_name}</span>
+                    <h4 className="font-black text-slate-900 text-sm">
+                      For: {associatedInsp ? `${associatedInsp.year} ${associatedInsp.brand} ${associatedInsp.model}` : "Custom Vehicle"}
+                    </h4>
+                    <p className="text-xs font-semibold text-slate-500">Bid status:
+                      <span className={`ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        off.status === "pending" ? "bg-amber-100 text-amber-700" :
+                        off.status === "accepted" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                      }`}>
+                        {off.status}
+                      </span>
+                    </p>
+                  </div>
 
-                            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                              <div className="text-left md:text-right">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Offer Amount</p>
-                                <p className="text-lg font-black text-[#2E7D32]">₹{off.offer_amount.toLocaleString()}</p>
-                              </div>
+                  <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                    <div className="text-left md:text-right">
+                      <p className="text-xs font-semibold text-slate-500">Offer amount</p>
+                      <p className="text-lg font-black text-[#2E7D32]">₹{off.offer_amount.toLocaleString()}</p>
+                    </div>
 
-                              {off.status === "pending" && (
-                                <div className="flex gap-1.5">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleSellerOfferAction(off.id, "accepted")}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-2.5"
-                                  >
-                                    Accept
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleSellerOfferAction(off.id, "rejected")}
-                                    className="border-rose-100 hover:bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-2.5 bg-white"
-                                  >
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
+                    {off.status === "pending" && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSellerOfferAction(off.id, "accepted")}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-9 rounded-lg px-3"
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSellerOfferAction(off.id, "rejected")}
+                          className="border-rose-100 hover:bg-rose-50 text-rose-600 text-xs font-bold h-9 rounded-lg px-3 bg-white"
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                           </div>
                         );
                       })}
