@@ -599,11 +599,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   }
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 md:pt-28 pb-24 text-left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+    <div className="bg-[#FAF9F6] min-h-screen pt-20 sm:pt-24 pb-16 text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         
         {/* Dashboard Heading & Meta Info */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-[#2E7D32]/10 p-4 sm:p-6 md:p-8 rounded-3xl shadow-xs">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-[#2E7D32]/10 p-4 sm:p-6 rounded-3xl shadow-xs">
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
               Welcome back, <span className="text-[#2E7D32]">{currentUser.name}</span>
@@ -625,7 +625,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
         {/* LOADING STATE */}
         <div className="relative">
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Live System Alerts Hub — redesigned: compact feed + full-screen command center */}
             {userNotifs.length > 0 && (
               <LiveSystemAlertsHub
@@ -637,7 +637,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               />
             )}
 
-            <div className="grid grid-cols-1 gap-5 lg:gap-8 items-start">
+            <div className="grid grid-cols-1 gap-4 lg:gap-6 items-start">
             
             {/* LEFT BAR: SUB-NAVIGATION */}
             {(currentUser.role as string) !== "Admin" && (
@@ -795,7 +795,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           )}
 
             {/* RIGHT BAR: MAIN WORKSPACE CONTAINER */}
-            <div className="w-full space-y-4 lg:space-y-6">
+            <div className="w-full space-y-4">
               
               {/* =======================================================
                   1. BUYER DASHBOARD TABS 
@@ -939,7 +939,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Inspection Status */}
               {currentUser.role === "Seller" && activeTab === "inspections" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Car Inspections</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Track your 120-point home inspections and certification status in real time.</p>
@@ -1015,7 +1015,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               {/* Offers (Sellers can accept/reject dealer cash bids) */}
               {currentUser.role === "Seller" && activeTab === "offers" && (
-                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Dealer Offers</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Competitive live bids placed on your certified inspected cars.</p>

@@ -131,7 +131,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
   });
 
   return (
-    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-6 md:p-8 space-y-6">
+    <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
