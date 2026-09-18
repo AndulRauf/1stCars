@@ -2035,7 +2035,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Your Car Inspected</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Our professional evaluator inspects your car at your home, office or inspection centre — completely free.
+                  Our professional evaluator inspects your car at your home, office or inspection centre completely free.
                 </p>
               </div>
             </div>
