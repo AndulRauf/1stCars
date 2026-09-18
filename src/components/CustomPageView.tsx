@@ -4,6 +4,7 @@ import { isHiddenPage } from "@/src/lib/utils";
 import Markdown from "react-markdown";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
+import { CTASection } from "@/src/components/ui/CTASection";
 import { FaqLanding } from "@/src/components/FaqLanding";
 
 interface CustomPageViewProps {
@@ -135,6 +136,24 @@ export function CustomPageView({ pageId, onBackToHome, onNavigateToInventory, on
             <Markdown>{page.content}</Markdown>
           </div>
         </div>
+
+        {/* Closing CTA band �?" matches the shared band on every other 1stCars
+            inner page (FAQ, About, Buy, Sell) so this CMS page feels native. */}
+        <CTASection
+          badge="1STCARS"
+          title={
+            <>
+              {"Ready to move? "}
+              <span className="text-[#4CAF50]">1stCars</span>
+              {" has your back"}
+            </>
+          }
+          subtitle="Every listing is backed by our 120-point certified inspection and a free, no-obligation doorstep appraisal. No pressure, no hidden fees, just a transparent road ahead."
+          ctas={[
+            { label: "Browse Certified Cars", variant: "primary", href: "#", onClick: onNavigateToInventory },
+            { label: "Sell Your Car", variant: "ghost", onClick: onNavigateToSell },
+          ]}
+        />
 
       </div>
     </div>
