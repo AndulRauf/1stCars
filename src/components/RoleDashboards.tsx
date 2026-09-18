@@ -613,20 +613,13 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2.5 w-full md:w-auto">
-            <Button
-              variant="outline"
-              onClick={reloadAllData}
-              className="border-slate-200 text-slate-700 hover:bg-slate-50 font-bold uppercase tracking-wider text-xs h-11 px-4 rounded-xl bg-white flex items-center gap-2 flex-1 md:flex-initial"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> Refresh
-            </Button>
-            <Button
+          <div className="flex flex-wrap gap-2.5 w-full md:w-auto md:justify-end">
+            <button
               onClick={onLogout}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-wider text-xs h-11 px-5 rounded-xl flex-1 md:flex-initial"
+              className="text-sm font-bold text-rose-600 hover:text-rose-700 cursor-pointer transition-colors px-1 flex items-center gap-1.5"
             >
               Logout
-            </Button>
+            </button>
           </div>
         </div>
 
