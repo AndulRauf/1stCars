@@ -791,20 +791,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               </div>
 
-              {/* Browse inventory help callout (hidden for Sales Associates & when hub is collapsed) */}
-              {!hubCollapsed && currentUser.role !== "Sales Associate" && (
-                <div className="p-4 bg-[#FAF9F6] border border-slate-100 rounded-2xl space-y-2 text-center">
-                  <p className="text-[11px] font-bold text-[#2E7D32]">Public Catalog</p>
-                  <p className="text-xs font-medium text-slate-500 leading-relaxed">Want to browse standard certified cars?</p>
-                  <Button
-                    onClick={onNavigateToInventory}
-                    className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-bold h-9 rounded-lg"
-                  >
-                    Browse Cars
-                  </Button>
-                </div>
-              )}
-
             </div>
           )}
 
