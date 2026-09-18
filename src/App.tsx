@@ -101,6 +101,7 @@ export default function App() {
   const [savedCars, setSavedCars] = React.useState<string[]>(() => getSavedCarsLocal());
   const [currentUser, setCurrentUser] = React.useState<Profile | null>(null);
   const [selectedCity, setSelectedCity] = React.useState<string>("Surat");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   // Live catalog = static curated list + cars uploaded/published via the CMS
   // (they live in the Supabase "cars" table, so they must be merged in here).
@@ -872,6 +873,7 @@ export default function App() {
         }}
         selectedCity={selectedCity}
         onCityChange={setSelectedCity}
+        onMobileMenuChange={setIsMobileMenuOpen}
       />
 
       <React.Suspense fallback={<ViewLoader />}>
@@ -1283,8 +1285,8 @@ export default function App() {
       />
 
       {/* Floating WhatsApp Widget — home, Buy Cars and Sell Car pages
-          (removed from dashboards and other inner pages) */}
-      {(currentView === "home" || currentView === "buy_cars" || currentView === "sell_car") && (
+          (removed from dashboards, inner pages, and while the mobile menu is open) */}
+      {!isMobileMenuOpen && (currentView === "home" || currentView === "buy_cars" || currentView === "sell_car") && (
         <WhatsAppFloatingButton view={currentView} />
       )}
 

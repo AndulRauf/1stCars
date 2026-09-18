@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin, Check, LocateFixed, Sparkles, ShieldCheck } from "lucide-react";
+import { Menu, X, Car, Heart, Search, ChevronRight, User, MapPin, Check, LocateFixed, Sparkles, ShieldCheck, ArrowRightLeft, FileText, LogOut } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { cn, isHiddenPage } from "@/src/lib/utils";
 import { supabase } from "@/src/lib/supabaseClient";
@@ -16,6 +16,7 @@ interface NavbarProps {
   onLogout?: () => void;
   selectedCity?: string;
   onCityChange?: (city: string) => void;
+  onMobileMenuChange?: (open: boolean) => void;
 }
 
 export function Navbar({
@@ -30,11 +31,16 @@ export function Navbar({
   onLogout,
   selectedCity,
   onCityChange,
+  onMobileMenuChange,
 }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isCityModalOpen, setIsCityModalOpen] = React.useState(false);
   const [citySearchTerm, setCitySearchTerm] = React.useState("");
   const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    onMobileMenuChange?.(isOpen);
+  }, [isOpen, onMobileMenuChange]);
 
   const CITY_LANDMARKS = [
     {
@@ -161,10 +167,11 @@ export function Navbar({
     href: string;
     isSpecial?: boolean;
     requiresAuth?: boolean;
+    icon?: React.ReactNode;
   }[] = [
-    { label: "Buy Cars", view: "buy_cars" as const, href: "/buy-cars" },
-    { label: "Sell Car", view: "sell_car" as const, href: "/sell-car" },
-    { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification" },
+    { label: "Buy Cars", view: "buy_cars" as const, href: "/buy-cars", icon: <Car className="h-5 w-5 shrink-0" /> },
+    { label: "Sell Car", view: "sell_car" as const, href: "/sell-car", icon: <ArrowRightLeft className="h-5 w-5 shrink-0" /> },
+    { label: "1stMark Certification", view: "firstmark_certification" as const, href: "/certification", icon: <ShieldCheck className="h-5 w-5 shrink-0" /> },
   ];
 
   // "about us" is always hidden from the nav menu (desktop + mobile) because it
@@ -396,7 +403,7 @@ export function Navbar({
       {/* Mobile Navigation Drawer */}
       <div
         className={cn(
-          "fixed top-0 bottom-0 right-0 z-50 w-full max-w-sm bg-white p-6 shadow-2xl lg:hidden transform transition-transform duration-300 ease-in-out flex flex-col justify-between",
+          "fixed top-0 bottom-0 right-0 z-50 w-full max-w-sm bg-white pt-6 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl lg:hidden transform transition-transform duration-300 ease-in-out flex flex-col justify-between",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
@@ -445,6 +452,9 @@ export function Navbar({
 
           {/* Mobile Links */}
           <div className="flex flex-col space-y-3">
+            <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Browse
+            </p>
             {navLinks.map((link) => (
               <a
                 key={link.label}
@@ -454,13 +464,16 @@ export function Navbar({
                   handleLinkClick(e, link.view, link.href);
                 }}
                 className={cn(
-                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl transition-colors",
+                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-3 px-4 rounded-xl transition-colors gap-3",
                   currentView === link.view
                     ? "bg-[#2E7D32] text-white"
                     : "hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
                 )}
               >
-                {link.label}
+                <span className="flex items-center gap-3">
+                  {link.icon}
+                  {link.label}
+                </span>
                 <ChevronRight className={cn("h-4 w-4", currentView === link.view ? "text-white" : "text-slate-400")} />
               </a>
             ))}
@@ -474,13 +487,16 @@ export function Navbar({
                   onViewChange?.("custom_page", page.id);
                 }}
                 className={cn(
-                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-2.5 px-4 rounded-xl transition-colors",
+                  "flex items-center justify-between text-sm font-bold uppercase tracking-wider py-3 px-4 rounded-xl transition-colors gap-3",
                   currentView === "custom_page"
                     ? "bg-[#2E7D32] text-white"
                     : "hover:bg-[#2E7D32]/5 hover:text-primary text-slate-800"
                 )}
               >
-                {page.title}
+                <span className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 shrink-0" />
+                  {page.title}
+                </span>
                 <ChevronRight className={cn("h-4 w-4", currentView === "custom_page" ? "text-white" : "text-slate-400")} />
               </a>
             ))}
