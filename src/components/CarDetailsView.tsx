@@ -612,23 +612,6 @@ export function CarDetailsView({
               <p className="text-xs font-bold text-slate-500 mt-1">Est. EMI <span className="text-[#2E7D32]">{formatMoney(car.emi)}/mo</span></p>
             </div>
 
-            {/* CTA buttons */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <Button
-                onClick={() => handleScrollToBooking("test_drive")}
-                className="bg-[#2E7D32] hover:bg-[#25632a] text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                Book Test Drive
-              </Button>
-              <Button
-                onClick={() => handleScrollToBooking("buy_now")}
-                className="bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                Reserve Now
-              </Button>
-            </div>
-
-
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#2E7D32] shrink-0" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SSL Encrypted · 1stCars Verified</span>
