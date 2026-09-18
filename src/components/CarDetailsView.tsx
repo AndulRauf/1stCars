@@ -416,23 +416,6 @@ export function CarDetailsView({
           </div>
         </div>
 
-        {/* Mobile-only CTA row — keeps Book Test Drive / Reserve Now visible on
-            the first screen without scrolling past the gallery */}
-        <div className="grid grid-cols-2 gap-2.5 mb-4 md:hidden">
-          <Button
-            onClick={() => handleScrollToBooking("test_drive")}
-            className="bg-[#2E7D32] hover:bg-[#25632a] text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md shadow-[#2E7D32]/20 cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            Book Test Drive
-          </Button>
-          <Button
-            onClick={() => handleScrollToBooking("buy_now")}
-            className="bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            Reserve Now
-          </Button>
-        </div>
-
         {/* HERO: Gallery + Key Info side-by-side */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 mb-6">
 
