@@ -274,7 +274,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
           badge="WHY 1STCARS?"
           badgeIcon={<Sparkles className="h-3.5 w-3.5" />}
           title="Why work with us?"
-          subtitle="We are building a better way to buy and sell pre-owned cars — powered by technology, transparency and people."
+          subtitle="We are building a better way to buy and sell pre-owned cars powered by technology, transparency and people."
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-6 animate-fade-up">
           {WHY_US.map((v) => {
