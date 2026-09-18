@@ -36,7 +36,7 @@ export function Error404Page({ onGoHome }: ErrorPageProps) {
             href="#contact-section"
             className="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-extrabold text-xs tracking-widest uppercase px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
           >
-            <PhoneCall className="h-4 w-4 text-[#2E7D32]" /> Contact Concierge
+            <PhoneCall className="h-4 w-4 text-[#2E7D32]" /> Contact Sales Associate
           </a>
         </div>
       </div>

@@ -336,7 +336,7 @@ export function BuyNowCheckout({
   };
 
   // Step 1: Verify mobile before payment. On the real backend the number is
-  // verified by the concierge on the call — no simulated OTP is ever shown in
+  // verified by the sales associate on the call — no simulated OTP is ever shown in
   // production. The simulated OTP gate exists only in mock/demo mode.
   const handleSendOtp = async () => {
     if (!buyerName.trim()) {

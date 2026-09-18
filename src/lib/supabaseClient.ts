@@ -457,7 +457,7 @@ If you do not agree with any part of these Terms, please discontinue use of the 
 ## 6. Bookings & Reservations
 
 - A booking creates a reservation for a specific vehicle and does not transfer ownership until full payment and legal documentation are completed.
-- We may require mobile number verification via OTP and contact details to process your booking. By providing these details you consent to being contacted by our concierge team.
+- We may require mobile number verification via OTP and contact details to process your booking. By providing these details you consent to being contacted by our sales associate team.
 - Priority assistance is provided to buyers who complete the token payment, subject to availability.
 
 ---

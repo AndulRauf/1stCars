@@ -506,8 +506,8 @@ export default function App() {
   const [selectedBudget, setSelectedBudget] = React.useState(0);
 
   // Lead capture / Book inspection states
-  const [conciergeName, setConciergeName] = React.useState("");
-  const [conciergeMobile, setConciergeMobile] = React.useState("");
+  const [salesAssociateName, setSalesAssociateName] = React.useState("");
+  const [salesAssociateMobile, setSalesAssociateMobile] = React.useState("");
 
   // Valuation Calculator states
   const [calcBrand, setCalcBrand] = React.useState("");
@@ -650,27 +650,27 @@ export default function App() {
     triggerToast(`Instant valuation compiled for your ${calcBrand}!`);
   };
 
-  // Concierge call-back lead — persisted to sales_notifications so it reaches
+  // Sales Associate call-back lead — persisted to sales_notifications so it reaches
   // the Sales Associate dashboard instead of being silently dropped.
-  const handleConciergeSubmit = async (e: React.FormEvent) => {
+  const handleSalesAssociateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!conciergeName.trim() || !conciergeMobile.trim()) {
+    if (!salesAssociateName.trim() || !salesAssociateMobile.trim()) {
       triggerToast("Please enter your name and mobile number.", "error");
       return;
     }
     try {
       const { error } = await supabase.from("sales_notifications").insert({
-        name: conciergeName.trim(),
-        mobile: conciergeMobile.trim().replace(/\D/g, "").slice(-10),
+        name: salesAssociateName.trim(),
+        mobile: salesAssociateMobile.trim().replace(/\D/g, "").slice(-10),
         type: "call_back",
         status: "pending",
-        notes: "Homepage concierge call-back request",
+        notes: "Homepage sales associate call-back request",
         city: selectedCity
       });
       if (error) throw error;
-      setConciergeName("");
-      setConciergeMobile("");
-      triggerToast("Concierge call-back request received! Specialist will contact you within 10 minutes.");
+      setSalesAssociateName("");
+      setSalesAssociateMobile("");
+      triggerToast("Sales Associate call-back request received! Specialist will contact you within 10 minutes.");
     } catch (err: any) {
       triggerToast("Could not save your request. Please call us at +91 8866377722.", "error");
     }
@@ -1229,26 +1229,26 @@ export default function App() {
 
           <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 max-w-2xl mx-auto text-left">
             <h3 className="text-xs font-black text-[#2E7D32] uppercase tracking-widest mb-4 text-center">
-              Concierge Call-Back Request
+              Sales Associate Call-Back Request
             </h3>
             
             <form 
-              onSubmit={handleConciergeSubmit} 
+              onSubmit={handleSalesAssociateSubmit} 
               className="grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
               <input 
                 type="text" 
                 placeholder="Full Name" 
-                value={conciergeName}
-                onChange={(e) => setConciergeName(e.target.value)}
+                value={salesAssociateName}
+                onChange={(e) => setSalesAssociateName(e.target.value)}
                 className="bg-white/10 border border-white/10 text-white text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:bg-white/20"
                 required
               />
               <input 
                 type="tel" 
                 placeholder="Mobile Number" 
-                value={conciergeMobile}
-                onChange={(e) => setConciergeMobile(e.target.value)}
+                value={salesAssociateMobile}
+                onChange={(e) => setSalesAssociateMobile(e.target.value)}
                 className="bg-white/10 border border-white/10 text-white text-xs font-bold px-4 py-3 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:bg-white/20"
                 required
               />

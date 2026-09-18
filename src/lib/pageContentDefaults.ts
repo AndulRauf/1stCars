@@ -40,7 +40,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutQuoteText:
     "\u201cWe don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",
   aboutTeamLabel: "The 1stCars Team",
-  aboutTeamSubtitle: "Certified Inspectors • Dealers • Concierge",
+  aboutTeamSubtitle: "Certified Inspectors • Dealers • Sales Associates",
   aboutStat1Value: "4+",
   aboutStat1Label: "Active Cities",
   aboutStat2Value: "12",
@@ -246,7 +246,7 @@ const LEGACY_MARKETING_COPY: Record<string, string[]> = {
     "We have completed over 4,500 doorstep premium deliveries. Read reviews from verified luxury car owners.",
   ],
   ctaSubheadingText: [
-    "Contact our Surat flagship concierge center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.",
+    "Contact our Surat flagship sales associate center to schedule a private showroom tour, request home evaluation, or register for rare luxury car arrivals.",
   ],
 };
 
