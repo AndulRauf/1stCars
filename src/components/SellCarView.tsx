@@ -1223,7 +1223,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     {settings.sellCarFormSubheading}
                   </p>
                   <p className="text-xs font-bold text-[#2E7D32] mt-3 flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 shrink-0" /> Free doorstep inspection — no obligation to sell
+                    <ShieldCheck className="h-4 w-4 shrink-0" /> Free doorstep inspection no obligation to sell
                   </p>
                 </div>
 
