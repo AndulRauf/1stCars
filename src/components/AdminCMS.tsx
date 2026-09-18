@@ -289,7 +289,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     sellCarBannerTitle: "Sell Your Car. Get the Best Offer.",
     sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with secure payment and RC transfer support.",
     sellCarFormHeading: "Tell Us About Your Car",
-    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few minutes.",
+    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few seconds.",
     certifiedBadgeText: "THE TRUST BLUEPRINT",
     certifiedHeadingText: "Why Choose 1stMark Certified?",
     certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",

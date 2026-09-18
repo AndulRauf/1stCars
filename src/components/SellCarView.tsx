@@ -687,7 +687,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     sellCarBannerTitle: "Sell Your Car. Get the Best Offer.",
     sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with secure payment and RC transfer support.",
     sellCarFormHeading: "Tell Us About Your Car",
-    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few minutes."
+    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few seconds."
   });
 
   React.useEffect(() => {
@@ -2022,7 +2022,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Tell Us About Your Car</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Enter your car details and verify your mobile number. It only takes a few minutes.
+                  Enter your car details and verify your mobile number. It only takes a few seconds.
                 </p>
               </div>
             </div>
