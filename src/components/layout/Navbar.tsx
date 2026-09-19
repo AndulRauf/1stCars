@@ -17,6 +17,7 @@ interface NavbarProps {
   selectedCity?: string;
   onCityChange?: (city: string) => void;
   onMobileMenuChange?: (open: boolean) => void;
+  onMobileLoginClick?: () => void;
 }
 
 export function Navbar({
@@ -32,6 +33,7 @@ export function Navbar({
   selectedCity,
   onCityChange,
   onMobileMenuChange,
+  onMobileLoginClick,
 }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isCityModalOpen, setIsCityModalOpen] = React.useState(false);
@@ -542,6 +544,21 @@ className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D
               </span>
             )}
           </button>
+
+          {/* Login button — buyers & sellers sign in with their mobile number.
+              Only shown when nobody is signed in (signed-in users get the
+              Dashboard / Logout actions below). */}
+          {!currentUser && (
+            <Button
+              onClick={() => {
+                setIsOpen(false);
+                onMobileLoginClick?.();
+              }}
+              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white h-12 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-[#2E7D32]/20"
+            >
+              <User className="h-4 w-4" /> Log In as Buyer / Seller
+            </Button>
+          )}
 
           {currentUser && (
             <div className="grid grid-cols-2 gap-3">

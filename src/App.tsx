@@ -49,6 +49,7 @@ import { FAMOUS_BRANDS, BUDGET_RANGES } from "@/src/data/cars";
 import { Car } from "@/src/types";
 import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
+import { MobileLoginModal } from "@/src/components/MobileLoginModal";
 import { supabase, isRealSupabase, isProdMockBlocked } from "@/src/lib/supabaseClient";
 import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
 import { getSavedCarsLocal, setSavedCarsLocal, loadSavedCarsFromDb, setSavedCarInDb } from "@/src/lib/savedCars";
@@ -522,6 +523,7 @@ export default function App() {
     isOpen: false,
     mode: "login"
   });
+  const [mobileLoginOpen, setMobileLoginOpen] = React.useState(false);
 
   // General Notification Toast
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
@@ -844,6 +846,22 @@ export default function App() {
         }}
       />
 
+      {/* Mobile Login (Buyer / Seller via mobile number) — used by the mobile
+          menu's Log In button. Buyer logins land on the Buyer dashboard and
+          Seller logins on the Seller dashboard (the RoleDashboards component
+          defaults its tab to the logged-in role). */}
+      <MobileLoginModal
+        isOpen={mobileLoginOpen}
+        onClose={() => setMobileLoginOpen(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          triggerToast(`Welcome back, ${user.name}!`);
+          navigateTo("role_dashboards", undefined, { replace: true });
+          setCurrentView("role_dashboards");
+          setMobileLoginOpen(false);
+        }}
+      />
+
       {/* 1. STICKY NAVBAR */}
       <Navbar 
         savedCount={savedCars.length} 
@@ -859,6 +877,7 @@ export default function App() {
           handleNavigate("buy_cars");
         }}
         onAuthClick={(mode) => setAuthModal({ isOpen: true, mode })}
+        onMobileLoginClick={() => setMobileLoginOpen(true)}
         currentView={currentView}
         onViewChange={(view, pageId) => {
           handleNavigate(view, { pageId });
