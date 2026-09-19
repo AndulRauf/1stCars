@@ -219,16 +219,32 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       // Buyer collections — Supabase is the source of truth for a signed-in
       // buyer (cross-device persistence); localStorage stays as the mock-mode
       // cache / fallback so an older database never breaks the dashboard.
+      //
+      // Scoping: every slice is pinned to THIS buyer. The local caches are
+      // shared device-wide (legacy seeds + every booking made in the browser),
+      // so they're filtered by the buyer's mobile number — the identifier the
+      // booking / order was recorded under. Rows without a matching buyer
+      // identity (global demo seeds, other buyers' slots on this device) are
+      // never shown, otherwise one buyer booking a single car would see other
+      // people's test drives in their "scheduled" list. The Supabase lead feed
+      // (already per-mobile) wins whenever it is available.
+      const myMobile = normMobile(currentUser.mobile);
       const localSaved = getSavedCarsLocal();
+      const belongsToBuyer = (row: any) =>
+        !myMobile || normMobile(row.buyer_mobile || row.mobile) === myMobile;
       let savedList = localSaved;
-      let tdList = safeParseLocalArray("1stcars_test_drives");
-      let orderList = safeParseLocalArray("1stcars_orders");
+      let tdList = safeParseLocalArray("1stcars_test_drives").filter(belongsToBuyer);
+      let orderList = safeParseLocalArray("1stcars_orders").filter(belongsToBuyer);
 
       if (isRealSupabase && currentUser?.id) {
         try {
           const dbSaved = await loadSavedCarsFromDb(currentUser.id);
           if (dbSaved) {
-            savedList = [...new Set([...dbSaved, ...localSaved])];
+            // The remote table is authoritative for a real buyer — it already
+            // holds every car they liked while signed in, so merging the
+            // device-local list back in would re-inject global demo seeds
+            // into a real buyer's dashboard.
+            savedList = [...dbSaved];
             setSavedCarsLocal(savedList);
           }
         } catch (e) {
@@ -245,7 +261,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             .select("*")
             .order("created_at", { ascending: false });
           if (!leadsErr && Array.isArray(dbLeads)) {
-            const myMobile = normMobile(currentUser.mobile);
             const mine = myMobile
               ? dbLeads.filter(
                   (l: any) =>
@@ -254,10 +269,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     String(l.status || "") !== "cancelled"
                 )
               : [];
-            if (myMobile) {
-              tdList = mine.filter((l: any) => l.type === "test_drive").map(testDriveFromLead);
-              orderList = mine.filter((l: any) => l.type === "buy_now").map(orderFromLead);
-            }
+            tdList = mine.filter((l: any) => l.type === "test_drive").map(testDriveFromLead);
+            orderList = mine.filter((l: any) => l.type === "buy_now").map(orderFromLead);
           }
         } catch (e) {
           console.warn("[buyer] Supabase lead sync skipped:", e);
@@ -300,7 +313,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     const updated = testDrives.filter(td => td.id !== id);
     setTestDrives(updated);
     try {
-      localStorage.setItem("1stcars_test_drives", JSON.stringify(updated));
+      // Remove only this cancelled slot from the device-wide cache — the state
+      // is buyer-scoped, so persisting it back wholesale would wipe other
+      // buyers' bookings made on this browser.
+      const fullLocal = safeParseLocalArray("1stcars_test_drives").filter(td => td.id !== id);
+      localStorage.setItem("1stcars_test_drives", JSON.stringify(fullLocal));
     } catch {
       /* non-fatal */
     }
