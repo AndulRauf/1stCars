@@ -1032,16 +1032,22 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      // Confirmed-write submit. Every branch requests the written row back
-      // (`.select("id")`) so we only count a lead once a real record exists. A
-      // partial row is only captured for signed-in users (anonymous visitors have
-      // no UPDATE grant on inspections), so if promoting that row matches nothing
-      // (e.g. the session vanished so RLS hides the row and PostgREST returns
-      // "no error, no row") we fall through to a fresh INSERT — never show
-      // success without a real lead.
-      let confirmedId: string | null = null;
+      // Confirmed-write submit. Anonymous visitors have NO SELECT RLS visibility
+      // on inspections (the SELECT policy only matches signed-in owners/staff),
+      // so PostgREST inserts their row but the RETURNING set comes back EMPTY —
+      // that is "success, no rows returned", NOT a failure. Therefore:
+      //  - INSERT: `error === null` means the row was created (RLS WITH CHECK,
+      //    NOT NULL constraints and grant problems all surface as errors), so a
+      //    returned id must NOT be required.
+      //  - Partial promotion (UPDATE): only attempted for a signed-in user
+      //    (partial rows are only ever captured for signed-in users), and it
+      //    KEEPS `.select("id").maybeSingle()` because a signed-in owner can
+      //    always read their own row back — "no row, no error" proves the UPDATE
+      //    matched nothing (e.g. the session vanished, so RLS hides the row) and
+      //    we fall through to a fresh INSERT instead of showing silent success.
+      let submitted = false;
 
-      if (partialLeadId) {
+      if (partialLeadId && user) {
         let res = await supabase
           .from("inspections")
           .update(inspectionRecord)
@@ -1064,17 +1070,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         if (res.error && (isRlsBlockedWrite(res.error.message) || isUnknownColumnError(res.error.message))) {
           console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", res.error.message);
         }
-        confirmedId = res.error ? null : res.id;
+        submitted = Boolean(!res.error && res.data?.id);
       }
 
-      if (!confirmedId) {
-        // No partial lead, or the promotion errored / matched nothing — do a
-        // fresh INSERT so the Sell Car form always lands a real row.
+      if (!submitted) {
+        // Fresh INSERT — the common anonymous-submit path.
         let result = await supabase
           .from("inspections")
-          .insert([inspectionRecord])
-          .select("id")
-          .maybeSingle();
+          .insert([inspectionRecord]);
         if (result.error && isUnknownColumnError(result.error.message)) {
           console.warn(
             "Inspection insert rejected an optional column — retrying with base columns only.",
@@ -1083,18 +1086,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           const { seller_email, notes, ...baseRecord } = inspectionRecord;
           result = await supabase
             .from("inspections")
-            .insert([baseRecord])
-            .select("id")
-            .maybeSingle();
+            .insert([baseRecord]);
         }
         if (result.error) {
           throw new Error(result.error.message || "Could not save your inspection request.");
         }
-        confirmedId = result.data?.id ?? null;
+        submitted = true;
       }
 
-      if (!confirmedId) {
-        throw new Error("Inspection save did not return a record. Please try again.");
+      if (!submitted) {
+        throw new Error("Inspection save was not confirmed. Please try again.");
       }
 
       const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
