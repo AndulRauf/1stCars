@@ -16,6 +16,7 @@ import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
+import { isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -424,33 +425,6 @@ export const brandData: {
 // Unified default catalog for the sell car form (brands + logos + popular flags)
 // derived from the built-in brand database. Admin CMS edits layer on top of this.
 const DEFAULT_SELL_CATALOG = catalogFromLegacy(brandData, BRAND_LOGOS);
-
-// Detect PostgREST "unknown column" / stale schema-cache errors so we can retry
-// the inspection insert with only the guaranteed base columns. These surface
-// when the live database was created from an older public/schema.sql that is
-// missing the denormalized seller_name/seller_mobile/seller_email/notes columns.
-function isUnknownColumnError(message?: string): boolean {
-  if (!message) return false;
-  return (
-    /schema cache/i.test(message) ||
-    /could not find the .* column/i.test(message) ||
-    /column .* does not exist/i.test(message) ||
-    /PGRST204/i.test(message)
-  );
-}
-
-// RLS / table-grant write rejections surfaced by PostgREST (e.g. an UPDATE attempt on
-// a database that predates the seller-update policy, or an anonymous visitor who has no
-// UPDATE grant on inspections). The submission must fall back to a fresh INSERT instead
-// of failing, sothat the Sell Car form always lands.
-function isRlsBlockedWrite(message?: string): boolean {
-  if (!message) return false;
-  return (
-    /row.?level security policy/i.test(message) ||
-    /permission denied/i.test(message)
-  );
-}
-
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
 // A valid Indian 10-digit mobile: digits only and a leading 6–9. Used by
@@ -1032,71 +1006,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      // Confirmed-write submit. Anonymous visitors have NO SELECT RLS visibility
-      // on inspections (the SELECT policy only matches signed-in owners/staff),
-      // so PostgREST inserts their row but the RETURNING set comes back EMPTY —
-      // that is "success, no rows returned", NOT a failure. Therefore:
-      //  - INSERT: `error === null` means the row was created (RLS WITH CHECK,
-      //    NOT NULL constraints and grant problems all surface as errors), so a
-      //    returned id must NOT be required.
-      //  - Partial promotion (UPDATE): only attempted for a signed-in user
-      //    (partial rows are only ever captured for signed-in users), and it
-      //    KEEPS `.select("id").maybeSingle()` because a signed-in owner can
-      //    always read their own row back — "no row, no error" proves the UPDATE
-      //    matched nothing (e.g. the session vanished, so RLS hides the row) and
-      //    we fall through to a fresh INSERT instead of showing silent success.
-      let submitted = false;
-
-      if (partialLeadId && user) {
-        let res = await supabase
-          .from("inspections")
-          .update(inspectionRecord)
-          .eq("id", partialLeadId)
-          .select("id")
-          .maybeSingle();
-        if (res.error && isUnknownColumnError(res.error.message)) {
-          console.warn(
-            "Inspection UPDATE rejected an optional column — retrying with base columns only.",
-            res.error.message
-          );
-          const { seller_email, notes, ...baseRecord } = inspectionRecord;
-          res = await supabase
-            .from("inspections")
-            .update(baseRecord)
-            .eq("id", partialLeadId)
-            .select("id")
-            .maybeSingle();
-        }
-        if (res.error && (isRlsBlockedWrite(res.error.message) || isUnknownColumnError(res.error.message))) {
-          console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", res.error.message);
-        }
-        submitted = Boolean(!res.error && res.data?.id);
-      }
-
-      if (!submitted) {
-        // Fresh INSERT — the common anonymous-submit path.
-        let result = await supabase
-          .from("inspections")
-          .insert([inspectionRecord]);
-        if (result.error && isUnknownColumnError(result.error.message)) {
-          console.warn(
-            "Inspection insert rejected an optional column — retrying with base columns only.",
-            result.error.message
-          );
-          const { seller_email, notes, ...baseRecord } = inspectionRecord;
-          result = await supabase
-            .from("inspections")
-            .insert([baseRecord]);
-        }
-        if (result.error) {
-          throw new Error(result.error.message || "Could not save your inspection request.");
-        }
-        submitted = true;
-      }
-
-      if (!submitted) {
-        throw new Error("Inspection save was not confirmed. Please try again.");
-      }
+      // RLS-aware write (see src/lib/sellCarSubmit.ts): anonymous INSERT succeeds
+      // on `error === null` even when PostgREST returns no row (anon has no SELECT
+      // visibility); partial-lead promotion is read-back confirmed and falls back
+      // to a fresh INSERT when the UPDATE matches nothing. Throws on failure.
+      await submitInspection({ supabase, record: inspectionRecord, partialLeadId, user });
 
       const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const inserted: any = { ...inspectionRecord, id: inspectionId };
