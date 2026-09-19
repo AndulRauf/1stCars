@@ -273,21 +273,34 @@ export function trackPageView(): void {
 // Seller funnel events
 // ---------------------------------------------------------------------------
 
-// Event 1 — reached the Sell Car page.
-export function trackViewSellCar(): void {
+// Seller funnel events. Each emits BOTH the canonical GA4 event name used by
+// the platform's conversion reports (sell_car_view / sell_car_start /
+// sell_car_form_submit / sell_car_lead_created) and a legacy alias so any
+// dashboards built on the older names keep counting. No PII is ever included.
+
+function sellerFunnelParams(): Record<string, string | undefined> {
   const utm = getUtmParams();
-  trackGA4("view_sell_car", {
+  return {
+    lead_type: "seller",
     page_location: window.location.href,
     page_path: window.location.pathname,
     utm_source: utm.utm_source || undefined,
     utm_medium: utm.utm_medium || undefined,
     utm_campaign: utm.utm_campaign || undefined,
     utm_content: utm.utm_content || undefined
-  });
+  };
 }
 
-// Event 2 — user starts interacting with the seller form. Fires only once per
-// session/user journey (guarded by sessionStorage so reloads don't reset it).
+// Event 1 — reached the Sell Car page (form entry).
+export function trackViewSellCar(): void {
+  const params = sellerFunnelParams();
+  trackGA4("sell_car_view", params);
+  trackGA4("view_sell_car", params);
+}
+
+// Event 2 — user starts the seller form. Fires once per session/user journey
+// (guarded by sessionStorage so reloads never reset it). The page now calls
+// this on form entry, so it aligns with "sell_car_start = form started".
 export function trackSellerFormStart(): void {
   if (typeof window === "undefined") return;
   try {
@@ -296,29 +309,26 @@ export function trackSellerFormStart(): void {
   } catch {
     /* ignore */
   }
-  const utm = getUtmParams();
-  trackGA4("seller_form_start", {
-    page_location: window.location.href,
-    utm_source: utm.utm_source || undefined,
-    utm_medium: utm.utm_medium || undefined,
-    utm_campaign: utm.utm_campaign || undefined,
-    utm_content: utm.utm_content || undefined
-  });
+  const params = sellerFunnelParams();
+  trackGA4("sell_car_start", params);
+  trackGA4("seller_form_start", params);
 }
 
-// Event 3 — MOST IMPORTANT: successful seller form submission (conversion).
-// No PII is included — only non-PII campaign/funnel info.
-export function trackSellerLeadSubmit(): void {
-  const utm = getUtmParams();
-  trackGA4("seller_lead_submit", {
-    lead_type: "seller",
-    page_location: window.location.href,
-    page_path: window.location.pathname,
-    utm_source: utm.utm_source || undefined,
-    utm_medium: utm.utm_medium || undefined,
-    utm_campaign: utm.utm_campaign || undefined,
-    utm_content: utm.utm_content || undefined
-  });
+// Event 3 — form submitted (validated, before the DB write). Aims taller than
+// lead_created so a gap between the two reveals write/reporting failures.
+export function trackSellerFormSubmit(): void {
+  const params = sellerFunnelParams();
+  trackGA4("sell_car_form_submit", params);
+  trackGA4("seller_form_submit", params);
+}
+
+// Event 4 — MOST IMPORTANT conversion: a lead row was CONFIRMED written to
+// Supabase (not just "no error"). Only fires after the insert/update returns
+// the created record. No PII included.
+export function trackSellerLeadCreated(): void {
+  const params = sellerFunnelParams();
+  trackGA4("sell_car_lead_created", params);
+  trackGA4("seller_lead_submit", params);
 }
 
 // ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { generateDerivedEmail } from "@/src/lib/utils";
-import { trackViewSellCar, trackSellerFormStart, trackSellerLeadSubmit } from "@/src/lib/analytics";
+import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -529,9 +529,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // GA4 funnel — Event 1: user reached the Sell Car page. Fires once per page load.
+  // GA4 funnel — Event 1: user reached the Sell Car page, and Event 2: form
+  // started. Both fire once per page load / session.
   React.useEffect(() => {
     trackViewSellCar();
+    trackSellerFormStart();
   }, []);
 
   // Link inspection rows submitted anonymously (seller_id NULL, before the auto
@@ -957,6 +959,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     setIsSubmitting(true);
 
+    // GA4 funnel — Event 3: the form was submitted with valid data. Fired before
+    // the DB write so a gap vs. Event 4 exposes write/reporting failures.
+    trackSellerFormSubmit();
+
     // Find RTO city name
     const rtoDetails = gujaratRTOs.find(r => r.code === selectedRTO);
     const resolvedCity = rtoDetails ? rtoDetails.city : "Gujarat";
@@ -1026,44 +1032,69 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
 
     try {
-      // If a partial lead was captured earlier, UPDATE that same row with the
-      // full inspection details; otherwise do a fresh INSERT. The fast path
-      // avoids a `.select()` round-trip on the critical path.
-      // A partial row is only captured for signed-in users (anonymous visitors have no
-      // UPDATE grant on inspections), so "partialLeadId" implies an authenticated submit.
-      const canPromotePartial = Boolean(partialLeadId && user);
-      let { error } = partialLeadId
-        ? await supabase.from("inspections").update(inspectionRecord).eq("id", partialLeadId)
-        : await supabase.from("inspections").insert([inspectionRecord]);
+      // Confirmed-write submit. Every branch requests the written row back
+      // (`.select("id")`) so we only count a lead once a real record exists. A
+      // partial row is only captured for signed-in users (anonymous visitors have
+      // no UPDATE grant on inspections), so if promoting that row matches nothing
+      // (e.g. the session vanished so RLS hides the row and PostgREST returns
+      // "no error, no row") we fall through to a fresh INSERT — never show
+      // success without a real lead.
+      let confirmedId: string | null = null;
 
-      // Schema-mismatch recovery: an older live database may be missing the
-      // optional denormalized columns. Retry with only the base columns.
-      if (error && isUnknownColumnError(error.message)) {
-        const { seller_email, notes, ...baseRecord } = inspectionRecord;
-        console.warn(
-          "Inspection write rejected an optional column — retrying with base columns only.",
-          error.message
-        );
-        ({ error } = partialLeadId
-          ? await supabase.from("inspections").update(baseRecord).eq("id", partialLeadId)
-          : await supabase.from("inspections").insert([baseRecord]));
+      if (partialLeadId) {
+        let res = await supabase
+          .from("inspections")
+          .update(inspectionRecord)
+          .eq("id", partialLeadId)
+          .select("id")
+          .maybeSingle();
+        if (res.error && isUnknownColumnError(res.error.message)) {
+          console.warn(
+            "Inspection UPDATE rejected an optional column — retrying with base columns only.",
+            res.error.message
+          );
+          const { seller_email, notes, ...baseRecord } = inspectionRecord;
+          res = await supabase
+            .from("inspections")
+            .update(baseRecord)
+            .eq("id", partialLeadId)
+            .select("id")
+            .maybeSingle();
+        }
+        if (res.error && (isRlsBlockedWrite(res.error.message) || isUnknownColumnError(res.error.message))) {
+          console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", res.error.message);
+        }
+        confirmedId = res.error ? null : res.id;
       }
 
-      if (error) {
-        if (!canPromotePartial) {
-          throw new Error(error.message || "Could not save your inspection request.");
-        }
-        // RLS / grant recovery: never fail the submission when the partial-row UPDATE
-        // was blocked (e.g. an out-of-date live DB missing the seller-update policy) —
-        // insert a fresh row so the Sell Car form always lands.
-        if (isRlsBlockedWrite(error.message) || isUnknownColumnError(error.message)) {
+      if (!confirmedId) {
+        // No partial lead, or the promotion errored / matched nothing — do a
+        // fresh INSERT so the Sell Car form always lands a real row.
+        let result = await supabase
+          .from("inspections")
+          .insert([inspectionRecord])
+          .select("id")
+          .maybeSingle();
+        if (result.error && isUnknownColumnError(result.error.message)) {
+          console.warn(
+            "Inspection insert rejected an optional column — retrying with base columns only.",
+            result.error.message
+          );
           const { seller_email, notes, ...baseRecord } = inspectionRecord;
-          console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", error.message);
-          ({ error } = await supabase.from("inspections").insert(isUnknownColumnError(error.message) ? [baseRecord] : [inspectionRecord]));
+          result = await supabase
+            .from("inspections")
+            .insert([baseRecord])
+            .select("id")
+            .maybeSingle();
         }
-        if (error) {
-          throw new Error(error.message || "Could not save your inspection request.");
+        if (result.error) {
+          throw new Error(result.error.message || "Could not save your inspection request.");
         }
+        confirmedId = result.data?.id ?? null;
+      }
+
+      if (!confirmedId) {
+        throw new Error("Inspection save did not return a record. Please try again.");
       }
 
       const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -1079,7 +1110,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         content_name: `${selectedBrand} ${selectedModel}`,
         content_category: "Sell Car / Inspection"
       });
-      trackSellerLeadSubmit();
+      // GA4 conversion (no PII) fires only after the insert was CONFIRMED.
+      trackSellerLeadCreated();
 
       // Auto sign-in so the seller lands on the Seller Dashboard — runs in the
       // background and never blocks the submission itself.

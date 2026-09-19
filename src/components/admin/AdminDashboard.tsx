@@ -100,6 +100,14 @@ export function AdminDashboard({
     return [];
   }, [salesLeads]);
 
+  // The unified "Leads & Enquiries" module = test-drive bookings (sales_notifications)
+  // + booking requests (sales_notifications) + Sell Car enquiries (inspections).
+  // The KPI counts the exact same union so the card number matches the module.
+  const customerLeads = React.useMemo(() => {
+    const sellerEnquiries = Array.isArray(inspections) ? inspections : [];
+    return leads.concat(sellerEnquiries);
+  }, [leads, inspections]);
+
   const activeAuctionsCount = auctions.filter((a) => AUCTION_OPEN_STATES.includes(a.status)).length;
   const pendingInspsCount = inspections.filter((i) => i.status === "pending").length;
   const pendingCarsCount = cars.filter((c) => String(c.status || "").toLowerCase() === "pending").length;
@@ -117,7 +125,7 @@ export function AdminDashboard({
   // Auctions → Users → Alerts → Pages); each opens the section that shows the
   // exact data the number is computed from.
   const kpiCards = [
-    { label: "Customer Leads", val: String(leads.length), desc: "Test-drive & booking enquiries", color: "bg-emerald-500/10 text-emerald-600", mod: "leads" as CMSModule, status: "all", icon: Users, series: dailyCounts(leads), change: periodChange(leads) },
+    { label: "Customer Leads", val: String(customerLeads.length), desc: `${leads.length} test-drive/booking · ${(Array.isArray(inspections) ? inspections : []).length} sell-car`, color: "bg-emerald-500/10 text-emerald-600", mod: "leads" as CMSModule, status: "all", icon: Users, series: dailyCounts(customerLeads), change: periodChange(customerLeads) },
     { label: "Inventory Value", val: `₹${(inventoryValue / 100000).toFixed(1)}L`, desc: `${cars.length} cars in catalog`, color: "bg-sky-500/10 text-sky-600", mod: "cars" as CMSModule, status: "all", icon: Car, series: carSeries, change: periodChange(cars) },
     { label: "Cars Ready to Sell", val: String(readyCarsCount), desc: pendingCarsCount > 0 ? `${pendingCarsCount} pending · ${soldCount} sold` : `${soldCount} sold this cycle`, color: pendingCarsCount > 0 ? "bg-amber-500/10 text-amber-600" : "bg-emerald-500/10 text-emerald-600", mod: "cars" as CMSModule, status: "ready", icon: CheckCircle2, series: carSeries, change: periodChange(cars) },
     { label: "Pending Evaluations", val: String(pendingInspsCount), desc: "Awaiting inspection", color: "bg-amber-500/10 text-amber-600", mod: "inspections" as CMSModule, status: "pending", icon: ClipboardList, series: dailyCounts(inspections), change: periodChange(inspections) },

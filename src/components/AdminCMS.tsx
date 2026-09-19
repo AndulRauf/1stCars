@@ -233,7 +233,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   // Unified "Leads & Enquiries" module: one sidebar entry with tabs across
   // test drive requests, booking requests and the test drives log.
-  const [leadsTab, setLeadsTab] = React.useState<"test_drive_requests" | "booking_requests" | "test_drives">("test_drive_requests");
+  const [leadsTab, setLeadsTab] = React.useState<"test_drive_requests" | "booking_requests" | "test_drives" | "seller_enquiries">("test_drive_requests");
 
   // Theme Design module holds two tabs: the brand/SEO designer and UPI payments.
   const [settingsTab, setSettingsTab] = React.useState<"theme" | "payments">("theme");
@@ -2749,7 +2749,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   const leadsCounts = {
     test_drive_requests: getModuleData("test_drive_requests").length,
     booking_requests: getModuleData("booking_requests").length,
-    test_drives: getModuleData("test_drives").length
+    test_drives: getModuleData("test_drives").length,
+    seller_enquiries: getModuleData("seller_enquiries").length
   };
 
   // The module actually being listed right now: when the unified "leads"
@@ -3651,7 +3652,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                     {([
                       ["test_drive_requests", "Test Drive Requests"],
                       ["booking_requests", "Booking Requests"],
-                      ["test_drives", "Test Drives Log"]
+                      ["test_drives", "Test Drives Log"],
+                      ["seller_enquiries", "Seller Enquiries"]
                     ] as const).map(([id, label]) => (
                       <button
                         key={id}
