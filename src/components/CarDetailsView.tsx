@@ -62,6 +62,7 @@ interface CarDetailsViewProps {
   onSaveToggle: (id: string, model: string) => void;
   onNavigateToSalesPortal: () => void;
   onNavigateToDashboard?: (profile?: Profile) => void;
+  mobileMenuOpen?: boolean;
 }
 
 export function CarDetailsView({
@@ -72,6 +73,7 @@ export function CarDetailsView({
   onSaveToggle,
   onNavigateToSalesPortal,
   onNavigateToDashboard,
+  mobileMenuOpen = false,
 }: CarDetailsViewProps) {
   const { cars: catalogCars } = useCatalogCars();
 
@@ -1029,7 +1031,9 @@ export function CarDetailsView({
       />
 
       {/* Mobile sticky action bar — Book Test Drive / Reserve Now stay reachable
-          without scrolling back up */}
+          without scrolling back up. Hidden while the mobile menu is open so the
+          bar never overlaps the drawer's bottom actions. */}
+      {!mobileMenuOpen && (
       <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
         <div className="flex items-center gap-2.5">
           <Button
@@ -1046,6 +1050,7 @@ export function CarDetailsView({
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 }

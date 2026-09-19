@@ -913,6 +913,7 @@ export default function App() {
             if (profile) setCurrentUser(profile);
             handleNavigate("role_dashboards");
           }}
+          mobileMenuOpen={isMobileMenuOpen}
         />
       ) : currentView === "sales_dashboard" ? (
         <SalesDashboardView
