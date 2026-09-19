@@ -58,20 +58,18 @@ export function Sidebar({
         try { return JSON.parse(stored); } catch (e) { /* ignore */ }
       }
     }
-    // Default only Overview expanded; the rest stay collapsed so the sidebar
+    // Default only Dashboard expanded; the rest stay collapsed so the sidebar
     // stays compact and the module list is easy to scan.
     return {
-      "Overview": true,
-      "CRM & Leads": false,
-      "Cars": false,
-      "Inspections": false,
+      "Dashboard": true,
+      "Leads & Customers": false,
+      "Cars & Inventory": false,
       "Auctions": false,
-      "Buyers": false,
-      "Sellers": false,
+      "Sales & Purchase": false,
+      "Inspections & Operations": false,
       "Dealers": false,
-      "Orders / Payments": false,
-      "Users / Staff": false,
-      "Content / FAQ": false,
+      "Users & Team": false,
+      "Analytics": false,
       "Settings": false
     };
   });

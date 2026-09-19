@@ -40,34 +40,28 @@ export const READY_CAR_STATUSES = ["available", "listed", "inspection_completed"
 
 export const ADMIN_NAV_SECTIONS: NavSection[] = [
   {
-    title: "Overview",
+    title: "Dashboard",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-      { id: "reports", label: "Reports & Analytics", icon: TrendingUp },
-      { id: "automation", label: "Automation Center", icon: Zap }
+      { id: "dashboard", label: "Dashboard", icon: BarChart3 }
     ]
   },
   {
-    title: "CRM & Leads",
+    title: "Leads & Customers",
     items: [
       { id: "leads", label: "Leads & Enquiries", icon: Inbox },
-      { id: "crm_activities", label: "CRM Activity Log", icon: ClipboardEdit },
-      { id: "career_applications", label: "Job Applications", icon: Briefcase }
+      { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
+      { id: "sell_form", label: "Sell Form & Brands", icon: ClipboardEdit },
+      { id: "crm_activities", label: "CRM Activity Log", icon: ClipboardList },
+      { id: "users", label: "Buyer Customers", icon: Users, deepFilter: "Buyer" },
+      { id: "users", label: "Seller Customers", icon: UserCheck, deepFilter: "Seller" }
     ]
   },
   {
-    title: "Cars",
+    title: "Cars & Inventory",
     items: [
       { id: "cars", label: "Cars Catalog", icon: Car },
       { id: "brands", label: "Brands & Models", icon: Award },
       { id: "cities", label: "Cities", icon: MapPin }
-    ]
-  },
-  {
-    title: "Inspections",
-    items: [
-      { id: "inspections", label: "120-Pt Inspections", icon: ClipboardList },
-      { id: "certifications", label: "1st Mark Certification", icon: Sparkles }
     ]
   },
   {
@@ -77,17 +71,19 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     ]
   },
   {
-    title: "Buyers",
+    title: "Sales & Purchase",
     items: [
-      { id: "users", label: "Buyer Customers", icon: Users, deepFilter: "Buyer" }
+      { id: "purchases", label: "Purchases & Orders", icon: QrCode },
+      { id: "finance", label: "Finance", icon: DollarSign },
+      { id: "expenses", label: "Ledger", icon: FileText }
     ]
   },
   {
-    title: "Sellers",
+    title: "Inspections & Operations",
     items: [
-      { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
-      { id: "sell_form", label: "Sell Form & Brands", icon: ClipboardEdit },
-      { id: "users", label: "Seller Customers", icon: UserCheck, deepFilter: "Seller" }
+      { id: "inspections", label: "120-Pt Inspections", icon: ClipboardList },
+      { id: "certifications", label: "1st Mark Certification", icon: Sparkles },
+      { id: "inspectors", label: "Inspectors", icon: Shield }
     ]
   },
   {
@@ -97,39 +93,62 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     ]
   },
   {
-    title: "Orders / Payments",
-    items: [
-      { id: "purchases", label: "Purchases & Orders", icon: QrCode },
-      { id: "finance", label: "Finance", icon: DollarSign },
-      { id: "expenses", label: "Ledger", icon: FileText }
-    ]
-  },
-  {
-    title: "Users / Staff",
+    title: "Users & Team",
     items: [
       { id: "users", label: "Users & Staff", icon: Users },
-      { id: "inspectors", label: "Inspectors", icon: Shield },
-      { id: "sales", label: "Sales Associates", icon: UserCheck }
+      { id: "sales", label: "Sales Associates", icon: UserCheck },
+      { id: "career_applications", label: "Job Applications", icon: Briefcase }
     ]
   },
   {
-    title: "Content / FAQ",
+    title: "Analytics",
     items: [
-      { id: "pages", label: "Edit Pages", icon: BookOpen },
-      { id: "faqs", label: "FAQs", icon: HelpCircle },
-      { id: "testimonials", label: "Reviews", icon: Star },
-      { id: "footer_links", label: "Footer Links", icon: Link },
-      { id: "text_editor", label: "Text Editor", icon: Edit3 }
+      { id: "reports", label: "Reports & Analytics", icon: TrendingUp },
+      { id: "automation", label: "Automation Center", icon: Zap }
     ]
   },
   {
     title: "Settings",
     items: [
       { id: "settings", label: "Theme & Payment Settings", icon: Palette },
+      { id: "pages", label: "Edit Pages", icon: BookOpen },
+      { id: "faqs", label: "FAQs", icon: HelpCircle },
+      { id: "testimonials", label: "Reviews", icon: Star },
+      { id: "footer_links", label: "Footer Links", icon: Link },
+      { id: "text_editor", label: "Text Editor", icon: Edit3 },
       { id: "notifications", label: "System Alerts", icon: Bell }
     ]
   }
 ];
+
+// Friendlier display titles for list-page headers — used by the generic CRUD
+// table so pages read "Manage Cars Catalog" instead of raw module keys.
+export const MODULE_TITLES: Record<string, string> = {
+  cars: "Cars Catalog",
+  users: "Users & Staff",
+  leads: "Leads & Enquiries",
+  test_drive_requests: "Test Drive Requests",
+  booking_requests: "Booking Requests",
+  seller_enquiries: "Seller Enquiries",
+  test_drives: "Test Drives Log",
+  dealers: "Dealers & Approvals",
+  inspectors: "Inspectors",
+  sales: "Sales Associates",
+  purchases: "Purchases & Orders",
+  crm_activities: "CRM Activity Log",
+  inspections: "120-Pt Inspections",
+  brands: "Brands & Models",
+  cities: "Cities",
+  faqs: "FAQs",
+  testimonials: "Reviews",
+  finance: "Finance Partners",
+  notifications: "System Alerts",
+  expenses: "Expense Ledger",
+  pages: "Edit Pages",
+  footer_links: "Footer Links",
+  career_applications: "Job Applications",
+  staff: "Staff"
+};
 
 // Is a sidebar item the active one? Filter-aware so that deep-filtered entries
 // (e.g. "Buyer Customers" = users + Role: Buyer) highlight only when their
@@ -158,5 +177,5 @@ export function getSectionAndItemForModule(moduleKey: CMSModule, activeFilter?: 
       }
     }
   }
-  return fallback || { sectionTitle: "Overview", itemLabel: "Dashboard", itemIcon: BarChart3 };
+  return fallback || { sectionTitle: "Dashboard", itemLabel: "Dashboard", itemIcon: BarChart3 };
 }

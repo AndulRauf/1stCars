@@ -1,7 +1,8 @@
 import * as React from "react";
 import { 
   Gavel, ClipboardList, Users, Car, UserCheck, Bell, BookOpen,
-  Plus, CheckCircle2, TrendingUp, TrendingDown, Minus, BarChart3
+  Plus, CheckCircle2, TrendingUp, TrendingDown, Minus, BarChart3,
+  ShieldCheck, Activity, FileText, HandCoins
 } from "lucide-react";
 import { CMSModule, READY_CAR_STATUSES } from "./adminNavData";
 import { getAnalyticsDiagnostics } from "@/src/lib/analytics";
@@ -17,6 +18,7 @@ interface AdminDashboardProps {
   pages: any[];
   salesLeads: any[];
   expenses: any[];
+  dealers: any[];
   onNavigate: (mod: CMSModule, status?: string, openAdd?: boolean) => void;
 }
 
@@ -75,6 +77,16 @@ function TrendChip({ change }: { change: number | null }) {
   );
 }
 
+// Compact "x time ago" for the recent-activity feed.
+function timeAgo(ts: number): string {
+  if (!ts || isNaN(ts)) return "";
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
 export function AdminDashboard({
   cars,
   users,
@@ -84,6 +96,7 @@ export function AdminDashboard({
   pages,
   salesLeads,
   expenses,
+  dealers,
   onNavigate
 }: AdminDashboardProps) {
   // CRM leads fall back to the legacy localStorage list (matches the lead
@@ -135,6 +148,99 @@ export function AdminDashboard({
     { label: "Live Pages", val: String(livePages.length), desc: hiddenPagesCount > 0 ? `${hiddenPagesCount} hidden page${hiddenPagesCount === 1 ? "" : "s"}` : "Custom CMS pages", color: "bg-teal-500/10 text-teal-600", mod: "pages" as CMSModule, status: "all", icon: BookOpen, series: [], change: null }
   ];
 
+  // -------------------------------------------------------------------------
+  // Pending Actions — actionable items requiring operator attention. Each row
+  // deep-links into the exact filtered list that holds the counted records.
+  // -------------------------------------------------------------------------
+  const unapprovedDealers = (Array.isArray(dealers) ? dealers : []).filter(
+    (d) => !d.is_approved && String(d.status || "").toLowerCase() !== "approved"
+  ).length;
+  const unassignedLeads = customerLeads.filter(
+    (l) => !l.assigned_to && String(l.status || "").toLowerCase() !== "completed"
+  ).length;
+
+  const pendingActions = [
+    {
+      key: "cars",
+      label: "Pending Car Approvals",
+      val: pendingCarsCount,
+      desc: pendingCarsCount > 0 ? "Cars awaiting publish" : "All caught up",
+      icon: Car,
+      tone: pendingCarsCount > 0 ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
+      mod: "cars" as CMSModule,
+      status: "pending",
+      needsAttention: pendingCarsCount > 0
+    },
+    {
+      key: "inspections",
+      label: "Pending Evaluations",
+      val: pendingInspsCount,
+      desc: pendingInspsCount > 0 ? "Schedule inspectors" : "No queue",
+      icon: ClipboardList,
+      tone: pendingInspsCount > 0 ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
+      mod: "inspections" as CMSModule,
+      status: "pending",
+      needsAttention: pendingInspsCount > 0
+    },
+    {
+      key: "dealers",
+      label: "Dealer Approvals",
+      val: unapprovedDealers,
+      desc: unapprovedDealers > 0 ? "Verify & approve dealers" : "All verified",
+      icon: ShieldCheck,
+      tone: unapprovedDealers > 0 ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
+      mod: "dealers" as CMSModule,
+      status: "all",
+      needsAttention: unapprovedDealers > 0
+    },
+    {
+      key: "leads",
+      label: "Unassigned Leads",
+      val: unassignedLeads,
+      desc: unassignedLeads > 0 ? "Assign a sales associate" : "All assigned",
+      icon: Users,
+      tone: unassignedLeads > 0 ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
+      mod: "leads" as CMSModule,
+      status: "all",
+      needsAttention: unassignedLeads > 0
+    },
+    {
+      key: "notifications",
+      label: "Unread Alerts",
+      val: totalUnreadAlerts,
+      desc: totalUnreadAlerts > 0 ? "Review notification ledger" : "Inbox clear",
+      icon: Bell,
+      tone: totalUnreadAlerts > 0 ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
+      mod: "notifications" as CMSModule,
+      status: "unread",
+      needsAttention: totalUnreadAlerts > 0
+    }
+  ] as const;
+
+  const totalPending = pendingActions.reduce((s, a) => s + a.val, 0);
+
+  // -------------------------------------------------------------------------
+  // Recent Activity — the newest touchpoints across modules, merged by
+  // timestamp. Each row deep-links into its source module.
+  // -------------------------------------------------------------------------
+  const recentActivity = React.useMemo(() => {
+    const entries: { ts: number; label: string; sub: string; mod: CMSModule; status: string; icon: any; tone: string }[] = [];
+    const add = (mod: CMSModule, status: string, ts: unknown, label: string, sub: string, icon: any, tone: string) => {
+      const t = ts ? new Date(ts as string).getTime() : NaN;
+      if (!t || isNaN(t)) return;
+      entries.push({ ts: t, label, sub, mod, status, icon, tone });
+    };
+
+    cars.slice(0, 12).forEach((c) => add("cars", "all", c.created_at, `${c.brand} ${c.model} (${c.year})`, `Car · ${String(c.status || "available").toUpperCase()}`, Car, "bg-emerald-500/10 text-emerald-600"));
+    inspections.slice(0, 12).forEach((i) => add("inspections", "all", i.created_at, `${i.brand} ${i.model || ""} (${i.year || "—"})`.trim(), `Inspection · ${i.seller_name || "Seller"}`, ClipboardList, "bg-indigo-500/10 text-indigo-600"));
+    customerLeads.slice(0, 12).forEach((l) => add("leads", "all", l.created_at, l.name || l.customer_name || l.seller_name || "Enquiry", `Lead · ${l.mobile || l.seller_mobile || "New"}`, Users, "bg-sky-500/10 text-sky-600"));
+    users.slice(0, 12).forEach((u) => add("users", "all", u.created_at, u.name || u.full_name || u.email, `User · ${u.role || "Buyer"}`, UserCheck, "bg-violet-500/10 text-violet-600"));
+    expenses.slice(0, 12).forEach((e) => add("expenses", "all", e.created_at || e.date, e.title, `Expense · ₹${(Number(e.amount) || 0).toLocaleString("en-IN")}`, FileText, "bg-rose-500/10 text-rose-600"));
+    notifications.slice(0, 12).forEach((n) => add("notifications", "all", n.created_at, n.title || n.message || "Alert", `Alert · ${n.is_read ? "Read" : "Unread"}`, Bell, "bg-orange-500/10 text-orange-600"));
+
+    return entries.sort((a, b) => b.ts - a.ts).slice(0, 7);
+  }, [cars, inspections, customerLeads, users, expenses, notifications]);
+
   const quickActions = [
     { label: "Add New Car", icon: Plus, mod: "cars" as CMSModule, status: "all", openAdd: true, tone: "bg-[#2E7D32] text-white hover:bg-[#25632a]" },
     { label: "Approve Pending", icon: CheckCircle2, mod: "cars" as CMSModule, status: "pending", openAdd: false, tone: "bg-[#ff5a07] text-white hover:bg-[#e04e00]" },
@@ -173,7 +279,7 @@ export function AdminDashboard({
       {/* KPI grid */}
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
-          Key Metrics — tap any card to open the underlying records
+          Business Overview — tap any card to open the underlying records
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {kpiCards.map((card, i) => (
@@ -203,6 +309,36 @@ export function AdminDashboard({
         </div>
       </div>
 
+      {/* Pending Actions strip */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2 flex items-center gap-1.5">
+          <Activity className="h-3.5 w-3.5 text-[#ff5a07]" /> Pending Actions
+          {totalPending > 0 && (
+            <span className="bg-[#ff5a07]/10 text-[#ff5a07] border border-[#ff5a07]/30 px-1.5 py-0.5 rounded-md text-[9px] font-black">
+              {totalPending} need{totalPending === 1 ? "s" : ""} attention
+            </span>
+          )}
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2">
+          {pendingActions.map((action) => (
+            <button
+              key={action.key}
+              onClick={() => onNavigate(action.mod, action.status)}
+              className={`group border rounded-2xl px-3.5 py-3 shadow-xs cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 text-left flex flex-col gap-1.5 ${action.tone}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <action.icon className="h-4 w-4 shrink-0" />
+                <span className="text-lg font-black leading-none">{action.val}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-widest truncate">{action.label}</p>
+                <p className="text-[10px] font-medium opacity-80 truncate mt-0.5">{action.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Analytics health banner */}
       <div className={`border rounded-2xl px-4 py-3 text-[11px] font-bold flex items-start gap-2.5 ${ga4Tone}`}>
         <BarChart3 className="h-4 w-4 shrink-0 mt-0.5" />
@@ -222,6 +358,37 @@ export function AdminDashboard({
           )}
         </div>
       </div>
+
+      {/* Recent Activity feed */}
+      {recentActivity.length > 0 && (
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
+            Recent Activity — latest across all modules
+          </p>
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm divide-y divide-slate-50">
+            {recentActivity.map((entry, i) => (
+              <button
+                key={i}
+                onClick={() => onNavigate(entry.mod, entry.status)}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 hover:bg-[#FAF9F6]/70 transition-colors cursor-pointer text-left group"
+              >
+                <span className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${entry.tone}`}>
+                  <entry.icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-black text-slate-800 truncate group-hover:text-[#2E7D32] transition-colors">
+                    {entry.label}
+                  </span>
+                  <span className="block text-[10px] font-bold text-slate-400 truncate">{entry.sub}</span>
+                </span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">
+                  {timeAgo(entry.ts)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sparse data hint */}
       {cars.length === 0 && leads.length === 0 && (

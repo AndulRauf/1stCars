@@ -30,7 +30,7 @@ import { CRM } from "./admin/CRM";
 import { BulkActionsBar } from "./admin/BulkActionsBar";
 import { AutomationControlCenter } from "./admin/AutomationControlCenter";
 import { automationService } from "@/src/lib/automation";
-import { CMSModule, READY_CAR_STATUSES } from "./admin/adminNavData";
+import { CMSModule, MODULE_TITLES, READY_CAR_STATUSES } from "./admin/adminNavData";
 import { PageEditor } from "./admin/PageEditor";
 import { PAGE_CONTENT_DEFAULTS, normalizeWebsiteSettings } from "@/src/lib/pageContentDefaults";
 import { AdminAuctions } from "./auctions/AdminAuctions";
@@ -2952,6 +2952,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 pages={pages}
                 salesLeads={salesLeads}
                 expenses={expenses}
+                dealers={dealers}
                 onNavigate={handleNavigateToModule}
               />
             </div>
@@ -3674,7 +3675,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 </>
               ) : (
                 <>
-                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {currentListModule === "career_applications" ? "Job Applications" : currentListModule}</h3>
+                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">Manage {MODULE_TITLES[currentListModule] || currentListModule}</h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Database search, structural filters, pagination & image upload tools</p>
                 </>
               )}
