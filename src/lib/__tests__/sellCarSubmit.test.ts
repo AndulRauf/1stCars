@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { submitInspection, isUnknownColumnError } from "@/src/lib/sellCarSubmit";
+import { submitInspection, isUnknownColumnError, isRlsBlockedWrite } from "@/src/lib/sellCarSubmit";
 
 // ============================================================
 // SELL CAR INSPECTION SUBMIT — RLS regression tests
@@ -152,9 +152,12 @@ describe("submitInspection — stale schema-cache recovery", () => {
     expect(seen[1][0]).not.toHaveProperty("notes");
   });
 
-  it("still flags unknown columns / RLS-blocked writes via the exported helpers", () => {
+  it("flags unknown columns and RLS-blocked writes via the exported helpers", () => {
     expect(isUnknownColumnError("PGRST204 could not find column")).toBe(true);
     expect(isUnknownColumnError("schema cache")).toBe(true);
     expect(isUnknownColumnError("random error")).toBe(false);
+    expect(isRlsBlockedWrite("permission denied for table inspections")).toBe(true);
+    expect(isRlsBlockedWrite('new row violates row-level security policy')).toBe(true);
+    expect(isRlsBlockedWrite("random error")).toBe(false);
   });
 });

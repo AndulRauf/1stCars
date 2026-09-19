@@ -269,10 +269,6 @@ export function trackPageView(): void {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Seller funnel events
-// ---------------------------------------------------------------------------
-
 // Seller funnel events. Each emits BOTH the canonical GA4 event name used by
 // the platform's conversion reports (sell_car_view / sell_car_start /
 // sell_car_form_submit / sell_car_lead_created) and a legacy alias so any
@@ -322,9 +318,9 @@ export function trackSellerFormSubmit(): void {
   trackGA4("seller_form_submit", params);
 }
 
-// Event 4 — MOST IMPORTANT conversion: a lead row was CONFIRMED written to
-// Supabase (not just "no error"). Only fires after the insert/update returns
-// the created record. No PII included.
+// Event 4 — MOST IMPORTANT conversion: the lead write was CONFIRMED. For anon
+// visitors `error === null` is confirmation (PostgREST may return no row under
+// RLS); for a signed-in promotion the updated row comes back. No PII included.
 export function trackSellerLeadCreated(): void {
   const params = sellerFunnelParams();
   trackGA4("sell_car_lead_created", params);

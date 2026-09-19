@@ -1025,7 +1025,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         content_name: `${selectedBrand} ${selectedModel}`,
         content_category: "Sell Car / Inspection"
       });
-      // GA4 conversion (no PII) fires only after the insert was CONFIRMED.
+      // GA4 conversion (no PII) fires only after the write was confirmed.
       trackSellerLeadCreated();
 
       // Auto sign-in so the seller lands on the Seller Dashboard — runs in the
