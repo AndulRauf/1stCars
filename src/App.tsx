@@ -971,6 +971,9 @@ export default function App() {
             onNavigateToSell={() => {
               handleNavigate("sell_car");
             }}
+            onViewCar={(id) => {
+              handleNavigate("car_details", { carId: id });
+            }}
             onReloadAllData={loadSettingsAndCMSData}
           />
         ) : (

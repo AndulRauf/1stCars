@@ -101,15 +101,25 @@ interface OrderRow {
   price?: number;
 }
 
+// Shared Indian-formatting for buyer money figures (matches CarCard / CarDetails).
+const inrFormat = (n: number) =>
+  new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+
+// Test-drive status chip labels (state values are lowercase engine statuses).
+const tdStatusLabel = (s: string) =>
+  !s || s === "scheduled" || s === "Approved" ? "Scheduled" :
+  s === "cancelled" ? "Cancelled" : s;
+
 interface RoleDashboardsProps {
   currentUser: Profile;
   onLogout: () => void;
   onNavigateToInventory: () => void;
   onNavigateToSell?: () => void;
+  onViewCar?: (id: string) => void;
   onReloadAllData?: () => void;
 }
 
-export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onNavigateToSell, onReloadAllData }: RoleDashboardsProps) {
+export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onNavigateToSell, onViewCar, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
   // Tracks whether the dashboard has rendered data at least once, so the full
@@ -186,6 +196,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   // high-stakes and immediate, so gate it behind an explicit confirm dialog.
   const [confirmOffer, setConfirmOffer] = React.useState<{ offer: Offer; action: "accepted" | "rejected" } | null>(null);
 
+  // Buyer test-drive cancellation confirmation — same principle: releasing a
+  // booked appointment is immediate, so ask before doing it.
+  const [confirmCancelTd, setConfirmCancelTd] = React.useState<any | null>(null);
+
   // Sell-form-style catalog (brands/models/variants) shared with the admin
   // editor so Sales Associates upload with the exact same choices.
   const sellCatalog = React.useMemo<SellCatalog>(() => {
@@ -201,6 +215,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [savedCars, setSavedCars] = React.useState<string[]>([]);
   const [testDrives, setTestDrives] = React.useState<any[]>([]);
   const [orders, setOrders] = React.useState<OrderRow[]>([]);
+
+  // Buyer test-drive split: upcoming/scheduled rows vs. cancelled history
+  // (cancelled slots are kept for the record instead of being dropped).
+  const activeTestDrives = testDrives.filter((td: any) => td.status !== "cancelled");
+  const cancelledTestDrives = testDrives.filter((td: any) => td.status === "cancelled");
 
   // Real-time alerts feed hook
   const { notifications: userNotifs, unreadCount, markRead, markAllRead } = useNotifications(currentUser?.id);
@@ -283,7 +302,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   (l: any) =>
                     normMobile(l.mobile) === myMobile &&
                     (l.type === "test_drive" || l.type === "buy_now") &&
-                    String(l.status || "") !== "cancelled"
+                    // Keep cancelled test drives (shown as history); drop
+                    // cancelled buy-now rows from wallet/orders entirely.
+                    (l.type === "test_drive" || String(l.status || "") !== "cancelled")
                 )
               : [];
             tdList = mine.filter((l: any) => l.type === "test_drive").map(testDriveFromLead);
@@ -314,7 +335,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     reloadAllData();
     // Default sub-tab based on role
     switch (currentUser.role) {
-      case "Buyer": setActiveTab("saved_cars"); break;
+      case "Buyer": setActiveTab("overview"); break;
       case "Seller": setActiveTab("overview"); break;
       case "Dealer": setActiveTab("auctions"); break;
       case "Inspector": setActiveTab("assigned"); break;
@@ -341,18 +362,22 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     return () => window.clearInterval(poll);
   }, [currentUser.role, activeTab]);
 
-  // Handle Buyer: Cancel Test Drive — removes the slot locally and, for
-  // Supabase-sourced bookings, marks the lead cancelled on the server when RLS
-  // allows it (public/saved_cars.sql); staff-restricted DBs keep the local
-  // removal and never throw.
+  // Handle Buyer: Cancel Test Drive — gates the action behind a confirmation
+  // and keeps the row as "cancelled" history instead of deleting it. For
+  // Supabase-sourced bookings the lead is also marked cancelled on the server
+  // when RLS allows it (public/saved_cars.sql); staff-restricted DBs keep the
+  // local update and never throw.
   const handleCancelTestDrive = (id: string) => {
-    const updated = testDrives.filter(td => td.id !== id);
-    setTestDrives(updated);
+    setTestDrives(prev =>
+      prev.map((td: any) => (td.id === id ? { ...td, status: "cancelled" } : td))
+    );
     try {
-      // Remove only this cancelled slot from the device-wide cache — the state
-      // is buyer-scoped, so persisting it back wholesale would wipe other
+      // Mark only this slot cancelled in the device-wide cache — the state is
+      // buyer-scoped, so persisting it back wholesale would wipe other
       // buyers' bookings made on this browser.
-      const fullLocal = safeParseLocalArray("1stcars_test_drives").filter(td => td.id !== id);
+      const fullLocal = safeParseLocalArray("1stcars_test_drives").map((td: any) =>
+        td.id === id ? { ...td, status: "cancelled" } : td
+      );
       localStorage.setItem("1stcars_test_drives", JSON.stringify(fullLocal));
     } catch {
       /* non-fatal */
@@ -677,7 +702,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               Welcome back, <span className="text-[#2E7D32]">{currentUser.name}</span>
             </h1>
             <p className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-              📍 Location: <strong className="text-slate-800">{currentUser.city}</strong>
+              <MapPin className="h-3.5 w-3.5 text-slate-400" /> Location: <strong className="text-slate-800">{currentUser.city}</strong>
             </p>
           </div>
 
@@ -727,9 +752,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {currentUser.role === "Buyer" && (
                   <>
                     {[
-                      { id: "saved_cars", label: "Saved Cars Collection", icon: Heart },
-                      { id: "test_drives", label: "My Test Drive Bookings", icon: Calendar },
-                      { id: "orders", label: "Active Orders & Deposits", icon: CreditCard }
+                      { id: "overview", label: "Overview", icon: LayoutDashboard },
+                      { id: "saved_cars", label: "Saved Cars Collection", icon: Heart, count: savedCars.length },
+                      { id: "test_drives", label: "My Test Drive Bookings", icon: Calendar, count: activeTestDrives.length },
+                      { id: "orders", label: "Active Orders & Deposits", icon: CreditCard, count: orders.length }
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -742,6 +768,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         <tab.icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {((tab as any).count || 0) > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                            {(tab as any).count}
+                          </span>
+                        )}
                         {activeTab !== tab.id && (
                           <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
                         )}
@@ -771,9 +802,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         <tab.icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 whitespace-nowrap">{tab.label}</span>
-                        {(tab.count || 0) > 0 && (
+                        {((tab as any).count || 0) > 0 && (
                           <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
-                            {tab.count}
+                            {(tab as any).count}
                           </span>
                         )}
                         {activeTab !== tab.id && (
@@ -802,6 +833,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         <tab.icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {((tab as any).count || 0) > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                            {(tab as any).count}
+                          </span>
+                        )}
                         {activeTab !== tab.id && (
                           <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
                         )}
@@ -827,6 +863,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         <tab.icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {((tab as any).count || 0) > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                            {(tab as any).count}
+                          </span>
+                        )}
                         {activeTab !== tab.id && (
                           <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
                         )}
@@ -860,6 +901,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         <tab.icon className="h-4.5 w-4.5 shrink-0" />
                         <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {((tab as any).count || 0) > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                            {(tab as any).count}
+                          </span>
+                        )}
                         {activeTab !== tab.id && (
                           <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
                         )}
@@ -891,6 +937,92 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   1. BUYER DASHBOARD TABS 
                   ======================================================= */}
               
+              {/* Buyer Overview — KPI hub that links into the buyer tabs */}
+              {currentUser.role === "Buyer" && activeTab === "overview" && (
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+                  <div className="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-black text-xl text-slate-900 tracking-tight">Your Buying Overview</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Saved cars, upcoming test drives and active deposits at a glance.</p>
+                    </div>
+                    <Button
+                      onClick={onNavigateToInventory}
+                      className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-10 px-4 rounded-xl shrink-0 flex items-center gap-1.5"
+                    >
+                      <Car className="h-4 w-4" /> Browse Inventory
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <button
+                      onClick={() => setActiveTab("saved_cars")}
+                      className="text-left bg-white border border-slate-100 hover:border-rose-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Heart className="h-5 w-5 text-rose-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{savedCars.length}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Saved Cars</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Vehicles you've favourited</p>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("test_drives")}
+                      className="text-left bg-white border border-slate-100 hover:border-emerald-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Calendar className="h-5 w-5 text-emerald-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{activeTestDrives.length}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Test Drives</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Upcoming appointments scheduled</p>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("orders")}
+                      className="text-left bg-white border border-slate-100 hover:border-amber-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <CreditCard className="h-5 w-5 text-amber-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{orders.length}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Deposits & Bookings</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Escrow-secured transactions</p>
+                    </button>
+                  </div>
+
+                  {savedCars.length === 0 && activeTestDrives.length === 0 && orders.length === 0 && (
+                    <div className="p-4 sm:p-5 bg-[#FAF9F6] border border-dashed border-slate-200 rounded-2xl text-center space-y-1.5">
+                      <Car className="h-9 w-9 text-[#2E7D32] mx-auto" />
+                      <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Your buying journey starts here</p>
+                      <p className="text-[11px] text-slate-400 font-semibold">Save cars you like, book a test drive, and put a token down securely.</p>
+                      <Button
+                        onClick={onNavigateToInventory}
+                        className="mt-2 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-9 px-4 rounded-xl"
+                      >
+                        <Car className="h-3.5 w-3.5 mr-1.5" /> Browse Cars
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[
+                      { label: "See My Saved Cars", target: "saved_cars" },
+                      { label: "See Test Drives", target: "test_drives" },
+                      { label: "See Deposits", target: "orders" }
+                    ].map((q) => (
+                      <button
+                        key={q.target}
+                        onClick={() => setActiveTab(q.target)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 text-slate-600 hover:border-[#2E7D32]/40 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        <ArrowRight className="h-3 w-3" /> {q.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Saved Cars Collection */}
               {currentUser.role === "Buyer" && activeTab === "saved_cars" && (
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
@@ -901,25 +1033,38 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
                   {savedCars.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {catalogCars.filter(car => savedCars.includes(car.id)).map(car => (
-                        <div key={car.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex justify-between items-center">
-                          <div className="space-y-1">
+                      {catalogCars.filter(car => savedCars.includes(car.id)).map(car => {
+                        const firstImage = Array.isArray(car.images) && car.images.length ? car.images[0] : car.image_url;
+                        return (
+                        <div key={car.id} className="border border-slate-100 rounded-2xl p-3 bg-[#FAF9F6] flex items-center gap-3">
+                          {firstImage ? (
+                            <img
+                              src={firstImage}
+                              alt={`${car.brand} ${car.model}`}
+                              className="h-24 w-28 rounded-xl object-cover bg-slate-100 shrink-0"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="h-24 w-28 rounded-xl bg-[#2E7D32]/5 border border-[#2E7D32]/10 flex items-center justify-center shrink-0">
+                              <Car className="h-6 w-6 text-[#2E7D32]/40" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0 space-y-1">
                             <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">{car.brand}</span>
-                            <h4 className="font-black text-slate-900 text-sm leading-none">{car.model}</h4>
+                            <h4 className="font-black text-slate-900 text-sm leading-none truncate">{car.model}</h4>
                             <p className="text-[10px] text-slate-400 font-semibold">{car.year} • {car.fuel} • {car.transmission}</p>
+                            <div className="text-sm font-black text-slate-900 pt-1">₹{inrFormat(car.price)}</div>
                           </div>
-                          <div className="text-right space-y-1">
-                            <div className="text-sm font-black text-slate-900">₹{(car.price * 80).toLocaleString()}</div>
-                            <Button 
-                              onClick={onNavigateToInventory}
-                              size="sm"
-                              className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 px-3 rounded-lg"
-                            >
-                              Details
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() => (onViewCar ? onViewCar(car.id) : onNavigateToInventory())}
+                            size="sm"
+                            className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-8 px-3 rounded-lg shrink-0"
+                          >
+                            Details
+                          </Button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
@@ -945,13 +1090,13 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <p className="text-xs text-slate-400 mt-0.5">Track your upcoming appointments with concierge associates.</p>
                   </div>
 
-                  {testDrives.length > 0 ? (
+                  {activeTestDrives.length > 0 ? (
                     <div className="space-y-3">
-                      {testDrives.map((td: any) => (
+                      {activeTestDrives.map((td: any) => (
                         <div key={td.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                           <div className="space-y-1">
                             <span className="bg-emerald-50 text-[#2E7D32] border border-emerald-200 px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-black inline-block">
-                              Status: {td.status || "Approved"}
+                              Status: {tdStatusLabel(td.status)}
                             </span>
                             <h4 className="font-black text-slate-900 text-sm">{td.car_title || td.vehicle || `${td.car_brand || ''} ${td.car_model || 'Car'}`}</h4>
                             <p className="text-[10px] text-slate-400 font-semibold">Appointment: {td.date || td.preferred_date} @ {td.time || td.preferred_time}</p>
@@ -959,7 +1104,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleCancelTestDrive(td.id)}
+                            onClick={() => setConfirmCancelTd(td)}
                             className="border-rose-100 hover:bg-rose-50 text-rose-600 font-bold text-[9px] uppercase tracking-wider h-8 rounded-lg"
                           >
                             Cancel Slot
@@ -978,6 +1123,31 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       >
                         Request virtual tour or test drive on details screen
                       </Button>
+                    </div>
+                  )}
+
+                  {cancelledTestDrives.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Cancelled earlier</p>
+                      {cancelledTestDrives.map((td: any) => (
+                        <div key={td.id} className="border border-slate-100 rounded-2xl p-3 bg-slate-50/60 flex flex-col sm:flex-row justify-between sm:items-center gap-2 opacity-75">
+                          <div className="space-y-0.5">
+                            <span className="bg-rose-50 text-rose-500 border border-rose-100 px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-black inline-block">
+                              Cancelled
+                            </span>
+                            <h4 className="font-black text-slate-700 text-sm">{td.car_title || td.vehicle || `${td.car_brand || ''} ${td.car_model || 'Car'}`}</h4>
+                            <p className="text-[10px] text-slate-400 font-semibold">Was scheduled: {td.date || td.preferred_date} @ {td.time || td.preferred_time}</p>
+                          </div>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={onNavigateToInventory}
+                            className="text-[#2E7D32] text-[10px] font-black uppercase tracking-wider h-8"
+                          >
+                            Rebook
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1004,7 +1174,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                           </div>
                           <div className="text-right">
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount Paid</p>
-                            <p className="text-base font-black text-slate-900">₹{Number(ord.price || 0).toLocaleString()}</p>
+                            <p className="text-base font-black text-slate-900">₹{inrFormat(Number(ord.price || 0))}</p>
                           </div>
                         </div>
                       ))}
@@ -1013,6 +1183,13 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
                       <CreditCard className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                       <p className="text-xs text-slate-500 font-bold">No active transactions.</p>
+                      <Button
+                        variant="link"
+                        onClick={onNavigateToInventory}
+                        className="text-[#2E7D32] text-xs font-black uppercase tracking-wider mt-1"
+                      >
+                        Browse cars to book
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1791,6 +1968,48 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </div>
           );
         })()}
+
+        {/* Buyer test-drive cancellation confirmation */}
+        {!!confirmCancelTd && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="font-black text-lg text-slate-900">Cancel this test drive?</h3>
+                  <p className="text-[10px] text-slate-400 font-bold">
+                    {confirmCancelTd.car_title || confirmCancelTd.vehicle || `${confirmCancelTd.car_brand || ''} ${confirmCancelTd.car_model || 'Car'}`} • {confirmCancelTd.date || confirmCancelTd.preferred_date} @ {confirmCancelTd.time || confirmCancelTd.preferred_time}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setConfirmCancelTd(null)}
+                  className="p-2 rounded-full hover:bg-slate-100 cursor-pointer"
+                  aria-label="Close cancellation confirmation"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] font-bold text-rose-800 leading-relaxed">
+                Your slot will be released. The appointment stays in your history as cancelled.
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setConfirmCancelTd(null)} className="h-9 px-4 text-[10px]">Keep Slot</Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const id = confirmCancelTd.id;
+                    setConfirmCancelTd(null);
+                    handleCancelTestDrive(id);
+                  }}
+                  className="h-9 px-5 text-[10px] bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  Cancel Test Drive
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
