@@ -697,11 +697,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               />
             )}
 
-            <div className="grid grid-cols-1 gap-4 lg:gap-6 items-start">
+            <div className={`grid grid-cols-1 ${(currentUser.role as string) !== "Admin" ? "lg:grid-cols-[280px_minmax(0,1fr)]" : ""} gap-4 lg:gap-6 items-start`}>
             
             {/* LEFT BAR: SUB-NAVIGATION */}
             {(currentUser.role as string) !== "Admin" && (
-              <div className="w-full bg-white border border-[#2E7D32]/10 rounded-3xl p-4 lg:p-5 shadow-sm space-y-4 transition-all duration-200">
+              <div className="w-full bg-white border border-[#2E7D32]/10 rounded-3xl p-4 lg:p-5 shadow-sm space-y-4 transition-all duration-200 lg:sticky lg:top-4">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2.5 px-1">
                   <span className="h-9 w-9 bg-[#2E7D32]/10 border border-[#2E7D32]/15 rounded-xl flex items-center justify-center text-[#2E7D32] shrink-0">
@@ -714,7 +714,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 </div>
               </div>
               
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none bg-slate-100/80 border border-slate-100 rounded-2xl p-1">
+              <div className="flex flex-col gap-1">
                 {/* BUYER LINKS */}
                 {currentUser.role === "Buyer" && (
                   <>
@@ -726,14 +726,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all cursor-pointer ${
                           activeTab === tab.id 
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20" 
-                            : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
+                            ? "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 shadow-sm" 
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                         }`}
                       >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                        <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {activeTab !== tab.id && (
+                          <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
+                        )}
                       </button>
                     ))}
                   </>
@@ -743,34 +746,30 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {currentUser.role === "Seller" && (
                   <>
                     {[
-                      { id: "overview", label: "Overview", icon: LayoutDashboard, count: 0 },
+                      { id: "overview", label: "Overview", icon: LayoutDashboard },
                       { id: "auctions", label: "My Car Auctions", icon: Gavel, count: auctionsReviewCount },
                       { id: "offers", label: "Direct Dealer Offers", icon: DollarSign, count: pendingOffersCount },
-                      { id: "inspections", label: "Inspection Status", icon: ClipboardList, count: 0 },
-                      { id: "sell_car", label: "Sell a New Car", icon: Upload, count: 0 }
+                      { id: "inspections", label: "Inspection Status", icon: ClipboardList }
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => {
-                          if (tab.id === "sell_car") {
-                            if (onNavigateToSell) onNavigateToSell();
-                            return;
-                          }
-                          setActiveTab(tab.id);
-                        }}
+                        onClick={() => setActiveTab(tab.id)}
                         title={tab.label}
-                        className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                          (activeTab === tab.id && tab.id !== "sell_car")
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20"
-                            : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
+                        className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all cursor-pointer ${
+                          activeTab === tab.id
+                            ? "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 shadow-sm"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                         }`}
                       >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
-                        {tab.count > 0 && (
-                          <span className="ml-0.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                        <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                        <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {(tab.count || 0) > 0 && (
+                          <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
                             {tab.count}
                           </span>
+                        )}
+                        {activeTab !== tab.id && (
+                          <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
                         )}
                       </button>
                     ))}
@@ -787,14 +786,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all cursor-pointer ${
                           activeTab === tab.id 
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20" 
-                            : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
+                            ? "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 shadow-sm" 
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                         }`}
                       >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                        <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {activeTab !== tab.id && (
+                          <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
+                        )}
                       </button>
                     ))}
                   </>
@@ -809,14 +811,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all cursor-pointer ${
                           activeTab === tab.id 
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20" 
-                            : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
+                            ? "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 shadow-sm" 
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                         }`}
                       >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                        <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {activeTab !== tab.id && (
+                          <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
+                        )}
                       </button>
                     ))}
                   </>
@@ -839,14 +844,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)} title={tab.label}
-                        className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`group w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all cursor-pointer ${
                           activeTab === tab.id 
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20" 
-                            : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
+                            ? "bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 shadow-sm" 
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                         }`}
                       >
-                        <tab.icon className="h-4.5 w-4.5" />
-                        <span>{tab.label}</span>
+                        <tab.icon className="h-4.5 w-4.5 shrink-0" />
+                        <span className="flex-1 whitespace-nowrap">{tab.label}</span>
+                        {activeTab !== tab.id && (
+                          <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-[#2E7D32] transition-colors opacity-0 group-hover:opacity-100" />
+                        )}
                       </button>
                     ))}
                   </>
@@ -854,6 +862,17 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
               </div>
 
+              {currentUser.role === "Seller" && onNavigateToSell && (
+                <>
+                  <div className="h-px bg-slate-100" />
+                  <button
+                    onClick={onNavigateToSell}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#2E7D32] hover:bg-[#25632a] text-white text-xs font-black uppercase tracking-wider h-11 px-4 shadow-sm transition-colors cursor-pointer"
+                  >
+                    <Upload className="h-4 w-4" /> Sell a New Car
+                  </button>
+                </>
+              )}
             </div>
           )}
 
