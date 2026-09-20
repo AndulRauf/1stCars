@@ -1,27 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <!-- Google's required snippet, placed right after <head>. Tuned for 1stCars:
-         - id="gtag-js" matches the dedup guard in src/lib/analytics.ts so the
-           app never injects a second copy of the loader script.
-         - Consent Mode v2 default is read from localStorage BEFORE the config
-           call, preserving the app's opt-out model ("Turn Off" visitors are not
-           tracked, including on their very next visit).
-         - send_page_view:false keeps page_views exact — the app fires one
-           page_view per SPA route change itself. -->
+    <!-- Google tag (gtag.js) loader. Kept as a plain external script so the tag
+         boots as early as possible. The consent default, gtag() stub, and
+         config call (send_page_view:false) live in src/lib/analytics.ts
+         (initGA4), which runs on app mount — keeping index.html free of inline
+         scripts so the site's Content-Security-Policy can forbid 'unsafe-inline'
+         for scripts. id="gtag-js" matches the dedup guard in analytics.ts so the
+         loader is never injected twice. -->
     <script async id="gtag-js" src="https://www.googletagmanager.com/gtag/js?id=G-2Z1JPEBR0R"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      (function(){
-        var s = "granted";
-        try { if (localStorage.getItem("1stcars_analytics_consent") === "denied") { s = "denied"; } } catch (e) {}
-        gtag('consent', 'default', { ad_storage:s, ad_user_data:s, ad_personalization:s, analytics_storage:s, wait_for_update:500 });
-      })();
-      gtag('js', new Date());
-      gtag('config', 'G-2Z1JPEBR0R', { send_page_view: false });
-    </script>
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

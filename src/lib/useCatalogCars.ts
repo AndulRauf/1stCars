@@ -111,7 +111,20 @@ export function useCatalogCars(): CatalogState {
     }
     return [];
   });
-  const [loading, setLoading] = React.useState(false);
+  // loading must be truthful from the very first render: when the DB cache is
+  // empty (fresh visit, cleared storage, just after a redeploy) the catalog is
+  // still being fetched, so callers must show a placeholder instead of the
+  // "empty inventory" state. A warm cache means real data is already painted.
+  const [loading, setLoading] = React.useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const raw = localStorage.getItem(DB_CACHE_KEY);
+      if (raw && Array.isArray(JSON.parse(raw))) return false;
+    } catch (e) {
+      // corrupted cache — treat as cold
+    }
+    return true;
+  });
   const [error, setError] = React.useState<string | null>(null);
 
   // Monotonic sequence so overlapping refreshes can never let a stale response

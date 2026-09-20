@@ -51,7 +51,7 @@ import { Profile } from "@/src/lib/db";
 import { AuthModal } from "@/src/components/AuthModal";
 import { MobileLoginModal } from "@/src/components/MobileLoginModal";
 import { supabase, isRealSupabase, isProdMockBlocked } from "@/src/lib/supabaseClient";
-import { parseCurrentUrl, navigateTo, getPageTitle, ViewType } from "@/src/lib/router";
+import { parseCurrentUrl, navigateTo, getPageTitle, ViewType, normalizeLabel, resolveCanonicalName } from "@/src/lib/router";
 import { getSavedCarsLocal, setSavedCarsLocal, loadSavedCarsFromDb, setSavedCarInDb } from "@/src/lib/savedCars";
 import { captureUtm, trackPageView } from "@/src/lib/analytics";
 import { trackMetaPageView } from "@/src/lib/metaPixel";
@@ -126,9 +126,22 @@ export default function App() {
     setCurrentView(view);
     if (params?.carId) setActiveCarId(params.carId);
     if (params?.pageId) setSelectedPageId(params.pageId);
-    if (params?.brand !== undefined) setSelectedBrand(params.brand);
-    if (params?.model !== undefined) setSelectedModel(params.model);
-    if (params?.search !== undefined) setSearchQuery(params.search);
+    // Only the Buy Cars view consumes brand/model/search. Reset stale deep-link
+    // filters when the catalog is opened without explicit params, so returning
+    // to Buy Cars (Back button / navbar) never re-applies a phantom filter that
+    // can surface an empty inventory. Brand params from routes arrive slug-encoded
+    // (e.g. "Bmw", "Mercedes Benz"), so resolve them to the catalog's canonical
+    // spelling before storing — strict-equality brand filters else match nothing.
+    if (view === "buy_cars") {
+      const knownBrands = Array.from(new Set([...FAMOUS_BRANDS, ...catalogCarsRef.current.map((c) => c.brand).filter(Boolean)]));
+      setSelectedBrand(params?.brand !== undefined ? (resolveCanonicalName(params.brand, knownBrands) || params.brand) : "");
+      setSelectedModel(params?.model !== undefined ? params.model : undefined);
+      setSearchQuery(params?.search !== undefined ? params.search : undefined);
+    } else {
+      if (params?.brand !== undefined) setSelectedBrand(params.brand);
+      if (params?.model !== undefined) setSelectedModel(params.model);
+      if (params?.search !== undefined) setSearchQuery(params.search);
+    }
 
     navigateTo(view, params, options);
 
@@ -141,12 +154,25 @@ export default function App() {
   React.useEffect(() => {
     const syncRouteFromUrl = () => {
       const route = parseCurrentUrl();
+      // Unknown URLs resolve to the homepage fallback. Canonicalize the
+      // address bar to "/" so bogus paths are never left in the history,
+      // refreshed, or handed to crawlers/share links.
+      if (route.unknown) {
+        window.history.replaceState({ view: "home" }, "", "/");
+      }
       setCurrentView(route.view);
       if (route.carId) setActiveCarId(route.carId);
       if (route.pageId) setSelectedPageId(route.pageId);
-      if (route.brand) setSelectedBrand(route.brand);
-      if (route.model) setSelectedModel(route.model);
-      if (route.search) setSearchQuery(route.search);
+      // Back/forward navigation parses the URL every time. Only carry filters
+      // that are actually present in it — a bare /buy-cars (the usual Back
+      // destination) must restore the full catalog instead of keeping stale
+      // brand/model/search from an earlier deep-link visit. Brand values from
+      // slugs ("Bmw", "Mercedes Benz") are canonicalized against the catalog so
+      // deep-linked brand routes don't 404 into an empty inventory.
+      const knownBrands = Array.from(new Set([...FAMOUS_BRANDS, ...catalogCarsRef.current.map((c) => c.brand).filter(Boolean)]));
+      setSelectedBrand(route.brand ? (resolveCanonicalName(route.brand, knownBrands) || route.brand) : "");
+      setSelectedModel(route.model);
+      setSearchQuery(route.search);
 
       const car = catalogCarsRef.current.find(c => c.id === (route.carId || activeCarId));
       const carName = car ? `${car.year} ${car.brand} ${car.model}` : undefined;
@@ -341,7 +367,7 @@ export default function App() {
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Certified Cars",
-          heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+          heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -354,7 +380,7 @@ export default function App() {
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "Easy Way",
-    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -382,10 +408,10 @@ export default function App() {
     certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
     testimonialBadgeText: "VIP CLUB FEEDBACK",
     testimonialHeadingText: "Loved By Drivers & Collectors",
-    testimonialSubheadingText: "We have completed over 280+ deliveries. Read reviews from verified car owners.",
+    testimonialSubheadingText: "We have completed 280+ deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
+    ctaSubheadingText: "Contact our Surat sell car hub to request a home evaluation, or to register for rare car arrivals.",
     otpProvider: "simulated",
     customOtpUrl: "",
     customOtpHeaders: "",
@@ -450,9 +476,9 @@ export default function App() {
       // Testimonials: Supabase `testimonials` is the source of truth (edited
       // in Admin CMS → Reviews), so the home page and admin panel always agree.
       const defaultTestimonials = [
-        { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche Carrera S from 1stCars was an absolute joy. The 120-point report card was extremely thorough, and they delivered the vehicle in a fully closed transport direct to my estate. Top tier service.", photo: "👤" },
-        { id: "t-2", name: "Dr. Melissa Duarte", role: "Sold: Mercedes-Benz G 63 AMG", rating: 5, content: "I was initially nervous about trade-ins, but 1stCars calculated an instant offer on my G 63, did the doorstep evaluation check next morning, and transferred funds to my Chase account that exact afternoon. Exceptional speed.", photo: "👤" },
-        { id: "t-3", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already. Sourced perfect specifications.", photo: "👤" }
+        { id: "t-1", name: "Arthur H. Sterling", role: "Purchased: Porsche 911 Carrera S", rating: 5, content: "Buying my Porsche 911 Carrera S from 1stCars was an absolute joy. The 120-point report was extremely thorough, and they delivered the vehicle in a fully enclosed transporter straight to my home. Top-tier service.", photo: "👤" },
+        { id: "t-2", name: "Dr. Melissa Duarte", role: "Sold: Mercedes-Benz AMG G 63", rating: 5, content: "I was nervous about trade-ins at first, but 1stCars gave me an instant offer on my G 63, completed the doorstep evaluation the next morning, and transferred the funds that same afternoon. Exceptional speed.", photo: "👤" },
+        { id: "t-3", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. I've already sourced three pristine Porsche models to spec through the platform.", photo: "👤" }
       ];
       try {
         const { data: tData } = await supabase.from("testimonials").select();
@@ -685,7 +711,7 @@ export default function App() {
       car.brand.toLowerCase().includes(searchTerm.toLowerCase()) || 
       car.model.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesBrand = selectedBrand === "" || car.brand === selectedBrand;
+    const matchesBrand = selectedBrand === "" || normalizeLabel(car.brand) === normalizeLabel(selectedBrand);
     
     const matchesBudget = selectedBudget === 0 || car.price <= selectedBudget;
     
@@ -1070,7 +1096,7 @@ export default function App() {
             </h1>
             
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium text-center">
-              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km."}
+              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">
@@ -1204,7 +1230,7 @@ export default function App() {
               {websiteSettings.testimonialHeadingText || "Loved By Drivers & Collectors"}
             </h2>
             <p className="text-sm sm:text-base text-slate-500 font-medium">
-              {websiteSettings.testimonialSubheadingText || "We have completed over 280+ deliveries. Read reviews from verified car owners."}
+              {websiteSettings.testimonialSubheadingText || "We have completed 280+ deliveries. Read reviews from verified car owners."}
             </p>
           </div>
 
@@ -1251,7 +1277,7 @@ export default function App() {
               {websiteSettings.ctaHeadingText || "Ready to Drive Your Certified Vehicle?"}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-semibold max-w-lg mx-auto leading-relaxed">
-              {websiteSettings.ctaSubheadingText || "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals."}
+              {websiteSettings.ctaSubheadingText || "Contact our Surat sell car hub to request a home evaluation, or to register for rare car arrivals."}
             </p>
           </div>
 

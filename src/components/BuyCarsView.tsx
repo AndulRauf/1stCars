@@ -6,6 +6,7 @@ import { CarCard } from "./CarCard";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { cn, sanitizeSettings } from "@/src/lib/utils";
+import { normalizeLabel, resolveCanonicalName } from "@/src/lib/router";
 import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
 
@@ -38,7 +39,7 @@ export function BuyCarsView({
   });
 
   // Live catalog: static cars + cars published through the CMS (Supabase "cars" table)
-  const { cars: catalogCars } = useCatalogCars();
+  const { cars: catalogCars, loading: catalogLoading, error: catalogError, refresh: refreshCatalog } = useCatalogCars();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -84,16 +85,22 @@ export function BuyCarsView({
 
   const [yearsOld, setYearsOld] = React.useState<string>("All");
 
-  // Sync initial parameters when route changes
+  // Sync initial parameters when route changes. Route brands arrive via the
+  // URL slug (`unslugify`) — e.g. "Bmw", "Mercedes Benz" — so resolve them back
+  // to the catalog's canonical spelling ("BMW", "Mercedes-Benz") before use;
+  // otherwise the strict-equality filters below match nothing and the grid
+  // shows an empty inventory.
   React.useEffect(() => {
     if (initialBrand || initialSearch) {
+      const knownBrands = Array.from(new Set([...FAMOUS_BRANDS, ...catalogCars.map((c) => c.brand).filter(Boolean)]));
+      const canonicalBrand = resolveCanonicalName(initialBrand, knownBrands) || initialBrand;
       setFilters(prev => ({
         ...prev,
-        brand: initialBrand || prev.brand,
-        search: initialSearch || (initialModel ? `${initialBrand || ''} ${initialModel}` : prev.search)
+        brand: canonicalBrand || prev.brand,
+        search: initialSearch || (initialModel ? `${canonicalBrand || ''} ${initialModel}` : prev.search)
       }));
     }
-  }, [initialBrand, initialModel, initialSearch]);
+  }, [initialBrand, initialModel, initialSearch, catalogCars]);
 
   // UI Settings States
   const [isListView, setIsListView] = React.useState(false);
@@ -182,20 +189,22 @@ export function BuyCarsView({
   const filteredAndSortedCars = React.useMemo(() => {
     let result = [...catalogCars];
 
-    // Search query match (model or brand or features)
+    // Search query match (model or brand or features). Label-normalized so
+    // hyphenated names still match space-separated route round-trips (e.g. the
+    // route search for "Mercedes-Benz G-Class" == "mercedes benz g class").
     if (filters.search.trim()) {
-      const q = filters.search.toLowerCase();
+      const q = normalizeLabel(filters.search);
       result = result.filter(
         (car) =>
-          car.brand.toLowerCase().includes(q) ||
-          car.model.toLowerCase().includes(q) ||
-          car.specifications.some((s) => s.toLowerCase().includes(q))
+          normalizeLabel(`${car.brand} ${car.model}`).includes(q) ||
+          car.specifications.some((s) => normalizeLabel(s).includes(q))
       );
     }
 
     // Brand filter
     if (filters.brand !== "All") {
-      result = result.filter((car) => car.brand === filters.brand);
+      const brandKey = normalizeLabel(filters.brand);
+      result = result.filter((car) => car.brand && normalizeLabel(car.brand) === brandKey);
     }
 
     // Fuel filter
@@ -700,7 +709,7 @@ export function BuyCarsView({
 
           {/* Listings Pane */}
           <div className="lg:col-span-3 flex flex-col justify-between" aria-live="polite">
-            {isLoading ? (
+            {isLoading || (catalogLoading && paginatedCars.length === 0 && !catalogError) ? (
               <div className={cn(
                 "grid gap-3 sm:gap-4 md:gap-6",
                 isListView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
@@ -773,6 +782,20 @@ export function BuyCarsView({
                     isListView={isListView}
                   />
                 ))}
+              </div>
+            ) : catalogError ? (
+              <div className="bg-white border border-rose-200 rounded-3xl p-16 text-center max-w-lg mx-auto my-12 shadow-xs">
+                <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto mb-5">
+                  <ShieldAlert className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">Could Not Load Inventory</h3>
+                <p className="text-sm text-slate-500 mt-2 leading-relaxed">{catalogError}</p>
+                <Button
+                  onClick={refreshCatalog}
+                  className="mt-6 bg-[#2E7D32] text-white px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs shadow-md shadow-[#2E7D32]/10"
+                >
+                  Try Again
+                </Button>
               </div>
             ) : (
               <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-16 text-center max-w-lg mx-auto my-12 shadow-xs">

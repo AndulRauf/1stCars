@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { Badge } from "@/src/components/ui/Badge";
 import { toast } from "@/src/lib/toast";
+import { calculateListingEmi } from "@/src/lib/finance";
 import { SellCatalog } from "@/src/lib/sellFormData";
 import {
   Full120PointReport,
@@ -325,7 +326,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
         variant: selectedVariant,
         year: selectedYear,
         price: priceNum,
-        emi: Math.round(priceNum / 60),
+        emi: calculateListingEmi(priceNum),
         km_driven: kmNum,
         mileage: kmNum,
         fuel: selectedFuel,
@@ -687,7 +688,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
                   <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
                 </div>
                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Fuel &amp; transmission</h3>
-                <p className="text-xs text-slate-400 font-semibold">Pick the gearbox, then tap the fuel type</p>
+                <p className="text-xs text-slate-400 font-semibold">Pick the transmission, then tap the fuel type</p>
               </div>
               <div>
                 <label className="block text-[11px] font-black uppercase text-slate-500 tracking-wider mb-2">Transmission</label>
@@ -741,7 +742,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
                   <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel}</span>
                 </div>
                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Where is the car registered?</h3>
-                <p className="text-xs text-slate-400 font-semibold">Pick the Gujarat RTO office on the number plate</p>
+                <p className="text-xs text-slate-400 font-semibold">Pick the Gujarat RTO office on the license plate</p>
               </div>
               <div className="relative">
                 <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -806,7 +807,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
                     leftIcon={<Gauge className="h-4 w-4" />}
                     className="h-12 rounded-xl text-sm font-bold"
                   />
-                  <p className="text-[10px] text-slate-400 font-semibold">Total odometer reading in kilometres</p>
+                  <p className="text-[10px] text-slate-400 font-semibold">Total odometer reading in kilometers</p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">SELLING PRICE (₹) *</label>
@@ -990,7 +991,7 @@ export function CreateCarWizard({ sellCatalog, isOpen, onClose, onSubmit, submit
                       { key: "engine", label: "Engine Displacement & Code *", placeholder: "e.g. 1.2L K12N DualJet Dual VVT Petrol Engine" },
                       { key: "maxPower", label: "Max Power Output *", placeholder: "e.g. 118 bhp @ 6000 rpm" },
                       { key: "peakTorque", label: "Peak Torque Rating *", placeholder: "e.g. 172 Nm @ 1500-4000 rpm" },
-                      { key: "transmission", label: "Transmission Gearbox *", placeholder: "e.g. 6-Speed Automatic Torque Converter" },
+                      { key: "transmission", label: "Transmission *", placeholder: "e.g. 6-Speed Automatic Torque Converter" },
                       { key: "araiMileage", label: "ARAI Certified Mileage *", placeholder: "e.g. 20.5 km/l" },
                       { key: "idleStartStop", label: "Idle Start-Stop / Tech *", placeholder: "e.g. Smart Engine Idle Start-Stop Active" }
                     ] as const).map((field) => (

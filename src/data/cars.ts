@@ -37,7 +37,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: XZ+ Lux Dark Edition 40.5kWh",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 437 km Range",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -54,7 +54,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Midnight Black paintwork depth tested. Zero structural or alignment defects.",
@@ -105,7 +105,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 4WD LX Hard Top 2.2 Diesel",
-      "Transmission: Manual Precision Gearbox",
+      "Transmission: Manual Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -122,7 +122,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Desert Fury Satin paintwork depth tested. Zero structural or alignment defects.",
@@ -173,7 +173,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT Dual Tone",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -190,7 +190,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Atlas White / Black Roof paintwork depth tested. Zero structural or alignment defects.",
@@ -241,7 +241,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.8 Diesel 4x4 Automatic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -258,7 +258,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Platinum White Pearl paintwork depth tested. Zero structural or alignment defects.",
@@ -309,7 +309,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Alpha+ Strong Hybrid CVT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -326,7 +326,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Nexa Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -377,7 +377,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -394,7 +394,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Pewter Olive paintwork depth tested. Zero structural or alignment defects.",
@@ -445,7 +445,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 i-VTEC CVT Sunroof",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -462,7 +462,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Radiant Red Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -513,7 +513,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: M Sport Line Shadow Edition",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -530,7 +530,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Portimao Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -581,7 +581,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Avantgarde Mild Hybrid AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -598,7 +598,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Mojave Silver paintwork depth tested. Zero structural or alignment defects.",
@@ -649,7 +649,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Technology Pack Quattro",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -666,7 +666,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Navarra Blue Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -717,7 +717,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 TSI DSG Performance",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -734,7 +734,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Wild Cherry Red paintwork depth tested. Zero structural or alignment defects.",
@@ -785,7 +785,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 6-Seater Dark Edition AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -802,7 +802,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Oberon Black paintwork depth tested. Zero structural or alignment defects.",
@@ -853,7 +853,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.2 mHawk Diesel 4X4 AT",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -870,7 +870,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Deep Forest Green paintwork depth tested. Zero structural or alignment defects.",
@@ -921,7 +921,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo CVT Panoramic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -938,7 +938,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Havana Grey paintwork depth tested. Zero structural or alignment defects.",
@@ -989,7 +989,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo DCT ADAS",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1006,7 +1006,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Starry Night paintwork depth tested. Zero structural or alignment defects.",
@@ -1057,7 +1057,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 K15C DualJet AT Dual Tone",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1074,7 +1074,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Brave Khakhi paintwork depth tested. Zero structural or alignment defects.",
@@ -1125,7 +1125,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Style DSG Sunroof",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1142,7 +1142,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Crystal Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -1193,7 +1193,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: ZX (O) Hybrid Ottoman Seats",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1210,7 +1210,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Blackish Ageha Glass Flake paintwork depth tested. Zero structural or alignment defects.",
@@ -1261,7 +1261,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.9L V2 Twin-Turbo PDK AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1278,7 +1278,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Python Green paintwork depth tested. Zero structural or alignment defects.",
@@ -1329,7 +1329,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.0 R-Dynamic S Petrol AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1346,7 +1346,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Santorini Black paintwork depth tested. Zero structural or alignment defects.",
@@ -1397,7 +1397,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: XZ+ Lux Dark Edition 40.5kWh",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 437 km Range",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1414,7 +1414,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Midnight Black paintwork depth tested. Zero structural or alignment defects.",
@@ -1465,7 +1465,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 4WD LX Hard Top 2.2 Diesel",
-      "Transmission: Manual Precision Gearbox",
+      "Transmission: Manual Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1482,7 +1482,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Desert Fury Satin paintwork depth tested. Zero structural or alignment defects.",
@@ -1533,7 +1533,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT Dual Tone",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1550,7 +1550,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Atlas White / Black Roof paintwork depth tested. Zero structural or alignment defects.",
@@ -1601,7 +1601,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.8 Diesel 4x4 Automatic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1618,7 +1618,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Platinum White Pearl paintwork depth tested. Zero structural or alignment defects.",
@@ -1669,7 +1669,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Alpha+ Strong Hybrid CVT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1686,7 +1686,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Nexa Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -1737,7 +1737,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1754,7 +1754,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Pewter Olive paintwork depth tested. Zero structural or alignment defects.",
@@ -1805,7 +1805,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 i-VTEC CVT Sunroof",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1822,7 +1822,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Radiant Red Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -1873,7 +1873,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: M Sport Line Shadow Edition",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1890,7 +1890,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Portimao Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -1941,7 +1941,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Avantgarde Mild Hybrid AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -1958,7 +1958,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Mojave Silver paintwork depth tested. Zero structural or alignment defects.",
@@ -2009,7 +2009,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Technology Pack Quattro",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2026,7 +2026,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Navarra Blue Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -2077,7 +2077,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 TSI DSG Performance",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2094,7 +2094,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Wild Cherry Red paintwork depth tested. Zero structural or alignment defects.",
@@ -2145,7 +2145,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 6-Seater Dark Edition AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2162,7 +2162,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Oberon Black paintwork depth tested. Zero structural or alignment defects.",
@@ -2213,7 +2213,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.2 mHawk Diesel 4X4 AT",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2230,7 +2230,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Deep Forest Green paintwork depth tested. Zero structural or alignment defects.",
@@ -2281,7 +2281,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo CVT Panoramic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2298,7 +2298,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Havana Grey paintwork depth tested. Zero structural or alignment defects.",
@@ -2349,7 +2349,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo DCT ADAS",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2366,7 +2366,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Starry Night paintwork depth tested. Zero structural or alignment defects.",
@@ -2417,7 +2417,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 K15C DualJet AT Dual Tone",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2434,7 +2434,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Brave Khakhi paintwork depth tested. Zero structural or alignment defects.",
@@ -2485,7 +2485,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Style DSG Sunroof",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2502,7 +2502,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Crystal Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -2553,7 +2553,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: ZX (O) Hybrid Ottoman Seats",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2570,7 +2570,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Blackish Ageha Glass Flake paintwork depth tested. Zero structural or alignment defects.",
@@ -2621,7 +2621,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.9L V2 Twin-Turbo PDK AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2638,7 +2638,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Python Green paintwork depth tested. Zero structural or alignment defects.",
@@ -2689,7 +2689,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.0 R-Dynamic S Petrol AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2706,7 +2706,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Santorini Black paintwork depth tested. Zero structural or alignment defects.",
@@ -2757,7 +2757,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: XZ+ Lux Dark Edition 40.5kWh",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 437 km Range",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2774,7 +2774,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Midnight Black paintwork depth tested. Zero structural or alignment defects.",
@@ -2825,7 +2825,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 4WD LX Hard Top 2.2 Diesel",
-      "Transmission: Manual Precision Gearbox",
+      "Transmission: Manual Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2842,7 +2842,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Desert Fury Satin paintwork depth tested. Zero structural or alignment defects.",
@@ -2893,7 +2893,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT Dual Tone",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2910,7 +2910,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Atlas White / Black Roof paintwork depth tested. Zero structural or alignment defects.",
@@ -2961,7 +2961,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.8 Diesel 4x4 Automatic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -2978,7 +2978,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Platinum White Pearl paintwork depth tested. Zero structural or alignment defects.",
@@ -3029,7 +3029,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Alpha+ Strong Hybrid CVT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3046,7 +3046,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Nexa Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -3097,7 +3097,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3114,7 +3114,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Pewter Olive paintwork depth tested. Zero structural or alignment defects.",
@@ -3165,7 +3165,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 i-VTEC CVT Sunroof",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3182,7 +3182,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Radiant Red Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -3233,7 +3233,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: M Sport Line Shadow Edition",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3250,7 +3250,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.2,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Portimao Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -3301,7 +3301,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Avantgarde Mild Hybrid AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3318,7 +3318,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Mojave Silver paintwork depth tested. Zero structural or alignment defects.",
@@ -3369,7 +3369,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Technology Pack Quattro",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3386,7 +3386,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Navarra Blue Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -3437,7 +3437,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 TSI DSG Performance",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3454,7 +3454,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Wild Cherry Red paintwork depth tested. Zero structural or alignment defects.",
@@ -3505,7 +3505,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 6-Seater Dark Edition AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3522,7 +3522,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Oberon Black paintwork depth tested. Zero structural or alignment defects.",
@@ -3573,7 +3573,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.2 mHawk Diesel 4X4 AT",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3590,7 +3590,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Deep Forest Green paintwork depth tested. Zero structural or alignment defects.",
@@ -3641,7 +3641,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo CVT Panoramic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3658,7 +3658,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Havana Grey paintwork depth tested. Zero structural or alignment defects.",
@@ -3709,7 +3709,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo DCT ADAS",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3726,7 +3726,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Starry Night paintwork depth tested. Zero structural or alignment defects.",
@@ -3777,7 +3777,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 K15C DualJet AT Dual Tone",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3794,7 +3794,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Brave Khakhi paintwork depth tested. Zero structural or alignment defects.",
@@ -3845,7 +3845,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Style DSG Sunroof",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3862,7 +3862,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Crystal Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -3913,7 +3913,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: ZX (O) Hybrid Ottoman Seats",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3930,7 +3930,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Blackish Ageha Glass Flake paintwork depth tested. Zero structural or alignment defects.",
@@ -3981,7 +3981,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.9L V2 Twin-Turbo PDK AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -3998,7 +3998,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Python Green paintwork depth tested. Zero structural or alignment defects.",
@@ -4049,7 +4049,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.0 R-Dynamic S Petrol AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4066,7 +4066,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Santorini Black paintwork depth tested. Zero structural or alignment defects.",
@@ -4117,7 +4117,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: XZ+ Lux Dark Edition 40.5kWh",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 437 km Range",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4134,7 +4134,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Midnight Black paintwork depth tested. Zero structural or alignment defects.",
@@ -4185,7 +4185,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 4WD LX Hard Top 2.2 Diesel",
-      "Transmission: Manual Precision Gearbox",
+      "Transmission: Manual Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4202,7 +4202,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Desert Fury Satin paintwork depth tested. Zero structural or alignment defects.",
@@ -4253,7 +4253,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT Dual Tone",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4270,7 +4270,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Atlas White / Black Roof paintwork depth tested. Zero structural or alignment defects.",
@@ -4321,7 +4321,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.8 Diesel 4x4 Automatic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4338,7 +4338,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Platinum White Pearl paintwork depth tested. Zero structural or alignment defects.",
@@ -4389,7 +4389,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Alpha+ Strong Hybrid CVT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4406,7 +4406,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Nexa Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -4457,7 +4457,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo Petrol DCT",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4474,7 +4474,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Pewter Olive paintwork depth tested. Zero structural or alignment defects.",
@@ -4525,7 +4525,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 i-VTEC CVT Sunroof",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4542,7 +4542,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Radiant Red Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -4593,7 +4593,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: M Sport Line Shadow Edition",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4610,7 +4610,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Portimao Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -4661,7 +4661,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Avantgarde Mild Hybrid AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4678,7 +4678,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Mojave Silver paintwork depth tested. Zero structural or alignment defects.",
@@ -4729,7 +4729,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Technology Pack Quattro",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4746,7 +4746,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Navarra Blue Metallic paintwork depth tested. Zero structural or alignment defects.",
@@ -4797,7 +4797,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 TSI DSG Performance",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4814,7 +4814,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Wild Cherry Red paintwork depth tested. Zero structural or alignment defects.",
@@ -4865,7 +4865,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 6-Seater Dark Edition AT",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4882,7 +4882,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Oberon Black paintwork depth tested. Zero structural or alignment defects.",
@@ -4933,7 +4933,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.2 mHawk Diesel 4X4 AT",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -4950,7 +4950,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Deep Forest Green paintwork depth tested. Zero structural or alignment defects.",
@@ -5001,7 +5001,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo CVT Panoramic",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5018,7 +5018,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.4,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Havana Grey paintwork depth tested. Zero structural or alignment defects.",
@@ -5069,7 +5069,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 Turbo DCT ADAS",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5086,7 +5086,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.7,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Starry Night paintwork depth tested. Zero structural or alignment defects.",
@@ -5137,7 +5137,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 1.5 K15C DualJet AT Dual Tone",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5154,7 +5154,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.3,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Brave Khakhi paintwork depth tested. Zero structural or alignment defects.",
@@ -5205,7 +5205,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: Style DSG Sunroof",
-      "Transmission: DCT Precision Gearbox",
+      "Transmission: DCT Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5222,7 +5222,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.6,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Crystal Blue paintwork depth tested. Zero structural or alignment defects.",
@@ -5273,7 +5273,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: ZX (O) Hybrid Ottoman Seats",
-      "Transmission: Automatic Precision Gearbox",
+      "Transmission: Automatic Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5290,7 +5290,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.8,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Blackish Ageha Glass Flake paintwork depth tested. Zero structural or alignment defects.",
@@ -5341,7 +5341,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.9L V2 Twin-Turbo PDK AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5358,7 +5358,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.9,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Python Green paintwork depth tested. Zero structural or alignment defects.",
@@ -5409,7 +5409,7 @@ export const CARS_DATA: Car[] = [
     "owners": 1,
     "specifications": [
       "Engine & Powertrain: 2.0 R-Dynamic S Petrol AWD",
-      "Transmission: AWD Precision Gearbox",
+      "Transmission: AWD Precision Transmission",
       "Fuel Efficiency / Range: 18.5 km/l Certified",
       "Safety Suite: 6 Airbags, ABS with EBD, ESP, Hill Hold Assist",
       "Infotainment: 10.25-inch Touchscreen with Wireless Apple CarPlay & Android Auto",
@@ -5426,7 +5426,7 @@ export const CARS_DATA: Car[] = [
     ],
     "inspectionSummary": {
       "overallScore": 9.5,
-      "engine": "Powertrain & gearbox diagnostics 100% error-free. Compression test verified.",
+      "engine": "Powertrain & transmission diagnostics 100% error-free. Compression test verified.",
       "brakes": "88% to 95% brake pad life remaining. Fluid flushed and calibrated.",
       "electronics": "Complete ECU sensor sweep clean. All electronics operating at peak spec.",
       "exterior": "Factory Santorini Black paintwork depth tested. Zero structural or alignment defects.",

@@ -90,7 +90,7 @@ export const OFFICIAL_120_CATEGORIES: Inspection120Category[] = [
     questions: [
       { id: "c2_1", question: "Front Bumper Alignment & Mounts", passed: true },
       { id: "c2_2", question: "Rear Bumper Fitment & Sensor Clips", passed: true },
-      { id: "c2_3", question: "Bonnet / Hood Metal Alignment", passed: true },
+      { id: "c2_3", question: "Hood Metal Alignment", passed: true },
       { id: "c2_4", question: "Roof Panel & Weather Channels", passed: true },
       { id: "c2_5", question: "Left Front Fender Alignment", passed: true },
       { id: "c2_6", question: "Right Front Fender Alignment", passed: true },
@@ -98,12 +98,12 @@ export const OFFICIAL_120_CATEGORIES: Inspection120Category[] = [
       { id: "c2_8", question: "Right Front Door Alignment & Hinges", passed: true },
       { id: "c2_9", question: "Left Rear Door Alignment & Hinges", passed: true },
       { id: "c2_10", question: "Right Rear Door Alignment & Hinges", passed: true },
-      { id: "c2_11", question: "Tailgate / Boot Lid Latch & Dampers", passed: true },
+      { id: "c2_11", question: "Trunk Lid Latch & Dampers", passed: true },
       { id: "c2_12", question: "Front Apron Frame Condition", passed: true },
       { id: "c2_13", question: "Left Apron Strut Tower Weld Integrity", passed: true },
       { id: "c2_14", question: "Right Apron Strut Tower Weld Integrity", passed: true },
       { id: "c2_15", question: "Front Cross Member / Radiator Support", passed: true },
-      { id: "c2_16", question: "Boot Floor Panel Integrity", passed: true },
+      { id: "c2_16", question: "Trunk Floor Panel Integrity", passed: true },
       { id: "c2_17", question: "Left Quarter Panel Metal Integrity", passed: true },
       { id: "c2_18", question: "Right Quarter Panel Metal Integrity", passed: true },
       { id: "c2_19", question: "Left A Pillar Spot Welds & Gap", passed: true },
@@ -163,25 +163,25 @@ export const OFFICIAL_120_CATEGORIES: Inspection120Category[] = [
       { id: "c5_5", question: "Reverse Lamps Activation", passed: true },
       { id: "c5_6", question: "Turn Indicators (Front, Side, Rear)", passed: true },
       { id: "c5_7", question: "Hazard Lights Flasher Circuit", passed: true },
-      { id: "c5_8", question: "Number Plate Lamps Illumination", passed: true }
+      { id: "c5_8", question: "License Plate Lamps Illumination", passed: true }
     ]
   },
   {
     id: "cat_6",
-    title: "6. Tyres & Wheels (10 Points)",
+    title: "6. Tires & Wheels (10 Points)",
     totalPoints: 10,
     pointsPassedText: "10 / 10 Points Passed",
     scorePercentageText: "100% PASS",
-    summary: "Deep tread depth remaining across all tyres; perfectly balanced.",
+    summary: "Deep tread depth remaining across all tires; perfectly balanced.",
     questions: [
-      { id: "c6_1", question: "Front Left Tyre Condition & Tread Depth", passed: true },
-      { id: "c6_2", question: "Front Right Tyre Condition & Tread Depth", passed: true },
-      { id: "c6_3", question: "Rear Left Tyre Condition & Tread Depth", passed: true },
-      { id: "c6_4", question: "Rear Right Tyre Condition & Tread Depth", passed: true },
+      { id: "c6_1", question: "Front Left Tire Condition & Tread Depth", passed: true },
+      { id: "c6_2", question: "Front Right Tire Condition & Tread Depth", passed: true },
+      { id: "c6_3", question: "Rear Left Tire Condition & Tread Depth", passed: true },
+      { id: "c6_4", question: "Rear Right Tire Condition & Tread Depth", passed: true },
       { id: "c6_5", question: "Spare Wheel Condition & Tool Kit", passed: true },
       { id: "c6_6", question: "Wheel Rims / Alloys Curb Scrape Check", passed: true },
-      { id: "c6_7", question: "Tyre Tread Depth (>5mm remaining)", passed: true },
-      { id: "c6_8", question: "Tyre Pressure & Valve Stem Integrity", passed: true },
+      { id: "c6_7", question: "Tire Tread Depth (>5mm remaining)", passed: true },
+      { id: "c6_8", question: "Tire Pressure & Valve Stem Integrity", passed: true },
       { id: "c6_9", question: "Wheel Alignment Dynamic Check", passed: true },
       { id: "c6_10", question: "Wheel Balancing & High-Speed Vibration", passed: true }
     ]
@@ -206,7 +206,7 @@ export const OFFICIAL_120_CATEGORIES: Inspection120Category[] = [
       { id: "c7_10", question: "Alternator Charging Output Voltage", passed: true },
       { id: "c7_11", question: "Drive Belts & Tensioner Wear", passed: true },
       { id: "c7_12", question: "Air Filter Cleanliness", passed: true },
-      { id: "c7_13", question: "Gearbox Performance & Shift Engagement", passed: true },
+      { id: "c7_13", question: "Transmission Performance & Shift Engagement", passed: true },
       { id: "c7_14", question: "Clutch Performance & Free Play", passed: true },
       { id: "c7_15", question: "Transmission Fluid Leakage Check", passed: true }
     ]
@@ -369,6 +369,29 @@ export function getInitial120Report(): Full120PointReport {
     notes: "120-Point Certified Inspection completed. All major mechanical and structural systems thoroughly tested.",
     workflowStage: "inspected"
   };
+}
+
+// Safely parse a car's stored `report_120_json` payload (inspection-flow cars).
+// Returns null when absent/invalid so surfaces render the neutral checklist
+// standard instead of fabricating an identical all-pass report.
+export function parseCarReport(reportJson?: string | null): Full120PointReport | null {
+  if (!reportJson || typeof reportJson !== "string") return null;
+  try {
+    let parsed: unknown = JSON.parse(reportJson);
+    // Tolerate legacy snapshots that were double-encoded (JSON string-inside-string).
+    if (typeof parsed === "string") {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        return null;
+      }
+    }
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!Array.isArray((parsed as Full120PointReport).categories) || (parsed as Full120PointReport).categories.length === 0) return null;
+    return parsed as Full120PointReport;
+  } catch {
+    return null;
+  }
 }
 
 // Storage keys for the admin-editable inspection form (shared with Admin CMS)

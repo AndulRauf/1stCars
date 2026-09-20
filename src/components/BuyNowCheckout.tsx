@@ -11,6 +11,7 @@ import { trackWhatsAppClick } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 import { Profile } from "@/src/lib/db";
 import { getSavedCarsLocal, setSavedCarsLocal, setSavedCarForSession } from "@/src/lib/savedCars";
+import { calculateListingEmi } from "@/src/lib/finance";
 
 interface BuyNowCheckoutProps {
   isOpen: boolean;
@@ -326,8 +327,9 @@ export function BuyNowCheckout({
   const ownerLabel = car.owners === 1 ? "1st owner" : `${car.owners || 1} owners`;
   const variant = (car as any).variant || "";
 
-  // EMI fallback: if the car has no emi value, estimate at ~2% of price/month (approx 5yr @ ~10%)
-  const displayEmi = car.emi && car.emi > 0 ? car.emi : Math.round((totalPrice * 0.021) / 100) * 100;
+  // EMI shown in checkout uses the same listing formula as the cards and the
+// finance calculator (20% down, 5.49% APR, 60 months).
+const displayEmi = car ? calculateListingEmi(car.price) : 0;
 
   const buildWhatsAppLink = () => {
     const phone = "918866377722"; // 1stCars support number

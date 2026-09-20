@@ -1,6 +1,7 @@
 import * as React from "react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { isHiddenPage } from "@/src/lib/utils";
+import { slugify } from "@/src/lib/router";
 import Markdown from "react-markdown";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
@@ -13,6 +14,24 @@ interface CustomPageViewProps {
   onNavigateToInventory?: () => void;
   onNavigateToSell?: () => void;
 }
+
+// Legacy reserved ids used by the mock/local pages (id "p-faq", slug "faqs",
+// ...). The live Supabase `pages` table is keyed by UUID and reached by slug, so
+// footer/nav links that carry a "p-*" id must fall back to a slug lookup —
+// otherwise the route 404s on the live data source.
+const RESERVED_PAGE_SLUGS: Record<string, string> = {
+  "p-faq": "faqs",
+  "p-about": "about-us",
+  "p-certificate": "120-point-certificate",
+  "p-terms": "terms-and-conditions",
+  "p-showrooms": "our-showrooms",
+};
+
+// FAQ is a first-class route: it can be reached as "p-faq" (dedicated view),
+// "faqs"/"faq" (slug-based custom-page id), or the live row's UUID. Any of
+// these that fail to resolve should fall back to the default FAQ page instead
+// of 404-ing, so footer/navbar/direct-link FAQ entries never show "Not Found".
+const isFaqRequest = (pageId: string) => /^(p-)?faq(s)?$/i.test(pageId);
 
 export function CustomPageView({ pageId, onBackToHome, onNavigateToInventory, onNavigateToSell }: CustomPageViewProps) {
   const [page, setPage] = React.useState<any | null>(null);
@@ -29,19 +48,49 @@ export function CustomPageView({ pageId, onBackToHome, onNavigateToInventory, on
       setLoading(true);
       setError(null);
       try {
-        const { data, error: err } = await supabase
-          .from("pages")
-          .select()
-          .eq("id", pageId)
-          .single();
+        // Resolve the page by exact id first (live UUIDs, mock "p-*" ids), then
+        // fall back to the reserved slug so legacy ids keep routing on live DBs.
+        // A non-UUID id (e.g. "faqs", "about-us") also gets a slugify() fallback
+        // so slug-based custom-page links work even before the pages row exists.
+        const fallbackSlug =
+          RESERVED_PAGE_SLUGS[pageId] ||
+          (pageId.match(/^[A-Za-z0-9-]+$/) ? slugify(pageId as string) : undefined);
+        const resolve = async (fallback: string | undefined) => {
+          const byId = await supabase
+            .from("pages")
+            .select()
+            .eq("id", pageId as string)
+            .maybeSingle();
+          if (byId.data && !isHiddenPage(byId.data)) return byId.data;
+          if (fallback && fallback !== slugify(pageId as string)) {
+            const bySlug = await supabase
+              .from("pages")
+              .select()
+              .eq("slug", fallback)
+              .maybeSingle();
+            if (bySlug.data && !isHiddenPage(bySlug.data)) return bySlug.data;
+          }
+          return null;
+        };
 
-        if (err || !data || isHiddenPage(data)) {
-          setError("This page could not be located or may have been deleted.");
-        } else {
+        const defaultFaqPage = { id: "p-faq", title: "FAQs", slug: "faqs", content: "", meta_description: null };
+        const data = await resolve(fallbackSlug);
+        if (data) {
           setPage(data);
+        } else if (isFaqRequest(pageId)) {
+          // FAQ is a first-class route: render the landing even when no pages
+          // row exists yet (e.g. live DB not seeded). FaqLanding carries its own
+          // default content, so the footer/navbar FAQ link can never 404.
+          setPage(defaultFaqPage);
+        } else {
+          setError("This page could not be located or may have been deleted.");
         }
       } catch (e) {
-        setError("An unexpected error occurred loading page content.");
+        if (isFaqRequest(pageId)) {
+          setPage({ id: "p-faq", title: "FAQs", slug: "faqs", content: "", meta_description: null });
+        } else {
+          setError("An unexpected error occurred loading page content.");
+        }
       } finally {
         setLoading(false);
       }

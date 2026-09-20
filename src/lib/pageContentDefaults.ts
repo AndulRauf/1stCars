@@ -11,7 +11,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutHeroHeading: "Your Trusted Pre-Owned Car Marketplace",
   aboutHeroHighlight: "",
   aboutHeroSubtitle:
-    "1stCars makes buying and selling pre-owned cars simple, transparent and convenient. Based in Surat, we connect car buyers, sellers and verified dealers through a technology-driven marketplace. Every 1stMark Certified Car goes through a detailed 120-point inspection, helping customers make their next car decision with greater confidence.",
+    "1stCars makes buying and selling pre-owned cars simple, transparent, and convenient. Based in Surat, we connect car buyers, sellers, and verified dealers through a technology-driven marketplace. Every 1stMark Certified Car goes through a detailed 120-point inspection, helping customers make their next car decision with greater confidence.",
   aboutBrowseButton: "Explore Certified Cars",
   aboutBackButton: "Sell Your Car",
 
@@ -39,7 +39,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
     "To become India's most trusted destination for certified pre-owned vehicles.",
   aboutMissionTitle: "Our Mission",
   aboutMissionText:
-    "To make the pre-owned car market more transparent, trustworthy and technology-driven \u2014 combining professional vehicle inspection with a simple customer experience.",
+    "To make the pre-owned car market more transparent, trustworthy, and technology-driven \u2014 combining professional vehicle inspection with a simple customer experience.",
 
   aboutQuoteText:
     "\u201cWe don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",
@@ -54,7 +54,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
 
   aboutValue1Title: "120-Point Inspection",
   aboutValue1Desc:
-    "Every 1stMark Certified Car undergoes a detailed inspection covering key mechanical, structural and functional areas.",
+    "Every 1stMark Certified Car undergoes a detailed inspection covering key mechanical, structural, and functional areas.",
   aboutValue2Title: "Transparent Information",
   aboutValue2Desc:
     "Customers get access to inspection details, vehicle information and available ownership history.",
@@ -133,15 +133,15 @@ export interface FaqItem {
 // warranty, buyback, guaranteed-sale or fixed-price claims are made here.
 export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   // ---- Buying a Car ----
-  { id: "fq-buy-1", category: "Buying a Car", question: "What is 1stCars?", answer: "1stCars is a technology-driven pre-owned car marketplace connecting buyers, sellers and verified dealers. We make buying and selling used cars simpler, more transparent and convenient." },
-  { id: "fq-buy-2", category: "Buying a Car", question: "What is a 1stMark Certified Car?", answer: "A 1stMark Certified Car is a vehicle that has undergone our 120-point inspection covering key mechanical, structural and functional areas before being listed as certified." },
+  { id: "fq-buy-1", category: "Buying a Car", question: "What is 1stCars?", answer: "1stCars is a technology-driven pre-owned car marketplace connecting buyers, sellers, and verified dealers. We make buying and selling used cars simpler, more transparent, and convenient." },
+  { id: "fq-buy-2", category: "Buying a Car", question: "What is a 1stMark Certified Car?", answer: "A 1stMark Certified Car is a vehicle that has undergone our 120-point inspection covering key mechanical, structural, and functional areas before being listed as certified." },
   { id: "fq-buy-3", category: "Buying a Car", question: "Are 1stMark cars single-owner vehicles?", answer: "Where specified as single-owner, the ownership details are verified against available vehicle and documentation records. Always check the individual vehicle listing for its specific details." },
-  { id: "fq-buy-4", category: "Buying a Car", question: "Are the kilometres verified?", answer: "We verify the available vehicle information using inspection checks and available service or vehicle-history records. The verification details are provided as part of the vehicle information where available." },
+  { id: "fq-buy-4", category: "Buying a Car", question: "Are the kilometers verified?", answer: "We verify the available vehicle information using inspection checks and available service or vehicle-history records. The verification details are provided as part of the vehicle information where available." },
   { id: "fq-buy-5", category: "Buying a Car", question: "Can I inspect or test drive a car before buying?", answer: "Yes, test drives can be arranged for eligible vehicles. Availability depends on the vehicle and location." },
   // ---- Selling Your Car ----
   { id: "fq-sell-1", category: "Selling Your Car", question: "How can I sell my car through 1stCars?", answer: "Start by submitting your car details through our Sell Your Car form. After verification, our team can arrange a free inspection and help you explore the best available selling option." },
   { id: "fq-sell-2", category: "Selling Your Car", question: "Is the car inspection free?", answer: "Yes. 1stCars offers a free doorstep inspection for eligible sellers." },
-  { id: "fq-sell-3", category: "Selling Your Car", question: "How is my car's price determined?", answer: "We consider the vehicle's condition, age, kilometres, documentation and current market demand. Depending on the selling route, you may receive an offer from 1stCars or competitive offers through our verified dealer network." },
+  { id: "fq-sell-3", category: "Selling Your Car", question: "How is my car's price determined?", answer: "We consider the vehicle's condition, age, kilometers, documentation, and current market demand. Depending on the selling route, you may receive an offer from 1stCars or competitive offers through our verified dealer network." },
   { id: "fq-sell-4", category: "Selling Your Car", question: "Do I have to accept the offer?", answer: "No. You remain in control of the decision. You can review the available offer and decide whether you want to proceed." },
   // ---- Inspection & Dealer Network ----
   { id: "fq-net-1", category: "Inspection & Dealer Network", question: "What does the 120-point inspection cover?", answer: "The inspection checks key mechanical, electrical, structural, exterior and interior aspects of the vehicle. The purpose is to identify the actual condition of the car before it is certified or offered." },
@@ -209,20 +209,20 @@ export function getPageContent(overrides?: Record<string, string | undefined>): 
 
 const CANONICAL_MARKETING_COPY: Record<string, string> = {
   heroSubtitle:
-    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
   footerText: "© 2026 1stCars Marketplace. All rights reserved.",
   brandSlogan: "Easy Way",
   brandDescription:
-    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
   seoTitle: "1stCars - Certified Car Marketplace",
   seoDescription:
     "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",
   certifiedSubheadingText:
     "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
   testimonialSubheadingText:
-    "We have completed over 280+ deliveries. Read reviews from verified car owners.",
+    "We have completed 280+ deliveries. Read reviews from verified car owners.",
   ctaSubheadingText:
-    "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
+    "Contact our Surat sell car hub to request a home evaluation, or to register for rare car arrivals.",
   buyCarsSubheadingText:
     "1stCars is Gujarat's premier aggregator platform connecting Car Buyers, Sellers, and Dealers. Every vehicle undergoes strict 1stMark certification for Single Owned status, Non-Accident trusted frame, and Genuine KM verification.",
 };
@@ -233,11 +233,19 @@ const LEGACY_MARKETING_COPY: Record<string, string[]> = {
     "Rigorous standards, reimagined for luxury. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
     "Inspired by rigorous standards, reimagined for ultimate convenience.",
     "Inspired by rigorous pre-owned standards, reimagined for the ultimate experience. Explore 120-point inspected, hassle-free certified vehicles with single-owner pedigree, non-accident trust, and genuine km verification.",
+    "Rigorous standards, made for you. 120-point inspected & certified cars\nSingle-owner • Accident-free • Verified kilometres",
   ],
-  footerText: ["© 2026 1stCars Luxury Marketplace. All rights reserved."],
+  footerText: [
+    "© 2026 1stCars Luxury Marketplace. All rights reserved.",
+    "© 2025 1stCars Luxury Marketplace. All rights reserved.",
+    "© 2024 1stCars Luxury Marketplace. All rights reserved.",
+    "© 2023 1stCars Luxury Marketplace. All rights reserved.",
+    "© 2026 Firstowner Cars. All rights reserved.",
+  ],
   brandSlogan: ["The Luxury Pre-Owned Hub", "CARS YOU CAN TRUST.", "CARS YOU CAN TRUST"],
   brandDescription: [
     "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
+    "Rigorous standards, made for you. 120-point inspected & certified cars\nSingle-owner • Accident-free • Verified kilometres",
   ],
   seoTitle: ["1stCars - Certified Luxury Car Marketplace"],
   seoDescription: [
@@ -302,6 +310,13 @@ export function normalizeWebsiteSettings(parsed: any): any {
   }
   if (!next.logoUrl || next.logoUrl === "🏎️ 1stCars" || next.logoUrl === "⭐") {
     next.logoUrl = "/logo.png";
+  }
+
+  // Rebrand guard: the footer once carried the pre-1stCars brand (e.g. "© 2026
+  // Firstowner Cars. All rights reserved.") from a legacy settings seed. Swap
+  // any such phrasing to the canonical 1stCars wordmark regardless of year.
+  if (typeof next.footerText === "string" && next.footerText.includes("Firstowner Cars")) {
+    next.footerText = CANONICAL_MARKETING_COPY.footerText;
   }
 
   // Swap only exact legacy demo/luxury values back to canonical copy.

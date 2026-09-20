@@ -25,19 +25,49 @@ export default async function handler(req: any, res: any) {
     ["/about-us", "monthly", "0.5"],
     ["/faq", "monthly", "0.4"],
     ["/careers", "monthly", "0.4"],
-    ["/auctions", "weekly", "0.6"]
+    ["/auctions", "weekly", "0.6"],
+    ["/our-showrooms", "weekly", "0.6"],
+    ["/120-point-certificate", "monthly", "0.5"],
+    ["/terms-and-conditions", "yearly", "0.3"]
   ];
 
   const urls: string[] = staticPages.map(
     ([loc, freq, prio]) =>
       `  <url>\n    <loc>${origin}${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n  </url>`
   );
+  const seenSlugs = new Set(staticPages.map(([loc]) => loc));
+
+  const pushPage = (slug: string, freq = "monthly", prio = "0.4") => {
+    if (!slug || seenSlugs.has("/" + slug)) return;
+    seenSlugs.add("/" + slug);
+    urls.push(
+      `  <url>\n    <loc>${origin}/${escapeXml(slug)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n  </url>`
+    );
+  };
+
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const pagesResponse = await fetch(
+        `${supabaseUrl}/rest/v1/pages?select=slug,title`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+      );
+      if (pagesResponse.ok) {
+        const pages: any[] = await pagesResponse.json();
+        for (const page of pages) {
+          if (!page || !page.slug) continue;
+          pushPage(String(page.slug));
+        }
+      }
+    } catch (e) {
+      // Fall back to the fixed routes only.
+    }
+  }
 
   let carCount = 0;
   if (supabaseUrl && supabaseKey) {
     try {
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/cars?select=id,updated_at,status&status=in.(available,listed,ready_for_sale,reserved)&limit=1000`,
+        `${supabaseUrl}/rest/v1/cars?select=id,updated_at,status&status=in.(available,reserved)&limit=1000`,
         { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
       );
       if (response.ok) {

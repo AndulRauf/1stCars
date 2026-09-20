@@ -4,4 +4,5 @@ Allow: /
 # Dynamic sitemap (includes every live car page); public/sitemap.xml is the
 # static fallback.
 Sitemap: https://1stcars.in/api/sitemap
+Sitemap: https://1stcars.in/sitemap.xml
 

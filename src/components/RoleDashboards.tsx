@@ -16,6 +16,7 @@ import {
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
 import { auctionService, AuctionActor, AuctionRecord, AUCTION_OPEN_STATES } from "@/src/lib/auctions";
+import { calculateListingEmi } from "@/src/lib/finance";
 import { AdminCMS } from "./AdminCMS";
 import { LiveSystemAlertsHub } from "./LiveSystemAlertsHub";
 import { DealerAuctions } from "./auctions/DealerAuctions";
@@ -577,7 +578,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
         price,
         km_driven: kmDriven,
         mileage: kmDriven,
-        emi: Math.round(price / 60),
+        emi: calculateListingEmi(price),
         id: editingOwnCar.id,
         created_by: current.created_by || currentUser.id,
         created_by_name: current.created_by_name || currentUser.name
@@ -963,7 +964,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                         <span className="text-base font-black text-slate-900 tabular-nums">{savedCars.length}</span>
                       </div>
                       <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Saved Cars</p>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Vehicles you've favourited</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Vehicles you've favorited</p>
                     </button>
 
                     <button

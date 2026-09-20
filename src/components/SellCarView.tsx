@@ -1560,7 +1560,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Fuel &amp; transmission</h3>
-                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the gearbox, then tap your fuel type</p>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the transmission, then tap your fuel type</p>
                     </div>
 
                     {/* Transmission toggle */}
@@ -1635,7 +1635,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Where is the car registered?</h3>
-                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the Gujarat RTO office on your number plate</p>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the Gujarat RTO office on your license plate</p>
                     </div>
 
                     {/* RTO Search Field */}
@@ -1982,7 +1982,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Your Car Inspected</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Our professional evaluator inspects your car at your home, office or inspection centre completely free.
+                  Our professional evaluator inspects your car at your home, office or inspection center completely free.
                 </p>
               </div>
             </div>

@@ -24,6 +24,9 @@ export interface RouteParams {
   variant?: string;
   city?: string;
   search?: string;
+  // True when the pathname matched no known route and fell through to the
+  // homepage fallback; callers can canonicalize the URL to "/" in that case.
+  unknown?: boolean;
 }
 
 // Slugify helper (e.g. "BMW 3 Series" => "bmw-3-series").
@@ -48,6 +51,25 @@ export function unslugify(slug: string): string {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+// Canonical-label helpers. `unslugify("bmw")` -> "Bmw" and
+// `unslugify("mercedes-benz")` -> "Mercedes Benz", which never match the
+// catalog brands "BMW" / "Mercedes-Benz" by strict equality — deep-linked and
+// back/forward routes like `/buy/bmw` or `/buy/mercedes-benz` therefore
+// resolved to a filter that matched nothing. Two labels are treated as the
+// same brand/model when they agree after stripping case, spaces, and hyphens,
+// and `resolveCanonicalName` maps a slug-derived label back to the catalog's
+// exact spelling.
+export function normalizeLabel(text: string): string {
+  return String(text).toLowerCase().replace(/[\s-]+/g, "");
+}
+
+export function resolveCanonicalName(text: string | undefined, known: string[]): string | undefined {
+  if (!text) return undefined;
+  const key = normalizeLabel(text);
+  if (!key) return undefined;
+  return known.find((name) => normalizeLabel(name) === key) || text;
 }
 
 /**
@@ -160,8 +182,10 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "error_500" };
   }
 
-  // Default fallback for unrecognized routes -> buy_cars if starts with car name, otherwise home
-  return { view: "home" };
+  // Default fallback for unrecognized routes -> homepage. The caller observes
+  // `unknown: true` and rewrites the address bar to "/" so no unknown URL is
+  // left in the browser history or served to crawlers.
+  return { view: "home", unknown: true };
 }
 
 /**

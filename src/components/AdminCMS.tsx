@@ -15,6 +15,7 @@ import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { deleteRecordFromSupabase, readDeletedTestimonialNames } from "@/src/lib/cmsSync";
 import { cn, isHiddenPage } from "@/src/lib/utils";
 import { saveCar, deleteCar, buildCarRecord, flattenCarRow, errorMessage } from "@/src/lib/carPersistence";
+import { calculateListingEmi } from "@/src/lib/finance";
 import { notificationService } from "@/src/lib/notifications";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -258,7 +259,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Buy & Sell Certified Cars With Total Confidence",
-              heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+              heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -272,7 +273,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "Easy Way",
-    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -300,10 +301,10 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     certifiedSubheadingText: "We engineered a rigorous quality benchmark to remove the friction, anxiety, and guesswork of buying pre-owned cars.",
     testimonialBadgeText: "VIP CLUB FEEDBACK",
     testimonialHeadingText: "Loved By Drivers & Collectors",
-    testimonialSubheadingText: "We have completed over 280+ deliveries. Read reviews from verified car owners.",
+    testimonialSubheadingText: "We have completed 280+ deliveries. Read reviews from verified car owners.",
     ctaBadgeText: "REQUEST ACCESS NOW",
     ctaHeadingText: "Ready to Drive Your Certified Vehicle?",
-    ctaSubheadingText: "Please contact our Surat sell car hub to request a home evaluation, or register for rare car arrivals.",
+    ctaSubheadingText: "Contact our Surat sell car hub to request a home evaluation, or to register for rare car arrivals.",
     ...PAGE_CONTENT_DEFAULTS
   });
 
@@ -685,7 +686,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       variant: inspection.variant || "ZX / Lux",
       year: inspection.year,
       price: inspection.year > 2020 ? 850000 : 450000,
-      emi: inspection.year > 2020 ? 14200 : 8500,
+      emi: calculateListingEmi(inspection.year > 2020 ? 850000 : 450000),
       location: inspection.city || "Surat",
       fuel: inspection.fuel || "Petrol",
       transmission: inspection.transmission || "Manual",

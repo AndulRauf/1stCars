@@ -432,7 +432,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transmission Gearbox *</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transmission *</label>
                   <Input
                     value={reportData.specs.transmission}
                     onChange={(e) => handleSpecChange("transmission", e.target.value)}

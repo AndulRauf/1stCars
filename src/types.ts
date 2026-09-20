@@ -37,6 +37,7 @@ export interface Car {
   // delisted and auction-sold records from surfacing on the public catalog.
   status?: "available" | "reserved" | "sold" | "pending" | "hidden" | "ended";
   cities?: string[];
+  report_120_json?: string; // Serialized Full120PointReport (inspection-flow cars)
 
 
   variant?: string;

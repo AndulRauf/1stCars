@@ -4,6 +4,7 @@ import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
 import { cn } from "@/src/lib/utils";
+import { calculateListingEmi } from "@/src/lib/finance";
 import { toast } from "@/src/lib/toast";
 import { buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
 import { trackShareEvent } from "@/src/lib/analytics";
@@ -127,15 +128,15 @@ export function CarCard({
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(car.emi);
+  }).format(calculateListingEmi(car.price));
 
-  // Stats Grid items
+  // Stats Grid items — Variant is a long free-text spec so it is given its own
+  // full-width row below instead of a 1/3-width column where it truncates.
   const stats = [
     { label: "Year", value: car.year, icon: Calendar },
     { label: "Fuel", value: car.fuel, icon: Fuel },
     { label: "KM Driven", value: `${car.mileage.toLocaleString("en-IN")} km`, icon: Gauge },
     { label: "Transmission", value: car.transmission, icon: Award },
-    { label: "Variant", value: car.variant || "Standard", icon: SlidersHorizontal },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
   // Top-4 key facts rendered as one compact chip row on mobile (the full
@@ -321,6 +322,24 @@ export function CarCard({
 
           <div className="hidden sm:block h-px bg-slate-100 my-3" />
 
+          {/* Full-width Variant row — kept outside the narrow stat columns so
+              long spec names like "40i M Sport 4MATIC" are never clipped. */}
+          {car.variant ? (
+            <div className="hidden sm:flex items-start gap-2 my-3 text-left">
+              <div className="p-1 rounded-md bg-[#2E7D32]/5 text-[#2E7D32] shrink-0">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                  Variant
+                </span>
+                <span className="block text-[11px] sm:text-xs font-extrabold text-slate-800 tracking-tight break-words leading-snug mt-0.5">
+                  {car.variant}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
           {/* Stats Grid (desktop only — mobile uses the compact chip row below) */}
           <div className="hidden sm:grid grid-cols-3 gap-y-2 gap-x-1 text-left my-3">
             {stats.map((stat) => {
@@ -334,7 +353,7 @@ export function CarCard({
                     <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
                       {stat.label}
                     </span>
-                    <span className="block text-[11px] sm:text-xs font-extrabold text-slate-800 tracking-tight truncate">
+                    <span className="block text-[11px] sm:text-xs font-extrabold text-slate-800 tracking-tight break-words leading-snug">
                       {stat.value}
                     </span>
                   </div>

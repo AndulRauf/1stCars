@@ -1,7 +1,8 @@
 import * as React from "react";
-import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Fuel, Award, MapPin, Calendar, User, Phone, Clock, MessageSquare, Heart, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Calculator, FileText, CheckCircle2, XCircle, ShieldAlert, Share2, Copy, Link as LinkIcon, Car as CarIcon } from "lucide-react";
 import { Car } from "@/src/types";
-import { OFFICIAL_120_CATEGORIES } from "@/src/data/inspection120Data";
+import { calculateEmi, calculateListingEmi } from "@/src/lib/finance";
+import { OFFICIAL_120_CATEGORIES, parseCarReport } from "@/src/data/inspection120Data";
 
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -77,23 +78,36 @@ export function CarDetailsView({
 }: CarDetailsViewProps) {
   const { cars: catalogCars } = useCatalogCars();
 
-  // 120-Point checklist totals computed from the official inspection data so
-  // the certificate banner always matches the module breakdown rendered below.
-  const total120Points = React.useMemo(
-    () => OFFICIAL_120_CATEGORIES.reduce((sum, cat) => sum + cat.questions.length, 0),
-    []
-  );
-  const passed120Points = React.useMemo(
-    () => OFFICIAL_120_CATEGORIES.reduce((sum, cat) => sum + cat.questions.filter((q) => q.passed).length, 0),
-    []
-  );
-
   // Locate selected car. Returns undefined when the car is missing (deleted or
   // unpublished) so the "Vehicle Not Available" state renders instead of
   // silently falling back to an unrelated vehicle.
   const car = React.useMemo(() => {
     return catalogCars.find((item) => item.id === carId);
   }, [carId, catalogCars]);
+
+  // Per-vehicle 120-point report (inspection-flow cars carry a stored JSON
+  // payload). When present it drives the real tallies/statuses below; cars
+  // without an itemised report render the neutral 120-Point standard instead
+  // of a cookie-cutter "verified clean" certificate that is identical on
+  // every listing.
+  const report = React.useMemo(() => parseCarReport(car?.report_120_json), [car]);
+
+  const total120Points = React.useMemo(
+    () =>
+      report
+        ? report.totalPoints || report.categories.reduce((sum, cat) => sum + cat.questions.length, 0)
+        : OFFICIAL_120_CATEGORIES.reduce((sum, cat) => sum + cat.questions.length, 0),
+    [report]
+  );
+
+  // null means "no verified figure" — callers must render neutral copy rather
+  // than inventing a pass count.
+  const passed120Points = React.useMemo(() => {
+    if (report) return report.totalPassedPoints;
+    const score = Number((car as any)?.overall_score ?? (car as any)?.overallScore);
+    if (Number.isFinite(score) && score > 0) return Math.round((score / 10) * total120Points);
+    return null;
+  }, [report, car, total120Points]);
 
   // Schema.org Structured Metadata for Car
   const schemaData = React.useMemo(() => {
@@ -209,6 +223,12 @@ export function CarDetailsView({
   const [downPayment, setDownPayment] = React.useState(20000);
   const [loanTerm, setLoanTerm] = React.useState(60); // months
 
+  // Default the slider to a 20% down payment so the calculator's opening EMI
+  // matches the listing-card EMI (same formula, same tenure).
+  React.useEffect(() => {
+    if (car) setDownPayment(Math.round((car.price * 0.2) / 1000) * 1000);
+  }, [car]);
+
   const handleScrollToBooking = (type: "test_drive" | "buy_now") => {
     if (type === "buy_now") {
       setIsBuyNowOpen(true);
@@ -222,12 +242,7 @@ export function CarDetailsView({
 
   const calculatedEmi = React.useMemo(() => {
     if (!car) return 0;
-    const principal = car.price - downPayment;
-    if (principal <= 0) return 0;
-    const annualInterestRate = 0.0549; // 5.49% Premium APR
-    const monthlyInterestRate = annualInterestRate / 12;
-    const emiValue = (principal * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, loanTerm)) / (Math.pow(1 + monthlyInterestRate, loanTerm) - 1);
-    return Math.round(emiValue);
+    return calculateEmi(car.price - downPayment, 5.49, loanTerm);
   }, [car, downPayment, loanTerm]);
 
   // Extract similar cars (same brand or price range +/- $30k)
@@ -285,17 +300,26 @@ export function CarDetailsView({
   const downloadInspectionPdf = () => {
     const safe = (s: string) =>
       s.replace(/[^\x20-\x7E]/g, "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+    const passSummary =
+      passed120Points === null
+        ? "Certified to the 120-Point standard (itemised report on request)"
+        : `${passed120Points}/${total120Points} points passed`;
+    const gradeText = report
+      ? `Grade: ${report.grade} (${report.overallScorePercent}%) | ${report.certificationResult}`
+      : "Grade: Verified per the 1stMark 120-Point standard";
     const lines = [
-      "1stCars - Official 120-Point Certified Inspection Certificate",
+      "1stCars - Official 120-Point Inspection Certificate",
       "",
       `Vehicle:  ${safe(`${car.brand} ${car.model}`)} (${car.year})`,
       `Location: ${safe(car.location || "N/A")}`,
-      `Grade:    A+ (Pristine)  |  Passed ${passed120Points}/${total120Points} points`,
-      `Inspector: Vikram Rathore (ID: INS-120-GJ-8842)`,
+      `Result:   ${safe(passSummary)}`,
+      `Grade:    ${safe(gradeText)}`,
+      report ? `Inspector: ${safe(report.inspectorName || "1stCars Certified Inspector")}` : "Inspector: 1stCars Certified Inspector",
+      report && report.inspectionDate ? `Date:      ${safe(report.inspectionDate)}` : "",
       "",
-      "This vehicle has passed the full 1stMark 120-Point quality standard:",
+      "This listing is backed by the 1stMark 120-Point quality standard:",
       "non-accident frame, authentic odometer, flood-free history and clean ECU scan.",
-    ];
+    ].filter(Boolean);
 
     const streamContent =
       "BT\n/F1 14 Tf\n72 720 Td\n14 TL\n" +
@@ -611,7 +635,7 @@ export function CarDetailsView({
             <div className="bg-[#2E7D32]/5 border border-[#2E7D32]/15 rounded-2xl p-4">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Buy Now Price</p>
               <p className="text-3xl font-black text-[#2E7D32] tracking-tight mt-0.5">{formatMoney(car.price)}</p>
-              <p className="text-xs font-bold text-slate-500 mt-1">Est. EMI <span className="text-[#2E7D32]">{formatMoney(car.emi)}/mo</span></p>
+              <p className="text-xs font-bold text-slate-500 mt-1">Est. EMI <span className="text-[#2E7D32]">{formatMoney(calculateListingEmi(car.price))}/mo</span></p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -779,26 +803,50 @@ export function CarDetailsView({
                         <div className="space-y-1">
                           <div className="flex items-center space-x-2">
                             <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border border-[#2E7D32]/20 text-[9px] font-black uppercase tracking-widest">
-                              Official 120-Point Certified Report
+                              {report ? "Official 120-Point Certified Report" : "120-Point Inspection Standard"}
                             </Badge>
-                            <span className="text-xs font-mono text-[#2E7D32]">CERT-120P-GJ-2026</span>
+                            <span className="text-xs font-mono text-[#2E7D32]">{report ? "CERT-120P-GJ-2026" : "1STMARK-120-STD"}</span>
                           </div>
                           <h3 className="text-xl font-black text-slate-900 tracking-tight pt-1">
-                            1stCars 120-Point Certified Inspection & Structural Audit
+                            {report ? "1stCars 120-Point Certified Inspection & Structural Audit" : "1stMark 120-Point Inspection Standard"}
                           </h3>
                           <p className="text-xs text-slate-500">
-                            Executed at <strong className="text-[#2E7D32]">{car.location}</strong> • Certified Inspector ID: <strong className="text-slate-800">INS-120-GJ-8842 (Vikram Rathore)</strong>
+                            {report ? (
+                              <>
+                                Executed at <strong className="text-[#2E7D32]">{car.location}</strong>
+                                {report.inspectorName ? <> • Certified Inspector: <strong className="text-slate-800">{report.inspectorName}</strong></> : null}
+                                {report.inspectionDate ? <> • {report.inspectionDate}</> : null}
+                              </>
+                            ) : (
+                              <>Every 1stCars listing is evaluated against the 1stMark 120-Point quality standard.</>
+                            )}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right">
                             <p className="text-[10px] font-bold text-[#2E7D32] uppercase tracking-widest">Vehicle Grade</p>
-                            <p className="text-3xl font-black text-slate-900">Grade A+ <span className="text-xs text-white bg-[#2E7D32] px-1.5 py-0.5 rounded font-bold">Pristine</span></p>
+                            {report ? (
+                              <p className="text-3xl font-black text-slate-900">
+                                {report.grade}{" "}
+                                <span className="text-xs text-white bg-[#2E7D32] px-1.5 py-0.5 rounded font-bold">{report.certificationResult}</span>
+                              </p>
+                            ) : (
+                              <p className="text-3xl font-black text-slate-900">{car.certified ? "1stMark" : "Inspected"}</p>
+                            )}
                           </div>
                           <div className="w-16 h-16 bg-[#2E7D32] text-white font-black rounded-2xl flex flex-col items-center justify-center text-center p-1 leading-none shadow-lg shadow-[#2E7D32]/30">
-                            <span className="text-sm font-black">{passed120Points}/{total120Points}</span>
-                            <span className="text-[8px] font-bold uppercase tracking-tighter mt-1">PASSED</span>
+                            {passed120Points !== null ? (
+                              <>
+                                <span className="text-sm font-black">{passed120Points}/{total120Points}</span>
+                                <span className="text-[8px] font-bold uppercase tracking-tighter mt-1">PASSED</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-[10px] font-black leading-tight">120</span>
+                                <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">POINT STD</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -806,12 +854,18 @@ export function CarDetailsView({
                       <div className="h-px bg-[#2E7D32]/10 my-2" />
 
                       <div className="flex flex-wrap items-center justify-between text-xs gap-3">
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-emerald-800 text-[11px] font-medium">
-                          <span>✓ 100% Non-Accident Frame</span>
-                          <span>✓ Authentic Odometer</span>
-                          <span>✓ Flood Free Guarantee</span>
-                          <span>✓ Clean ECU DTC Sweep</span>
-                        </div>
+                        {car.certified || report ? (
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-emerald-800 text-[11px] font-medium">
+                            <span>✓ 100% Non-Accident Frame</span>
+                            <span>✓ Authentic Odometer</span>
+                            <span>✓ Flood Free Guarantee</span>
+                            <span>✓ Clean ECU DTC Sweep</span>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            Certified on the 1stMark program. A verified, itemised certificate accompanies this vehicle at inspection.
+                          </p>
+                        )}
                         <button
                           onClick={downloadInspectionPdf}
                           className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all cursor-pointer shadow-sm w-full sm:w-auto"
@@ -824,8 +878,13 @@ export function CarDetailsView({
 
                     {/* 120-Point Official 12 Category Modules (vertical accordion) */}
                     <div className="space-y-2">
-                      {OFFICIAL_120_CATEGORIES.map((cat, idx) => {
+                      {(report ? report.categories : OFFICIAL_120_CATEGORIES).map((cat, idx) => {
                         const isOpen = expandedCategory === idx;
+                        const catQuestions = cat.questions || [];
+                        const catTotal = catQuestions.length;
+                        const catPassed = catQuestions.filter((q) => q.passed).length;
+                        const allPassed = catPassed === catTotal;
+                        const hasReport = Boolean(report);
                         return (
                           <div key={cat.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
                             <button
@@ -837,15 +896,35 @@ export function CarDetailsView({
                               <div>
                                 <div className="flex items-center space-x-2">
                                   <span className="text-xs font-black text-slate-900">{cat.title}</span>
-                                  <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border-none text-[9px] font-extrabold uppercase">
-                                    {cat.totalPoints} / {cat.totalPoints} Passed
-                                  </Badge>
+                                  {hasReport ? (
+                                    <Badge
+                                      className={cn(
+                                        "border-none text-[9px] font-extrabold uppercase",
+                                        allPassed ? "bg-[#2E7D32]/10 text-[#2E7D32]" : "bg-amber-500/10 text-amber-700"
+                                      )}
+                                    >
+                                      {catPassed}/{catTotal} Passed
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-slate-500/10 text-slate-500 border-none text-[9px] font-extrabold uppercase">
+                                      {catTotal} Point Standard
+                                    </Badge>
+                                  )}
                                 </div>
-                                <p className="text-xs text-slate-500 mt-0.5 font-medium">All {cat.questions.length} checkpoints verified clean by lead inspector.</p>
+                                <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                                  {hasReport
+                                    ? cat.summary || `${catPassed}/${catTotal} checkpoints passed.`
+                                    : `One of 12 modules in the 1stMark 120-Point standard — ${catTotal} checkpoints.`}
+                                </p>
                               </div>
                               <span className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-xs font-black text-[#2E7D32] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 shrink-0">
-                                  100% PASS
+                                <span
+                                  className={cn(
+                                    "text-xs font-black bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 shrink-0",
+                                    hasReport && !allPassed ? "bg-amber-50 border-amber-100 text-amber-700" : "text-[#2E7D32]"
+                                  )}
+                                >
+                                  {hasReport ? (allPassed ? `${Math.round((catPassed / catTotal) * 100)}% PASS` : `${catPassed}/${catTotal} PASSED`) : "STANDARD"}
                                 </span>
                                 <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                               </span>
@@ -853,10 +932,17 @@ export function CarDetailsView({
 
                             {isOpen && (
                               <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2 bg-white">
-                                {cat.questions.map((q) => (
+                                {catQuestions.map((q) => (
                                   <div key={q.id} className="flex items-start space-x-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                                    <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />
-                                    <span className="text-xs font-bold text-slate-700 leading-tight">{q.question}</span>
+                                    {hasReport && !q.passed ? (
+                                      <XCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5 stroke-[2.5]" />
+                                    ) : (
+                                      <CheckCircle2 className="h-4 w-4 text-[#2E7D32] shrink-0 mt-0.5 stroke-[2.5]" />
+                                    )}
+                                    <span className={cn("text-xs font-bold text-slate-700 leading-tight", hasReport && !q.passed && "text-slate-400")}>
+                                      {q.question}
+                                      {q.notes ? <span className="block text-[10px] font-medium text-slate-400 mt-0.5">Note: {q.notes}</span> : null}
+                                    </span>
                                   </div>
                                 ))}
                               </div>
