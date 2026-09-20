@@ -1349,10 +1349,18 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
 {isLoading && (
             <div className="absolute inset-0 z-40 bg-[#FAF9F6]/85 rounded-3xl flex items-start justify-center pt-24">
-              <div className="bg-white border border-slate-100 rounded-3xl p-24 text-center shadow-sm">
-                <RefreshCw className="h-10 w-10 text-[#2E7D32] animate-spin mx-auto mb-4" />
-                <h3 className="font-black text-slate-800 tracking-tight text-lg">Querying Database...</h3>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Row Level Security policy checks active</p>
+              <div className="bg-white border border-slate-100 rounded-3xl px-16 py-14 text-center shadow-sm flex flex-col items-center">
+                <div className="relative h-28 w-64 overflow-hidden" aria-hidden="true">
+                  <div className="road-lane absolute left-0 right-0 bottom-7 h-1.5" />
+                  <div className="absolute left-1/2 bottom-8 -translate-x-1/2 animate-car-bob">
+                    <Car className="h-11 w-11 text-[#2E7D32]" strokeWidth={2} />
+                  </div>
+                </div>
+                <h3 className="font-black text-slate-800 tracking-tight text-lg mt-4">Gearing up your dashboard…</h3>
+                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">Loading your cars, leads & deals</p>
+                <div className="mt-5 h-1 w-40 overflow-hidden rounded-full bg-emerald-100">
+                  <div className="progress-fill h-full w-1/3 rounded-full bg-[#2E7D32]" />
+                </div>
               </div>
             </div>
           )}

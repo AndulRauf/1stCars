@@ -234,3 +234,58 @@
     opacity: 1;
   }
 }
+
+/* ── Dashboard loading scene — a car cruising over a moving lane ──
+   Replaces the generic spinning refresh icon with a light automotive motif
+   ("gearing up your dashboard"). Reduced-motion users just see a parked car. */
+
+.road-lane {
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(46, 125, 50, 0.28) 0 14px,
+    transparent 14px 28px
+  );
+}
+
+.progress-fill {
+  transform: translateX(-100%);
+}
+
+@keyframes fc-road-move {
+  to {
+    background-position-x: 28px;
+  }
+}
+
+@keyframes fc-car-bob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes fc-progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(250%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .road-lane {
+    animation: fc-road-move 0.9s linear infinite;
+  }
+  .animate-car-bob {
+    animation: fc-car-bob 1.6s ease-in-out infinite;
+  }
+  .progress-fill {
+    animation: fc-progress-slide 1.1s ease-in-out infinite;
+  }
+}
