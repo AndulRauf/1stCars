@@ -234,6 +234,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   // Unified "Leads & Enquiries" module: one sidebar entry with tabs across
   // test drive requests, booking requests and the test drives log.
   const [leadsTab, setLeadsTab] = React.useState<"test_drive_requests" | "booking_requests" | "test_drives" | "seller_enquiries">("test_drive_requests");
+  const [sellerTab, setSellerTab] = React.useState<"enquiries" | "customers">("enquiries");
 
   // Theme Design module holds two tabs: the brand/SEO designer and UPI payments.
   const [settingsTab, setSettingsTab] = React.useState<"theme" | "payments">("theme");
@@ -2753,10 +2754,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     seller_enquiries: getModuleData("seller_enquiries").length
   };
 
+  const sellerCustomersCount = (users || []).filter((u: any) => String(u.role || "").toLowerCase() === "seller").length;
+
   // The module actually being listed right now: when the unified "leads"
   // module is open this follows the active tab, otherwise it is the sidebar
   // module itself. All list CRUD + table rendering use this value.
-  const currentListModule: CMSModule = activeModule === "leads" ? leadsTab : activeModule;
+  const currentListModule: CMSModule = activeModule === "leads"
+    ? leadsTab
+    : activeModule === "seller_enquiries"
+      ? (sellerTab === "customers" ? "users" : "seller_enquiries")
+      : activeModule;
 
   // Which storage backend backs the currently active admin module? Used by the
   // header badge so the operator always knows if edits are shared with
@@ -2817,6 +2824,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
   // module has rendered — used by the dashboard "Add New Car" quick action so
   // the button does what it says instead of just listing the catalog.
   const handleNavigateToModule = (mod: CMSModule, status: string = "all", openAdd: boolean = false) => {
+    if (mod === "seller_enquiries") setSellerTab("enquiries");
     setActiveModule(mod);
     setCurrentPage(1);
     setSearchQuery("");
@@ -3668,6 +3676,33 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                         {label}
                         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${leadsTab === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
                           {leadsCounts[id]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : activeModule === "seller_enquiries" ? (
+                <>
+                  <h3 className="font-black text-lg text-slate-900 uppercase tracking-wider">
+                    <UserCheck className="h-5 w-5 text-[#ff5a07] inline -mt-0.5 mr-1.5" /> Seller Enquiries & Customers
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                    {([
+                      ["enquiries", "Seller Enquiries", leadsCounts.seller_enquiries],
+                      ["customers", "Seller Customers", sellerCustomersCount]
+                    ] as const).map(([id, label, count]) => (
+                      <button
+                        key={id}
+                        onClick={() => { setSellerTab(id); setStatusFilter(id === "customers" ? "Seller" : "all"); setCurrentPage(1); setSearchQuery(""); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                          sellerTab === id
+                            ? "bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {label}
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${sellerTab === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                          {count}
                         </span>
                       </button>
                     ))}

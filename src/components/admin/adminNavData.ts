@@ -49,11 +49,10 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     title: "Leads & Customers",
     items: [
       { id: "leads", label: "Leads & Enquiries", icon: Inbox },
-      { id: "seller_enquiries", label: "Seller Enquiries", icon: FileText },
+      { id: "seller_enquiries", label: "Seller Enquiries & Customers", icon: FileText },
       { id: "sell_form", label: "Sell Form & Brands", icon: ClipboardEdit },
       { id: "crm_activities", label: "CRM Activity Log", icon: ClipboardList },
-      { id: "users", label: "Buyer Customers", icon: Users, deepFilter: "Buyer" },
-      { id: "users", label: "Seller Customers", icon: UserCheck, deepFilter: "Seller" }
+      { id: "users", label: "Buyer Customers", icon: Users, deepFilter: "Buyer" }
     ]
   },
   {
