@@ -83,4 +83,37 @@ describe("parseCurrentUrl unknown route fallback", () => {
       expect(route.unknown, path).toBeUndefined();
     }
   });
+
+  it("returns no phantom brand for the plain catalog paths", () => {
+    // Regression: "/buy-cars" used to be parsed as a /buy/ segment, so stripping
+    // the prefix left "-cars" -> unslugify -> " Cars", an impossible brand that
+    // emptied the grid on every direct load / refresh.
+    for (const path of ["/buy-cars", "/buy", "/buy-cars/", "/buy/"]) {
+      const restore = stubWindow(path);
+      const route = parseCurrentUrl();
+      restore();
+      expect(route.view, path).toBe("buy_cars");
+      expect(route.brand, path).toBeUndefined();
+      expect(route.model, path).toBeUndefined();
+    }
+  });
+
+  it("keeps brand/model from deep /buy/ segment routes and query params", () => {
+    const r1Restore = stubWindow("/buy/bmw");
+    const r1 = parseCurrentUrl();
+    r1Restore();
+    expect(r1.view).toBe("buy_cars");
+    expect(resolveCanonicalName(r1.brand, FAMOUS_BRANDS)).toBe("BMW");
+
+    const r2Restore = stubWindow("/buy/bmw/3-series");
+    const r2 = parseCurrentUrl();
+    r2Restore();
+    expect(r2.model).toBe("3 Series");
+
+    const r3Restore = stubWindow("/buy-cars", "?brand=BMW&search=porsche");
+    const r3 = parseCurrentUrl();
+    r3Restore();
+    expect(r3.brand).toBe("BMW");
+    expect(r3.search).toBe("porsche");
+  });
 });

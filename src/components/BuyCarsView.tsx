@@ -93,11 +93,16 @@ export function BuyCarsView({
   React.useEffect(() => {
     if (initialBrand || initialSearch) {
       const knownBrands = Array.from(new Set([...FAMOUS_BRANDS, ...catalogCars.map((c) => c.brand).filter(Boolean)]));
+      const known =
+        !!initialBrand && knownBrands.some((b) => normalizeLabel(b) === normalizeLabel(initialBrand));
       const canonicalBrand = resolveCanonicalName(initialBrand, knownBrands) || initialBrand;
+      // Defensive: if the route's brand never resolves to a known brand, drop
+      // it to "All" (and keep it out of the search box) instead of rendering an
+      // empty grid — a slug like " Cars" is not a brand anyone can buy.
       setFilters(prev => ({
         ...prev,
-        brand: canonicalBrand || prev.brand,
-        search: initialSearch || (initialModel ? `${canonicalBrand || ''} ${initialModel}` : prev.search)
+        brand: known ? canonicalBrand : "All",
+        search: initialSearch || (initialModel ? (known ? `${canonicalBrand} ${initialModel}` : initialModel) : prev.search)
       }));
     }
   }, [initialBrand, initialModel, initialSearch, catalogCars]);

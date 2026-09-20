@@ -143,12 +143,27 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "custom_page", pageId };
   }
 
-  // Route 7: Buy Cars / Filters (`/buy-cars`, `/buy`, `/buy/:brand`, `/buy/:brand/:model`)
-  if (pathname === "/buy-cars" || pathname === "/buy" || pathname.startsWith("/buy/")) {
+  // Route 7: Buy Cars / Filters. The plain catalog pages (`/buy-cars`, `/buy`)
+  // must NOT fall through to the `/buy/:brand` segment parsing — stripping the
+  // "/buy" prefix from "/buy-cars" leaves "-cars", which unslugifies to
+  // " Cars" and becomes a phantom brand filter that empties the grid on every
+  // direct load/refresh.
+  if (pathname === "/buy-cars" || pathname === "/buy") {
     // Handoff from the crawler-preview page: `/buy-cars?carId=x` opens the car detail view.
     if (searchParams.get("carId")) {
       return { view: "car_details", carId: searchParams.get("carId") as string };
     }
+    return {
+      view: "buy_cars",
+      brand: brandQuery,
+      model: modelQuery,
+      variant: variantQuery,
+      city: cityQuery,
+      search: searchQuery
+    };
+  }
+
+  if (pathname.startsWith("/buy/")) {
     const segments = pathname.replace(/^\/buy\/?/, "").split("/").filter(Boolean);
     let brand = brandQuery;
     let model = modelQuery;
@@ -162,10 +177,10 @@ export function parseCurrentUrl(): RouteParams {
       model = unslugify(segments[1]);
     }
 
-    return { 
-      view: "buy_cars", 
-      brand: brand || undefined, 
-      model: model || undefined, 
+    return {
+      view: "buy_cars",
+      brand: brand || undefined,
+      model: model || undefined,
       variant: variantQuery,
       city: cityQuery,
       search: searchQuery

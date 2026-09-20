@@ -1315,7 +1315,7 @@ export default function App() {
           <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs font-extrabold text-slate-300">
             <span className="flex items-center"><CheckCircle className="h-4.5 w-4.5 text-[#2E7D32] mr-2 shrink-0" /> Zero Obligations</span>
             <span className="flex items-center"><CheckCircle className="h-4.5 w-4.5 text-[#2E7D32] mr-2 shrink-0" /> No High-pressure Sales</span>
-            <span className="flex items-center"><CheckCircle className="h-4.5 w-4.5 text-[#2E7D32] mr-2 shrink-0" /> Fast DMV title preparation</span>
+            <span className="flex items-center"><CheckCircle className="h-4.5 w-4.5 text-[#2E7D32] mr-2 shrink-0" /> Fast RTO transfer assistance</span>
           </div>
 
         </div>
