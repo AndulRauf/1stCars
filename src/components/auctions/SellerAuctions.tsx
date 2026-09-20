@@ -27,6 +27,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
   const [auctions, setAuctions] = React.useState<AuctionRecord[]>([]);
   const [cars, setCars] = React.useState<any[]>([]);
   const [inspections, setInspections] = React.useState<any[]>([]);
+  const [dealers, setDealers] = React.useState<any[]>([]);
   const [filter, setFilter] = React.useState<string>(REVIEW_FILTER);
   const [search, setSearch] = React.useState("");
   const [loading, setLoading] = React.useState(true);
@@ -41,14 +42,16 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
   const reload = React.useCallback(async () => {
     setLoading(true);
     try {
-      const [auctionList, carData, inspData] = await Promise.all([
+      const [auctionList, carData, inspData, dealerData] = await Promise.all([
         auctionService.listAuctions(actor),
         (supabase as any).from("cars").select("*"),
-        (supabase as any).from("inspections").select("*")
+        (supabase as any).from("inspections").select("*"),
+        (supabase as any).from("profiles").select("*").eq("role", "Dealer")
       ]);
       setAuctions(auctionList);
       setCars(carData.data || []);
       setInspections(inspData.data || []);
+      setDealers(dealerData.data || []);
     } finally {
       setLoading(false);
     }
@@ -90,6 +93,16 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
       city: insp?.city ?? car?.city
     };
   };
+
+  // Resolve the winning dealer from the profiles table instead of showing a
+  // masked UUID — sellers are deciding on a real, legal counterparty.
+  const dealerOf = (id: string | null | undefined) => {
+    const d = dealers.find((x) => x.id === id);
+    if (!id) return { name: "No confirmed winner yet", city: "" };
+    return { name: d?.name || `Dealer #${String(id).substring(0, 8)}`, city: d?.city || "" };
+  };
+  const detailWinner = detail ? dealerOf(detail.winner_dealer_id) : null;
+  const confirmWinner = confirm ? dealerOf(confirm.auction.winner_dealer_id) : null;
 
   const decide = async () => {
     if (!confirm) return;
@@ -229,14 +242,19 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                   </div>
                 </div>
 
-                {isReview && (
-                  <div className="p-3 bg-violet-50 border border-violet-200 rounded-xl flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-violet-600 shrink-0" />
-                    <p className="text-xs font-semibold text-violet-800">
-                      The auction closed at <strong>{formatINR(a.current_highest_bid)}</strong>. Accept to proceed with the sale, or reject to keep your vehicle.
-                    </p>
-                  </div>
-                )}
+                {isReview && (() => {
+                  const winner = dealerOf(a.winner_dealer_id);
+                  return (
+                    <div className="p-3 bg-violet-50 border border-violet-200 rounded-xl flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-violet-600 shrink-0" />
+                      <p className="text-xs font-semibold text-violet-800">
+                        The auction closed at <strong>{formatINR(a.current_highest_bid)}</strong>
+                        {a.winner_dealer_id ? <> with <strong>{winner.name}</strong>{winner.city ? <> ({winner.city})</> : null} as the winning bidder</> : null}
+                        . Accept to proceed with the sale, or reject to keep your vehicle.
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 {isSettled && a.status === "ACCEPTED" && (
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
@@ -312,8 +330,8 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
             </div>
             <div className="space-y-1.5">
               {confirm.kind === "accept" ? (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800">
-                  You'll sell at <strong>{formatINR(confirm.auction.current_highest_bid)}</strong> and the winning dealer will be routed to payment.
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800 leading-relaxed">
+                  You'll sell to <strong>{confirmWinner?.name ?? "the winning dealer"}</strong>{confirmWinner?.city ? <> ({confirmWinner.city})</> : null} for <strong>{formatINR(confirm.auction.current_highest_bid)}</strong>. The winning dealer will be routed to payment.
                 </div>
               ) : (
                 <Input
@@ -378,7 +396,8 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
             <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
               <div>
                 <p className="text-[11px] font-bold text-indigo-700">Winning dealer</p>
-                <p className="text-sm font-black text-indigo-900 mt-0.5">{detail.winner_dealer_id ? `Dealer #${detail.winner_dealer_id.substring(0, 8)}` : "No confirmed winner yet"}</p>
+                <p className="text-sm font-black text-indigo-900 mt-0.5">{detailWinner?.name || "No confirmed winner yet"}</p>
+                <p className="text-[10px] font-bold text-indigo-600 mt-0.5">{detailWinner?.city ? `📍 ${detailWinner.city}` : "Winning dealer is completing payment"}</p>
               </div>
               <Wallet className="h-5 w-5 text-indigo-400" />
             </div>

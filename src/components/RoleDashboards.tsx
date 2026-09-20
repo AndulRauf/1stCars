@@ -103,6 +103,10 @@ interface RoleDashboardsProps {
 export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
+  // Tracks whether the dashboard has rendered data at least once, so the full
+  // loading overlay only appears on the very first load — refreshes after
+  // Accept/Reject actions no longer blank out already-visible content.
+  const [hasLoadedOnce, setHasLoadedOnce] = React.useState(false);
 
   // Sales CRM (Phase 1) shared data — real queries scoped to this associate
   // (leads, owned cars, test drives, follow-ups). Used by the upgraded
@@ -168,6 +172,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const [editingOwnCar, setEditingOwnCar] = React.useState<any | null>(null);
   const [ownCarDraft, setOwnCarDraft] = React.useState<Record<string, string | number>>({});
   const [isSavingOwnCar, setIsSavingOwnCar] = React.useState(false);
+
+  // Dealer-offer decision confirmation — accepting or rejecting a cash bid is
+  // high-stakes and immediate, so gate it behind an explicit confirm dialog.
+  const [confirmOffer, setConfirmOffer] = React.useState<{ offer: Offer; action: "accepted" | "rejected" } | null>(null);
 
   // Sell-form-style catalog (brands/models/variants) shared with the admin
   // editor so Sales Associates upload with the exact same choices.
@@ -289,6 +297,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       console.error("Error loading dashboard data", err);
     } finally {
       setIsLoading(false);
+      setHasLoadedOnce(true);
     }
   };
 
@@ -304,6 +313,24 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       case "Admin": setActiveTab("overview"); break;
     }
   }, [currentUser]);
+
+  // Keep the seller's Dealer Offers Bids tab fresh without forcing a
+  // full-dashboard reload — mirrors the auction tab's 30s poll (see
+  // SellerAuctions) so a new bid appears while the seller is looking at offers.
+  React.useEffect(() => {
+    if (currentUser.role !== "Seller" || activeTab !== "offers") return;
+    const poll = window.setInterval(async () => {
+      try {
+        const { data: offs } = await supabase.from("offers").select();
+        const { data: insps } = await supabase.from("inspections").select();
+        if (offs) setOffers(offs);
+        if (insps) setInspections(insps);
+      } catch (e) {
+        console.warn("[seller] offers poll skipped:", e);
+      }
+    }, 30000);
+    return () => window.clearInterval(poll);
+  }, [currentUser.role, activeTab]);
 
   // Handle Buyer: Cancel Test Drive — removes the slot locally and, for
   // Supabase-sourced bookings, marks the lead cancelled on the server when RLS
@@ -1037,7 +1064,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => handleSellerOfferAction(off.id, "accepted")}
+                          onClick={() => setConfirmOffer({ offer: off, action: "accepted" })}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-9 rounded-lg px-3"
                         >
                           Accept
@@ -1045,7 +1072,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleSellerOfferAction(off.id, "rejected")}
+                          onClick={() => setConfirmOffer({ offer: off, action: "rejected" })}
                           className="border-rose-100 hover:bg-rose-50 text-rose-600 text-xs font-bold h-9 rounded-lg px-3 bg-white"
                         >
                           Reject
@@ -1347,7 +1374,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
           </div>
         </div>
 
-{isLoading && (
+{isLoading && !hasLoadedOnce && (
             <div className="absolute inset-0 z-40 bg-[#FAF9F6]/85 rounded-3xl flex items-start justify-center pt-24">
               <div className="bg-white border border-slate-100 rounded-3xl px-16 py-14 text-center shadow-sm flex flex-col items-center">
                 <div className="relative h-28 w-64 overflow-hidden" aria-hidden="true">
@@ -1508,6 +1535,63 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </div>
           </div>
         )}
+
+        {/* Dealer offer decision confirmation */}
+        {!!confirmOffer && (() => {
+          const insp = inspections.find(i => i.id === confirmOffer.offer.inspection_id);
+          const vehicleTitle = insp ? `${insp.year} ${insp.brand} ${insp.model}` : confirmOffer.offer.dealer_name || "Your vehicle";
+          return (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-lg text-slate-900">
+                      {confirmOffer.action === "accepted" ? "Confirm sale to this dealer" : "Reject this dealer offer?"}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold">
+                      {vehicleTitle} • Dealer: {confirmOffer.offer.dealer_name}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setConfirmOffer(null)}
+                    className="p-2 rounded-full hover:bg-slate-100 cursor-pointer"
+                    aria-label="Close confirmation"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  {confirmOffer.action === "accepted" ? (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] font-bold text-emerald-800 leading-relaxed">
+                      You're committing to sell for <strong>₹{Number(confirmOffer.offer.offer_amount).toLocaleString("en-IN")}</strong>. Accepting finalizes this dealer's cash bid.
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] font-bold text-rose-800 leading-relaxed">
+                      The dealer's <strong>₹{Number(confirmOffer.offer.offer_amount).toLocaleString("en-IN")}</strong> bid will be declined and the offer closed.
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmOffer(null)} className="h-9 px-4 text-[10px]">Keep</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      void handleSellerOfferAction(confirmOffer.offer.id, confirmOffer.action);
+                      setConfirmOffer(null);
+                    }}
+                    className={confirmOffer.action === "accepted"
+                      ? "h-9 px-5 text-[10px] bg-[#2E7D32] hover:bg-[#25632a] text-white"
+                      : "h-9 px-5 text-[10px] bg-rose-600 hover:bg-rose-700 text-white"}
+                  >
+                    {confirmOffer.action === "accepted" ? "Confirm Sale" : "Reject Offer"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
