@@ -1216,6 +1216,16 @@ export function CRM({
   // -------------------------------------------------------------------------
   // Main render
   // -------------------------------------------------------------------------
+  // True when every CRM activity source is empty — powers the "no activity
+  // captured yet" banner that explains a zero-funnel instead of a bare page.
+  const crmActivityEmpty =
+    salesLeads.length === 0 &&
+    sellRequests.length === 0 &&
+    parkSell.length === 0 &&
+    inspections.length === 0 &&
+    offers.length === 0 &&
+    dealerBids.length === 0;
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -1252,6 +1262,25 @@ export function CRM({
           </Button>
         </div>
       </div>
+
+      {/* Empty-state / data-health banner — explains the zero-funnel instead
+          of a bare page when the live site hasn't captured CRM data yet. */}
+      {crmActivityEmpty && (
+        <div className="bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 text-[11px] font-bold text-amber-800 flex items-start gap-2.5">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div>
+            <p>No CRM activity captured yet — buyer leads, sell requests, inspections, offers and dealer bids currently sit at zero, so the funnel and activity feed below are empty (inventory still shows under Records).</p>
+            {profiles.length === 0 && (
+              <p className="mt-1 font-semibold text-amber-700">No customer profiles yet either — site sign-ups and role registrations populate the Customers tab.</p>
+            )}
+            <p className="mt-1 font-semibold text-amber-700">
+              To preview this center with realistic sample data, run{" "}
+              <code className="bg-amber-100 px-1 py-0.5 rounded font-black">public/seed_crm_demo.sql</code>{" "}
+              in Supabase → SQL Editor. It is idempotent and never touches existing rows.
+            </p>
+          </div>
+        </div>
+      )}
 
       {detail ? (
         renderDetail()
