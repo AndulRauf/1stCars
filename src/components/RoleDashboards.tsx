@@ -15,7 +15,7 @@ import {
 } from "@/src/lib/db";
 import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService, useNotifications } from "@/src/lib/notifications";
-import { auctionService, AuctionActor } from "@/src/lib/auctions";
+import { auctionService, AuctionActor, AuctionRecord, AUCTION_OPEN_STATES } from "@/src/lib/auctions";
 import { AdminCMS } from "./AdminCMS";
 import { LiveSystemAlertsHub } from "./LiveSystemAlertsHub";
 import { DealerAuctions } from "./auctions/DealerAuctions";
@@ -97,10 +97,11 @@ interface RoleDashboardsProps {
   currentUser: Profile;
   onLogout: () => void;
   onNavigateToInventory: () => void;
+  onNavigateToSell?: () => void;
   onReloadAllData?: () => void;
 }
 
-export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onReloadAllData }: RoleDashboardsProps) {
+export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, onNavigateToSell, onReloadAllData }: RoleDashboardsProps) {
   const [activeTab, setActiveTab] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
   // Tracks whether the dashboard has rendered data at least once, so the full
@@ -306,7 +307,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     // Default sub-tab based on role
     switch (currentUser.role) {
       case "Buyer": setActiveTab("saved_cars"); break;
-      case "Seller": setActiveTab("inspections"); break;
+      case "Seller": setActiveTab("overview"); break;
       case "Dealer": setActiveTab("auctions"); break;
       case "Inspector": setActiveTab("assigned"); break;
       case "Sales Associate": setActiveTab("overview"); break;
@@ -569,6 +570,43 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
     return offers.filter(o => sellerInspIds.has(o.inspection_id));
   }, [currentUser, inspections, offers]);
 
+  // Seller-owned auctions — polled so the Overview tiles and menu badges stay
+  // live without the seller having to open the auctions tab (mirrors the
+  // auction tab's own 30s refresh; local mode scopes by seller_id).
+  const [sellerAuctions, setSellerAuctions] = React.useState<AuctionRecord[]>([]);
+  React.useEffect(() => {
+    if (currentUser.role !== "Seller") return;
+    let mounted = true;
+    const load = async () => {
+      try {
+        const list = await auctionService.listAuctions({ userId: currentUser.id, role: currentUser.role });
+        if (mounted) setSellerAuctions(list);
+      } catch (e) {
+        console.warn("[seller] auctions overview sync skipped:", e);
+      }
+    };
+    void auctionService.ensureDemo().then(() => load());
+    const poll = window.setInterval(() => { void load(); }, 30000);
+    return () => { mounted = false; window.clearInterval(poll); };
+  }, [currentUser.id, currentUser.role]);
+
+  // Seller's own inspection requests (shared by the Overview hub and the
+  // Inspection Status tab) — matched by seller id, or vendor mobile/email.
+  const sellerInspections = React.useMemo(() => {
+    if (currentUser.role !== "Seller") return [];
+    return inspections.filter(i =>
+      i.seller_id === currentUser.id ||
+      (i.seller_mobile && i.seller_mobile === currentUser.mobile) ||
+      (!!i.seller_email && !!currentUser.email && i.seller_email.toLowerCase() === currentUser.email.toLowerCase())
+    );
+  }, [currentUser, inspections]);
+
+  const inspCount = (s: string) => sellerInspections.filter(i => i.status === s).length;
+  const auctionsReviewCount = sellerAuctions.filter(a => a.status === "SELLER_REVIEW").length;
+  const auctionsLiveCount = sellerAuctions.filter(a => AUCTION_OPEN_STATES.includes(a.status)).length;
+  const pendingOffersCount = sellerOffers.filter(o => o.status === "pending").length;
+  const hasAnySellerActivity = auctionsReviewCount + auctionsLiveCount + pendingOffersCount + sellerInspections.length > 0;
+
   // Dealer KYC gate: show a locked "under review" screen instead of the dealer
   // dashboard until the Admin approves the application.
   if (currentUser.role === "Dealer" && dealerPending === true) {
@@ -705,21 +743,35 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 {currentUser.role === "Seller" && (
                   <>
                     {[
-                      { id: "inspections", label: "Inspection Status", icon: ClipboardList },
-                      { id: "auctions", label: "My Car Auctions", icon: Gavel },
-                      { id: "offers", label: "Dealer Offers Bids", icon: DollarSign }
+                      { id: "overview", label: "Overview", icon: LayoutDashboard, count: 0 },
+                      { id: "auctions", label: "My Car Auctions", icon: Gavel, count: auctionsReviewCount },
+                      { id: "offers", label: "Direct Dealer Offers", icon: DollarSign, count: pendingOffersCount },
+                      { id: "inspections", label: "Inspection Status", icon: ClipboardList, count: 0 },
+                      { id: "sell_car", label: "Sell a New Car", icon: Upload, count: 0 }
                     ].map(tab => (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)} title={tab.label}
+                        onClick={() => {
+                          if (tab.id === "sell_car") {
+                            if (onNavigateToSell) onNavigateToSell();
+                            return;
+                          }
+                          setActiveTab(tab.id);
+                        }}
+                        title={tab.label}
                         className={`px-4 py-2.5 justify-center whitespace-nowrap shrink-0 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                          activeTab === tab.id 
-                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20" 
+                          (activeTab === tab.id && tab.id !== "sell_car")
+                            ? "bg-white text-[#2E7D32] shadow-sm border border-[#2E7D32]/20"
                             : "text-slate-500 hover:text-slate-800 hover:bg-white/80"
                         }`}
                       >
                         <tab.icon className="h-4.5 w-4.5" />
                         <span>{tab.label}</span>
+                        {tab.count > 0 && (
+                          <span className="ml-0.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-600 text-white text-[10px] font-black tabular-nums shadow-sm">
+                            {tab.count}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </>
@@ -948,6 +1000,108 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 <SellerAuctions currentUser={currentUser} />
               )}
 
+              {/* Seller Overview — KPI hub that links into the money tabs */}
+              {currentUser.role === "Seller" && activeTab === "overview" && (
+                <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+                  <div className="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-black text-xl text-slate-900 tracking-tight">Your Selling Overview</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">A snapshot of your cars, auctions and offers — everything that needs your attention.</p>
+                    </div>
+                    {onNavigateToSell && (
+                      <Button
+                        onClick={onNavigateToSell}
+                        className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-10 px-4 rounded-xl shrink-0 flex items-center gap-1.5"
+                      >
+                        <Upload className="h-4 w-4" /> Sell a New Car
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button
+                      onClick={() => setActiveTab("auctions")}
+                      className="text-left bg-white border border-slate-100 hover:border-violet-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <AlarmClock className="h-5 w-5 text-violet-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{auctionsReviewCount}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Awaiting Your Decision</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Closed auctions needing a yes/no</p>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("auctions")}
+                      className="text-left bg-white border border-slate-100 hover:border-[#2E7D32]/40 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Gavel className="h-5 w-5 text-[#2E7D32]" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{auctionsLiveCount}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Live Auctions</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Dealers bidding on your cars now</p>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("offers")}
+                      className="text-left bg-white border border-slate-100 hover:border-amber-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <DollarSign className="h-5 w-5 text-amber-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{pendingOffersCount}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Direct Offers Pending</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">Cash bids on your cars to review</p>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab("inspections")}
+                      className="text-left bg-white border border-slate-100 hover:border-blue-300 rounded-2xl p-4 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <ClipboardList className="h-5 w-5 text-blue-600" />
+                        <span className="text-base font-black text-slate-900 tabular-nums">{sellerInspections.length}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-500 leading-none mt-3">Cars in Inspection</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1">
+                        {inspCount("pending")} pending · {inspCount("assigned")} in progress · {inspCount("completed")} completed
+                      </p>
+                    </button>
+                  </div>
+
+                  {!hasAnySellerActivity && onNavigateToSell && (
+                    <div className="p-4 sm:p-5 bg-[#FAF9F6] border border-dashed border-slate-200 rounded-2xl text-center space-y-1.5">
+                      <Car className="h-9 w-9 text-[#2E7D32] mx-auto" />
+                      <p className="text-xs font-black text-slate-700 uppercase tracking-wider">No active deals yet</p>
+                      <p className="text-[11px] text-slate-400 font-semibold">Start by listing your car for a free doorstep inspection.</p>
+                      <Button
+                        onClick={onNavigateToSell}
+                        className="mt-2 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider h-9 px-4 rounded-xl"
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1.5" /> Sell a New Car
+                      </Button>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {[
+                      { label: "See My Car Auctions", target: "auctions" },
+                      { label: "See Direct Offers", target: "offers" },
+                      { label: "See Inspections", target: "inspections" }
+                    ].map((q) => (
+                      <button
+                        key={q.target}
+                        onClick={() => setActiveTab(q.target)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 text-slate-600 hover:border-[#2E7D32]/40 hover:text-slate-800 transition-colors cursor-pointer"
+                      >
+                        <ArrowRight className="h-3 w-3" /> {q.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Inspection Status */}
               {currentUser.role === "Seller" && activeTab === "inspections" && (
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
@@ -957,8 +1111,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   </div>
 
                   {(() => {
-                    const myInspections = inspections.filter(i => i.seller_id === currentUser.id || (i.seller_mobile && i.seller_mobile === currentUser.mobile) || (!!i.seller_email && !!currentUser.email && i.seller_email.toLowerCase() === currentUser.email.toLowerCase()));
-                    const inspCount = (s: string) => myInspections.filter((i) => i.status === s).length;
+                    const myInspections = sellerInspections;
                     return myInspections.length > 0 ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

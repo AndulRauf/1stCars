@@ -968,6 +968,9 @@ export default function App() {
             onNavigateToInventory={() => {
               handleNavigate("buy_cars");
             }}
+            onNavigateToSell={() => {
+              handleNavigate("sell_car");
+            }}
             onReloadAllData={loadSettingsAndCMSData}
           />
         ) : (
