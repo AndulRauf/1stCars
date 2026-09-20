@@ -4,7 +4,7 @@ import {
   Trash2, ArrowRight, DollarSign, Hammer, 
 Upload, Check, Pencil, Eye, X,
   RefreshCw, ClipboardList, Car, Gavel,
-LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock
+LayoutDashboard, AlarmClock, GitBranch, History, CalendarClock, MapPin
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -92,6 +92,14 @@ const orderFromLead = (l: any) => ({
   date: l.preferred_date || (l.created_at || "").slice(0, 10),
   price: parseAmountFromNotes(l.notes)
 });
+
+interface OrderRow {
+  id: string;
+  status: string;
+  car_title: string;
+  date?: string;
+  price?: number;
+}
 
 interface RoleDashboardsProps {
   currentUser: Profile;
@@ -192,7 +200,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   // Buyer-specific states
   const [savedCars, setSavedCars] = React.useState<string[]>([]);
   const [testDrives, setTestDrives] = React.useState<any[]>([]);
-  const [orders, setOrders] = React.useState<any[]>([]);
+  const [orders, setOrders] = React.useState<OrderRow[]>([]);
 
   // Real-time alerts feed hook
   const { notifications: userNotifs, unreadCount, markRead, markAllRead } = useNotifications(currentUser?.id);
@@ -985,7 +993,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
                   {orders.length > 0 ? (
                     <div className="space-y-3">
-                      {orders.map((ord: any) => (
+                      {orders.map((ord) => (
                         <div key={ord.id} className="border border-slate-100 rounded-2xl p-4 bg-[#FAF9F6] flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                           <div className="space-y-1">
                             <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-black inline-block">
@@ -1170,8 +1178,8 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-bold text-slate-600">
-                            <div>📍 Inspection Location: <span className="text-slate-800">{item.address}</span></div>
-                            <div>📅 Preferred Date/Slot: <span className="text-[#2E7D32]">{item.preferred_date} ({item.preferred_time})</span></div>
+                            <div className="flex items-start gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" /> Inspection Location: <span className="text-slate-800">{item.address}</span></div>
+                            <div className="flex items-start gap-1.5"><CalendarClock className="h-3.5 w-3.5 text-[#2E7D32] shrink-0 mt-0.5" /> Preferred Date/Slot: <span className="text-[#2E7D32]">{item.preferred_date} ({item.preferred_time})</span></div>
                           </div>
 
                           {item.overall_score && (
@@ -1200,9 +1208,21 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
               {currentUser.role === "Seller" && activeTab === "offers" && (
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="border-b border-slate-100 pb-4">
-                    <h3 className="font-black text-xl text-slate-900 tracking-tight">Active Dealer Offers</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Competitive live bids placed on your certified inspected cars.</p>
+                    <h3 className="font-black text-xl text-slate-900 tracking-tight">Direct Dealer Offers</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Cash offers dealers sent you directly for your cars — separate from live auction bids.</p>
                   </div>
+
+                  {pendingOffersCount > 0 && (
+                    <button
+                      onClick={() => setActiveTab("auctions")}
+                      className="w-full flex items-center justify-between gap-3 p-3 border border-violet-100 bg-violet-50/60 rounded-xl text-left hover:border-violet-300 transition-colors cursor-pointer"
+                    >
+                      <span className="text-[11px] font-bold text-violet-700">
+                        Dealers may also be bidding live on your cars — {auctionsLiveCount} auction{auctionsLiveCount === 1 ? "" : "s"} open right now.
+                      </span>
+                      <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black text-violet-800 uppercase tracking-wider">View live bids <ArrowRight className="h-3 w-3" /></span>
+                    </button>
+                  )}
 
                   {/* Only show offers placed on the current seller's own inspected cars */}
                   {sellerOffers.length > 0 ? (
@@ -1221,7 +1241,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                         off.status === "pending" ? "bg-amber-100 text-amber-700" :
                         off.status === "accepted" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
                       }`}>
-                        {off.status}
+                        {off.status === "pending" ? "Pending" : off.status === "accepted" ? "Accepted" : "Rejected"}
                       </span>
                     </p>
                   </div>
@@ -1259,8 +1279,15 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   ) : (
                     <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
                       <DollarSign className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-bold">No bids currently placed on your cars.</p>
+                      <p className="text-xs text-slate-500 font-bold">No direct offers placed on your cars yet.</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">Completed inspections enter dealer live bidding instantly.</p>
+                      <Button
+                        variant="link"
+                        onClick={() => setActiveTab("auctions")}
+                        className="text-[#2E7D32] text-xs font-black uppercase tracking-wider mt-1"
+                      >
+                        View live auction bids instead
+                      </Button>
                     </div>
                   )}
                 </div>
