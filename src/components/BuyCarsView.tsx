@@ -102,6 +102,29 @@ export function BuyCarsView({
     }
   }, [initialBrand, initialModel, initialSearch, catalogCars]);
 
+  // Default-city safety: on a fresh load the catalog starts empty, so the
+  // initial "selectedCity" (e.g. "Surat") is checked only AFTER the inventory
+  // arrives. If the default city matches zero vehicles (DB rows carry another
+  // city), relax the filter to "All Cities" instead of showing a confusing
+  // "No Matching Inventory" card on refresh. Runs once per mount; later city
+  // choices are left untouched.
+  const initialCitySettled = React.useRef(false);
+  React.useEffect(() => {
+    if (initialCitySettled.current || catalogLoading || catalogCars.length === 0) return;
+    initialCitySettled.current = true;
+    setFilters(prev => {
+      if (prev.city === "All Cities") return prev;
+      const c = prev.city.toLowerCase();
+      const hasMatch = catalogCars.some(
+        (car) =>
+          car.cities?.some((x) => x.toLowerCase() === c) ||
+          car.regCity?.toLowerCase() === c ||
+          car.location?.toLowerCase().includes(c)
+      );
+      return hasMatch ? prev : { ...prev, city: "All Cities" };
+    });
+  }, [catalogLoading, catalogCars]);
+
   // UI Settings States
   const [isListView, setIsListView] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<string>("featured");

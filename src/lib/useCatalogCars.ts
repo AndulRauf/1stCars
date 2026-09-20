@@ -119,7 +119,14 @@ export function useCatalogCars(): CatalogState {
     if (typeof window === "undefined") return true;
     try {
       const raw = localStorage.getItem(DB_CACHE_KEY);
-      if (raw && Array.isArray(JSON.parse(raw))) return false;
+      if (raw) {
+        const cached = JSON.parse(raw);
+        // A warm cache only proves we can paint instantly when it actually
+        // holds listable inventory. An empty (or all-hidden) cache must NOT
+        // skip the loading state — otherwise BuyCarsView would flash its
+        // "No Matching Inventory" card on refresh BEFORE the refetch resolves.
+        if (Array.isArray(cached) && cached.filter(isListable).length > 0) return false;
+      }
     } catch (e) {
       // corrupted cache — treat as cold
     }
