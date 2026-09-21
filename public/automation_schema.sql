@@ -171,6 +171,7 @@ CREATE POLICY "Admin manages crm activities" ON public.crm_activities FOR ALL US
 -- ====================================================
 
 -- 3.1 Write an audit log entry.
+DROP FUNCTION IF EXISTS public.automation_log(text, text, text, jsonb, uuid, uuid);
 CREATE OR REPLACE FUNCTION public.automation_log(
   p_level text,
   p_action text,
@@ -188,6 +189,7 @@ END;
 $$;
 
 -- 3.2 Record a business event (idempotent via action_key).
+DROP FUNCTION IF EXISTS public.automation_record_event(text, text, text, jsonb);
 CREATE OR REPLACE FUNCTION public.automation_record_event(
   p_event_type text,
   p_source_table text,
@@ -215,6 +217,7 @@ END;
 $$;
 
 -- 3.3 Create a system notification (and audit it).
+DROP FUNCTION IF EXISTS public.automation_notify(uuid, text, text, text, jsonb, uuid);
 CREATE OR REPLACE FUNCTION public.automation_notify(
   p_recipient_id uuid,
   p_title text,
@@ -249,6 +252,7 @@ $$;
 -- ====================================================
 
 -- 4.1 Auto-assign an inspector to an inspection request.
+DROP FUNCTION IF EXISTS public.automation_auto_assign_inspector(uuid, uuid);
 CREATE OR REPLACE FUNCTION public.automation_auto_assign_inspector(
   p_inspection_id uuid,
   p_event_id uuid DEFAULT NULL
@@ -349,6 +353,7 @@ END;
 $$;
 
 -- 4.2 Auto-assign a sales associate to a buyer lead.
+DROP FUNCTION IF EXISTS public.automation_auto_assign_sales_lead(uuid, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.automation_auto_assign_sales_lead(
   p_lead_id uuid,
   p_city text,

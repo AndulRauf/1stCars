@@ -51,6 +51,7 @@ END $$;
 --    Creates the intro follow-up + follow-up task + notification
 --    only when they do not exist yet for this lead.
 -- ------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.sales_crm_on_assign(uuid, uuid, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.sales_crm_on_assign(
   p_lead_id uuid,
   p_associate uuid,
@@ -147,6 +148,7 @@ $$;
 --    Idempotent + admin-override safe: an already-assigned lead is
 --    never re-touched, so an intentional Admin reassignment sticks.
 -- ------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.automation_auto_assign_sales_lead(uuid, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.automation_auto_assign_sales_lead(
   p_lead_id uuid,
   p_city text DEFAULT NULL,
