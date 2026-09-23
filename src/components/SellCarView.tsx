@@ -1142,7 +1142,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               onClick={scrollToSellForm}
               className="bg-[#2E7D32] hover:bg-[#25632a] text-white font-black uppercase tracking-widest rounded-full px-8 sm:px-10 h-12 text-sm shadow-lg shadow-[#2E7D32]/30 w-full max-w-sm sm:w-auto"
             >
-              Book Your Free Inspection
+              Submit your car details.
             </Button>
             <p className="text-[11px] sm:text-xs text-slate-600 font-bold">
               Free Doorstep Inspection • Competitive Offers • Secure Payment • RC Transfer Support
