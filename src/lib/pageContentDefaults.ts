@@ -246,6 +246,7 @@ const LEGACY_MARKETING_COPY: Record<string, string[]> = {
   brandDescription: [
     "We curate only top-tier luxury, sports, and specialty vehicles. Our mission is to bridge pristine engineering with absolute luxury service.",
     "Rigorous standards, made for you. 120-point inspected & certified cars\nSingle-owner • Accident-free • Verified kilometres",
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
   ],
   seoTitle: ["1stCars - Certified Luxury Car Marketplace"],
   seoDescription: [
