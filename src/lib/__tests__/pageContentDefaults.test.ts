@@ -12,9 +12,10 @@ describe("normalizeWebsiteSettings — legacy brand/copy self-heal", () => {
   it("replaces the legacy 'made for you … Verified kilometres' hero/brand copy", () => {
     const legacy = "Rigorous standards, made for you. 120-point inspected & certified cars\nSingle-owner • Accident-free • Verified kilometres";
     const out = normalizeWebsiteSettings({ heroSubtitle: legacy, brandDescription: legacy });
-    const canonical = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.";
-    expect(out.heroSubtitle).toBe(canonical);
-    expect(out.brandDescription).toBe(canonical);
+    const canonicalHero = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.";
+    const canonicalBrand = "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.";
+    expect(out.heroSubtitle).toBe(canonicalHero);
+    expect(out.brandDescription).toBe(canonicalBrand);
   });
 
   it("leaves genuine current copy alone", () => {
