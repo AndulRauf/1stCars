@@ -675,13 +675,6 @@ export function CarDetailsView({
                   <p className="text-[10px] font-bold text-slate-500 mt-0.5">Mfg {car.year}</p>
                 </div>
 
-                {/* 3. Ownership */}
-                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-bold">Ownership</p>
-                  <p className="text-xs font-black text-slate-900 mt-1">{car.owners === 1 ? "1st Owner" : `${car.owners || 1} Owners`}</p>
-                  <p className="text-[10px] font-bold text-emerald-600 mt-0.5">Single Handed</p>
-                </div>
-
                 {/* 4. Kilometers Driven */}
                 <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">KM Driven</p>
@@ -708,13 +701,6 @@ export function CarDetailsView({
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Insurance</p>
                   <p className="text-xs font-black text-slate-900 mt-1 break-words">{car.insuranceValidity ? "Valid Insurance" : "Comprehensive"}</p>
                   <p className="text-[10px] font-bold text-emerald-600 mt-0.5 break-words">{car.insuranceValidity || "Valid till March 2027"}</p>
-                </div>
-
-                {/* 8. Ground Clearance & Boot */}
-                <div className="p-3 bg-[#FAF9F6] border border-slate-100 rounded-2xl">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clearance & Boot</p>
-                  <p className="text-xs font-black text-slate-900 mt-1">{car.groundClearance || "185 mm"}</p>
-                  <p className="text-[10px] font-bold text-slate-500 mt-0.5">{car.bootCapacity || "420 Litres"}</p>
                 </div>
               </div>
             </div>
