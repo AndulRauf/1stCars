@@ -20,7 +20,7 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "Easy Way",
-    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
     footerText: "© 2026 1stCars Marketplace. All rights reserved.",
     facebook: "https://www.facebook.com/1stcars.in",
     instagram: "https://www.instagram.com/1stcars.in",
@@ -101,57 +101,59 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
   if (!locationSeen) quickLinks.push(b2bLink("b2b-fallback"));
 
   return (
-    <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-10 md:pt-12 pb-6 md:pb-8">
+    <footer className="bg-[#F8F6F0] text-slate-900 border-t border-[#2E7D32]/10 pt-7 md:pt-12 pb-5 md:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
 
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 md:pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8 md:pb-10">
           
           {/* Brand Col */}
-          <div className="lg:col-span-2 flex flex-col space-y-4 sm:space-y-5">
+          <div className="lg:col-span-2 flex flex-col space-y-3 sm:space-y-5">
             <div className="flex items-center space-x-3">
               <img 
                 src={(settings as any).logoUrl || "/logo.png"} 
                 alt="1stCars Logo" 
-                className="h-10 w-10 object-contain rounded-lg border border-slate-200 bg-white p-0.5 shadow-xs"
+                className="h-9 w-9 md:h-10 md:w-10 object-contain rounded-lg border border-slate-200 bg-white p-0.5 shadow-xs"
                 referrerPolicy="no-referrer"
               />
               <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tighter text-[#2E7D32]">
+                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#2E7D32]">
                   1stCars
                 </span>
-                <span className="text-xs font-bold tracking-widest text-slate-500 uppercase mt-0.5">
+                <span className="text-[10px] md:text-xs font-bold tracking-widest text-slate-500 uppercase mt-0.5">
                   {settings.brandSlogan}
                 </span>
               </div>
             </div>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
+            <p className="hidden sm:block text-sm text-slate-500 leading-relaxed max-w-sm">
               {settings.brandDescription}
             </p>
-            <div className="flex flex-col space-y-2.5 pt-2">
-              <div className="flex items-start space-x-3 text-sm text-slate-600">
-                <MapPin className="h-4.5 w-4.5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex flex-col space-y-1.5 md:space-y-2.5 pt-1 md:pt-2">
+              <div className="flex items-start space-x-2.5 text-[13px] md:text-sm text-slate-600">
+                <MapPin className="h-4 w-4 md:h-4.5 md:w-4.5 text-primary flex-shrink-0 mt-0.5" />
                 <span>{settings.supportAddress}</span>
               </div>
-              <div className="flex items-center space-x-3 text-sm text-slate-600">
-                <Phone className="h-4.5 w-4.5 text-primary flex-shrink-0" />
+              <div className="flex items-center space-x-2.5 text-[13px] md:text-sm text-slate-600">
+                <Phone className="h-4 w-4 md:h-4.5 md:w-4.5 text-primary flex-shrink-0" />
                 <span>{settings.supportPhone}</span>
               </div>
-              <div className="flex items-center space-x-3 text-sm text-slate-600">
-                <Mail className="h-4.5 w-4.5 text-primary flex-shrink-0" />
+              <div className="flex items-center space-x-2.5 text-[13px] md:text-sm text-slate-600">
+                <Mail className="h-4 w-4 md:h-4.5 md:w-4.5 text-primary flex-shrink-0" />
                 <span>{settings.supportEmail}</span>
               </div>
             </div>
           </div>
 
+          {/* Mobile: link columns side-by-side (2 cols); md+ display:contents keeps original grid */}
+          <div className="grid grid-cols-2 gap-5 md:contents">
           {/* Quick Links Column 1: Trust & Policies (Dynamic Footer Pages) */}
           <div>
-            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
+            <h5 className="font-bold text-[11px] md:text-xs text-slate-900 tracking-widest uppercase mb-3 md:mb-5">
               Trust & Policies
             </h5>
-            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
+            <ul className="space-y-2.5 md:space-y-3.5 text-[13px] md:text-sm text-slate-500 font-medium">
               <li>
                 <button
                   type="button"
@@ -188,10 +190,10 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
 
           {/* Follow Us column: Social Links */}
           <div>
-            <h5 className="font-bold text-xs text-slate-900 tracking-widest uppercase mb-5">
+            <h5 className="font-bold text-[11px] md:text-xs text-slate-900 tracking-widest uppercase mb-3 md:mb-5">
               Follow Us
             </h5>
-            <ul className="space-y-3.5 text-sm text-slate-500 font-medium">
+            <ul className="space-y-2.5 md:space-y-3.5 text-[13px] md:text-sm text-slate-500 font-medium">
               <li>
                 <a
                   href={settings.facebook || "https://www.facebook.com/1stcars.in"}
@@ -220,10 +222,11 @@ export function Footer({ onViewChange, currentView, hideTrustBadges, onAuthClick
           </div>
 
 
+          </div>{/* /mobile-2col */}
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#2E7D32]/10 pt-4 md:pt-6 mt-5 md:mt-10 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-semibold">
+        <div className="border-t border-[#2E7D32]/10 pt-4 md:pt-6 mt-6 md:mt-10 flex flex-col md:flex-row items-center justify-between text-[11px] md:text-xs text-slate-400 font-semibold">
           <p>{settings.footerText.includes("©") ? settings.footerText : `© ${currentYear} ${settings.footerText}`}</p>
         </div>
 
