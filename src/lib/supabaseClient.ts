@@ -29,7 +29,7 @@ export const isRealSupabase = !isMissingSupabaseEnv && !useMockOverride;
 export function friendlyOAuthErrorMessage(err: any, fallback: string): string {
   const raw = String(err?.message || "").toLowerCase();
   if (raw.includes("unsupported provider") || raw.includes("provider is not enabled")) {
-    return "Google sign-in hasn't been turned on yet. Please type your details in the form below — or contact us and we'll enable it right away.";
+    return "Google sign-in hasn't been turned on yet. Please type your details in the form below, or contact us and we'll enable it right away.";
   }
   // Supabase rejects any redirectTo that is not on the Auth → URL
   // Configuration → Redirect URLs allowlist. This is the most common reason
@@ -404,7 +404,7 @@ content: `# Frequently Asked Questions\n\nEverything you need to know about buyi
 
 **Last Updated: August 2026**
 
-These Terms & Conditions ("Terms") govern your access to and use of the 1stCars marketplace, website, and related services (together, the "Platform"). By accessing the Platform, browsing listings, or using any of our services — including buying, selling, or booking vehicle inspections — you agree to be bound by these Terms.
+These Terms & Conditions ("Terms") govern your access to and use of the 1stCars marketplace, website, and related services (together, the "Platform"). By accessing the Platform, browsing listings, or using any of our services, including buying, selling, or booking vehicle inspections, you agree to be bound by these Terms.
 
 If you do not agree with any part of these Terms, please discontinue use of the Platform immediately.
 
@@ -465,7 +465,7 @@ If you do not agree with any part of these Terms, please discontinue use of the 
 ## 7. Booking Token & Payments
 
 - The booking token (1% of the vehicle value, min ₹3,000 / max ₹10,000) is refundable and is adjusted against the total drive-away price at final payment.
-- Token refunds are processed within 7–10 working days to the same payment method, provided no applicable cancellation or damage policy is triggered.
+- Token refunds are processed within 7-10 working days to the same payment method, provided no applicable cancellation or damage policy is triggered.
 - All payments are to be made in Indian Rupees (INR). You are responsible for ensuring the accuracy of UPI / bank details provided.
 
 ---
@@ -500,7 +500,7 @@ You agree not to:
 
 ## 11. Intellectual Property
 
-- All content on the Platform — including logos, text, graphics, and branding — is the property of 1stCars or its licensors and is protected by applicable intellectual property laws.
+- All content on the Platform, including logos, text, graphics, and branding, is the property of 1stCars or its licensors and is protected by applicable intellectual property laws.
 - You may not copy, reproduce, distribute, or create derivative works from any Platform content without prior written consent.
 
 ---
@@ -748,6 +748,15 @@ For questions, concerns, or feedback regarding these Terms, please contact:
         return chain;
       },
 
+      is: (column: string, value: any) => {
+        queryState.filters.push((item) =>
+          value === null || value === undefined
+            ? item[column] == null
+            : String(item[column]) === String(value)
+        );
+        return chain;
+      },
+
       order: (column: string, { ascending = true } = {}) => {
         queryState.orderField = column;
         queryState.orderAsc = ascending;
@@ -788,19 +797,25 @@ For questions, concerns, or feedback regarding these Terms, please contact:
         if (queryState.operation === "update") {
           const changes = queryState.payload;
           let matchedCount = 0;
+          // PostgREST `UPDATE ... RETURNING` yields the rows that MATCHED the
+          // pre-update filters (with changes applied) — it does NOT re-apply
+          // the filters to the new values. (Re-filtering would wrongly empty
+          // the result whenever the update itself changes a filtered column,
+          // e.g. claiming a pool lead sets assigned_to and would then fail an
+          // `assigned_to IS NULL` filter.)
+          const updatedRecords: any[] = [];
           const updatedTable = items.map((item) => {
             const matches = queryState.filters.every((filterFn) => filterFn(item));
             if (matches) {
               matchedCount++;
-              return { ...item, ...changes, updated_at: new Date().toISOString() };
+              const next = { ...item, ...changes, updated_at: new Date().toISOString() };
+              updatedRecords.push(next);
+              return next;
             }
             return item;
           });
 
           this.setStorage(storageKey, updatedTable);
-          const updatedRecords = updatedTable.filter((item) =>
-            queryState.filters.every((filterFn) => filterFn(item))
-          );
 
           return { data: updatedRecords, error: null, count: matchedCount };
         }

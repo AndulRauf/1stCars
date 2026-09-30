@@ -232,7 +232,7 @@ export function AdminDashboard({
     };
 
     cars.slice(0, 12).forEach((c) => add("cars", "all", c.created_at, `${c.brand} ${c.model} (${c.year})`, `Car · ${String(c.status || "available").toUpperCase()}`, Car, "bg-emerald-500/10 text-emerald-600"));
-    inspections.slice(0, 12).forEach((i) => add("inspections", "all", i.created_at, `${i.brand} ${i.model || ""} (${i.year || "—"})`.trim(), `Inspection · ${i.seller_name || "Seller"}`, ClipboardList, "bg-indigo-500/10 text-indigo-600"));
+    inspections.slice(0, 12).forEach((i) => add("inspections", "all", i.created_at, `${i.brand} ${i.model || ""} (${i.year || "-"})`.trim(), `Inspection · ${i.seller_name || "Seller"}`, ClipboardList, "bg-indigo-500/10 text-indigo-600"));
     customerLeads.slice(0, 12).forEach((l) => add("leads", "all", l.created_at, l.name || l.customer_name || l.seller_name || "Enquiry", `Lead · ${l.mobile || l.seller_mobile || "New"}`, Users, "bg-sky-500/10 text-sky-600"));
     users.slice(0, 12).forEach((u) => add("users", "all", u.created_at, u.name || u.full_name || u.email, `User · ${u.role || "Buyer"}`, UserCheck, "bg-violet-500/10 text-violet-600"));
     expenses.slice(0, 12).forEach((e) => add("expenses", "all", e.created_at || e.date, e.title, `Expense · ₹${(Number(e.amount) || 0).toLocaleString("en-IN")}`, FileText, "bg-rose-500/10 text-rose-600"));
@@ -279,7 +279,7 @@ export function AdminDashboard({
       {/* KPI grid */}
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
-          Business Overview — tap any card to open the underlying records
+          Business Overview. Tap any card to open the underlying records
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {kpiCards.map((card, i) => (
@@ -347,7 +347,7 @@ export function AdminDashboard({
             <span className="uppercase tracking-widest text-[9px] font-black">
               Tracking status: <span className={`inline-flex items-center gap-1 ${ga4.ga4Enabled ? "text-emerald-700" : "text-rose-600"}`}><span className={`w-1.5 h-1.5 rounded-full ${ga4Dot}`} /> GA4 {ga4.ga4Enabled ? "ON" : "OFF"}</span>
             </span>
-            <code className="bg-black/10 px-1.5 py-0.5 rounded-md font-mono text-[10px] break-all">{ga4.ga4Id || "—"}</code>
+            <code className="bg-black/10 px-1.5 py-0.5 rounded-md font-mono text-[10px] break-all">{ga4.ga4Id || "-"}</code>
             <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline text-[10px] font-black uppercase tracking-wide">Open GA4</a>
           </div>
           <p className={`mt-1 font-medium ${ga4.ga4Enabled ? "opacity-80" : ""}`}>{ga4.ga4Reason}</p>
@@ -363,7 +363,7 @@ export function AdminDashboard({
       {recentActivity.length > 0 && (
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-2">
-            Recent Activity — latest across all modules
+            Recent Activity. Latest across all modules
           </p>
           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm divide-y divide-slate-50">
             {recentActivity.map((entry, i) => (
@@ -394,7 +394,7 @@ export function AdminDashboard({
       {cars.length === 0 && leads.length === 0 && (
         <div className="bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 text-[11px] font-bold text-amber-800 flex items-center gap-2">
           <Bell className="h-4 w-4 shrink-0" />
-          Fresh installation — no records yet. Use "Add New Record" in any module or the quick actions above to seed data.
+          Fresh installation. No records yet. Use "Add New Record" in any module or the quick actions above to seed data.
         </div>
       )}
     </div>

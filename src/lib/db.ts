@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS public.offers (
 -- bidding, anti-sniping and automation triggers are defined canonically in
 -- public/auction_engine.sql. Run that file to provision the auction schema.
 -- The legacy flat "auctions" table (car_title/base_price/current_bid/status
--- 'active') has been retired — it conflicted with the canonical engine.
+-- 'active') has been retired. It conflicted with the canonical engine.
 
 -- Bookings / Sales Leads table
 CREATE TABLE IF NOT EXISTS public.sales_notifications (

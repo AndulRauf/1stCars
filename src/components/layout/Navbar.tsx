@@ -574,7 +574,7 @@ className="w-full h-12 bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 border border-[#2E7D
                 Logged in as {currentUser.name}
                 <ChevronRight className="h-3.5 w-3.5" />
               </p>
-              <p className="text-[10px] font-semibold text-slate-400">{currentUser.role} Account — tap to open dashboard</p>
+              <p className="text-[10px] font-semibold text-slate-400">{currentUser.role} Account. Tap to open dashboard</p>
             </button>
           ) : currentUser && (
             <div className="grid grid-cols-2 gap-3">

@@ -149,7 +149,7 @@ export function CarDetailsView({
       return car.images.map((url: string, idx: number) => ({
         url,
         title: idx === 0 ? "Featured Profile" : `Detail Angle #${idx + 1}`,
-        text: `${car.brand} ${car.model} — Cinematic view #${idx + 1}`
+        text: `${car.brand} ${car.model}, Cinematic view #${idx + 1}`
       }));
     }
     const hasRealImgUrl = car.image_url && (
@@ -162,7 +162,7 @@ export function CarDetailsView({
         {
           url: car.image_url,
           title: "Primary Profile View",
-          text: `${car.brand} ${car.model} — Exterior cinematic presentation`
+          text: `${car.brand} ${car.model}, Exterior cinematic presentation`
         }
       ];
     }
@@ -900,7 +900,7 @@ export function CarDetailsView({
                                 <p className="text-xs text-slate-500 mt-0.5 font-medium">
                                   {hasReport
                                     ? cat.summary || `${catPassed}/${catTotal} checkpoints passed.`
-                                    : `One of 12 modules in the 1stMark 120-Point standard — ${catTotal} checkpoints.`}
+                                    : `One of 12 modules in the 1stMark 120-Point standard, ${catTotal} checkpoints.`}
                                 </p>
                               </div>
                               <span className="flex items-center gap-1.5 shrink-0">

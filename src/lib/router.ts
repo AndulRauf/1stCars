@@ -294,7 +294,7 @@ export function navigateTo(
  * Get dynamic page title for browser tab
  */
 export function getPageTitle(view: ViewType, carName?: string, pageTitle?: string): string {
-  const brand = "1stCars — Certified Used Cars";
+  const brand = "1stCars, Certified Used Cars";
 
   switch (view) {
     case "home":
@@ -306,11 +306,11 @@ export function getPageTitle(view: ViewType, carName?: string, pageTitle?: strin
     case "car_details":
       return carName ? `${carName} | 1stCars Certified Pre-Owned` : `Certified Vehicle Details | 1stCars`;
     case "firstmark_certification":
-      return `1stMark Certification — 120-Point Inspection Standard | 1stCars`;
+      return `1stMark Certification, 120-Point Inspection Standard | 1stCars`;
     case "about":
-      return `About Us | 1stCars — Certified Premium Used Cars`;
+      return `About Us | 1stCars, Certified Premium Used Cars`;
     case "faq":
-      return `FAQ — Frequently Asked Questions | 1stCars`;
+      return `FAQ, Frequently Asked Questions | 1stCars`;
     case "careers":
       return `Careers at 1stCars | Join Our Team`;
     case "role_dashboards":

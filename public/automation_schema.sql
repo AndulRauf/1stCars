@@ -428,7 +428,7 @@ BEGIN
     'lead_followup',
     v_title,
     COALESCE((SELECT name || ' (' || mobile || ') in ' || city FROM public.sales_notifications WHERE id = p_lead_id), 'New buyer lead') ||
-      ' — reach out to confirm interest and schedule the next step.',
+      '. Reach out to confirm interest and schedule the next step.',
     'high', 'open', now() + interval '1 day', 'sales_notifications', p_lead_id::text
   );
 

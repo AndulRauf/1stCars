@@ -114,7 +114,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
     setBusy(true);
     try {
       await auctionService.sellerDecision(actor, auction.id, kind === "accept" ? "ACCEPT" : "REJECT", confirmReason.trim() || undefined);
-      toast.success(kind === "accept" ? "Result accepted — the winning dealer has been routed to payment" : "Result rejected — the vehicle is now released to you");
+      toast.success(kind === "accept" ? "Result accepted. The winning dealer has been routed to payment" : "Result rejected. The vehicle is now released to you");
       await reload();
       if (detail?.id === auction.id) setDetail(null);
     } catch (err) {
@@ -225,7 +225,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 <div>
                   <h4 className="font-black text-slate-900 text-base">{v.year} {v.title}</h4>
                   <p className="text-xs font-semibold text-slate-500">
-                    {v.city} • {v.km_driven?.toLocaleString() || "—"} KM • {v.fuel} • {v.transmission}
+                    {v.city} • {v.km_driven?.toLocaleString() || "-"} KM • {v.fuel} • {v.transmission}
                   </p>
                 </div>
 
@@ -260,7 +260,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-emerald-600 shrink-0" />
                     <p className="text-xs font-semibold text-emerald-800">
-                      Sale settled at <strong>{formatINR(a.current_highest_bid)}</strong> — the winning dealer is completing payment.
+                      Sale settled at <strong>{formatINR(a.current_highest_bid)}</strong>, the winning dealer is completing payment.
                     </p>
                   </div>
                 )}
@@ -268,7 +268,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
                     <p className="text-xs font-semibold text-rose-800">
-                      Result rejected{a.ended_reason ? ` — ${a.ended_reason}` : ""}. Your vehicle has been released.
+                      Result rejected{a.ended_reason ? `. ${a.ended_reason}` : ""}. Your vehicle has been released.
                     </p>
                   </div>
                 )}
@@ -279,7 +279,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                 )}
                 {isSettled && a.status === "CANCELLED" && (
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <p className="text-xs font-semibold text-slate-600">Auction cancelled — vehicle released.</p>
+                    <p className="text-xs font-semibold text-slate-600">Auction cancelled. Vehicle released.</p>
                   </div>
                 )}
 
@@ -411,7 +411,7 @@ export function SellerAuctions({ currentUser }: SellerAuctionsProps) {
                       <p className="text-[10px] font-black text-slate-800 flex items-center gap-1.5">
                         <DollarSign className="h-3.5 w-3.5 text-[#2E7D32]" /> {formatINR(p.amount)}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold">{p.method || "—"} • {p.reference || ""}</p>
+                      <p className="text-[9px] text-slate-400 font-bold">{p.method || "-"} • {p.reference || ""}</p>
                     </div>
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
                       p.status === "RECEIVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :

@@ -22,7 +22,7 @@ export function MyCars({ data, onDrillIntoLeads }: MyCarsProps) {
   return (
     <CrmCard
       title="My Cars"
-      subtitle="Vehicles you uploaded — each one routes its buyer leads to you automatically."
+      subtitle="Vehicles you uploaded. Each one routes its buyer leads to you automatically."
       actions={
         <Button size="sm" variant="outline" onClick={() => void reload()} className="border-slate-200 bg-white text-slate-600 text-[9px] font-black uppercase tracking-wider h-8 rounded-lg px-2.5">
           Refresh
@@ -30,7 +30,7 @@ export function MyCars({ data, onDrillIntoLeads }: MyCarsProps) {
       }
     >
       {cars.length === 0 ? (
-        <EmptyState icon={Car} title="You haven't uploaded any cars yet." hint="Use the Upload New Car tab — every car you upload makes you the owner of its buyer leads." />
+        <EmptyState icon={Car} title="You haven't uploaded any cars yet." hint="Use the Upload New Car tab. Every car you upload makes you the owner of its buyer leads." />
       ) : (
         <div className="space-y-3">
           {cars.map((car) => {
@@ -54,7 +54,7 @@ export function MyCars({ data, onDrillIntoLeads }: MyCarsProps) {
                   </div>
                   <h4 className="font-black text-slate-900 text-base">{car.brand} {car.model} ({car.year})</h4>
                   <p className="text-[11px] text-slate-500 font-bold">
-                    {car.variant || "—"} • {Number(car.km_driven || 0).toLocaleString()} km • {car.city || "Surat"}
+                    {car.variant || "-"} • {Number(car.km_driven || 0).toLocaleString()} km • {car.city || "Surat"}
                   </p>
                   <p className="text-sm font-black text-[#2E7D32]">₹{Number(car.price || 0).toLocaleString("en-IN")}</p>
 

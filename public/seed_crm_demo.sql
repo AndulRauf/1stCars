@@ -124,11 +124,11 @@ INSERT INTO public.inspection_reports (
   notes, created_at
 ) VALUES
 ('r3p00001-0000-4000-8000-000000000024', '1n5p0003-0000-4000-8000-000000000023', 'bbbb0002-0000-4000-8000-000000000004', 9.2,
- 'Engine and OBD clean — no fault codes, smooth idle, slight turbo lag at low revs.',
+ 'Engine and OBD clean. No fault codes, smooth idle, slight turbo lag at low revs.',
  'Front discs 70% life, pads healthy, ABS + stability systems functioning.',
- 'All electronics, infotainment, sensors and warning lamps verified — no errors.',
+ 'All electronics, infotainment, sensors and warning lamps verified. No errors.',
  'Minor stone chips on bonnet and door edges, original paint confirmed with gauge.',
- 'Interior mint — OEM mats, no tears or odours, all seat adjustments working.',
+ 'Interior mint. OEM mats, no tears or odours, all seat adjustments working.',
  'Shock absorbers and bushes within spec, no play in steering rack.',
  'Certified under the 120-Point inspection. Report id r3p00001.', now() - interval '3 days');
 
@@ -161,9 +161,9 @@ INSERT INTO public.sales_notifications (
 -- 5. Activity timeline + notification ledger
 -- ----------------------------------------------------------------------------
 INSERT INTO public.notifications (id, recipient_id, sender_id, title, message, type, is_read, created_at) VALUES
-('n0t00001-0000-4000-8000-000000000031', 'eeee0001-0000-4000-8000-000000000009', NULL, 'Welcome to 1stCars', 'Your buyer account is ready — browse certified cars and book test drives.', 'info', true, now() - interval '12 days'),
+('n0t00001-0000-4000-8000-000000000031', 'eeee0001-0000-4000-8000-000000000009', NULL, 'Welcome to 1stCars', 'Your buyer account is ready. Browse certified cars and book test drives.', 'info', true, now() - interval '12 days'),
 ('n0t00002-0000-4000-8000-000000000032', 'dddd0001-0000-4000-8000-000000000007', 'bbbb0001-0000-4000-8000-000000000003', 'Inspection scheduled', 'Vikram Rathore will inspect your Honda City on the requested slot.', 'success', false, now() - interval '2 days'),
-('n0t00003-0000-4000-8000-000000000033', 'dddd0001-0000-4000-8000-000000000007', NULL, 'New dealer offers', 'Two dealers have placed offers on your BMW 3 Series — review them now.', 'alert', false, now() - interval '2 days');
+('n0t00003-0000-4000-8000-000000000033', 'dddd0001-0000-4000-8000-000000000007', NULL, 'New dealer offers', 'Two dealers have placed offers on your BMW 3 Series. Review them now.', 'alert', false, now() - interval '2 days');
 
 INSERT INTO public.crm_activities (id, customer_id, staff_id, activity_type, subject, detail, created_at) VALUES
 ('crm00001-0000-4000-8000-000000000041', 'eeee0001-0000-4000-8000-000000000009', 'aaaa0001-0000-4000-8000-000000000001', 'call',      'First follow-up call',     'Discussed BMW M4 interest, financing preference and test drive availability.', now() - interval '6 days'),

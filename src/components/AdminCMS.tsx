@@ -259,7 +259,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Buy & Sell Certified Cars With Total Confidence",
-              heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
+              heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -273,7 +273,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "Easy Way",
-    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -879,12 +879,37 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         return raw ? JSON.parse(raw) : def;
       };
 
+      // One-time purge: remove legacy demo/fake fallback rows that older builds
+      // cached into localStorage (matched by exact hardcoded ids so real local
+      // rows â€” e.g. models with m-<random> ids â€” are never touched).
+      if (!localStorage.getItem("1stcars_cms_demo_purged_v1")) {
+        const fakeIds: Record<string, string[]> = {
+          dealers: ["dl-1", "dl-2", "dl-3"],
+          inspectors: ["insp-u1", "insp-u2"],
+          sales_associates: ["sa-1", "sa-2"],
+          models: ["m-1", "m-2", "m-3", "m-4"],
+          cities: ["c-1", "c-2", "c-3"],
+          faqs: ["fq-1", "fq-2"],
+          testimonials: ["t-1", "t-2"],
+          finance: ["fp-1", "fp-2"],
+          expenses: ["ex-1", "ex-2", "ex-3"],
+        };
+        Object.entries(fakeIds).forEach(([key, ids]) => {
+          try {
+            const raw = localStorage.getItem(`1stcars_cms_${key}`);
+            if (!raw) return;
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              const cleaned = arr.filter((r: any) => !ids.includes(String(r?.id || "")));
+              localStorage.setItem(`1stcars_cms_${key}`, JSON.stringify(cleaned));
+            }
+          } catch { /* ignore malformed cache */ }
+        });
+        localStorage.setItem("1stcars_cms_demo_purged_v1", "1");
+      }
+
       // Set initial values if not initialized
-      setDealers(getStored("dealers", [
-        { id: "dl-1", name: "Elite Motors Bangalore", manager: "Vijay Mallya", rating: 4.8, city: "Bangalore", credits: 550000, active_bids: 3 },
-        { id: "dl-2", name: "Apex Prestige Cars", manager: "Rohit Shetty", rating: 4.5, city: "Surat", credits: 1200000, active_bids: 5 },
-        { id: "dl-3", name: "Delhi Luxury Wheels", manager: "Karan Johar", rating: 4.9, city: "Delhi NCR", credits: 750000, active_bids: 1 }
-      ]));
+      setDealers(getStored("dealers", []));
 
       // Supabase dealers/profiles are the source of truth; merge real dealer
       // accounts (role=Dealer) with any legacy local-only rows.
@@ -913,10 +938,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         ]);
       }
 
-      setInspectors(getStored("inspectors", [
-        { id: "insp-u1", name: "Vikram Rathore", email: "inspector@1stcars.com", certified_level: "Master", region: "Surat", total_inspections: 148 },
-        { id: "insp-u2", name: "Ramesh Kumar", email: "ramesh@1stcars.com", certified_level: "Senior", region: "Delhi NCR", total_inspections: 89 }
-      ]));
+      setInspectors(getStored("inspectors", []));
 
       // Real Inspector-role profiles are merged in so staff signups show up.
       if (uData && uData.some((p: any) => p.role === "Inspector")) {
@@ -937,10 +959,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         ]);
       }
 
-      setSalesAssociates(getStored("sales_associates", [
-        { id: "sa-1", name: "Sneha Patel", email: "sales@1stcars.com", active_leads: 8, closed_deals: 42, performance_score: 9.6 },
-        { id: "sa-2", name: "Anil Kapoor", email: "anil@1stcars.com", active_leads: 4, closed_deals: 27, performance_score: 9.1 }
-      ]));
+      setSalesAssociates(getStored("sales_associates", []));
 
       // Real Sales Associate-role profiles are merged in the same way.
       if (uData && uData.some((p: any) => p.role === "Sales Associate")) {
@@ -961,12 +980,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         ]);
       }
 
-      setModels(getStored("models", [
-        { id: "m-1", brand: "Porsche", name: "911 Carrera S", category: "Coupe", engine: "3.0L Twin-Turbo", power: "450 HP" },
-        { id: "m-2", brand: "BMW", name: "M4 Competition", category: "Coupe", engine: "3.0L Straight-6", power: "503 HP" },
-        { id: "m-3", brand: "Mercedes-Benz", name: "G-Class AMG G 63", category: "SUV", engine: "4.0L BiTurbo V8", power: "577 HP" },
-        { id: "m-4", brand: "Audi", name: "e-tron GT", category: "Sedan", engine: "Dual Electric Motor", power: "637 HP" }
-      ]));
+      setModels(getStored("models", []));
 
       // Supabase `models` is the source of truth; merge it with any local-only
       // rows (which keep richer engine/power data) without duplicating by name.
@@ -994,11 +1008,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         setModels(mergedModels);
       }
 
-      setCities(getStored("cities", [
-        { id: "c-1", name: "Surat", state: "Maharashtra", branch_manager: "Aakash Ambani", support_number: "022-44445555" },
-        { id: "c-2", name: "Delhi NCR", state: "Delhi", branch_manager: "Rajesh Khanna", support_number: "011-22223333" },
-        { id: "c-3", name: "Bangalore", state: "Karnataka", branch_manager: "Sudha Murty", support_number: "080-66667777" }
-      ]));
+      setCities(getStored("cities", []));
 
       // Supabase `cities` is the source of truth when rows exist.
       if (ctData && ctData.length > 0) {
@@ -1012,10 +1022,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         })));
       }
 
-      setFaqs(getStored("faqs", [
-        { id: "fq-1", category: "Certification", question: "What is the 1stMark Certification process?", answer: "Every vehicle undergoes our rigorous 120-Point Certificate inspection focusing on chassis, engine diagnostics, electrical elements, and paint levels." },
-        { id: "fq-2", category: "Trust", question: "What are the 1stMark Certification USPs?", answer: "Our 1stMark certification guarantees three core pillars for every luxury vehicle: 1) Single Owned: Every car is verified to have had only one previous owner; 2) Non-Accident Trusted: Strictly checked to have zero chassis frame damage or past accident repairs; 3) Genuine KM: Verified using advanced OBD diagnostics and complete historical service log sweeps so you can trust the mileage is 100% authentic." }
-      ]));
+      setFaqs(getStored("faqs", []));
 
       // Supabase `faq` is the source of truth when rows exist.
       if (qData && qData.length > 0) {
@@ -1027,10 +1034,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         })));
       }
 
-      setTestimonials(getStored("testimonials", [
-        { id: "t-1", name: "Harish Kotian", role: "Dealer Partner", rating: 5, content: "The B2B live dealer bidding is completely transparent and incredibly fast. Picked up 3 pristine Porsche models already.", photo: "👤" },
-        { id: "t-2", name: "Priyanjali Sen", role: "Private Buyer", rating: 5, content: " व्हाइट-ग्लव डिलीवरी are world class! The home inspection and evaluation made selling my Range Rover completely painless.", photo: "👤" }
-      ]));
+      setTestimonials(getStored("testimonials", []));
 
       // Supabase `testimonials` is the source of truth when rows exist. Rows
       // whose author name was tombstoned via delete are hidden so a delete
@@ -1049,10 +1053,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           .filter((t: any) => !deleted.includes(String(t.name || "").trim().toLowerCase())));
       }
 
-      setFinancePartners(getStored("finance", [
-        { id: "fp-1", name: "HDFC Bank Premium Finance", rate: "7.9%", tenure_months: "84 Months", max_funding: "90%", approval_hours: "2 Hours" },
-        { id: "fp-2", name: "ICICI Bank Luxury Auto Loan", rate: "8.2%", tenure_months: "60 Months", max_funding: "100%", approval_hours: "4 Hours" }
-      ]));
+      setFinancePartners(getStored("finance", []));
 
       // Supabase `finance_partners` is the source of truth when rows exist.
       if (fData && fData.length > 0) {
@@ -1066,11 +1067,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         })));
       }
 
-      setExpenses(getStored("expenses", [
-        { id: "ex-1", title: "Showroom Detailing and Ceramic Coating", category: "Preparation", amount: 48000, date: "2026-07-15", logged_by: "u-admin" },
-        { id: "ex-2", title: "Flatbed Towing from Pune to Mumbai", category: "Logistics", amount: 15000, date: "2026-07-16", logged_by: "u-admin" },
-        { id: "ex-3", title: "Doorstep Evaluator Compensation", category: "Salaries", amount: 24000, date: "2026-07-17", logged_by: "u-admin" }
-      ]));
+      setExpenses(getStored("expenses", []));
 
       // Supabase `expenses` is the source of truth when rows exist.
       if (exData && exData.length > 0) {
@@ -1576,7 +1573,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         const missing = (requiredRefs[currentListModule] || []).filter((f) => !recordToSave[f]);
         if (missing.length > 0) {
           throw new Error(
-            `${currentListModule} needs a valid ${missing.map((f) => f.replace(/_/g, " ")).join(" and ")} — enter the record's real id (e.g. the car's UUID shown in the list).`
+            `${currentListModule} needs a valid ${missing.map((f) => f.replace(/_/g, " ")).join(" and ")}. Enter the record's real id (e.g. the car's UUID shown in the list).`
           );
         }
         // Persist to Supabase — this branch previously only validated the FKs
@@ -1601,7 +1598,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             minimum_increment: 25000
           });
         } else {
-          toast.error("Auction editing is handled in the Auction Engine — open the auction there to edit, publish or cancel it.");
+          toast.error("Auction editing is handled in the Auction Engine. Open the auction there to edit, publish or cancel it.");
           setIsFormOpen(false);
           loadCMSData();
           if (onReloadAllData) onReloadAllData();
@@ -1727,7 +1724,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           }
         } else if (currentUser?.id) {
           await supabase.from("notifications").insert([{ ...notif, recipient_id: currentUser.id }]);
-          toast.success("No valid recipient picked — notification saved to your own feed.");
+          toast.success("No valid recipient picked, notification saved to your own feed.");
         } else {
           throw new Error("Pick a valid recipient id (user UUID) or use \"all\" to broadcast.");
         }
@@ -1989,7 +1986,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       console.error("Error deleting from CMS:", err);
       const detail = err?.message || err?.details || "";
       toast.error(
-        `Delete failed. The record could not be removed from the database — check the Supabase RLS policy for this table, then try again.${detail ? ` (${detail})` : ""}`
+        `Delete failed. The record could not be removed from the database. Check the Supabase RLS policy for this table, then try again.${detail ? ` (${detail})` : ""}`
       );
     } finally {
       setIsLoading(false);
@@ -2515,7 +2512,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       .then(({ error }) => {
         if (error) {
           console.error("Failed to sync website settings to Supabase:", error);
-          toast.error("Saved locally, but syncing to the shared settings table failed — check your connection.");
+          toast.error("Saved locally, but syncing to the shared settings table failed. Check your connection.");
         } else {
           toast.success("Website Theme, branding parameters, SEO tags, and analytics updated.");
         }
@@ -2611,8 +2608,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         setTestStatus(`Dispatched successfully to +91 ${testMobile}! Code is ${code}.`);
       } else {
         // Simulated (MED-15): never present a simulated dispatch as a real SMS.
-        toast.success(`🔑 Simulated only — NO SMS was sent. Demo code: ${code}.`);
-        setTestStatus(`SIMULATED ONLY — nothing was sent to +91 ${testMobile}. Demo verification code: ${code}.`);
+        toast.success(`🔑 Simulated only. NO SMS was sent. Demo code: ${code}.`);
+        setTestStatus(`SIMULATED ONLY. Nothing was sent to +91 ${testMobile}. Demo verification code: ${code}.`);
 
         // Custom event so that the visual pop-up banner also shows up!
         const event = new CustomEvent("1stcars_simulate_sms", {
@@ -2887,7 +2884,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                 <Activity className="h-3 w-3" /> Live Supabase · {cars.length} car{cars.length === 1 ? "" : "s"} in DB
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="Supabase env vars are not set — data is stored in THIS browser only and will NOT appear in the Supabase dashboard or on other devices.">
+              <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="Supabase env vars are not set. Data is stored in THIS browser only and will NOT appear in the Supabase dashboard or on other devices.">
                 <AlertCircle className="h-3 w-3" /> Mock Browser DB · not reaching Supabase
               </span>
             )}
@@ -2917,7 +2914,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
             </span>
           )}
           {moduleSource === "local" && (
-            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="This is an editor/config panel with no dedicated Supabase table — edits live in this browser only. Data-driven modules (cars, users, auctions, expenses, etc.) sync across all devices.">
+            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="This is an editor/config panel with no dedicated Supabase table. Edits live in this browser only. Data-driven modules (cars, users, auctions, expenses, etc.) sync across all devices.">
               <AlertCircle className="h-3 w-3" /> Local-only · this browser
             </span>
           )}
@@ -3466,7 +3463,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-md">{model.years}</span>
                         </div>
                         <p className="text-[10px] text-slate-400 font-bold mt-1 truncate">
-                          {(model.variants || []).join(" · ") || "No variants — buyers pick from default options"}
+                          {(model.variants || []).join(" · ") || "No variants. Buyers pick from default options"}
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -3857,14 +3854,14 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                           {currentListModule === "purchases" && (
                             <>
                               <p className="font-black text-slate-800">₹{(Number(item.amount_paid) || 0).toLocaleString()} • {item.payment_method || "UPI"}</p>
-                              <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "—").slice(0, 8)} • Car: {String(item.car_id || "—").slice(0, 8)}</p>
+                              <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "-").slice(0, 8)} • Car: {String(item.car_id || "-").slice(0, 8)}</p>
                             </>
                           )}
                           {currentListModule === "test_drives" && (
-                            <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "—").slice(0, 8)} • Car: {String(item.car_id || "—").slice(0, 8)} • Slot: {item.preferred_date || "—"} ({item.preferred_time || "—"})</p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-0.5 truncate">Buyer: {String(item.buyer_id || "-").slice(0, 8)} • Car: {String(item.car_id || "-").slice(0, 8)} • Slot: {item.preferred_date || "-"} ({item.preferred_time || "-"})</p>
                           )}
                           {currentListModule === "crm_activities" && (
-                            <p className="text-[11px] text-slate-500 italic">"{item.subject || item.activity_type || "Activity"}{item.detail ? ` — ${item.detail}` : ""}"</p>
+                            <p className="text-[11px] text-slate-500 italic">"{item.subject || item.activity_type || "Activity"}{item.detail ? `. ${item.detail}` : ""}"</p>
                           )}
                         </div>
                       )}
@@ -4107,7 +4104,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                                 ? "bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100"
                                 : "bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100"
                             }`}
-                            title={item.assigned_to ? `Assigned to ${item.assigned_to_name || "sales associate"} — re-assign` : "Assign this lead to a Sales Associate"}
+                            title={item.assigned_to ? `Assigned to ${item.assigned_to_name || "sales associate"}, re-assign` : "Assign this lead to a Sales Associate"}
                           >
                             <UserCheck className="h-3 w-3" />
                             {item.assigned_to ? `Assigned: ${item.assigned_to_name || "Yes"}` : "Assign"}
@@ -4755,7 +4752,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       }}
                       className="w-full h-10 bg-white border border-slate-200 rounded-lg px-2.5 outline-none font-bold text-slate-700 focus:ring-1 focus:ring-[#2E7D32]"
                     >
-                      <option value="simulated">📱 Auto — Real Supabase OTP on live backend / Simulated in demo (recommended)</option>
+                      <option value="simulated">📱 Auto, Real Supabase OTP on live backend / Simulated in demo (recommended)</option>
                       <option value="supabase_native">🔥 Supabase Native Phone Auth (Requires real phone provider configured)</option>
                       <option value="custom_gateway">⚡ Custom REST SMS Gateway (Twilio, Fast2SMS, MSG91, Twilio-like APIs)</option>
                     </select>
@@ -6237,7 +6234,7 @@ className="p-2.5 rounded-lg border border-slate-200 hover:border-rose-500 hover:
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Buyer</span>
-                <span className="font-black text-slate-800">{assignLeadModal.lead.name || "—"} ({assignLeadModal.lead.mobile || "—"})</span>
+                <span className="font-black text-slate-800">{assignLeadModal.lead.name || "-"} ({assignLeadModal.lead.mobile || "-"})</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Car</span>

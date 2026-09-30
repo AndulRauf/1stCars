@@ -29,7 +29,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
   aboutM4Label: "",
 
   aboutStoryBadge: "OUR STORY",
-  aboutStoryHeading: "Built on a simple belief — buying a used car should feel safe.",
+  aboutStoryHeading: "Built on a simple belief. Buying a used car should feel safe.",
   aboutStoryHighlight: "buying a used car should feel safe.",
   aboutStoryPara1:
     "1stCars makes pre-owned car buying simple, transparent, and trustworthy. With doorstep inspections, certified vehicle grading, and a network of verified dealers, we help customers buy and sell with confidence.",
@@ -39,10 +39,10 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
     "To become India's most trusted destination for certified pre-owned vehicles.",
   aboutMissionTitle: "Our Mission",
   aboutMissionText:
-    "To make the pre-owned car market more transparent, trustworthy, and technology-driven \u2014 combining professional vehicle inspection with a simple customer experience.",
+    "To make the pre-owned car market more transparent, trustworthy, and technology-driven, combining professional vehicle inspection with a simple customer experience.",
 
   aboutQuoteText:
-    "\u201cWe don't just sell cars — we sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",
+    "\u201cWe don't just sell cars. We sell the confidence that the car you see is exactly the car you get. That promise is non-negotiable.\u201d",
   aboutTeamLabel: "The 1stCars Team",
   aboutTeamSubtitle: "Certified Inspectors • Dealers • Concierge",
   aboutStat1Value: "4+",
@@ -90,7 +90,7 @@ export const PAGE_CONTENT_DEFAULTS: Record<string, string> = {
 
   aboutContactHeading: "Talk To The 1stCars Team",
   aboutContactSubtitle:
-    "Have a question about buying, selling, or our certification process? We're here to help — no pressure, just answers.",
+    "Have a question about buying, selling, or our certification process? We're here to help. No pressure, just answers.",
   aboutContactPhone: "+91 8866377722",
   aboutContactEmail: "support@1stcars.com",
   aboutContactAddress: "1stCars Seller Hub, Surat, Gujarat",
@@ -209,11 +209,11 @@ export function getPageContent(overrides?: Record<string, string | undefined>): 
 
 const CANONICAL_MARKETING_COPY: Record<string, string> = {
   heroSubtitle:
-    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
   footerText: "© 2026 1stCars Marketplace. All rights reserved.",
   brandSlogan: "Easy Way",
   brandDescription:
-    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
   seoTitle: "1stCars - Certified Car Marketplace",
   seoDescription:
     "The premier platform to buy and sell certified pre-owned vehicles with a 120-Point Certificate.",

@@ -212,7 +212,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
         const hint =
           (signUpErr?.message || "").toLowerCase().includes("already") ||
           (signUpErr?.message || "").toLowerCase().includes("registered")
-            ? " It looks like this demo account already exists — try the sign-in tab instead."
+            ? " It looks like this demo account already exists. Try the sign-in tab instead."
             : " Please make sure 'Confirm email' is turned OFF in Supabase Auth settings, or sign in with your existing account.";
         setError((signUpErr?.message || "Demo sign-up did not return a user.") + hint);
         return;
@@ -400,7 +400,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
             console.error("Failed to sign out pending dealer:", signOutErr);
           }
 
-          setSuccess(`Dealer registration submitted for ${regName}! Admin will review your documents. Check ${dealerEmail} for a password-setup link — once approved you can sign in to participate in live auctions.`);
+          setSuccess(`Dealer registration submitted for ${regName}! Admin will review your documents. Check ${dealerEmail} for a password-setup link. Once approved you can sign in to participate in live auctions.`);
           toast.success("Dealer profile submitted to Admin for review!");
           setLoading(false);
           setRegName("");

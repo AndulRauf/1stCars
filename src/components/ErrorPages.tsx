@@ -16,7 +16,7 @@ export function Error404Page({ onGoHome }: ErrorPageProps) {
         </div>
         
         <p className="text-xs font-black tracking-widest text-[#2E7D32] uppercase mb-3">
-          Error Code: 404 — Page Unavailable
+          Error Code: 404. Page Unavailable
         </p>
         <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-4">
           Lost Your <span className="text-[#2E7D32]">Coordinates?</span>
@@ -53,7 +53,7 @@ export function Error500Page({ onGoHome, onRetry }: ErrorPageProps) {
         </div>
         
         <p className="text-xs font-black tracking-widest text-amber-600 uppercase mb-3">
-          Error Code: 500 — Transmission Failed
+          Error Code: 500. Transmission Failed
         </p>
         <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-4">
           Engine <span className="text-amber-600">Stalled</span>

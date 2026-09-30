@@ -43,7 +43,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function fmtTime(iso?: string) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleString("en-IN", {
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
@@ -240,7 +240,7 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
               <Zap className="h-5 w-5 text-[#ff5a07]" /> Automation Center
             </h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-              Self-operating marketplace engine — triggers, rules & scheduled jobs with no external tools
+              Self-operating marketplace engine, triggers, rules & scheduled jobs with no external tools
             </p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
@@ -570,7 +570,7 @@ export function AutomationControlCenter({ onRefreshAll }: { onRefreshAll?: () =>
                           <span className="text-[9px] font-mono text-slate-400">{a.entity_type}#{a.entity_id || ""}</span>
                         </div>
                         <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
-                          {a.old_status || "—"} → {a.new_status || "—"}
+                          {a.old_status || "-"} → {a.new_status || "-"}
                           {a.actor_role ? ` · by ${a.actor_role}` : ""}
                         </p>
                       </div>

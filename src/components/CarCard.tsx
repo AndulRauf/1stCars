@@ -35,17 +35,17 @@ const getCarAngleImages = (car: Car) => {
     {
       title: "Front Profile",
       bgClass: `bg-gradient-to-br ${gradient}`,
-      text: `${car.brand} ${car.model} — Three-Quarter Front View`
+      text: `${car.brand} ${car.model}, Three-Quarter Front View`
     },
     {
       title: "Rear & Aggressive Lines",
       bgClass: `bg-gradient-to-tr ${gradient}`,
-      text: `${car.brand} ${car.model} — Sleek Rear Fastback View`
+      text: `${car.brand} ${car.model}, Sleek Rear Fastback View`
     },
     {
       title: "Premium Cabin Interior",
       bgClass: `bg-gradient-to-b ${gradient}`,
-      text: `${car.brand} ${car.model} — Cockpit & Premium Infotainment`
+      text: `${car.brand} ${car.model}, Cockpit & Premium Infotainment`
     }
   ];
 };
@@ -55,7 +55,7 @@ const getCarPhotos = (car: Car) => {
     return car.images.map((url, idx) => ({
       url,
       title: idx === 0 ? "Featured Profile" : `Detail Angle #${idx + 1}`,
-      text: `${car.brand} ${car.model} — Cinematic view #${idx + 1}`
+      text: `${car.brand} ${car.model}, Cinematic view #${idx + 1}`
     }));
   }
   const hasRealImgUrl = car.image_url && (
@@ -68,7 +68,7 @@ const getCarPhotos = (car: Car) => {
       {
         url: car.image_url,
         title: "Primary Profile View",
-        text: `${car.brand} ${car.model} — Exterior cinematic presentation`
+        text: `${car.brand} ${car.model}, Exterior cinematic presentation`
       }
     ];
   }
@@ -223,7 +223,7 @@ export function CarCard({
                   } else {
                     trackShareEvent("copy", "car_card", `${car.brand} ${car.model}`);
                     navigator.clipboard.writeText(buildCarShareFullMessage(car)).then(() => {
-                      toast.success(`Car card copied — paste it in WhatsApp!`);
+                      toast.success(`Car card copied. Paste it in WhatsApp!`);
                     }).catch(() => {});
                   }
                 }}

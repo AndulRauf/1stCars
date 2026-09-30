@@ -3,11 +3,11 @@ import { cn } from "@/src/lib/utils";
 import { AuctionStatus, AUCTION_STATUS_LABELS } from "@/src/lib/auctions";
 
 export function formatINR(n: number | null | undefined): string {
-  return n == null ? "—" : `₹${n.toLocaleString("en-IN")}`;
+  return n == null ? "-" : `₹${n.toLocaleString("en-IN")}`;
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
   return `${d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} · ${d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
 }

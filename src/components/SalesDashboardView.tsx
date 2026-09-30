@@ -70,10 +70,10 @@ export function SalesDashboardView({ onBackToInventory, currentUserId, userRole 
               <ShieldCheck className="h-4 w-4" /> Sales Associate CRM
             </p>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-              {isAdmin ? "Sales CRM — All Associates" : "My Sales CRM"}
+              {isAdmin ? "Sales CRM, All Associates" : "My Sales CRM"}
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-1">
-              Cars you upload are owned by you — every buyer inquiry on them lands in your CRM automatically.
+              Cars you upload are owned by you. Every buyer inquiry on them lands in your CRM automatically.
             </p>
           </div>
           <Button

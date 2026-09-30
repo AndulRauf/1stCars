@@ -37,7 +37,7 @@ const KIND_META: Record<
 };
 
 function fmtRelative(iso?: string): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return iso;
   const mins = Math.max(0, Math.round((Date.now() - t) / 60000));

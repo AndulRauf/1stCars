@@ -109,7 +109,7 @@ BEGIN
     ) VALUES (
       p_associate, 'lead_followup', v_title,
       COALESCE(v_lead.name, 'A buyer') || ' in ' || COALESCE(v_lead.city, 'your region') ||
-      ' — reach out to confirm interest and schedule the next step within 24 hours.',
+      '. Reach out to confirm interest and schedule the next step within 24 hours.',
       'high', 'open', timezone('utc'::text, now()) + interval '24 hours',
       'sales_notifications', p_lead_id::text
     );
@@ -199,7 +199,7 @@ BEGIN
         RETURN v_owner;
       END IF;
       PERFORM public.automation_log('warn', 'assign-sales-lead',
-        'Vehicle owner is not an active Sales Associate — using fallback',
+        'Vehicle owner is not an active Sales Associate. Using fallback',
         jsonb_build_object('lead_id', p_lead_id, 'owner', v_owner), NULL, p_event_id);
     END IF;
   END IF;

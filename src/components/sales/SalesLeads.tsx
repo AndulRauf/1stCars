@@ -54,14 +54,14 @@ export function SalesLeads({ data, userId, userName, isAdmin, carIdFilter }: Sal
     setBusy(false);
     if (res.error) toast.error(res.error);
     else {
-      toast.success("Lead claimed — it is now yours");
+      toast.success("Lead claimed. It is now yours");
       await reload();
     }
   };
 
   if (visible.length === 0) {
     return (
-      <CrmCard title="CRM Leads" subtitle="Every buyer inquiry routed to you — follow up, qualify, close.">
+      <CrmCard title="CRM Leads" subtitle="Every buyer inquiry routed to you. Follow up, qualify, close.">
         <EmptyState
           icon={ClipboardList}
           title={carIdFilter ? "No leads for this vehicle yet." : filter === "pool" ? "The shared pool is empty." : "No leads assigned to you yet."}
@@ -123,7 +123,7 @@ export function SalesLeads({ data, userId, userName, isAdmin, carIdFilter }: Sal
                       {lead.car_brand} {lead.car_model} • {STAGE_LABELS[stage]} • {String(lead.type || "lead").replace(/_/g, " ")}
                     </p>
                     <p className="text-[10px] text-slate-400 font-bold">
-                      {lead.city} • {lead.preferred_date || "—"} {lead.preferred_time ? `(${lead.preferred_time})` : ""}
+                      {lead.city} • {lead.preferred_date || "-"} {lead.preferred_time ? `(${lead.preferred_time})` : ""}
                     </p>
                   </div>
 

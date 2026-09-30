@@ -17,7 +17,7 @@ export default async function handler(req: any, res: any) {
       .replace(/'/g, "&#39;");
 
   let title = "1stCars | Certified Premium Used Cars";
-  let description = "1stCars — the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
+  let description = "1stCars, the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
   let image = `${origin}/og-image.jpg?v=5`;
   let redirect = "/";
 
@@ -49,7 +49,7 @@ export default async function handler(req: any, res: any) {
           const carName = `${car.year || ""} ${car.brand || ""} ${car.model || ""}`.trim() || car.title || "Certified Vehicle";
           title = `${carName} | 1stCars Certified Pre-Owned`;
           const priceText = car.price ? ` ₹${Number(car.price).toLocaleString("en-IN")}` : "";
-          description = `${carName}${priceText} — 1stCars Certified. 120-point inspected, transparent history, doorstep delivery across Gujarat.`;
+          description = `${carName}${priceText}. 1stCars Certified. 120-point inspected, transparent history, doorstep delivery across Gujarat.`;
           redirect = `/buy-cars?carId=${encodeURIComponent(carId)}`;
 
           // Resolve the photo exactly like flattenCarRow does on the client:

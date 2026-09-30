@@ -59,7 +59,7 @@ export const buildCarOgTitle = (car: ShareableCar) =>
   `${car.year} ${car.brand} ${car.model} | 1stCars Certified`;
 
 export const buildCarOgDescription = (car: ShareableCar) =>
-  `Certified ${car.year} ${car.brand} ${car.model} (${car.fuel || "Petrol"}, ${car.transmission || "Automatic"}${car.mileage ? `, ${car.mileage.toLocaleString("en-IN")} km` : ""}) — ${formatINR(car.price)}. 120-point inspected, transparent history, doorstep delivery.`;
+  `Certified ${car.year} ${car.brand} ${car.model} (${car.fuel || "Petrol"}, ${car.transmission || "Automatic"}${car.mileage ? `, ${car.mileage.toLocaleString("en-IN")} km` : ""}). ${formatINR(car.price)}. 120-point inspected, transparent history, doorstep delivery.`;
 
 // ---------------------------------------------------------------------------
 // Runtime Open Graph injection

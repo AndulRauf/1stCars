@@ -848,7 +848,7 @@ export function BuyCarsView({
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80 pt-4 mt-8">
                 <p className="text-xs font-semibold text-slate-500 text-center sm:text-left order-2 sm:order-1">
                   Showing Page <span className="font-bold text-slate-800">{currentPage}</span> of{" "}
-                  <span className="font-bold text-slate-800">{totalPages}</span> — Curating{" "}
+                  <span className="font-bold text-slate-800">{totalPages}</span>. Curating{" "}
                   <span className="font-bold text-[#2E7D32]">{filteredAndSortedCars.length}</span> masterpieces
                 </p>
 

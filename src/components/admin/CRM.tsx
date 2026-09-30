@@ -30,9 +30,9 @@ const tAgo = (iso?: string) => {
 };
 
 const fDate = (iso?: string) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 };
 
@@ -340,7 +340,7 @@ export function CRM({
     };
 
     if (!scope) {
-      notifications.forEach((n) => push(n.created_at, `${n.title || "Alert"}${n.message ? " — " + n.message : ""}`, "slate"));
+      notifications.forEach((n) => push(n.created_at, `${n.title || "Alert"}${n.message ? ". " + n.message : ""}`, "slate"));
       return ev.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
     }
 
@@ -381,7 +381,7 @@ export function CRM({
     if (kind === "inspection") {
       inspectionReports
         .filter((r) => r.inspection_id === id)
-        .forEach((r) => push(r.created_at, `120-pt inspection report completed · score ${r.overall_score != null ? r.overall_score + "/10" : "—"}`, "green"));
+        .forEach((r) => push(r.created_at, `120-pt inspection report completed · score ${r.overall_score != null ? r.overall_score + "/10" : "-"}`, "green"));
       offers
         .filter((o) => o.inspection_id === id)
         .forEach((o) => push(o.created_at, `Offer ${INR(o.offer_amount)} from ${o.dealer_name || "dealer"} (${o.status || "pending"})`, "rose"));
@@ -454,7 +454,7 @@ export function CRM({
 
   const handleStatusChange = (item: CrmItem, next: string) => {
     if (item.kind === "auction") {
-      toast.error("Auction status is owned by the Auction Engine state machine — change it from Admin CMS → Live Auctions.");
+      toast.error("Auction status is owned by the Auction Engine state machine. Change it from Admin CMS → Live Auctions.");
       return;
     }
     updateRow(statusTable[item.kind], item.id, { status: next }, KIND_META[item.kind].label);
@@ -537,7 +537,7 @@ export function CRM({
     if (!isAdmin || !opts.length) {
       return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-lg border text-[10px] font-black uppercase tracking-wider ${toneBadge(statusTone(item.status))}`}>
-          {item.status || "—"}
+          {item.status || "-"}
         </span>
       );
     }
@@ -803,7 +803,7 @@ export function CRM({
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-800 truncate">{p.name}</p>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">{p.role || "—"}{p.city ? " · " + p.city : ""}</p>
+                  <p className="text-[10px] text-slate-500 font-medium truncate">{p.role || "-"}{p.city ? " · " + p.city : ""}</p>
                 </div>
                 <span className="text-[9px] text-slate-400 font-bold">{tAgo(p.created_at)}</span>
               </button>
@@ -866,7 +866,7 @@ export function CRM({
                     </span>
                     <div className="min-w-0">
                       <h4 className="font-extrabold text-slate-900 text-sm leading-snug truncate">{p.name}</h4>
-                      <p className="text-[10px] text-slate-500 font-medium truncate">{p.email || p.mobile || "—"}</p>
+                      <p className="text-[10px] text-slate-500 font-medium truncate">{p.email || p.mobile || "-"}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2.5">
@@ -1105,7 +1105,7 @@ export function CRM({
                           onChange={(e) => e.target.value && handleAssignSales(item, e.target.value)}
                           className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 outline-none bg-white disabled:opacity-60"
                         >
-                          <option value="">— Unassigned —</option>
+                          <option value="">- Unassigned -</option>
                           {salesAssociates.map((x) => (
                             <option key={x.id} value={x.id}>{x.name}{x.city ? ` (${x.city})` : ""}</option>
                           ))}
@@ -1132,7 +1132,7 @@ export function CRM({
                         onChange={(e) => e.target.value && handleAssignInspector(item, e.target.value)}
                         className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 outline-none bg-white disabled:opacity-60"
                       >
-                        <option value="">— Select inspector —</option>
+                        <option value="">- Select inspector -</option>
                         {inspectors.map((x) => (
                           <option key={x.id} value={x.id}>{x.name}{x.city ? ` (${x.city})` : ""}</option>
                         ))}
@@ -1150,7 +1150,7 @@ export function CRM({
                     </Button>
                   )}
                   {item.kind === "inspection" && inspectors.length === 0 && (
-                    <p className="text-[10px] text-slate-400 font-bold">No Inspector profiles exist yet — add one under Inspections & Operations → Inspectors.</p>
+                    <p className="text-[10px] text-slate-400 font-bold">No Inspector profiles exist yet. Add one under Inspections & Operations → Inspectors.</p>
                   )}
                   {item.kind === "offer" && item.record?.inspection_id && (
                     <Button
@@ -1172,7 +1172,7 @@ export function CRM({
                       <CheckCircle2 className="h-4 w-4 mr-1" /> Mark as Sold
                     </Button>
                   )}
-                  <p className="text-[9px] text-slate-400 font-bold">Changes are written straight to the existing Supabase tables — analytics and n8n webhooks pick them up automatically.</p>
+                  <p className="text-[9px] text-slate-400 font-bold">Changes are written straight to the existing Supabase tables. Analytics and n8n webhooks pick them up automatically.</p>
                 </div>
               </div>
             )}
@@ -1235,7 +1235,7 @@ export function CRM({
             <Sparkles className="h-5 w-5 text-[#ffb81e]" /> Customer Relationship Center
           </h2>
           <p className="text-[11px] text-emerald-100 font-semibold mt-0.5">
-            Unified view across buyers, sellers, inspections, dealer bids & inventory — powered by the existing Supabase tables.
+            Unified view across buyers, sellers, inspections, dealer bids & inventory, powered by the existing Supabase tables.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1269,9 +1269,9 @@ export function CRM({
         <div className="bg-amber-50/70 border border-amber-200 rounded-2xl px-4 py-3 text-[11px] font-bold text-amber-800 flex items-start gap-2.5">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <div>
-            <p>No CRM activity captured yet — buyer leads, sell requests, inspections, offers and dealer bids currently sit at zero, so the funnel and activity feed below are empty (inventory still shows under Records).</p>
+            <p>No CRM activity captured yet. Buyer leads, sell requests, inspections, offers and dealer bids currently sit at zero, so the funnel and activity feed below are empty (inventory still shows under Records).</p>
             {profiles.length === 0 && (
-              <p className="mt-1 font-semibold text-amber-700">No customer profiles yet either — site sign-ups and role registrations populate the Customers tab.</p>
+              <p className="mt-1 font-semibold text-amber-700">No customer profiles yet either. Site sign-ups and role registrations populate the Customers tab.</p>
             )}
             <p className="mt-1 font-semibold text-amber-700">
               To preview this center with realistic sample data, run{" "}

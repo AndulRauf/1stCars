@@ -233,7 +233,7 @@ BEGIN
 
   PERFORM public.automation_create_task(v_sales, 'offer_review',
     'Review offer for ' || v_car,
-    'Dealer ' || NEW.dealer_name || ' offered ₹' || NEW.offer_amount || ' — validate and route to the seller.',
+    'Dealer ' || NEW.dealer_name || ' offered ₹' || NEW.offer_amount || '. Validate and route to the seller.',
     'high', now() + interval '24 hours', 'offers', NEW.id::text, 'offer-' || NEW.id::text);
 
   PERFORM public.automation_notify(v_sales, 'Offer Received',
@@ -455,7 +455,7 @@ BEGIN
 
     PERFORM public.automation_create_task(v_sales, 'valuation_task',
       'Valuation pending: ' || v_vehicle,
-      'Inspection completed (score ' || COALESCE(NEW.overall_score::text, '—') || '). Prepare the certified offer for the seller.',
+      'Inspection completed (score ' || COALESCE(NEW.overall_score::text, '-') || '). Prepare the certified offer for the seller.',
       'high', now() + interval '1 day', 'inspections', NEW.id::text, 'valuation-' || NEW.id::text);
 
     PERFORM public.automation_notify(v_sales, 'Inspection Completed',

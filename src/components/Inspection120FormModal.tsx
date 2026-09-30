@@ -674,7 +674,7 @@ export const Inspection120FormModal: React.FC<Inspection120FormModalProps> = ({
                   onClick={onClose}
                   className="w-full md:w-auto h-11 px-6 bg-indigo-900 hover:bg-indigo-800 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex items-center gap-1.5"
                 >
-                  <Gavel className="h-4 w-4 text-indigo-300" /> Verified — Return to Bidding
+                  <Gavel className="h-4 w-4 text-indigo-300" /> Verified, Return to Bidding
                 </Button>
               )}
             </div>

@@ -367,7 +367,7 @@ export default function App() {
     buttonColor: "#2E7D32",
     fontFamily: "Inter",
     heroTitle: "Certified Cars",
-          heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km.",
+          heroSubtitle: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
     showPopularBrands: true,
     showLatestArrivals: true,
     showHowItWorks: true,
@@ -380,7 +380,7 @@ export default function App() {
     supportPhone: "+91 8866377722",
     supportAddress: "1stCars Seller Hub, Vikas Arced, Masma, Olpad, Surat, Gujarat 394540, India",
     brandSlogan: "Easy Way",
-    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles single-owner, accident-free, verified km.",
+    brandDescription: "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km.",
     highlight1Title: "Single Owned",
     highlight1Desc: "Every vehicle is verified to have had only one premium owner, with pristine documentation.",
     highlight2Title: "Non Accident Trusted",
@@ -834,7 +834,7 @@ export default function App() {
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex flex-col gap-3">
             <p className="text-xs leading-relaxed text-slate-200 font-medium">
               We use cookies and analytics (Google Analytics, Meta Pixel) to understand how visitors use
-              1stCars and improve your experience. Tracking is on by default — you can turn it off anytime.
+              1stCars and improve your experience. Tracking is on by default. You can turn it off anytime.
               Your choice is saved locally.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -1096,7 +1096,7 @@ export default function App() {
             </h1>
             
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium text-center">
-              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles — single-owner, accident-free, verified km."}
+              {websiteSettings.heroSubtitle || "Rigorous standards, reimagined for you. 120-point inspected, certified vehicles, single-owner, accident-free, verified km."}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center w-full max-w-md mx-auto">

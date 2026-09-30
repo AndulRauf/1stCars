@@ -67,8 +67,12 @@ export async function resolveLeadOwner(car: { id?: string | null; brand?: string
 // If the live database predates the `assigned_to` migration, retry the
 // insert without the new columns so bookings never fail.
 // Returns { data, error, row } so callers can read the DB-generated id.
+// NOTE: `.select()` is REQUIRED here — without it PostgREST returns no
+// representation, `row` is always null, and any later `.eq("id", row.id)`
+// update silently matches zero rows (the background assignment in
+// BookingModal hit exactly this: it updated the display-only INQ- refId).
 export async function insertLeadWithAssignment(lead: any) {
-  const first = await supabase.from("sales_notifications").insert([lead]);
+  const first = await supabase.from("sales_notifications").insert([lead]).select();
   if (!first.error) {
     return {
       data: first.data,
@@ -80,7 +84,7 @@ export async function insertLeadWithAssignment(lead: any) {
   const msg = String(first.error.message || JSON.stringify(first.error));
   if (/assigned_to|schema cache|does not exist/i.test(msg)) {
     const { assigned_to, assigned_to_name, ...stripped } = lead;
-    const retry = await supabase.from("sales_notifications").insert([stripped]);
+    const retry = await supabase.from("sales_notifications").insert([stripped]).select();
     if (!retry.error) {
       console.warn("Lead inserted without assigned_to (run the schema migration to enable auto-assignment).");
     }

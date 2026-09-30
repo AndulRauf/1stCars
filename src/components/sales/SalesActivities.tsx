@@ -28,15 +28,16 @@ export function SalesActivities({ data }: SalesActivitiesProps) {
     (async () => {
       setLoading(true);
       // Activities for the associate's leads (audit trail + automation events),
-      // capped so very large CRMs stay fast.
+      // capped so very large CRMs stay fast. Bulk fetch: ONE audit + events
+      // pull grouped per lead (not one 700-row pull per lead).
+      const capped = leads.slice(0, 50);
+      const grouped = await salesCrm.getAllLeadActivities(capped.map((l) => l.id));
       const all: SalesActivity[] = [];
-      const perLead = await Promise.all(leads.slice(0, 50).map((l) => salesCrm.getLeadActivities(l.id)));
-      perLead.forEach((list, i) => {
-        const lead = leads[i];
-        for (const a of list) {
+      for (const lead of capped) {
+        for (const a of grouped[String(lead.id)] || []) {
           all.push({ ...a, detail: a.detail || `${lead.name} • ${lead.car_brand} ${lead.car_model}` });
         }
-      });
+      }
       const seen = new Set<string>();
       setRows(
         all
@@ -52,7 +53,7 @@ export function SalesActivities({ data }: SalesActivitiesProps) {
     <div>
       <CrmCard
         title="Activities"
-        subtitle="Chronological CRM history — lead created, assigned, followed up, stage changes."
+        subtitle="Chronological CRM history. Lead created, assigned, followed up, stage changes."
         actions={
           <Button size="sm" variant="outline" onClick={() => void reload()} className="border-slate-200 bg-white text-slate-600 text-[9px] font-black uppercase tracking-wider h-8 rounded-lg px-2.5">
             Refresh

@@ -351,7 +351,7 @@ const displayEmi = car ? calculateListingEmi(car.price) : 0;
     }
 
     if (isRealSupabase) {
-      toast.success("Proceed to pay the booking token — our team verifies your number over the call.");
+      toast.success("Proceed to pay the booking token. Our team verifies your number over the call.");
       setShowUpiPayment(true);
       return;
     }
@@ -513,7 +513,7 @@ const displayEmi = car ? calculateListingEmi(car.price) : 0;
                       // if the page is still visible, tell the user to scan the QR / use another app.
                       setTimeout(() => {
                         if (document.visibilityState === "visible") {
-                          toast.info(`If ${app.name} didn't open, make sure it's installed — or scan the QR above.`);
+                          toast.info(`If ${app.name} didn't open, make sure it's installed, or scan the QR above.`);
                         }
                       }, 1200);
                     }}

@@ -335,13 +335,21 @@ export const salesCrm = {
     return {};
   },
 
-  /** Claim an unassigned pool lead (Sales Associate). */
+  /** Claim an unassigned pool lead (Sales Associate).
+   *  The `.is("assigned_to", null)` guard makes the claim atomic: when two
+   *  associates race, only the first update matches a row. Zero matched rows
+   *  means the lead just left the pool — report it instead of a fake success. */
   async claimLead(leadId: string, userId: string, userName: string): Promise<{ error?: string }> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("sales_notifications")
       .update({ assigned_to: userId, assigned_to_name: userName })
-      .eq("id", leadId);
+      .eq("id", leadId)
+      .is("assigned_to", null)
+      .select("id");
     if (error) return { error: errorMessage(error) };
+    if (!data || data.length === 0) {
+      return { error: "This lead was just claimed by someone else. Refresh the pool and try another." };
+    }
     return {};
   },
 
@@ -393,12 +401,19 @@ export const salesCrm = {
   // ACTIVITY TIMELINE (existing audit trail + events)
   // ==========================================
 
-  async getLeadActivities(leadId: string): Promise<SalesActivity[]> {
-    const out: SalesActivity[] = [];
+  /** Bulk variant: ONE audit + events fetch grouped per lead.
+   *  getLeadActivities() re-pulled up to 700 rows PER lead (50 leads =
+   *  35k rows per Activities render). This pulls once and fans out. */
+  async getAllLeadActivities(leadIds: string[]): Promise<Record<string, SalesActivity[]>> {
+    const ids = new Set(leadIds.map(String));
+    const out: Record<string, SalesActivity[]> = {};
+    const push = (leadId: string, entry: SalesActivity) => {
+      (out[leadId] = out[leadId] || []).push(entry);
+    };
     const audit: AuditEntry[] = await automationService.getAudit(400);
     for (const a of audit) {
-      if (a.entity_type === "sales_notifications" && String(a.entity_id) === String(leadId)) {
-        out.push({
+      if (a.entity_type === "sales_notifications" && ids.has(String(a.entity_id))) {
+        push(String(a.entity_id), {
           id: a.id,
           at: a.created_at,
           action: a.action,
@@ -409,8 +424,8 @@ export const salesCrm = {
     }
     const events = await automationService.getEvents(300);
     for (const e of events) {
-      if (e.source_table === "sales_notifications" && String(e.source_id) === String(leadId)) {
-        out.push({
+      if (e.source_table === "sales_notifications" && ids.has(String(e.source_id))) {
+        push(String(e.source_id), {
           id: e.id,
           at: e.created_at,
           action: e.event_type,
@@ -418,7 +433,13 @@ export const salesCrm = {
         });
       }
     }
-    return out.sort((a, b) => b.at.localeCompare(a.at));
+    for (const k of Object.keys(out)) out[k].sort((a, b) => b.at.localeCompare(a.at));
+    return out;
+  },
+
+  async getLeadActivities(leadId: string): Promise<SalesActivity[]> {
+    const grouped = await this.getAllLeadActivities([leadId]);
+    return grouped[String(leadId)] || [];
   }
 };
 

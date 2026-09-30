@@ -179,5 +179,40 @@ describe("phase 1 — sales CRM + sales automation", () => {
     expect(counts["car-a"].appointments).toBe(1); // the single test_drive-type lead
     expect(counts["car-a"].testDrives).toBe(1);
   });
+
+  it("lead insert returns the DB row id so later updates hit the real row", async () => {
+    const { insertLeadWithAssignment } = await import("@/src/lib/leadAssignment");
+    const res = await insertLeadWithAssignment({
+      name: "Row Id", mobile: "9000000011", city: "Surat",
+      car_id: "car-owned-a", car_brand: "Honda", car_model: "City",
+      type: "test_drive", status: "pending", notes: "row-id check"
+    });
+    // Without `.select()` PostgREST returns no representation and every
+    // downstream `.eq("id", row.id)` update silently matched zero rows.
+    expect(res.error).toBeFalsy();
+    expect(res.row?.id).toBeTruthy();
+  });
+
+  it("claim is atomic: a second claim reports taken instead of stealing", async () => {
+    const { supabase } = await import("@/src/lib/supabaseClient");
+    const { salesCrm } = await import("@/src/lib/salesCrm");
+
+    await supabase.from("sales_notifications").insert([
+      { name: "Pool Prize", mobile: "9000000022", city: "Surat", car_id: "car-a", car_brand: "Honda", car_model: "City", type: "buy_now", status: "pending" }
+    ]);
+    const { data: rows } = await supabase.from("sales_notifications").select();
+    const pool = (rows as any[]).find((r) => r.mobile === "9000000022");
+    expect(pool).toBeTruthy();
+
+    const first = await salesCrm.claimLead(pool.id, "assoc-A", "Associate A");
+    expect(first.error).toBeUndefined();
+
+    const second = await salesCrm.claimLead(pool.id, "assoc-B", "Associate B");
+    expect(second.error).toMatch(/someone else/i);
+
+    // Ownership stays with the first claimer — no steal, no duplicate.
+    const { data: after } = await supabase.from("sales_notifications").select();
+    expect((after as any[]).find((r) => r.id === pool.id).assigned_to).toBe("assoc-A");
+  });
 });
 

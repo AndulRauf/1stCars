@@ -150,12 +150,12 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
       transmission: insp?.transmission ?? car?.transmission,
       city: insp?.city ?? car?.city,
       score: insp?.overall_score ?? car?.overall_score,
-      seller_name: insp?.seller_name || (a.seller_id ? "Seller" : "—")
+      seller_name: insp?.seller_name || (a.seller_id ? "Seller" : "-")
     };
   };
 
   const dealerName = (id: string | null | undefined) => {
-    if (!id) return "—";
+    if (!id) return "-";
     return dealers.find((d) => d.id === id)?.name || id;
   };
 
@@ -261,7 +261,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
       return;
     }
     await run(a.id, () => auctionService.adminDecision(actor, a.id, decision, undefined),
-      "Auction result accepted — payment task created");
+      "Auction result accepted. Payment task created");
     setDetail(null);
   };
 
@@ -270,14 +270,14 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
     const { auction, kind } = confirm;
     if (kind === "cancel") {
       await run(auction.id, () => auctionService.cancelAuction(actor, auction.id, confirmReason.trim() || "Cancelled from Admin Auctions"),
-        "Auction cancelled — vehicle released");
+        "Auction cancelled. Vehicle released");
     } else {
       if (!confirmReason.trim()) {
         toast.error("Provide a reason for rejection");
         return;
       }
       await run(auction.id, () => auctionService.adminDecision(actor, auction.id, "REJECT", confirmReason.trim()),
-        "Auction result rejected — vehicle released");
+        "Auction result rejected. Vehicle released");
       setDetail(null);
     }
     setConfirm(null);
@@ -320,7 +320,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
       const car = cars.find((c) => openStatuses.includes(c.status) && insp != null && (c.id === insp.car_id || (c.brand === insp.brand && c.model === insp.model)))
         || cars.find((c) => openStatuses.includes(c.status));
       if (!insp) {
-        toast.error("No certified inspection available — click \"Upload Demo Car\" below first");
+        toast.error("No certified inspection available. Click \"Upload Demo Car\" below first");
         return;
       }
       const created = await auctionService.createAuction(actor, {
@@ -356,8 +356,8 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
     try {
       const res = await auctionService.seedDemoInspection(actor);
       toast.success(res.created
-        ? "Demo car uploaded: Toyota Fortuner 2022 with a certified inspection — ready to auction"
-        : "Demo car already exists — reusing the seeded Toyota Fortuner inspection");
+        ? "Demo car uploaded: Toyota Fortuner 2022 with a certified inspection, ready to auction"
+        : "Demo car already exists. Reusing the seeded Toyota Fortuner inspection");
       await reload();
       if (onReloadAllData) onReloadAllData();
     } catch (err) {
@@ -521,7 +521,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                         <Button size="sm" variant="outline" className="h-8 px-3 text-[9px]" onClick={() => openSchedule(a)}>
                           <CalendarClock className="h-3 w-3" /> Schedule
                         </Button>
-                        <Button size="sm" className="h-8 px-3 text-[9px] bg-[#2E7D32]" onClick={() => run(a.id, () => auctionService.startAuction(actor, a.id), "Auction started — LIVE")} disabled={actionBusy === a.id}>
+                        <Button size="sm" className="h-8 px-3 text-[9px] bg-[#2E7D32]" onClick={() => run(a.id, () => auctionService.startAuction(actor, a.id), "Auction started. LIVE")} disabled={actionBusy === a.id}>
                           <PlayCircle className="h-3 w-3" /> Start Now
                         </Button>
                       </>
@@ -531,7 +531,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                         <Button size="sm" variant="outline" className="h-8 px-3 text-[9px]" onClick={() => openSchedule(a)}>
                           <CalendarClock className="h-3 w-3" /> Reschedule
                         </Button>
-                        <Button size="sm" className="h-8 px-3 text-[9px] bg-[#2E7D32]" onClick={() => run(a.id, () => auctionService.startAuction(actor, a.id), "Auction started — LIVE")} disabled={actionBusy === a.id}>
+                        <Button size="sm" className="h-8 px-3 text-[9px] bg-[#2E7D32]" onClick={() => run(a.id, () => auctionService.startAuction(actor, a.id), "Auction started. LIVE")} disabled={actionBusy === a.id}>
                           <PlayCircle className="h-3 w-3" /> Start Now
                         </Button>
                       </>
@@ -574,7 +574,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
           <h4 className="font-black text-sm uppercase tracking-wider">Engine Test Mode</h4>
         </div>
         <p className="text-[10px] text-slate-400 font-bold mb-4">
-          Drive the full auction lifecycle from this dashboard — create, publish, schedule, start, bid, close, decide.
+          Drive the full auction lifecycle from this dashboard. Create, publish, schedule, start, bid, close, decide.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={runMaintenance} disabled={testRunning} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9 px-4 text-[10px]">
@@ -626,7 +626,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                 </select>
                 {availableInspections.length === 0 && (
                   <p className="mt-2 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                    No certified inspections yet — an Inspector must upload a 120-Point report first. Quick start: click "Upload Demo Car" in Engine Test Mode below.
+                    No certified inspections yet. An Inspector must upload a 120-Point report first. Quick start: click "Upload Demo Car" in Engine Test Mode below.
                   </p>
                 )}
               </div>
@@ -647,13 +647,13 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                 </select>
                 {availableCars.length === 0 && (
                   <p className="mt-2 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                    No available vehicles — leaving this empty auto-lists a vehicle record from the selected inspection.
+                    No available vehicles. Leaving this empty auto-lists a vehicle record from the selected inspection.
                   </p>
                 )}
               </div>
 
               <Input label="Starting Bid (₹)" type="number" value={createForm.starting_bid} onChange={(e) => setCreateForm((f) => ({ ...f, starting_bid: e.target.value }))} />
-              <Input label="Reserve Price (₹) — 0 = no reserve" type="number" value={createForm.reserve_price} onChange={(e) => setCreateForm((f) => ({ ...f, reserve_price: e.target.value }))} />
+              <Input label="Reserve Price (₹), 0 = no reserve" type="number" value={createForm.reserve_price} onChange={(e) => setCreateForm((f) => ({ ...f, reserve_price: e.target.value }))} />
               <Input label="Minimum Increment (₹)" type="number" value={createForm.minimum_increment} onChange={(e) => setCreateForm((f) => ({ ...f, minimum_increment: e.target.value }))} />
               <Input label="Anti-Sniping Window (seconds)" type="number" value={createForm.extension_seconds} onChange={(e) => setCreateForm((f) => ({ ...f, extension_seconds: e.target.value }))} />
               <Input label="Max Extensions" type="number" value={createForm.max_extension_count} onChange={(e) => setCreateForm((f) => ({ ...f, max_extension_count: e.target.value }))} />
@@ -833,7 +833,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                     <div key={e.id} className="flex items-center justify-between gap-2 p-3 border border-slate-100 rounded-xl">
                       <div className="min-w-0">
                         <p className="text-xs font-black text-slate-800 truncate">{e.dealer_name || e.dealer_id}</p>
-                        <p className="text-[9px] text-slate-400 font-bold">{e.city} • {e.mobile || "—"}</p>
+                        <p className="text-[9px] text-slate-400 font-bold">{e.city} • {e.mobile || "-"}</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full ${e.status === "BIDDED" ? "bg-emerald-50 text-emerald-700" : e.status === "DISQUALIFIED" ? "bg-rose-50 text-rose-600" : "bg-sky-50 text-sky-700"}`}>
@@ -912,7 +912,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
             {detailTab === "payment" && (
               <div className="max-h-80 overflow-y-auto">
                 {payments.length === 0 ? (
-                  <p className="text-xs text-slate-400 font-bold text-center py-8">No payment record yet — created when the seller accepts.</p>
+                  <p className="text-xs text-slate-400 font-bold text-center py-8">No payment record yet. Created when the seller accepts.</p>
                 ) : (
                   payments.map((p) => (
                     <div key={p.id} className="p-3.5 border border-slate-100 rounded-xl space-y-1.5">
@@ -920,7 +920,7 @@ export function AdminAuctions({ currentUser, onReloadAllData, initialStatusFilte
                         <p className="text-xs font-black text-slate-800">₹{p.amount.toLocaleString("en-IN")} · {dealerName(p.winner_dealer_id)}</p>
                         <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700">{p.status}</span>
                       </div>
-                      <p className="text-[9px] text-slate-400 font-bold">Reference: {p.reference || "—"} • Method: {p.method || "—"}</p>
+                      <p className="text-[9px] text-slate-400 font-bold">Reference: {p.reference || "-"} • Method: {p.method || "-"}</p>
                     </div>
                   ))
                 )}

@@ -221,7 +221,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
         );
         console.warn(
           tableMissing
-            ? "career_applications table not found — run public/add_career_applications.sql in Supabase. Application saved locally."
+            ? "career_applications table not found. Run public/add_career_applications.sql in Supabase. Application saved locally."
             : "career_applications insert failed:",
           dbError
         );

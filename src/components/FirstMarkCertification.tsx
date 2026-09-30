@@ -256,32 +256,32 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-black text-slate-900">Grade A+ (95–100%)</p>
-                      <p className="text-[10px] text-emerald-800 font-semibold">114–120 Points Passed • Pristine</p>
+                      <p className="text-xs font-black text-slate-900">Grade A+ (95-100%)</p>
+                      <p className="text-[10px] text-emerald-800 font-semibold">114-120 Points Passed • Pristine</p>
                     </div>
                     <Badge className="bg-[#2E7D32] text-white">Certified</Badge>
                   </div>
 
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-black text-slate-900">Grade A (90–94%)</p>
-                      <p className="text-[10px] text-emerald-800 font-semibold">108–113 Points Passed • Excellent</p>
+                      <p className="text-xs font-black text-slate-900">Grade A (90-94%)</p>
+                      <p className="text-[10px] text-emerald-800 font-semibold">108-113 Points Passed • Excellent</p>
                     </div>
                     <Badge className="bg-[#2E7D32] text-white">Certified</Badge>
                   </div>
 
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-black text-slate-900">Grade B+ (85–89%)</p>
-                      <p className="text-[10px] text-amber-800 font-semibold">102–107 Points Passed</p>
+                      <p className="text-xs font-black text-slate-900">Grade B+ (85-89%)</p>
+                      <p className="text-[10px] text-amber-800 font-semibold">102-107 Points Passed</p>
                     </div>
                     <Badge className="bg-amber-600 text-white">Minor Repairs</Badge>
                   </div>
 
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex justify-between items-center">
                     <div>
-                      <p className="text-xs font-black text-slate-900">Grade B (80–84%)</p>
-                      <p className="text-[10px] text-amber-800 font-semibold">96–101 Points Passed</p>
+                      <p className="text-xs font-black text-slate-900">Grade B (80-84%)</p>
+                      <p className="text-[10px] text-amber-800 font-semibold">96-101 Points Passed</p>
                     </div>
                     <Badge className="bg-amber-700 text-white">Minor Repairs</Badge>
                   </div>

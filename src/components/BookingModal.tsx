@@ -321,6 +321,9 @@ export function BookingModal({
 
       void (async () => {
         // Auto-assign the lead in the background — never blocks the UI.
+        // NOTE: dbLeadId is the real UUID row id (insertLeadWithAssignment
+        // returns it via `.select()`). Targeting the display-only INQ- refId
+        // instead would silently match zero rows.
         try {
           const owner = await resolveLeadOwner(car);
           if (owner) {
@@ -329,10 +332,22 @@ export function BookingModal({
               l.id === refId ? { ...l, assigned_to: owner.id, assigned_to_name: owner.name || "" } : l
             );
             localStorage.setItem("1stcars_sales_leads", JSON.stringify(updated));
-            await supabase
-              .from("sales_notifications")
-              .update({ assigned_to: owner.id, assigned_to_name: owner.name || "" })
-              .eq("id", dbLeadId || refId);
+            if (dbLeadId) {
+              await supabase
+                .from("sales_notifications")
+                .update({ assigned_to: owner.id, assigned_to_name: owner.name || "" })
+                .eq("id", dbLeadId);
+              // The appointment row is created by the DB trigger BEFORE the
+              // lead is assigned, so link it to the owner as well — otherwise
+              // the associate's Test Drives tab (filtered by
+              // sales_associate_id) stays empty. Best-effort: buyers are
+              // RLS-blocked here; the sales_crm_sync_appointment_assignee
+              // trigger is the canonical server-side sync.
+              await supabase
+                .from("test_drives")
+                .update({ sales_associate_id: owner.id })
+                .eq("lead_id", dbLeadId);
+            }
           }
         } catch (assignErr) {
           console.warn("Background lead assignment failed:", assignErr);

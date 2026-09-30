@@ -105,7 +105,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
           <div className="border border-slate-100 rounded-2xl p-4 space-y-2">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Car className="h-3.5 w-3.5" /> Vehicle</p>
             <p className="text-xs font-bold text-slate-700">{lead.car_brand} {lead.car_model}</p>
-            <p className="text-[10px] font-mono text-slate-400">Vehicle ID: {lead.car_id || "—"}</p>
+            <p className="text-[10px] font-mono text-slate-400">Vehicle ID: {lead.car_id || "-"}</p>
             {lead.notes && <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">{lead.notes}</p>}
           </div>
 
@@ -118,7 +118,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
 
           <div className="border border-slate-100 rounded-2xl p-4 space-y-2">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Appointment</p>
-            <p className="text-xs font-bold text-slate-700 flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-[#2E7D32]" /> {lead.preferred_date || "—"} {lead.preferred_time ? `• ${lead.preferred_time}` : ""}</p>
+            <p className="text-xs font-bold text-slate-700 flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-[#2E7D32]" /> {lead.preferred_date || "-"} {lead.preferred_time ? `• ${lead.preferred_time}` : ""}</p>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
             <div key={f.id} className="flex items-center justify-between gap-2 border border-slate-100 rounded-xl p-3 bg-[#FAF9F6]">
               <div className="min-w-0">
                 <p className="text-xs font-black text-slate-800">{f.follow_up_type} • {f.priority}</p>
-                <p className="text-[10px] text-slate-500 font-bold">{f.status} • due {f.due_at ? new Date(f.due_at).toLocaleDateString() : "—"}</p>
+                <p className="text-[10px] text-slate-500 font-bold">{f.status} • due {f.due_at ? new Date(f.due_at).toLocaleDateString() : "-"}</p>
                 {f.notes && <p className="text-[10px] text-slate-500 mt-0.5">{f.notes}</p>}
               </div>
               {f.status !== "completed" && (
@@ -168,7 +168,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
                 Reassign
               </Button>
             </div>
-            <p className="text-[10px] text-indigo-400 font-bold">Reassignment sticks — automation never overwrites an explicit admin assignment.</p>
+            <p className="text-[10px] text-indigo-400 font-bold">Reassignment sticks. Automation never overwrites an explicit admin assignment.</p>
           </div>
         )}
 
@@ -179,7 +179,7 @@ export function LeadDetailPanel({ lead, followUps, userId, isAdmin, onClose, onC
           <div className="space-y-1.5">
             {activities.map((a) => (
               <div key={a.id} className="flex items-center justify-between gap-2 text-xs border-l-2 border-[#2E7D32]/30 pl-3 py-1">
-                <span className="font-black text-slate-700">{a.label}{a.detail ? ` — ${a.detail}` : ""}</span>
+                <span className="font-black text-slate-700">{a.label}{a.detail ? `, ${a.detail}` : ""}</span>
                 <span className="text-[9px] text-slate-400 font-bold shrink-0">{new Date(a.at).toLocaleString()}</span>
               </div>
             ))}

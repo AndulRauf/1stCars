@@ -227,6 +227,9 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
 
   // Selected sub-views / modal triggers
   const [selectedInspection, setSelectedInspection] = React.useState<Inspection | null>(null);
+  // Inspector worklist filter: pending assignments vs. submitted history
+  // (submitted rows used to vanish with no way to review them).
+  const [inspectorListFilter, setInspectorListFilter] = React.useState<"pending" | "done">("pending");
   const [selectedDealerReport, setSelectedDealerReport] = React.useState<any | null>(null);
   const [reportForm, setReportForm] = React.useState({
     overallScore: 8.5,
@@ -437,8 +440,10 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const handleUploadReport = async (inspectionId: string, reportData: Full120PointReport) => {
     const targetInsp = inspections.find(i => i.id === inspectionId) || selectedInspection;
 
-    // 1. Update the inspection item as completed with full 120-point report
-    await supabase.from("inspections").update({
+    // 1. Update the inspection item as completed with full 120-point report.
+    // `.select("id")` detects the silent zero-row case (RLS denial / stale
+    // id) so a failed save can never show a success toast.
+    const { data: saved, error: reportErr } = await supabase.from("inspections").update({
       status: "completed",
       overall_score: reportData.overallScorePercent ? Number((reportData.overallScorePercent / 10).toFixed(1)) : 9.5,
       report_engine: reportData.categories[0]?.summary || "",
@@ -450,7 +455,11 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
       report_150_json: JSON.stringify(reportData),
       notes: reportData.notes,
       is_certified: reportData.isCertified
-    }).eq("id", inspectionId);
+    }).eq("id", inspectionId).select("id");
+    if (reportErr || !saved || saved.length === 0) {
+      toast.error("Could not save the inspection report: " + (reportErr ? errorMessage(reportErr) : "the inspection was not found or is no longer assigned to you."));
+      return;
+    }
 
     // 2. Auto-list this certified car in the Live Dealer Auction via the canonical engine.
     //    (DRAFT -> READY -> SCHEDULED -> LIVE, 24h window — same live-listing the
@@ -1211,7 +1220,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                   <div className="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                       <h3 className="font-black text-xl text-slate-900 tracking-tight">Your Selling Overview</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">A snapshot of your cars, auctions and offers — everything that needs your attention.</p>
+                      <p className="text-xs text-slate-400 mt-0.5">A snapshot of your cars, auctions and offers. Everything that needs your attention.</p>
                     </div>
                     {onNavigateToSell && (
                       <Button
@@ -1387,7 +1396,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">Direct Dealer Offers</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Cash offers dealers sent you directly for your cars — separate from live auction bids.</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Cash offers dealers sent you directly for your cars, separate from live auction bids.</p>
                   </div>
 
                   {pendingOffersCount > 0 && (
@@ -1396,7 +1405,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                       className="w-full flex items-center justify-between gap-3 p-3 border border-violet-100 bg-violet-50/60 rounded-xl text-left hover:border-violet-300 transition-colors cursor-pointer"
                     >
                       <span className="text-[11px] font-bold text-violet-700">
-                        Dealers may also be bidding live on your cars — {auctionsLiveCount} auction{auctionsLiveCount === 1 ? "" : "s"} open right now.
+                        Dealers may also be bidding live on your cars, {auctionsLiveCount} auction{auctionsLiveCount === 1 ? "" : "s"} open right now.
                       </span>
                       <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black text-violet-800 uppercase tracking-wider">View live bids <ArrowRight className="h-3 w-3" /></span>
                     </button>
@@ -1515,52 +1524,85 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                 <div className="bg-white border border-[#2E7D32]/10 rounded-3xl p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                   <div className="border-b border-slate-100 pb-4">
                     <h3 className="font-black text-xl text-slate-900 tracking-tight">My Doorstep Inspection Worklist</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Perform 200-point structural evaluations and upload report parameters.</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Perform 120-point structural evaluations and upload report parameters.</p>
                   </div>
 
-                  {inspections.filter(i => i.status === "assigned" && i.inspector_id === currentUser.id).length > 0 ? (
-                    <div className="space-y-4">
-                      {inspections.filter(i => i.status === "assigned" && i.inspector_id === currentUser.id).map(item => (
-                        <div key={item.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] space-y-4">
-                          <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-200/50 pb-3">
-                            <div>
-                              <span className="text-[9px] font-mono text-slate-400">LEAD ID: {item.id}</span>
-                              <h4 className="font-black text-slate-900 text-base">{item.year} {item.brand} {item.model}</h4>
-                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{item.variant} • {item.reg_number}</p>
-                            </div>
-                            
-                            <Button
-                              onClick={() => setSelectedInspection(item)}
-                              className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-3 flex items-center gap-1.5"
+                  {(() => {
+                    const assignedToMe = inspections.filter(i => i.status === "assigned" && i.inspector_id === currentUser.id);
+                    const completedByMe = inspections.filter(i => i.inspector_id === currentUser.id && ["completed", "auctioned", "published", "sold", "offered"].includes(String(i.status || "").toLowerCase()));
+                    const shown = inspectorListFilter === "pending" ? assignedToMe : completedByMe;
+                    return (
+                      <>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {(["pending", "done"] as const).map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => setInspectorListFilter(f)}
+                              className={`px-3 h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border cursor-pointer transition-all ${
+                                inspectorListFilter === f ? "bg-[#2E7D32] text-white border-[#2E7D32]" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                              }`}
                             >
-                              <Upload className="h-3.5 w-3.5" /> Upload Report Card
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 font-semibold">
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Doorstep Address</p>
-                              <p className="text-slate-800 font-bold">{item.address}, {item.city}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Booking Time Slot</p>
-                              <p className="text-[#2E7D32] font-bold">{item.preferred_date} • {item.preferred_time}</p>
-                            </div>
-                          </div>
-
-                          <div className="p-3 bg-white border border-slate-100 rounded-xl text-[11px] text-slate-500 italic">
-                            Seller Notes: " {item.notes} "
-                          </div>
+                              {f === "pending" ? `Pending (${assignedToMe.length})` : `Completed (${completedByMe.length})`}
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
-                      <Check className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500 font-bold">Your worklist is completely clear!</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Admins assign newly submitted seller requests in real-time.</p>
-                    </div>
-                  )}
+                        {shown.length > 0 ? (
+                          <div className="space-y-4">
+                            {shown.map(item => (
+                              <div key={item.id} className="border border-slate-100 rounded-2xl p-5 bg-[#FAF9F6] space-y-4">
+                                <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-200/50 pb-3">
+                                  <div>
+                                    <span className="text-[9px] font-mono text-slate-400">LEAD ID: {item.id}</span>
+                                    <h4 className="font-black text-slate-900 text-base">{item.year} {item.brand} {item.model}</h4>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{item.variant} • {item.reg_number}</p>
+                                  </div>
+
+                                  {inspectorListFilter === "pending" ? (
+                                    <Button
+                                      onClick={() => setSelectedInspection(item)}
+                                      className="bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-bold uppercase tracking-wider h-8 rounded-lg px-3 flex items-center gap-1.5"
+                                    >
+                                      <Upload className="h-3.5 w-3.5" /> Upload Report Card
+                                    </Button>
+                                  ) : (
+                                    <div className="text-right">
+                                      <p className="text-[9px] font-mono text-slate-400">STATUS: {String(item.status || "").toUpperCase()}</p>
+                                      <p className="font-black text-[#2E7D32] text-base">
+                                        Score: {item.overall_score ?? "—"}{item.is_certified ? " • Certified" : ""}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 font-semibold">
+                                  <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Doorstep Address</p>
+                                    <p className="text-slate-800 font-bold">{item.address}, {item.city}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-[#2E7D32] uppercase tracking-widest">Booking Time Slot</p>
+                                    <p className="text-[#2E7D32] font-bold">{item.preferred_date} • {item.preferred_time}</p>
+                                  </div>
+                                </div>
+
+                                <div className="p-3 bg-white border border-slate-100 rounded-xl text-[11px] text-slate-500 italic">
+                                  Seller Notes: " {item.notes} "
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
+                            <Check className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                            <p className="text-xs text-slate-500 font-bold">
+                              {inspectorListFilter === "pending" ? "Your worklist is completely clear!" : "No completed inspections yet."}
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Admins assign newly submitted seller requests in real-time.</p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {/* 120-POINT REPORT UPLOAD MODAL */}
                   {!!selectedInspection && (
@@ -1638,7 +1680,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <div>
                       <h3 className="font-black text-xl text-slate-900 tracking-tight">Upload a New Car</h3>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Fill the listing wizard below. Your car is saved as <strong className="text-amber-600">Pending Review</strong> — an admin must approve it before it goes live on the website.
+                        Fill the listing wizard below. Your car is saved as <strong className="text-amber-600">Pending Review</strong>, an admin must approve it before it goes live on the website.
                       </p>
                     </div>
                     <Button
@@ -1653,7 +1695,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                     <Car className="h-10 w-10 text-[#2E7D32] mx-auto" />
                     <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Launch the 9-step wizard to list a vehicle</p>
                     <p className="text-[11px] text-slate-400 font-semibold max-w-md mx-auto leading-relaxed">
-                      Brand, model, variant, year, fuel &amp; gear, RTO / city, KM &amp; price, 120-point inspection, and photos — then submit for admin review.
+                      Brand, model, variant, year, fuel &amp; gear, RTO / city, KM &amp; price, 120-point inspection, and photos. Then submit for admin review.
                     </p>
                   </div>
                 </div>
@@ -1691,7 +1733,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
                               </div>
                               <h4 className="font-black text-slate-900 text-base">{data.brand} {data.model} ({data.year})</h4>
                               <p className="text-[11px] text-slate-500 font-bold">
-                                {data.variant || "—"} • {data.fuel} • {data.transmission} • {Number(data.km_driven || data.mileage || 0).toLocaleString()} km • {data.city || "Surat"}
+                                {data.variant || "-"} • {data.fuel} • {data.transmission} • {Number(data.km_driven || data.mileage || 0).toLocaleString()} km • {data.city || "Surat"}
                               </p>
                               <p className="text-sm font-black text-[#2E7D32]">₹{Number(data.price || 0).toLocaleString("en-IN")}</p>
                             </div>

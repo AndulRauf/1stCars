@@ -73,7 +73,7 @@ export function SalesFollowUps({ data, userId }: SalesFollowUpsProps) {
   };
 
   return (
-    <CrmCard title="Follow-ups" subtitle="Due today and overdue items first — powered by the automation engine.">
+    <CrmCard title="Follow-ups" subtitle="Due today and overdue items first, powered by the automation engine.">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_auto] gap-2 items-end">
         <div>
           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lead</label>
@@ -114,7 +114,7 @@ export function SalesFollowUps({ data, userId }: SalesFollowUpsProps) {
                 <p className="text-xs font-black text-slate-800 truncate">{leadLabel(f)}</p>
               </div>
               <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                {f.follow_up_type} • due {f.due_at ? new Date(f.due_at).toLocaleString() : "—"}
+                {f.follow_up_type} • due {f.due_at ? new Date(f.due_at).toLocaleString() : "-"}
               </p>
               {f.notes && <p className="text-[10px] text-slate-500 mt-0.5">{f.notes}</p>}
             </div>
@@ -134,7 +134,7 @@ export function SalesFollowUps({ data, userId }: SalesFollowUpsProps) {
           <div className="space-y-1.5">
             {done.slice(0, 10).map((f) => (
               <div key={f.id} className="flex items-center justify-between text-xs border border-slate-100 rounded-xl px-3 py-2 bg-white">
-                <span className="font-bold text-slate-500 truncate">{leadLabel(f)} — {f.follow_up_type}</span>
+                <span className="font-bold text-slate-500 truncate">{leadLabel(f)}, {f.follow_up_type}</span>
                 <span className="text-[9px] text-slate-400 font-bold shrink-0">{f.completed_at ? new Date(f.completed_at).toLocaleDateString() : ""}</span>
               </div>
             ))}

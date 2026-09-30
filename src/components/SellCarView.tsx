@@ -893,7 +893,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               brand: selectedBrand,
               model: selectedModel,
               status: "pending",
-              notes: "Partial lead — form in progress"
+              notes: "Partial lead. Form in progress"
             }
           ])
           .select()
@@ -1386,7 +1386,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Your mobile number?</h3>
-                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">We'll reach you with a competitive cash quote — and save your progress so you never lose it.</p>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">We'll reach you with a competitive cash quote, and save your progress so you never lose it.</p>
                     </div>
 
                     <div className="space-y-1.5">
@@ -1706,7 +1706,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {wizardStep === 8 && (
                   <form onSubmit={handleFinalSubmit} className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Almost done — verify your details</h3>
+                      <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Almost done. Verify your details</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Please complete doorstep booking credentials</p>
                     </div>
 
@@ -1728,7 +1728,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="p-3.5 bg-amber-50/60 border border-amber-100 rounded-xl flex gap-2.5">
                       <ShieldCheck className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-amber-800 leading-relaxed font-semibold">
-                        Your mobile number stays strictly private — used purely to coordinate inspector dispatch and confirm competitive cash quotes.
+                        Your mobile number stays strictly private, used purely to coordinate inspector dispatch and confirm competitive cash quotes.
                       </p>
                     </div>
 

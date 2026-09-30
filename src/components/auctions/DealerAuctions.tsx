@@ -127,7 +127,7 @@ export function DealerAuctions({ currentUser }: DealerAuctionsProps) {
       }
       toast.success(
         result.extended
-          ? `Bid placed — auction extended due to last-minute bidding`
+          ? `Bid placed. Auction extended due to last-minute bidding`
           : `Bid of ${formatINR(result.amount)} placed successfully`
       );
       setBidAmounts((m) => ({ ...m, [a.id]: "" }));
@@ -252,7 +252,7 @@ export function DealerAuctions({ currentUser }: DealerAuctionsProps) {
                 <div>
                   <h4 className="font-black text-slate-900 text-base">{v.year} {v.title}</h4>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {v.city} • {v.km_driven?.toLocaleString() || "—"} KM • {v.fuel} • {v.transmission}
+                    {v.city} • {v.km_driven?.toLocaleString() || "-"} KM • {v.fuel} • {v.transmission}
                   </p>
                 </div>
 
@@ -366,7 +366,7 @@ export function DealerAuctions({ currentUser }: DealerAuctionsProps) {
                       <p className="text-[10px] font-black text-slate-800 flex items-center gap-1.5">
                         <Wallet className="h-3.5 w-3.5 text-[#2E7D32]" /> {formatINR(p.amount)}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold">{p.method || "—"} • {p.reference || ""}</p>
+                      <p className="text-[9px] text-slate-400 font-bold">{p.method || "-"} • {p.reference || ""}</p>
                     </div>
                     <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${
                       p.status === "RECEIVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
@@ -381,7 +381,7 @@ export function DealerAuctions({ currentUser }: DealerAuctionsProps) {
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Bid History (masked)</p>
               {history.length === 0 ? (
                 <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl">
-                  <p className="text-xs text-slate-500 font-bold">No bids placed yet — be the first!</p>
+                  <p className="text-xs text-slate-500 font-bold">No bids placed yet. Be the first!</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">

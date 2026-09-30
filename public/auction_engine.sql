@@ -1191,7 +1191,7 @@ BEGIN
     ON CONFLICT (auction_id) DO NOTHING
     RETURNING * INTO v_payment;
     IF v_auction.winner_dealer_id IS NOT NULL THEN
-      PERFORM public.automation_notify(v_auction.winner_dealer_id, 'Auction Accepted — Payment Required',
+      PERFORM public.automation_notify(v_auction.winner_dealer_id, 'Auction Accepted. Payment Required',
         'Auction result accepted. Pay ₹' || v_auction.current_highest_bid::text || ' to complete your purchase.',
         'action', jsonb_build_object('auction_id', p_auction_id, 'amount', v_auction.current_highest_bid));
     END IF;
