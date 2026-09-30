@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/src/lib/supabaseClient";
 import { toast } from "@/src/lib/toast";
+import { automationService } from "@/src/lib/automation";
+import { notificationService } from "@/src/lib/notifications";
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -460,8 +462,73 @@ export function CRM({
     updateRow(statusTable[item.kind], item.id, { status: next }, KIND_META[item.kind].label);
   };
 
-  const handleAssignInspector = (item: CrmItem, inspectorId: string) => {
-    updateRow("inspections", item.id, { status: "assigned", inspector_id: inspectorId }, "Inspection");
+  // Manual flow: seller enquiry stays `pending` until an admin picks an
+  // inspector here. On assign we flip inspections → `assigned` + create the
+  // inspector's task + notify the inspector + record an audit entry.
+  const handleAssignInspector = async (item: CrmItem, inspectorId: string) => {
+    if (!inspectorId) {
+      toast.error("Select an inspector first");
+      return;
+    }
+    const prevInspector = item.record?.inspector_id || null;
+    const ok = await updateRow("inspections", item.id, { status: "assigned", inspector_id: inspectorId }, "Inspection");
+    if (!ok) return;
+    const r = item.record || {};
+    const vehicle = `${r.brand || ""} ${r.model || ""}`.trim() || "Vehicle";
+    const city = String(r.city || item.city || "");
+    try {
+      await automationService.createTask({
+        assigneeId: inspectorId,
+        taskType: "inspection_assignment",
+        title: `Inspect ${vehicle}${city ? ` (${city})` : ""}`,
+        description: `Manually assigned by admin. Complete the 120-point report within 48 hours.`,
+        priority: "high",
+        dueAt: new Date(Date.now() + 2 * 86400000).toISOString(),
+        sourceTable: "inspections",
+        sourceId: item.id
+      });
+    } catch (e) {
+      console.warn("[crm] manual-assign createTask failed:", e);
+    }
+    try {
+      await notificationService.triggerInspectorAssigned({
+        inspectorId,
+        inspectionId: item.id,
+        vehicle,
+        city
+      });
+    } catch (e) {
+      console.warn("[crm] manual-assign notify failed:", e);
+    }
+    try {
+      await automationService.recordAudit({
+        action: prevInspector ? "inspection.reassigned" : "inspection.assigned",
+        entityType: "inspections",
+        entityId: item.id,
+        oldStatus: item.status,
+        newStatus: "assigned",
+        metadata: { prev_inspector_id: prevInspector, inspector_id: inspectorId, source: "manual-assign" }
+      });
+    } catch (e) {
+      console.warn("[crm] manual-assign audit failed:", e);
+    }
+  };
+
+  const handleUnassignInspector = async (item: CrmItem) => {
+    const ok = await updateRow("inspections", item.id, { status: "pending", inspector_id: null }, "Inspection");
+    if (!ok) return;
+    try {
+      await automationService.recordAudit({
+        action: "inspection.unassigned",
+        entityType: "inspections",
+        entityId: item.id,
+        oldStatus: item.status,
+        newStatus: "pending",
+        metadata: { prev_inspector_id: item.record?.inspector_id || null, source: "manual-assign" }
+      });
+    } catch (e) {
+      console.warn("[crm] manual-unassign audit failed:", e);
+    }
   };
 
   const handleAssignSales = (item: CrmItem, salesId: string) => {
@@ -1125,11 +1192,11 @@ export function CRM({
                   )}
                   {item.kind === "inspection" && (
                     <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Assign Inspector</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Assign Inspector (manual)</label>
                       <select
                         value={item.record?.inspector_id || ""}
                         disabled={saving?.table === "inspections"}
-                        onChange={(e) => e.target.value && handleAssignInspector(item, e.target.value)}
+                        onChange={(e) => e.target.value && void handleAssignInspector(item, e.target.value)}
                         className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 outline-none bg-white disabled:opacity-60"
                       >
                         <option value="">- Select inspector -</option>
@@ -1137,16 +1204,26 @@ export function CRM({
                           <option key={x.id} value={x.id}>{x.name}{x.city ? ` (${x.city})` : ""}</option>
                         ))}
                       </select>
+                      {item.record?.inspector_id && (
+                        <p className="text-[10px] text-emerald-600 font-bold">
+                          Assigned — changing the selection re-assigns the lead, creates a new task and notifies the new inspector.
+                        </p>
+                      )}
+                      {!item.record?.inspector_id && (
+                        <p className="text-[10px] text-amber-600 font-bold">
+                          Pending manual assignment — new seller enquiries wait here until an admin assigns an inspector.
+                        </p>
+                      )}
                     </div>
                   )}
-                  {item.kind === "inspection" && (
+                  {item.kind === "inspection" && item.record?.inspector_id && (
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={saving?.table === "inspections"}
-                      onClick={() => updateRow("inspections", item.id, { status: "assigned" }, "Inspection")}
+                      onClick={() => void handleUnassignInspector(item)}
                     >
-                      <UserCheck className="h-4 w-4 mr-1" /> Mark Assigned
+                      <UserCheck className="h-4 w-4 mr-1" /> Unassign (back to pending)
                     </Button>
                   )}
                   {item.kind === "inspection" && inspectors.length === 0 && (

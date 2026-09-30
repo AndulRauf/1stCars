@@ -241,8 +241,11 @@ export const notificationService = {
   // ==========================================
 
   /**
-   * Rule 1: Seller submits inspection → Notify Inspector.
-   * Recipients: All Inspectors (or a general pool).
+   * Rule 1: Seller submits inspection → Notify Admin for MANUAL assignment.
+   * Manual flow: seller enquiry stays `pending` with no inspector until an
+   * admin picks one in CRM → Inspection Detail → Assign Inspector.
+   * Recipients: All Admins (assignment queue). Inspectors are only notified
+   * later by handleAssignInspector once an admin assigns them.
    */
   async triggerInspectionSubmitted(inspection: {
     id: string;
@@ -252,27 +255,46 @@ export const notificationService = {
     city: string;
     preferred_date: string;
   }) {
-    // Locate inspector profiles in the same city
-    const { data: inspectors } = await supabase
+    // Locate admin profiles — they own the manual assignment queue.
+    const { data: admins } = await supabase
       .from("profiles")
       .select("id")
-      .eq("role", "Inspector");
+      .eq("role", "Admin");
 
-    const inspectorList = inspectors || [{ id: "u-inspector" }];
+    const adminList = admins?.length ? admins : [{ id: "u-admin" }];
 
-    // Dispatch notifications to all inspectors in parallel (much faster than
+    // Dispatch notifications to all admins in parallel (much faster than
     // awaiting each insert sequentially).
     await Promise.all(
-      inspectorList.map((inspector: { id: string }) =>
+      adminList.map((admin: { id: string }) =>
         this.createNotification({
-          recipientId: inspector.id,
-          title: "New Vehicle Inspection Request",
-          message: `${inspection.sellerName} has requested an inspection for a ${inspection.brand} ${inspection.model} in ${inspection.city} on ${inspection.preferred_date}.`,
+          recipientId: admin.id,
+          title: "New Seller Enquiry — Assign Inspector",
+          message: `${inspection.sellerName} has requested an inspection for a ${inspection.brand} ${inspection.model} in ${inspection.city} on ${inspection.preferred_date}. Open CRM → Inspection Detail to manually assign an inspector.`,
           type: "action",
-          metadata: { inspection_id: inspection.id, city: inspection.city }
+          metadata: { inspection_id: inspection.id, city: inspection.city, needs_assignment: true }
         })
       )
     );
+  },
+
+  /**
+   * Rule 1b: Admin manually assigns inspector → Notify that Inspector.
+   * Called from CRM handleAssignInspector after the inspections UPDATE.
+   */
+  async triggerInspectorAssigned(input: {
+    inspectorId: string;
+    inspectionId: string;
+    vehicle: string;
+    city: string;
+  }) {
+    await this.createNotification({
+      recipientId: input.inspectorId,
+      title: "New Inspection Assigned",
+      message: `Admin assigned you the inspection for ${input.vehicle}${input.city ? ` in ${input.city}` : ""}. Please complete it within 48 hours.`,
+      type: "action",
+      metadata: { inspection_id: input.inspectionId, city: input.city, source: "manual-assign" }
+    });
   },
 
   /**
