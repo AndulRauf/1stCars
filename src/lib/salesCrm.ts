@@ -212,22 +212,40 @@ export const salesCrm = {
   },
 
   /** Cars owned (uploaded) by this Sales Associate — cars.created_by.
-   *  Admin passes isAdmin to see the whole fleet instead. */
+   *  Admin passes isAdmin to see the whole fleet instead.
+   *
+   *  Resilient to older databases: `image_url` lives in `car_images`
+   *  (not on `cars`), and `payload` was added later — requesting a
+   *  missing column makes PostgREST return 400 with zero rows, which
+   *  showed up as a silent "MY CARS = 0". On a schema-cache/column
+   *  error we retry with the guaranteed base columns. */
   async getMyCars(userId: string, isAdmin = false): Promise<MyCarRow[]> {
-    let query = supabase
-      .from("cars")
-      .select("id, title, brand, model, variant, year, price, km_driven, city, status, overall_score, created_at, image_url, payload");
-    if (!isAdmin) query = query.eq("created_by", userId);
-    const { data, error } = await query;
+    const FULL_COLUMNS =
+      "id, title, brand, model, variant, year, price, km_driven, city, status, overall_score, created_at, image_url, payload";
+    const BASE_COLUMNS =
+      "id, title, brand, model, variant, year, price, km_driven, city, status, overall_score, created_at";
+    const run = async (columns: string) => {
+      let query = supabase.from("cars").select(columns);
+      if (!isAdmin) query = query.eq("created_by", userId);
+      return query;
+    };
+    const normalize = (rows: any[]): MyCarRow[] =>
+      rows
+        .map((c) => ({
+          ...c,
+          image_url: c.image_url ?? c.payload?.image_url,
+          title: c.title || `${c.brand} ${c.model}`
+        }))
+        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    let { data, error } = await run(FULL_COLUMNS);
+    if (error && isRealSupabase && /column|schema cache|PGRST|does not exist/i.test(errorMessage(error))) {
+      console.warn("[salesCrm] getMyCars full-column select failed, retrying with base columns:", errorMessage(error));
+      const retry = await run(BASE_COLUMNS);
+      data = retry.data;
+      error = retry.error;
+    }
     if (error && isRealSupabase) console.warn("[salesCrm] getMyCars failed:", errorMessage(error));
-    const rows = (data || []) as any[];
-    return rows
-      .map((c) => ({
-        ...c,
-        image_url: c.image_url ?? c.payload?.image_url,
-        title: c.title || `${c.brand} ${c.model}`
-      }))
-      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    return normalize((data || []) as any[]);
   },
 
   /** Appointments/test drives for this associate (test_drives.sales_associate_id). */
