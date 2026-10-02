@@ -70,11 +70,12 @@ export function initMetaPixel(): void {
 // Fire PageView for SPA route changes (initial PageView is fired by initMetaPixel).
 let lastMetaPageViewUrl = "";
 
-// Opt-out mirror of the GA4 consent key (avoiding a circular import).
-function trackingOptedOut(): boolean {
+// Opt-in mirror of the GA4 consent key (avoiding a circular import).
+// Only visitors who explicitly accepted tracking are measured.
+function hasTrackingConsent(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem("1stcars_analytics_consent") === "denied";
+    return localStorage.getItem("1stcars_analytics_consent") === "granted";
   } catch {
     return false;
   }
@@ -82,7 +83,7 @@ function trackingOptedOut(): boolean {
 
 export function trackMetaPageView(): void {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
-  if (trackingOptedOut()) return;
+  if (!hasTrackingConsent()) return;
   const fullUrl = window.location.pathname + window.location.search;
   if (fullUrl === lastMetaPageViewUrl) return;
   lastMetaPageViewUrl = fullUrl;
@@ -139,7 +140,7 @@ function sanitizeMetaPayload(data?: Record<string, unknown>): Record<string, unk
 
 export function trackMetaEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
-  if (trackingOptedOut()) return;
+  if (!hasTrackingConsent()) return;
   try {
     window.fbq("track", event, sanitizeMetaPayload(data));
     // @ts-ignore
@@ -151,7 +152,7 @@ export function trackMetaEvent(event: string, data?: Record<string, unknown>) {
 
 export function trackMetaCustomEvent(event: string, data?: Record<string, unknown>) {
   if (typeof window === "undefined" || typeof window.fbq !== "function") return;
-  if (trackingOptedOut()) return;
+  if (!hasTrackingConsent()) return;
   try {
     window.fbq("trackCustom", event, sanitizeMetaPayload(data));
     // @ts-ignore

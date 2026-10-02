@@ -68,13 +68,14 @@ export function getGa4MeasurementId(): string {
   return "";
 }
 
-// Consent gate (opt-out model): analytics runs by default and stops only after
-// an explicit "denied" choice (persisted by src/lib/consent.ts). Read directly
-// to avoid a circular import between the two modules.
+// Consent gate (opt-in model): analytics runs only after an explicit
+// "granted" choice (persisted by src/lib/consent.ts). Fresh (undecided) and
+// denied visitors are never tracked. Read directly to avoid a circular import
+// between the two modules.
 function hasTrackingConsent(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem("1stcars_analytics_consent") !== "denied";
+    return localStorage.getItem("1stcars_analytics_consent") === "granted";
   } catch {
     return false;
   }
@@ -83,12 +84,10 @@ function hasTrackingConsent(): boolean {
 // ---------------------------------------------------------------------------
 // Google Consent Mode v2
 //
-// GA4 is opt-out (tracking ON by default), so we explicitly signal "granted"
-// to gtag.js — both as the boot-time default (in initGA4) and again on every
-// explicit consent choice (src/lib/consent.ts). Consent Mode is the standard
-// way gtag.js knows it is allowed to transmit; without it the tag manager has
-// no deliberate consent signal, which is exactly the silent failure mode that
-// showed queued dataLayer commands but zero network collection requests.
+// GA4 is opt-in (tracking OFF by default), so we explicitly signal "denied"
+// to gtag.js at boot (in initGA4) and push "granted" only after the visitor
+// accepts the banner (src/lib/consent.ts). Consent Mode is the standard
+// way gtag.js knows whether it may transmit.
 // ---------------------------------------------------------------------------
 
 type ConsentPurpose =
@@ -149,15 +148,16 @@ export function initGA4(): void {
     document.head.appendChild(script);
   }
 
-  // Google Consent Mode v2: declare the opt-out default as an explicit
-  // "granted" BEFORE the tag boots so the very first page_view it sends is
-  // allowed. wait_for_update keeps the hit queued for up to 500ms so a "Turn
-  // Off" click at boot (updateConsent(false)) still prevents transmission.
+// Google Consent Mode v2: declare the opt-in default as an explicit
+// "denied" BEFORE the tag boots so nothing is transmitted until the visitor
+// accepts the banner (src/lib/consent.ts pushes an "update" to "granted" on
+// accept). wait_for_update keeps the hit queued for up to 500ms so an
+// "Accept" click at boot still captures the first page_view.
   window.gtag("consent", "default", {
-    ad_storage: "granted",
-    ad_user_data: "granted",
-    ad_personalization: "granted",
-    analytics_storage: "granted",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    analytics_storage: "denied",
     wait_for_update: 500
   });
 

@@ -1,12 +1,13 @@
 import { initGA4, updateConsent } from "@/src/lib/analytics";
 import { initMetaPixel } from "@/src/lib/metaPixel";
 
-// Analytics/tracking consent (DPDP-aligned, opt-out model).
+// Analytics/tracking consent (DPDP-aligned, opt-in model).
 //
-// Tracking starts by default when a visitor lands (so a small business never
-// loses its first-visit data), and the on-page banner lets anyone opt out with
-// one tap ("Turn Off"). The choice is persisted in localStorage so returning
-// visitors keep their decision without re-asking.
+// Tracking stays OFF until the visitor explicitly accepts via the on-page
+// banner ("Accept"). No GA4 / Meta Pixel request is fired for undecided or
+// denied visitors — including the very first page load. The choice is
+// persisted in localStorage so returning visitors keep their decision
+// without re-asking.
 
 const CONSENT_KEY = "1stcars_analytics_consent";
 
@@ -30,16 +31,15 @@ export function setConsentStatus(status: "granted" | "denied"): void {
   }
 }
 
-// Opt-out model: allowed unless explicitly denied. A visitor who never touches
-// the banner still gets counted (and only that visitor's future events stop if
-// they click "Turn Off").
+// Opt-in model: tracking only for visitors who explicitly granted it.
+// Undecided (fresh) visitors and denied visitors are never tracked.
 export function isTrackingAllowed(): boolean {
-  return getConsentStatus() !== "denied";
+  return getConsentStatus() === "granted";
 }
 
-// Initialize GA4 + Meta Pixel. Called on app boot (optimistically, no banner
-// interaction required) and again after an explicit grant. Visitors who opted
-// out are skipped.
+// Initialize GA4 + Meta Pixel. Called on app boot (no-ops unless the visitor
+// previously granted consent) and again after an explicit grant. Visitors
+// who are undecided or opted out are skipped.
 export function initAnalyticsAfterConsent(): void {
   if (!isTrackingAllowed()) return;
   initGA4();

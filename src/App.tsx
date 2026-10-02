@@ -584,12 +584,10 @@ export default function App() {
     setConsentStatusState(choice);
   };
 
-  // Auto-accept analytics consent on page load (same path as clicking "Keep
-  // On") so GA4 / Meta Pixel initialize immediately without user interaction.
-  React.useEffect(() => {
-    setConsentStatus("granted");
-    setConsentStatusState("granted");
-  }, []);
+  // Analytics consent is strictly opt-in (DPDP Act 2023): GA4 / Meta Pixel
+  // initialize only after the visitor clicks "Accept" (or when a returning
+  // visitor already has "granted" stored — main.tsx replays that on boot).
+  // No auto-grant here: fresh visitors stay "undecided" and see the banner.
 
   // Global simulated SMS state
   const [globalSimulatedSms, setGlobalSimulatedSms] = React.useState<{ mobile: string; body: string; code: string } | null>(null);
@@ -848,13 +846,13 @@ export default function App() {
       )}
 
       {/* Tracking Consent Banner — GA4 / Meta Pixel stay dormant until the
-          visitor accepts (DPDP/GDPR-aligned). */}
+          visitor explicitly accepts (DPDP/GDPR-aligned opt-in). */}
       {consentStatus === "undecided" && (
-        <div className="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-lg px-5 py-4">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[150] w-[calc(100%-2rem)] max-w-lg px-5 py-4">
           <div className="bg-slate-950/95 text-white backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/10 flex flex-col gap-3">
             <p className="text-xs leading-relaxed text-slate-200 font-medium">
               We use cookies and analytics (Google Analytics, Meta Pixel) to understand how visitors use
-              1stCars and improve your experience. Tracking is on by default. You can turn it off anytime.
+              1stCars and improve your experience. Tracking stays off until you accept.
               Your choice is saved locally.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -863,14 +861,14 @@ export default function App() {
                 onClick={() => handleConsentChoice("granted")}
                 className="px-4 py-2 bg-[#2E7D32] hover:bg-[#25632a] text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
               >
-                Keep On
+                Accept
               </button>
               <button
                 type="button"
                 onClick={() => handleConsentChoice("denied")}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
               >
-                Turn Off
+                Reject
               </button>
             </div>
           </div>
