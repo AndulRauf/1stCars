@@ -807,7 +807,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { data: puData },
         { data: caData },
         { data: abData },
-        { data: jobData }
+        { data: jobData },
+        { data: dealerAppData }
       ] = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select(),
@@ -835,7 +836,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         supabase.from("purchases").select(),
         supabase.from("crm_activities").select(),
         supabase.from("auction_bids").select(),
-        supabase.from("career_applications").select()
+        supabase.from("career_applications").select(),
+        supabase.from("dealer_applications").select().order("created_at", { ascending: false })
       ]);
 
       if (cData) setCars(cData);
@@ -908,34 +910,92 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         localStorage.setItem("1stcars_cms_demo_purged_v1", "1");
       }
 
-      // Set initial values if not initialized
-      setDealers(getStored("dealers", []));
-
-      // Supabase dealers/profiles are the source of truth; merge real dealer
-      // accounts (role=Dealer) with any legacy local-only rows.
-      if ((dlrData && dlrData.length > 0) || (uData && uData.some((p: any) => p.role === "Dealer"))) {
+      // Dealers: Supabase `dealer_applications` is the source of truth (written
+      // by AuthModal register flow). Merge with profiles/dealers/local rows so
+      // full KYC details (email/mobile/docs) are never dropped.
+      {
         const localDealers = getStored("dealers", []);
-        const dbDealers = (uData || [])
+        const normStatus = (s: any) => String(s || "pending_approval").toLowerCase();
+        const isApprovedStatus = (s: any) => {
+          const n = normStatus(s);
+          return n === "approved";
+        };
+        const appRows: any[] = Array.isArray(dealerAppData) ? dealerAppData : [];
+        const profileById = new Map((uData || []).map((p: any) => [String(p.id), p]));
+        const dealersById = new Map((dlrData || []).map((d: any) => [String(d.id), d]));
+
+        const fromApps = appRows.map((a: any) => {
+          const uid = String(a.user_id || a.id);
+          const p: any = profileById.get(uid) || {};
+          const d: any = dealersById.get(uid) || {};
+          const statusNorm = normStatus(a.status);
+          const approved = isApprovedStatus(a.status) || d?.is_verified === true || p?.is_approved === true;
+          return {
+            id: uid,
+            application_id: a.id,
+            user_id: a.user_id,
+            name: a.name || p.name || "Unnamed Dealer",
+            dealership_name: a.dealership_name || d?.company_name || p.name || a.name || "Dealer",
+            manager: a.name || p.name || "",
+            email: a.email || p.email || "",
+            mobile: a.mobile || p.mobile || "",
+            city: a.city || p.city || "",
+            status: statusNorm,
+            visiting_card_url: a.visiting_card_url || "",
+            aadhar_card_url: a.aadhar_card_url || "",
+            rating: 4.5,
+            credits: 0,
+            active_bids: 0,
+            is_verified: d?.is_verified || approved,
+            is_approved: approved,
+            dealerStatus: approved ? "Approved" : "Pending",
+            created_at: a.created_at,
+          };
+        });
+
+        const fromProfiles = (uData || [])
           .filter((p: any) => p.role === "Dealer")
+          .filter((p: any) => !appRows.some((a: any) => String(a.user_id || a.id) === String(p.id)))
           .map((p: any) => {
-            const d = (dlrData || []).find((r: any) => r.id === p.id);
+            const d = (dlrData || []).find((r: any) => String(r.id) === String(p.id));
+            const approved = d?.is_verified === true || p?.is_approved === true;
             return {
               id: p.id,
-              name: d?.company_name || p.name || "Unnamed Dealer",
+              user_id: p.id,
+              name: p.name || d?.company_name || "Unnamed Dealer",
+              dealership_name: d?.company_name || (p as any).dealership_name || p.name || "Dealer",
               manager: p.name || "",
-              rating: 4.5,
+              email: (p as any).email || "",
+              mobile: (p as any).mobile || "",
               city: p.city || "",
+              status: normStatus((p as any).status || (approved ? "approved" : "pending_approval")),
+              visiting_card_url: (p as any).visiting_card_url || "",
+              aadhar_card_url: (p as any).aadhar_card_url || "",
+              rating: 4.5,
+              cityFallback: "",
               credits: 0,
               active_bids: 0,
               is_verified: d?.is_verified || false,
-              is_approved: d?.is_verified || false,
-              dealerStatus: d?.is_verified ? "Approved" : "Pending"
+              is_approved: approved,
+              dealerStatus: approved ? "Approved" : "Pending",
+              created_at: (p as any).created_at,
             };
           });
-        setDealers([
-          ...dbDealers,
-          ...localDealers.filter((ld: any) => !dbDealers.some((dd: any) => dd.id === ld.id))
-        ]);
+
+        if (fromApps.length > 0 || fromProfiles.length > 0 || (dlrData && dlrData.length > 0)) {
+          const seen = new Set<string>();
+          const combined = [...fromApps, ...fromProfiles];
+          const deduped = combined.filter((r: any) => {
+            const k = String(r.id);
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
+          const localOnly = localDealers.filter((ld: any) => !seen.has(String(ld.id)));
+          setDealers([...deduped, ...localOnly]);
+        } else {
+          setDealers(localDealers);
+        }
       }
 
       setInspectors(getStored("inspectors", []));
@@ -1893,6 +1953,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         // table or RLS gap on one never blocks the profile delete that follows).
         if (currentListModule === "dealers") {
           try { await supabase.from("dealer_applications").delete().eq("user_id", id); } catch (e) { console.warn("AdminCMS: dealer_applications cleanup skipped:", e); }
+          try { await supabase.from("dealer_applications").delete().eq("id", id); } catch (e) { /* application id variant */ }
           try { await supabase.from("dealers").delete().eq("id", id); } catch (e) { console.warn("AdminCMS: dealers cleanup skipped:", e); }
         }
         const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", id);
@@ -2150,7 +2211,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     const updatedDealer = {
       ...dealerItem,
       is_approved: true,
-      status: "Approved",
+      is_verified: true,
+      status: "approved",
       dealerStatus: "Approved"
     };
 
@@ -2159,18 +2221,25 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     setDealers(nextDealers);
     localStorage.setItem("1stcars_cms_dealers", JSON.stringify(nextDealers));
 
-    // Sync status to Supabase profiles
+    // Sync status to Supabase profiles (lowercase canonical status)
     try {
       await supabase.from("profiles").update({
         is_approved: true,
-        status: "Approved"
+        status: "approved"
       }).eq("id", dealerItem.id);
     } catch (e) {}
 
     // Mark the KYC application row approved so the dealer-side dashboard gate
     // (which checks dealer_applications.status) unlocks the account.
+    // Match by user_id AND by application id for robustness.
     try {
       await supabase.from("dealer_applications").update({ status: "approved" }).eq("user_id", dealerItem.id);
+      if (dealerItem.application_id) {
+        await supabase.from("dealer_applications").update({ status: "approved" }).eq("id", dealerItem.application_id);
+      }
+      if (dealerItem.user_id && dealerItem.user_id !== dealerItem.id) {
+        await supabase.from("dealer_applications").update({ status: "approved" }).eq("user_id", dealerItem.user_id);
+      }
     } catch (e) {}
 
     // Also flip is_verified on the real dealers table when the row exists.
@@ -2181,7 +2250,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           await supabase.from("dealers").update({ is_verified: true }).eq("id", dealerItem.id);
         } else {
           await supabase.from("dealers").insert([
-            { id: dealerItem.id, company_name: dealerItem.name || dealerItem.company_name || "Dealer", is_verified: true }
+            { id: dealerItem.id, company_name: dealerItem.dealership_name || dealerItem.name || dealerItem.company_name || "Dealer", is_verified: true }
           ]);
         }
         // Record the automation event (the AFTER UPDATE trigger covers the live
@@ -2192,7 +2261,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           sourceId: dealerItem.id,
           payload: {
             dealer_id: dealerItem.id,
-            company_name: dealerItem.name || dealerItem.company_name || "Dealer"
+            company_name: dealerItem.dealership_name || dealerItem.name || dealerItem.company_name || "Dealer"
           }
         }).catch((err) => console.warn("Automation event emission failed:", err));
       } catch (e) {}
@@ -3867,8 +3936,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       )}
                       {currentListModule === "dealers" && (
                         <div>
-                          <p className="font-black text-slate-800">{item.dealership_name || item.name} ({item.mobile})</p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Contact: {item.name || item.manager} • Email: {item.email || "N/A"} • City: {item.city || "Gujarat"}</p>
+                          <p className="font-black text-slate-800">{item.dealership_name || item.name} ({item.mobile || "N/A"})</p>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">Contact: {item.name || item.manager} • Email: {item.email || "N/A"} • City: {item.city || "N/A"}</p>
                         </div>
                       )}
                       {currentListModule === "testimonials" && (
@@ -4024,7 +4093,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
                       <div className="flex items-center justify-end gap-1.5">
                         {currentListModule === "dealers" && (
                           <>
-                            {item.is_approved || item.status === "Approved" || item.status === "approved" ? (
+                            {item.is_approved || String(item.status || "").toLowerCase() === "approved" ? (
                               <span className="px-2.5 py-1 rounded-lg bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                                 <Check className="h-3 w-3 text-emerald-700" /> Approved
                               </span>
