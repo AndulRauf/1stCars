@@ -45,6 +45,8 @@ function SimilarCarThumb({ car }: { car: Car }) {
           alt={`${car.brand} ${car.model}`}
           className="absolute inset-0 w-full h-full object-cover"
           draggable={false}
+          loading="lazy"
+          decoding="async"
           onError={() => setFailed(true)}
         />
       ) : (
@@ -585,7 +587,7 @@ export function CarDetailsView({
                   style={{width:72, height:52}}
                 >
                   {ang.url ? (
-                    <img src={ang.url} alt={ang.title || `Angle ${i+1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={ang.url} alt={ang.title || `Angle ${i+1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white text-xs font-black">
                       {i === 0 ? "🚗" : i === 1 ? "🔙" : "🪑"}

@@ -20,6 +20,9 @@ export default async function handler(req: any, res: any) {
   let description = "1stCars, the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
   let image = `${origin}/og-image.jpg?v=5`;
   let redirect = "/";
+  let carFound = false;
+  let carJsonLd = "";
+  let carMissing = false;
 
   // OAuth callback guard (defense-in-depth): if this endpoint is ever reached
   // with Supabase PKCE params (code/state/error) or the booking re-open flag,
@@ -45,7 +48,9 @@ export default async function handler(req: any, res: any) {
       if (response.ok) {
         const cars: any[] = await response.json();
         const car = cars && cars[0];
+        carMissing = !car;
         if (car) {
+          carFound = true;
           const carName = `${car.year || ""} ${car.brand || ""} ${car.model || ""}`.trim() || car.title || "Certified Vehicle";
           title = `${carName} | 1stCars Certified Pre-Owned`;
           const priceText = car.price ? ` ₹${Number(car.price).toLocaleString("en-IN")}` : "";
@@ -70,6 +75,42 @@ export default async function handler(req: any, res: any) {
           } else if (rawImageUrl.startsWith("/")) {
             image = `${origin}${rawImageUrl}`;
           }
+
+          // Structured data for rich results on real car pages only.
+          try {
+            const carLd: any = {
+              "@context": "https://schema.org",
+              "@type": "Car",
+              name: carName,
+              brand: car.brand || undefined,
+              model: car.model || undefined,
+              vehicleModelDate: car.year ? String(car.year) : undefined,
+              url: `${origin}/cars/${carId}`,
+              image,
+              offers: car.price
+                ? {
+                    "@type": "Offer",
+                    price: Number(car.price),
+                    priceCurrency: "INR",
+                    availability: "https://schema.org/InStock",
+                    url: `${origin}/cars/${carId}`
+                  }
+                : undefined
+            };
+            carJsonLd = `<script type="application/ld+json">${JSON.stringify(carLd).replace(/</g, "\\u003c")}</script>`;
+          } catch {
+            carJsonLd = "";
+          }
+        } else {
+          // Unknown car id at the HTTP layer: signal a real 404 + noindex so
+          // search engines drop bogus /cars/:id URLs instead of indexing them.
+          // Only when the DB lookup actually succeeded (env present) — if the
+          // lookup itself failed we keep the generic 200 preview as before.
+          if (carMissing) {
+            title = "Car not found | 1stCars";
+            description = "This vehicle is no longer available. Browse certified pre-owned cars on 1stCars.";
+            redirect = "/buy-cars";
+          }
         }
       }
     } catch (e) {
@@ -90,25 +131,35 @@ export default async function handler(req: any, res: any) {
     redirect += (redirect.includes("?") ? "&" : "?") + passthroughStr;
   }
 
+  const isMissing = carMissing && !carFound;
+  const robotsMeta = !isMissing
+    ? `<meta name="robots" content="index, follow" />`
+    : `<meta name="robots" content="noindex, follow" />`;
+  const canonicalHref = !isMissing
+    ? `${origin}/cars/${escapeHtml(carId)}`
+    : `${origin}/buy-cars`;
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
-    <link rel="canonical" href="${origin}/cars/${escapeHtml(carId)}" />
+    ${robotsMeta}
+    <link rel="canonical" href="${canonicalHref}" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="${origin}/cars/${escapeHtml(carId)}" />
+    <meta property="og:url" content="${canonicalHref}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${image}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="${origin}/cars/${escapeHtml(carId)}" />
+    <meta name="twitter:url" content="${canonicalHref}" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${image}" />
+    ${carJsonLd}
     <script>location.replace("${redirect}");</script>
   </head>
   <body>
@@ -119,6 +170,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   // OAuth callbacks must never be cached — a stale CDN copy would drop the
   // auth code. Crawler previews keep the short public cache as before.
-  res.setHeader("Cache-Control", hasOAuthParams ? "no-store" : "public, max-age=600, s-maxage=3600");
-  res.status(200).send(html);
+  // Missing cars are never cached so a newly published id becomes live fast.
+  res.setHeader("Cache-Control", isMissing || hasOAuthParams ? "no-store" : "public, max-age=600, s-maxage=3600");
+  res.status(isMissing ? 404 : 200).send(html);
 }

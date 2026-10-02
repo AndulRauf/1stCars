@@ -168,6 +168,8 @@ export function CarCard({
             alt={`${car.brand} ${car.model}`}
             className="block w-full h-auto object-contain"
             draggable={false}
+            loading="lazy"
+            decoding="async"
             onError={() => setImageFailed(true)}
           />
         ) : (

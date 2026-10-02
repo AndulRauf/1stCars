@@ -186,6 +186,24 @@ export default function App() {
     };
   }, []);
 
+  // Soft-404 SEO guard: the static SPA host always serves HTTP 200 for unknown
+  // paths, so mark error views noindex (and restore index on real views) to
+  // keep bogus URLs out of search indexes.
+  React.useEffect(() => {
+    const selector = 'meta[name="robots"]';
+    let tag = document.head.querySelector(selector) as HTMLMetaElement | null;
+    if (currentView === "error_404" || currentView === "error_500") {
+      if (!tag) {
+        tag = document.createElement("meta");
+        tag.setAttribute("name", "robots");
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute("content", "noindex, follow");
+    } else if (tag) {
+      tag.setAttribute("content", "index, follow");
+    }
+  }, [currentView]);
+
   // GA4 + UTM tracking: capture campaign params on arrival, then emit exactly
   // one page_view per SPA route change (pushState navigation, back/forward, and
   // direct URL loads). captureUtm() reads any utm_* params from the URL and
@@ -336,9 +354,11 @@ export default function App() {
     };
   }, [currentUser?.id]);
 
-  // Auction engine maintenance poller: starts SCHEDULED auctions at their
-  // starts_at and auto-closes LIVE/EXTENDED ones whose ends_at has passed.
-  // Without this nothing ever moves an auction off LIVE (CRIT-01).
+  // Auction engine maintenance poller (BACKUP ONLY): the Vercel Cron job
+  // /api/auction-maintenance (every 5 min) is the primary driver that starts
+  // SCHEDULED auctions and closes expired ones via auction_run_maintenance.
+  // This client tick stays as a best-effort fallback for local/dev where the
+  // cron never runs — hence the relaxed 5-minute interval.
   React.useEffect(() => {
     const tick = async () => {
       try {
@@ -351,7 +371,7 @@ export default function App() {
       }
     };
     tick();
-    const timer = window.setInterval(tick, 60000);
+    const timer = window.setInterval(tick, 300000);
     return () => {
       window.clearInterval(timer);
     };

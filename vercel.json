@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/auction-maintenance",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/cars/:id",
@@ -11,11 +17,20 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "https://1stcars.in" },
+        { "key": "Vary", "value": "Origin" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

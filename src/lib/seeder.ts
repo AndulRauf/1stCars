@@ -582,6 +582,12 @@ export async function maybeAutoSeedDatabase(user?: { id?: string; role?: string 
   // Seeding is a DEVELOPMENT convenience and must never auto-inject demo cars
   // into a production database. It only runs when VITE_ALLOW_SEED === "true" is
   // explicitly set for the build (or in a local dev server).
+  // Defense-in-depth: even if the flag ever leaks into a prod build, seeding
+  // is hard-blocked on the production hostnames.
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+    if (host === "1stcars.in" || host.endsWith(".1stcars.in")) return;
+  }
   // @ts-ignore
   const seedAllowed = import.meta.env.DEV || import.meta.env.VITE_ALLOW_SEED === "true";
   if (!seedAllowed) return;

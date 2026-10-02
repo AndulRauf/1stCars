@@ -17,18 +17,18 @@ export default async function handler(req: any, res: any) {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  // Static routes mirror src/lib/router.ts exactly — only views that render
+  // without login are listed. Private portals (/admin, /sales-portal) and
+  // removed/renamed slugs are intentionally excluded so crawlers never get
+  // soft-404s.
   const staticPages: Array<[string, string, string]> = [
     ["/", "daily", "1.0"],
     ["/buy-cars", "daily", "0.9"],
     ["/sell-car", "weekly", "0.8"],
     ["/certification", "monthly", "0.7"],
-    ["/about-us", "monthly", "0.5"],
+    ["/about", "monthly", "0.5"],
     ["/faq", "monthly", "0.4"],
-    ["/careers", "monthly", "0.4"],
-    ["/auctions", "weekly", "0.6"],
-    ["/our-showrooms", "weekly", "0.6"],
-    ["/120-point-certificate", "monthly", "0.5"],
-    ["/terms-and-conditions", "yearly", "0.3"]
+    ["/careers", "monthly", "0.4"]
   ];
 
   const urls: string[] = staticPages.map(
