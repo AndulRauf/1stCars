@@ -13,6 +13,7 @@
 --   - Baad me verify_aslam_easy.sql se verify karo
 --   - Order fix hai, sections ko aage-peeche mat karo
 --   - Generated: 2026-10-02 | Sections: 17 | Size: ~237 KB
+--   - Fix 2026-10-02: enum/text cast (user_role=text error) repaired
 -- ============================================================
 
 
@@ -1528,10 +1529,10 @@ CREATE INDEX IF NOT EXISTS sales_notifications_status_idx ON public.sales_notifi
 CREATE INDEX IF NOT EXISTS follow_ups_related_idx ON public.follow_ups (related_table, related_id);
 
 
-
 -- ============================================================
 -- SECTION 8/17: public/automation_schema.sql
 -- ============================================================
+
 -- ====================================================
 -- 1stCars Native Automation Engine — DDL Migration
 -- Event ledger, job queue, audit logs, internal task
@@ -4658,7 +4659,7 @@ END $$;
 DROP POLICY IF EXISTS "Admin deletes profiles" ON public.profiles;
 CREATE POLICY "Admin deletes profiles" ON public.profiles
   FOR DELETE
-  USING (public.get_auth_user_role() = 'Admin'::text);
+  USING (public.get_auth_user_role()::text = 'Admin');
 
 -- 2) Belt & braces: re-assert the broad admin manage policy too, so
 --    databases missing it entirely get it created (FOR ALL covers
@@ -4666,16 +4667,16 @@ CREATE POLICY "Admin deletes profiles" ON public.profiles
 DROP POLICY IF EXISTS "Admin manages all profiles" ON public.profiles;
 CREATE POLICY "Admin manages all profiles" ON public.profiles
   FOR ALL
-  USING (public.get_auth_user_role() = 'Admin'::text)
-  WITH CHECK (public.get_auth_user_role() = 'Admin'::text);
+  USING (public.get_auth_user_role()::text = 'Admin')
+  WITH CHECK (public.get_auth_user_role()::text = 'Admin');
 
 -- 3) Admin can delete rows off the dealers sibling table (cleanup
 --    step of the admin dealer delete).
 DROP POLICY IF EXISTS "Admin manages dealers" ON public.dealers;
 CREATE POLICY "Admin manages dealers" ON public.dealers
   FOR ALL
-  USING (public.get_auth_user_role() = 'Admin'::text)
-  WITH CHECK (public.get_auth_user_role() = 'Admin'::text);
+  USING (public.get_auth_user_role()::text = 'Admin')
+  WITH CHECK (public.get_auth_user_role()::text = 'Admin');
 
 -- 4) Same for dealer_applications when that table exists (the
 --    pre-migration / older databases may not have it — the DO
@@ -4690,8 +4691,8 @@ BEGIN
     EXECUTE $pol$
       CREATE POLICY "Admin manages dealer_applications" ON public.dealer_applications
         FOR ALL
-        USING (public.get_auth_user_role() = 'Admin'::text)
-        WITH CHECK (public.get_auth_user_role() = 'Admin'::text);
+        USING (public.get_auth_user_role()::text = 'Admin')
+        WITH CHECK (public.get_auth_user_role()::text = 'Admin');
     $pol$;
   END IF;
 END $$;
