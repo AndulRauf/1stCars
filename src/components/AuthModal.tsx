@@ -895,7 +895,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = "logi
                 onClick={() => setMode("register")}
                 className="text-[#2E7D32] font-black hover:underline cursor-pointer"
               >
-                Register as Partnered Dealer
+                Register as Authorised Dealer
               </button>
             </p>
           ) : (
