@@ -859,7 +859,7 @@ export function CRM({
             </button>
           </div>
           <div className="space-y-2">
-            {profiles.slice(0, 8).map((p) => (
+            {[...profiles].sort((a, b) => (new Date(b.created_at || 0).getTime()) - (new Date(a.created_at || 0).getTime())).slice(0, 8).map((p) => (
               <button
                 key={p.id}
                 onClick={() => setDetail({ kind: "customer", id: p.id })}
@@ -889,7 +889,7 @@ export function CRM({
   // -------------------------------------------------------------------------
   const grouped = STAGES.map((s) => ({ stage: s, rows: filtered.filter((i) => i.stage === s.key) }));
   const stageVisible = stageFilter !== "all";
-  const customerRows = kindFilter === "customer" ? profiles : [];
+  const customerRows = kindFilter === "customer" ? [...profiles].sort((a, b) => (new Date(b.created_at || 0).getTime()) - (new Date(a.created_at || 0).getTime())) : [];
   const pipeline = (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">

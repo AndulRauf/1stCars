@@ -244,7 +244,7 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
   const reloadAllData = async () => {
     setIsLoading(true);
     try {
-      const { data: profs } = await supabase.from("profiles").select();
+      const { data: profs } = await supabase.from("profiles").select().order("created_at", { ascending: false });
       const { data: insps } = await supabase.from("inspections").select();
       const { data: offs } = await supabase.from("offers").select();
       const { data: lds } = await supabase.from("sales_notifications").select();

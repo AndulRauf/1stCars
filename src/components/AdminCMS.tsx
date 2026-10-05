@@ -811,7 +811,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         { data: dealerAppData }
       ] = await Promise.all([
         supabase.from("cars").select(),
-        supabase.from("profiles").select(),
+        supabase.from("profiles").select().order("created_at", { ascending: false }),
         supabase.from("inspections").select(),
         supabase.from("auctions").select(),
         supabase.from("notifications").select(),
