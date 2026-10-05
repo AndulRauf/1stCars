@@ -716,14 +716,6 @@ export function RoleDashboards({ currentUser, onLogout, onNavigateToInventory, o
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2.5 w-full md:w-auto md:justify-end">
-            <button
-              onClick={onLogout}
-              className="text-sm font-bold text-rose-600 hover:text-rose-700 cursor-pointer transition-colors px-1 flex items-center gap-1.5"
-            >
-              Logout
-            </button>
-          </div>
         </div>
 
         {/* LOADING STATE */}
