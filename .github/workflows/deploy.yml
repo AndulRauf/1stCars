@@ -1,8 +1,10 @@
-name: Deploy to Vercel
+name: Deploy to Vercel (DISABLED - using Vercel Git integration for auto-deploy)
 
+# Disabled on purpose: Vercel's native GitHub integration already auto-deploys
+# every push to main. This custom action needed VERCEL_TOKEN secrets and was
+# blocking/confusing auto deploys. Keep file for history, trigger manually only.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
