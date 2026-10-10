@@ -19,6 +19,7 @@ export default async function handler(req: any, res: any) {
   let title = "1stCars | Certified Premium Used Cars";
   let description = "1stCars, the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
   let image = `${origin}/og-image.jpg?v=5`;
+  let originalImage = "";
   let redirect = "/";
   let carFound = false;
   let carJsonLd = "";
@@ -72,8 +73,21 @@ export default async function handler(req: any, res: any) {
             (rawImageUrl.startsWith("http") ? rawImageUrl : null);
           if (candidate) {
             image = candidate;
+            originalImage = candidate;
           } else if (rawImageUrl.startsWith("/")) {
             image = `${origin}${rawImageUrl}`;
+          }
+          // Sharp Status/chat previews need an EXACT 1200x630 JPEG: serving a
+          // multi-MB portrait phone photo with 1200x630 dimension tags makes
+          // WhatsApp crop + downscale it into a blurry thumbnail. Render the
+          // exact cover-cropped variant via the Supabase image endpoint; the
+          // original is kept as a second og:image so crawlers still have a
+          // fallback if the render endpoint ever 404s.
+          if (originalImage) {
+            const sm = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(originalImage);
+            if (sm) {
+              image = `https://${sm[1]}/storage/v1/render/image/public/${sm[2]}?width=1200&height=630&resize=cover&quality=80`;
+            }
           }
 
           // Structured data for rich results on real car pages only.
@@ -153,6 +167,12 @@ export default async function handler(req: any, res: any) {
     : `${origin}${redirect.startsWith("/") ? redirect : `/${redirect}`}`;
   const redirectAttr = escapeHtml(redirectAbs);
   const imageAttr = escapeHtml(image);
+  const originalAttr = originalImage && originalImage !== image ? escapeHtml(originalImage) : "";
+  const imageAlt = escapeHtml(carFound ? title : "1stCars certified pre-owned cars");
+  const imageTypeTag =
+    /render\/image|\.jpe?g($|\?)/i.test(image)
+      ? `\n    <meta property="og:image:type" content="image/jpeg" />`
+      : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -168,13 +188,17 @@ export default async function handler(req: any, res: any) {
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${imageAttr}" />
+    <meta property="og:image:secure_url" content="${imageAttr}" />${imageTypeTag}
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${imageAlt}" />
+    ${originalAttr ? `<meta property="og:image" content="${originalAttr}" />` : ""}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="${canonicalHref}" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${imageAttr}" />
+    <meta name="twitter:image:alt" content="${imageAlt}" />
     ${carJsonLd}
     <script>try{location.replace(${JSON.stringify(redirectAbs)});}catch(e){location.href=${JSON.stringify(redirectAbs)};}</script>
   </head>

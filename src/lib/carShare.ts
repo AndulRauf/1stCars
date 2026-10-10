@@ -21,11 +21,30 @@ const formatINR = (n: number) =>
 
 export const carShareLink = (car: ShareableCar) => `${window.location.origin}/cars/${car.id}`;
 
+// WhatsApp / Status link previews must be EXACTLY 1200x630 JPEGs to render
+// sharp: serving a multi-MB portrait phone photo with hardcoded 1200x630
+// dimension tags makes the crawler crop + downscale it into a blurry Status
+// thumbnail. Supabase storage can render that exact variant on the fly, so
+// map public object URLs to the render endpoint (cover-cropped 1200x630,
+// quality 80). Non-Supabase URLs pass through untouched.
+export const toShareImageUrl = (url: string): string => {
+  const m = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(url || "");
+  if (m) {
+    return `https://${m[1]}/storage/v1/render/image/public/${m[2]}?width=1200&height=630&resize=cover&quality=80`;
+  }
+  return url;
+};
+
 export const carPrimaryImage = (car: ShareableCar): string => {
   const isReal = (u?: string) => !!u && (u.startsWith("http") || u.startsWith("/") || u.startsWith("data:"));
   const imgs = Array.isArray(car.images) ? car.images : [];
   const first = imgs.find((u) => typeof u === "string" && isReal(u));
-  return first || (isReal(car.image_url) ? car.image_url! : "");
+  const raw = first || (isReal(car.image_url) ? car.image_url! : "");
+  if (!raw) return "";
+  // Absolute https URL + exact 1200x630 variant so JS-rendering crawlers
+  // (WhatsApp / Facebook) get the same sharp image as the server preview.
+  const absolute = raw.startsWith("http") ? raw : `${window.location.origin}${raw.startsWith("/") ? raw : `/${raw}`}`;
+  return absolute.startsWith("https://") ? toShareImageUrl(absolute) : absolute;
 };
 
 // WhatsApp "car card" text block — deliberately contains NO link. The deep
