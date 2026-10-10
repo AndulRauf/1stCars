@@ -214,5 +214,53 @@ describe("phase 1 — sales CRM + sales automation", () => {
     const { data: after } = await supabase.from("sales_notifications").select();
     expect((after as any[]).find((r) => r.id === pool.id).assigned_to).toBe("assoc-A");
   });
+
+  it("survives the live RLS RETURNING trap: anon INSERT ok, INSERT+SELECT rejected", async () => {
+    // Live-site failure 10-Oct-2026: anon has INSERT WITH CHECK (true) but no
+    // SELECT policy on sales_notifications, so insert([...]).select()
+    // (= INSERT ... RETURNING) throws "new row violates row-level security
+    // policy" even though the INSERT is allowed. The helper must retry as a
+    // bare INSERT with a client UUID and still return row.id.
+    const mod = await import("@/src/lib/leadAssignment");
+    const { supabase } = await import("@/src/lib/supabaseClient");
+    const realFrom = (supabase as any).from.bind(supabase);
+    const realRpc = (supabase as any).rpc?.bind?.(supabase);
+    // Force Tier-1 RPC off so this test exercises the Tier-2/3 direct-insert
+    // fallback (older DBs without the RPC deployed hit this path in prod).
+    if (realRpc) {
+      (supabase as any).rpc = async () => ({ data: null, error: { message: "function submit_sales_lead does not exist" } });
+    }
+    (supabase as any).from = (table: string) => {
+      const chain: any = realFrom(table);
+      if (table !== "sales_notifications") return chain;
+      const origInsert = chain.insert.bind(chain);
+      chain.insert = (records: any) => {
+        const withSelect = origInsert(records);
+        const origSelect = (withSelect as any).select?.bind(withSelect);
+        // Simulate the live RLS rejection ONLY when RETURNING is requested.
+        if (origSelect) {
+          (withSelect as any).select = (...a: any[]) => Promise.resolve({
+            data: null,
+            error: { message: 'new row violates row-level security policy for table "sales_notifications"', code: "42501" }
+          });
+        }
+        // Bare insert (the retry path) succeeds like the live INSERT policy.
+        return withSelect;
+      };
+      return chain;
+    };
+    try {
+      const res = await mod.insertLeadWithAssignment({
+        name: "RLS Visitor", mobile: "9000000033", city: "Surat",
+        car_id: "car-a", car_brand: "Honda", car_model: "City",
+        type: "test_drive", status: "pending", notes: "rls trap check"
+      });
+      expect(res.error).toBeFalsy();
+      expect(res.row?.id).toBeTruthy();
+    } finally {
+      (supabase as any).from = realFrom;
+      if (realRpc) (supabase as any).rpc = realRpc;
+    }
+  });
 });
 

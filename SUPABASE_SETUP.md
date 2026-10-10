@@ -4,7 +4,6 @@
 > `public/` (listed in section 2 below) into the SQL Editor, never this file.
 
 # 1stCars — Real Backend (Supabase) Setup
-
 The app runs on an in-browser **mock database** until you provide real Supabase
 credentials. Follow these steps to go live with a real, shared backend.
 
@@ -43,6 +42,15 @@ wins its type — running them out of order silently changes the schema:
 9. fix_launch_security_storage_profiles.sql  <- REQUIRED: storage lockdown, private
    "resumes" bucket with upload/review policies, and profiles SELECT for
    authenticated users only (drop-in safe on any DB state, idempotent)
+10. fix_booking_audit_fk.sql        <- REQUIRED if Test Drive / Buy-Now ever
+    failed with "audit_trail_actor_user_id_fkey": FK-safe audit + ensure_profile()
+11. supabase/migrations/20260929000000_fix_sales_testdrive_assign_sync.sql
+    <- syncs test_drives.sales_associate_id when a lead is assigned later
+12. fix_testdrive_rls_returning.sql <- REQUIRED if Test Drive / Buy-Now fails
+    with "new row violates row-level security policy for table
+    sales_notifications": re-asserts the visitor INSERT policy + adds the
+    RLS-proof submit_sales_lead(jsonb) RPC (idempotent, keeps leads
+    staff-only — no anon SELECT granted)
 
 ```
 

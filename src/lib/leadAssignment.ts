@@ -67,32 +67,114 @@ export async function resolveLeadOwner(car: { id?: string | null; brand?: string
 // If the live database predates the `assigned_to` migration, retry the
 // insert without the new columns so bookings never fail.
 // Returns { data, error, row } so callers can read the DB-generated id.
-// NOTE: `.select()` is REQUIRED here — without it PostgREST returns no
-// representation, `row` is always null, and any later `.eq("id", row.id)`
-// update silently matches zero rows (the background assignment in
-// BookingModal hit exactly this: it updated the display-only INQ- refId).
+//
+// RLS TRAP (live-site Test Drive failure 10-Oct-2026):
+//   anon has INSERT WITH CHECK (true) but NO SELECT policy on this table,
+//   so `insert([...]).select()` (= INSERT ... RETURNING) fails with
+//   "new row violates row-level security policy for table
+//   sales_notifications" even though the INSERT itself is allowed.
+//   Fix: pre-generate a client UUID and, on any RLS/RETURNING failure,
+//   retry as a bare INSERT (no `.select()`). The bare INSERT needs no
+//   SELECT policy, so anonymous visitors succeed with zero SQL changes.
+//   The known client id is returned as `row.id` so background assignment
+//   updates keep targeting the real row.
+function newLeadUuid(): string {
+  try {
+    const c: any = (globalThis as any)?.crypto;
+    if (c?.randomUUID) return c.randomUUID();
+  } catch { /* fall through */ }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (ch) => {
+    const r = Math.floor(Math.random() * 16);
+    const v = ch === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function pickRow(data: any): any | null {
+  return Array.isArray(data) && data.length > 0 ? data[0] : null;
+}
+
+function isRlsReturningFailure(msg: string): boolean {
+  return /row-level security|42501|permission denied|PGRST|returning|not allowed to|violates/i.test(msg || "");
+}
+
 export async function insertLeadWithAssignment(lead: any) {
-  const first = await supabase.from("sales_notifications").insert([lead]).select();
+  // TIER 1 — canonical server-side path: submit_sales_lead(jsonb) is
+  // SECURITY DEFINER, so it bypasses RLS entirely and can never hit the
+  // INSERT...RETURNING trap. Requires public/fix_testdrive_rls_returning.sql
+  // to have been run once in the Supabase SQL Editor. The mock client also
+  // implements this RPC so unit tests exercise the same path.
+  const rpcPayload = {
+    name: lead?.name, mobile: lead?.mobile, city: lead?.city,
+    preferred_date: lead?.preferred_date, preferred_time: lead?.preferred_time,
+    car_id: lead?.car_id ?? null, car_brand: lead?.car_brand, car_model: lead?.car_model,
+    type: lead?.type, status: lead?.status, notes: lead?.notes ?? null
+  };
+  try {
+    const rpc = await (supabase as any)?.rpc?.("submit_sales_lead", { p_lead: rpcPayload });
+    if (rpc && !rpc.error && rpc.data) {
+      const row = { ...lead, id: String(rpc.data) };
+      return { data: [row], error: null as any, row };
+    }
+    // RPC missing (older DB / PostgREST cache) or rejected — fall through to
+    // the direct-insert tiers below instead of failing the booking.
+    if (rpc?.error) {
+      console.warn("submit_sales_lead RPC unavailable, falling back to direct insert:", (rpc.error as any)?.message || rpc.error);
+    }
+  } catch (e) {
+    console.warn("submit_sales_lead RPC threw, falling back to direct insert:", e);
+  }
+
+  // TIER 2/3 — direct insert fallbacks (need no SQL changes on the live DB).
+  const clientId = (lead && typeof lead.id === "string" && /^[0-9a-fA-F-]{36}$/.test(lead.id))
+    ? lead.id
+    : newLeadUuid();
+  const withId = { ...lead, id: clientId };
+
+  const first = await supabase.from("sales_notifications").insert([withId]).select();
   if (!first.error) {
     return {
       data: first.data,
       error: first.error as any,
-      row: Array.isArray(first.data) && first.data.length > 0 ? first.data[0] : null
+      row: pickRow(first.data) || { ...withId }
     };
   }
 
-  const msg = String(first.error.message || JSON.stringify(first.error));
+  const msg = String((first.error as any)?.message || JSON.stringify(first.error));
+
+  // Schema-cache lag (assigned_to columns not yet visible to PostgREST):
+  // strip the new columns and retry WITH returning first.
   if (/assigned_to|schema cache|does not exist/i.test(msg)) {
-    const { assigned_to, assigned_to_name, ...stripped } = lead;
+    const { assigned_to, assigned_to_name, ...stripped } = withId;
     const retry = await supabase.from("sales_notifications").insert([stripped]).select();
     if (!retry.error) {
       console.warn("Lead inserted without assigned_to (run the schema migration to enable auto-assignment).");
+      return { data: retry.data, error: retry.error as any, row: pickRow(retry.data) || { ...stripped } };
     }
-    return {
-      data: retry.data,
-      error: retry.error as any,
-      row: Array.isArray(retry.data) && retry.data.length > 0 ? retry.data[0] : null
-    };
+    // That retry may itself have hit the RLS RETURNING trap — fall through
+    // to the bare-INSERT path below using the stripped payload.
+    const rlsMsg = String((retry.error as any)?.message || JSON.stringify(retry.error));
+    if (isRlsReturningFailure(rlsMsg)) {
+      const bare = await supabase.from("sales_notifications").insert([stripped]);
+      if (!bare.error || /duplicate|unique|already exists/i.test(String((bare.error as any)?.message || ""))) {
+        if (bare.error) console.warn("Lead insert raced (duplicate id) — treating as success:", clientId);
+        return { data: [{ ...stripped }], error: null, row: { ...stripped } };
+      }
+      return { data: bare.data, error: bare.error as any, row: null };
+    }
+    return { data: retry.data, error: retry.error as any, row: null };
+  }
+
+  // RLS RETURNING trap: the row was REJECTED only because `.select()`
+  // demands a SELECT policy anon doesn't have. Retry as a bare INSERT
+  // (no RETURNING) with the same client id — idempotent and policy-safe.
+  if (isRlsReturningFailure(msg)) {
+    const bare = await supabase.from("sales_notifications").insert([withId]);
+    if (!bare.error || /duplicate|unique|already exists/i.test(String((bare.error as any)?.message || ""))) {
+      if (bare.error) console.warn("Lead insert raced (duplicate id) — treating as success:", clientId);
+      return { data: [{ ...withId }], error: null, row: { ...withId } };
+    }
+    return { data: bare.data, error: bare.error as any, row: null };
   }
 
   return { data: first.data, error: first.error as any, row: null };

@@ -680,6 +680,54 @@ For questions, concerns, or feedback regarding these Terms, please contact:
   };
 
   // Highly robust custom query interface builder
+  public rpc = async (fn: string, args?: any) => {
+    try {
+      if (fn === "ensure_profile") {
+        const raw = typeof window !== "undefined"
+          ? localStorage.getItem("1stcars_sb_current_session")
+          : null;
+        const session = raw ? JSON.parse(raw) : null;
+        const uid = session?.user?.id;
+        if (!uid) return { data: null, error: null };
+        const profiles = this.getStorage<any>("1stcars_sb_profiles", this.getInitialData("profiles"));
+        if (!profiles.some((p: any) => p.id === uid)) {
+          const u = session.user;
+          this.setStorage("1stcars_sb_profiles", [
+            ...profiles,
+            {
+              id: uid, name: u.name || u.email?.split("@")[0] || "Customer",
+              email: u.email || null, mobile: u.mobile || null,
+              role: "Buyer", city: u.city || "Surat",
+              created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            }
+          ]);
+        }
+        return { data: uid, error: null };
+      }
+      if (fn === "submit_sales_lead") {
+        const lead = (args as any)?.p_lead || {};
+        const row = {
+          id: `lead-${Math.random().toString(36).slice(2, 10)}`,
+          created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          name: lead.name || "", mobile: lead.mobile || "", city: lead.city || "Surat",
+          preferred_date: lead.preferred_date || new Date().toISOString().split("T")[0],
+          preferred_time: lead.preferred_time || "11:00 AM - 01:00 PM",
+          car_id: lead.car_id || null, car_brand: lead.car_brand || "1stCars",
+          car_model: lead.car_model || "Selection",
+          type: lead.type || "test_drive", status: lead.status || "pending",
+          notes: lead.notes || null
+        };
+        const key = this.getTableKey("sales_notifications");
+        const items = this.getStorage<any>(key, this.getInitialData("sales_notifications"));
+        this.setStorage(key, [row, ...items]);
+        return { data: row.id, error: null };
+      }
+      return { data: null, error: { message: `Unknown function: ${fn}` } };
+    } catch (e: any) {
+      return { data: null, error: e };
+    }
+  };
+
   public from(table: string) {
     const storageKey = this.getTableKey(table);
     const initialData = this.getInitialData(table);
@@ -948,7 +996,10 @@ function createFatalStub(message: string): any {
 }
 
 // Instantiate the appropriate client
-export const supabase = isRealSupabase
+// NOTE: the mock intentionally exposes `.rpc(...)` (ensure_profile,
+// submit_sales_lead) so test + preview builds exercise the same
+// RPC-first code path as production.
+export const supabase: any = isRealSupabase
   ? createClient(supabaseUrl, supabaseAnonKey, {
       // PKCE flow: the one-time auth code travels in the URL query string
       // (?code=...) instead of tokens in the fragment. This is what the
