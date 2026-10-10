@@ -80,7 +80,8 @@ export function parseCurrentUrl(): RouteParams {
     return { view: "home" };
   }
 
-  const pathname = window.location.pathname.toLowerCase().replace(/\/$/, "");
+  const rawPathname = window.location.pathname.replace(/\/$/, "");
+  const pathname = rawPathname.toLowerCase();
   const searchParams = new URLSearchParams(window.location.search);
 
   // Extract query params
@@ -130,9 +131,13 @@ export function parseCurrentUrl(): RouteParams {
   }
 
   // Route 5: Car Detail Page (`/cars/:carId` or `/car/:carId` or `/buy/:brand/:model/:carId`)
+  // Match case-insensitively, but extract carId from the RAW path so IDs with
+  // uppercase characters are never lowercased into a non-existent id (which
+  // rendered shared links as "Vehicle Not Available").
   const carMatch = pathname.match(/^\/(?:cars|car)\/([^\/]+)$/);
   if (carMatch) {
-    const carId = carMatch[1];
+    const rawMatch = rawPathname.match(/^\/(?:cars|car)\/([^/]+)$/i);
+    const carId = rawMatch ? rawMatch[1] : carMatch[1];
     return { view: "car_details", carId };
   }
 

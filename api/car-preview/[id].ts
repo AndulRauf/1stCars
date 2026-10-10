@@ -139,6 +139,21 @@ export default async function handler(req: any, res: any) {
     ? `${origin}/cars/${escapeHtml(carId)}`
     : `${origin}/buy-cars`;
 
+  // Human redirect target as an ABSOLUTE URL. The previous build used an
+  // inline-only `<script>location.replace("/buy-cars?...")</script>`, but the
+  // site's global Content-Security-Policy (`script-src 'self'`, no
+  // 'unsafe-inline') blocks inline scripts — so taps on shared WhatsApp links
+  // got stuck on the "Redirecting to 1stCars…" page forever. A
+  // `<meta http-equiv="refresh">` redirect is NOT governed by `script-src`,
+  // so it works even when inline JS is blocked or disabled. The JS redirect
+  // is kept as a progressive enhancement; the meta refresh + plain link are
+  // the reliable path.
+  const redirectAbs = redirect.startsWith("http")
+    ? redirect
+    : `${origin}${redirect.startsWith("/") ? redirect : `/${redirect}`}`;
+  const redirectAttr = escapeHtml(redirectAbs);
+  const imageAttr = escapeHtml(image);
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -147,23 +162,28 @@ export default async function handler(req: any, res: any) {
     <meta name="description" content="${escapeHtml(description)}" />
     ${robotsMeta}
     <link rel="canonical" href="${canonicalHref}" />
+    <meta http-equiv="refresh" content="0;url=${redirectAttr}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${canonicalHref}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
-    <meta property="og:image" content="${image}" />
+    <meta property="og:image" content="${imageAttr}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="${canonicalHref}" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
-    <meta name="twitter:image" content="${image}" />
+    <meta name="twitter:image" content="${imageAttr}" />
     ${carJsonLd}
-    <script>location.replace("${redirect}");</script>
+    <script>try{location.replace(${JSON.stringify(redirectAbs)});}catch(e){location.href=${JSON.stringify(redirectAbs)};}</script>
   </head>
   <body>
-    <p>Redirecting to 1stCars…</p>
+    <main style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:48px 20px;text-align:center;">
+      <h1 style="font-size:20px;margin:0 0 8px;">Opening your car on 1stCars…</h1>
+      <p style="font-size:14px;color:#555;margin:0 0 20px;">If you are not redirected automatically, tap the button below.</p>
+      <p><a href="${redirectAttr}" style="display:inline-block;background:#135D38;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:999px;">View Car on 1stCars</a></p>
+    </main>
   </body>
 </html>`;
 

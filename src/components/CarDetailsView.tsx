@@ -78,7 +78,7 @@ export function CarDetailsView({
   onNavigateToDashboard,
   mobileMenuOpen = false,
 }: CarDetailsViewProps) {
-  const { cars: catalogCars } = useCatalogCars();
+  const { cars: catalogCars, loading: catalogLoading } = useCatalogCars();
 
   // Locate selected car. Returns undefined when the car is missing (deleted or
   // unpublished) so the "Vehicle Not Available" state renders instead of
@@ -274,6 +274,17 @@ export function CarDetailsView({
   };
 
   // Car not in the live catalog (deleted in Admin CMS or not published yet).
+  // While the catalog is still loading (fresh visit via a shared WhatsApp
+  // link with an empty local cache), render a loader — NOT the "not
+  // available" state — so the link never flashes a false dead-end.
+  if (!car && catalogLoading) {
+    return (
+      <div className="bg-[#FAF9F6] min-h-screen flex flex-col items-center justify-center gap-4 p-8">
+        <div className="h-10 w-10 rounded-full border-4 border-[#2E7D32]/20 border-t-[#2E7D32] animate-spin" />
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Loading vehicle…</p>
+      </div>
+    );
+  }
   if (!car) {
     return (
       <div className="bg-[#FAF9F6] min-h-screen flex items-center justify-center p-8">
