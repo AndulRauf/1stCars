@@ -86,6 +86,25 @@ export function CarCard({
   onWhatsApp,
   isListView = false,
 }: CarCardProps) {
+  // FIX: buttons must work even when parent forgets handlers (home grid did).
+  // Internal fallbacks: Test Drive navigates to the car page with booking open,
+  // WhatsApp opens a pre-filled chat. Parent-passed handlers still win.
+  const handleTestDrive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onTestDrive) { onTestDrive(car); return; }
+    if (typeof window !== "undefined") {
+      window.location.href = `/cars/${car.id}?open_booking=1`;
+    }
+  };
+  const handleWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onWhatsApp) { onWhatsApp(car); return; }
+    if (typeof window !== "undefined") {
+      const price = Number(car.price || 0).toLocaleString("en-IN");
+      const msg = `Hi 1stCars! I'm interested in ${car.year} ${car.brand} ${car.model} (Rs.${price}, ${car.fuel || "Petrol"}, ${car.location || "Surat"}). ID: ${car.id}. Please share test drive slots.`;
+      window.open(`https://wa.me/918866377722?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+  };
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
   // A photo URL that fails to load (broken storage link) falls back to the
   // stylized gradient placeholder instead of showing a broken image.
@@ -303,27 +322,39 @@ export function CarCard({
         </div>
       </div>
 
-      {/* Content Panel */}
-      <div className="flex-1 p-3 sm:p-5 flex flex-col justify-between">
+      {/* Content Panel — refined spacing + trust strip */}
+      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between gap-2">
         <div>
           {/* Header & Title */}
-          <div className="flex items-start justify-between mb-1.5">
-            <div>
-              <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-widest uppercase">
-                {car.brand}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-widest uppercase truncate">
+                {car.brand} • {car.year}
               </p>
-              <h3 className="text-sm sm:text-lg font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-1">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-1">
                 {car.model}
               </h3>
             </div>
-            <div className="text-right shrink-0 ml-2">
-              <span className="block text-base sm:text-xl font-black text-[#2E7D32] tracking-tight">
+            <div className="text-right shrink-0">
+              <span className="block text-base sm:text-lg font-black text-[#2E7D32] tracking-tight">
                 {formattedPrice}
               </span>
               <span className="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest -mt-0.5">
                 EMI {formattedEmi}/mo
               </span>
             </div>
+          </div>
+
+          {/* Trust strip — 1stMark + location, always visible */}
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            {car.certified && (
+              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 py-0.5">
+                <ShieldCheck className="h-3 w-3" /> 1stMark Certified
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">
+              <MapPin className="h-3 w-3" /> {car.location || "Surat"}
+            </span>
           </div>
 
           <div className="hidden sm:block h-px bg-slate-100 my-3" />
@@ -383,35 +414,34 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Action Panel — direct lead CTAs: Test Drive + WhatsApp next to Details.
-            Previously only "See Details" existed, forcing 2 extra clicks. */}
-        <div className="pt-2.5 sm:pt-3.5 border-t border-slate-100 flex flex-col gap-2 mt-auto">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => onViewDetails?.(car.id)}
-              className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 shadow-md shadow-[#2E7D32]/10"
-            >
-              See Details
-            </Button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onTestDrive?.(car); }}
-              aria-label={`Book test drive for ${car.brand} ${car.model}`}
-              className="flex-1 h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 bg-[#E8F3EA] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#2E7D32]/20"
-            >
-              <CalendarCheck className="h-4 w-4" />
-              Test Drive
-            </button>
-          </div>
+        {/* Action Panel — refined: 2-col grid, Details + Test Drive on top,
+            full-width WhatsApp below. Buttons always work (internal fallback)
+            even when parent passes no handlers. */}
+        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
+          <Button
+            size="sm"
+            onClick={() => onViewDetails?.(car.id)}
+            className="bg-slate-900 text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 rounded-xl px-3 shadow-sm transition-colors"
+          >
+            Details
+          </Button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onWhatsApp?.(car); }}
-            aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
-            className="w-full h-9 rounded-lg sm:rounded-xl px-3 bg-[#25D366]/10 text-[#128C4B] hover:bg-[#25D366] hover:text-white font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25"
+            onClick={handleTestDrive}
+            aria-label={`Book test drive for ${car.brand} ${car.model}`}
+            className="h-10 rounded-xl px-3 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-[#2E7D32]/20"
           >
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp: {car.brand} {car.model} • ₹{car.price.toLocaleString("en-IN")}
+            <CalendarCheck className="h-4 w-4" />
+            Test Drive
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsApp}
+            aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
+            className="col-span-2 h-10 rounded-xl px-3 bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25"
+          >
+            <MessageCircle className="h-4 w-4 shrink-0" />
+            <span className="truncate">WhatsApp • {car.brand} {car.model} • ₹{car.price.toLocaleString("en-IN")}</span>
           </button>
         </div>
       </div>

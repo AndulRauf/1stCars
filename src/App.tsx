@@ -1204,6 +1204,11 @@ export default function App() {
                       isSaved={isSaved}
                       onSaveToggle={toggleSaveCar}
                       onViewDetails={(id) => handleNavigate("car_details", { carId: id })}
+                      onTestDrive={(c) => handleNavigate("car_details", { carId: c.id, openBooking: true })}
+                      onWhatsApp={(c) => {
+                        const price = Number(c.price || 0).toLocaleString("en-IN");
+                        window.open(`https://wa.me/918866377722?text=${encodeURIComponent(`Hi 1stCars! I'm interested in ${c.year} ${c.brand} ${c.model} (Rs.${price}, ${c.fuel || "Petrol"}, ${c.location || "Surat"}). ID: ${c.id}. Please share test drive slots.`)}`, "_blank");
+                      }}
                     />
                   );
                 })}
