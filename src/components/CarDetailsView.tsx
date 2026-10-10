@@ -66,6 +66,8 @@ interface CarDetailsViewProps {
   onNavigateToSalesPortal: () => void;
   onNavigateToDashboard?: (profile?: Profile) => void;
   mobileMenuOpen?: boolean;
+  autoOpenBooking?: boolean;
+  onAutoOpenBookingConsumed?: () => void;
 }
 
 export function CarDetailsView({
@@ -77,6 +79,8 @@ export function CarDetailsView({
   onNavigateToSalesPortal,
   onNavigateToDashboard,
   mobileMenuOpen = false,
+  autoOpenBooking = false,
+  onAutoOpenBookingConsumed,
 }: CarDetailsViewProps) {
   const { cars: catalogCars, loading: catalogLoading } = useCatalogCars();
 
@@ -200,22 +204,27 @@ export function CarDetailsView({
   // Buy Now / Reserve checkout sheet state
   const [isBuyNowOpen, setIsBuyNowOpen] = React.useState(false);
 
-  // If the visitor arrived with a ?open_booking=1 deep link, open the booking
-  // modal directly. (Google sign-in was removed from the booking modal.)
+  // If the visitor arrived with a ?open_booking=1 deep link (or the
+  // autoOpenBooking prop from card Test-Drive), open the booking modal
+  // directly. (Google sign-in was removed from the booking modal.)
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("open_booking") === "1") {
-      params.delete("open_booking");
-      const nextSearch = params.toString();
-      window.history.replaceState(
-        null,
-        "",
-        nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
-      );
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const viaUrl = params?.get("open_booking") === "1";
+    if (viaUrl || autoOpenBooking) {
+      if (viaUrl && params) {
+        params.delete("open_booking");
+        const nextSearch = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname
+        );
+      }
       setBookingModalType("test_drive");
       setIsBookingModalOpen(true);
+      if (autoOpenBooking) onAutoOpenBookingConsumed?.();
     }
-  }, []);
+  }, [autoOpenBooking]);
 
   React.useEffect(() => {
     if (!car) return;

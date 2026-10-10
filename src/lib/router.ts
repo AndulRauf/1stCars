@@ -24,6 +24,7 @@ export interface RouteParams {
   variant?: string;
   city?: string;
   search?: string;
+  openBooking?: boolean;
   // True when the pathname matched no known route and fell through to the
   // homepage fallback; callers can canonicalize the URL to "/" in that case.
   unknown?: boolean;
@@ -141,7 +142,9 @@ export function parseCurrentUrl(): RouteParams {
   if (carMatch) {
     const rawMatch = rawPathname.match(/^\/(?:cars|car)\/([^/]+)$/i);
     const carId = rawMatch ? rawMatch[1] : carMatch[1];
-    return { view: "car_details", carId };
+    // ?open_booking=1 from card Test-Drive buttons auto-opens BookingModal.
+    const openBooking = searchParams.get("open_booking") === "1";
+    return { view: "car_details", carId, openBooking };
   }
 
   // Route 6: Custom Page (`/page/:id` or `/p/:id`)
@@ -214,7 +217,7 @@ export function parseCurrentUrl(): RouteParams {
 /**
  * Format a canonical URL path for a given view and route parameters
  */
-export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string }): string {
+export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string; openBooking?: boolean }): string {
   switch (view) {
     case "home":
       return "/";
@@ -241,7 +244,8 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
       return "/sales-portal";
 
     case "car_details":
-      return params?.carId ? `/cars/${params.carId}` : "/buy-cars";
+      if (!params?.carId) return "/buy-cars";
+      return params?.openBooking ? `/cars/${params.carId}?open_booking=1` : `/cars/${params.carId}`;
 
     case "custom_page":
       return params?.pageId ? `/page/${params.pageId}` : "/";
@@ -281,7 +285,7 @@ export function formatUrl(view: ViewType, params?: { carId?: string; pageId?: st
  */
 export function navigateTo(
   view: ViewType, 
-  params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string },
+  params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string; openBooking?: boolean },
   options?: { replace?: boolean }
 ) {
   if (typeof window === "undefined") return;

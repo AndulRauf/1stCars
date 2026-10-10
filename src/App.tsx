@@ -96,6 +96,8 @@ export default function App() {
   const [currentView, setCurrentView] = React.useState<ViewType>("home");
   const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
   const [activeCarId, setActiveCarId] = React.useState<string>("car-1");
+  // Auto-open BookingModal when arriving via card Test-Drive (?open_booking=1).
+  const [autoOpenBooking, setAutoOpenBooking] = React.useState(false);
   const [selectedBrand, setSelectedBrand] = React.useState<string>("");
   const [selectedModel, setSelectedModel] = React.useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = React.useState<string | undefined>(undefined);
@@ -120,12 +122,13 @@ export default function App() {
   // Central Navigation handler that keeps URL in sync
   const handleNavigate = React.useCallback((
     view: ViewType,
-    params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string },
+    params?: { carId?: string; pageId?: string; brand?: string; model?: string; variant?: string; city?: string; search?: string; openBooking?: boolean },
     options?: { replace?: boolean }
   ) => {
     setCurrentView(view);
     if (params?.carId) setActiveCarId(params.carId);
     if (params?.pageId) setSelectedPageId(params.pageId);
+    if (view === "car_details" && params?.openBooking !== undefined) setAutoOpenBooking(params.openBooking);
     // Only the Buy Cars view consumes brand/model/search. Reset stale deep-link
     // filters when the catalog is opened without explicit params, so returning
     // to Buy Cars (Back button / navbar) never re-applies a phantom filter that
@@ -163,6 +166,8 @@ export default function App() {
       setCurrentView(route.view);
       if (route.carId) setActiveCarId(route.carId);
       if (route.pageId) setSelectedPageId(route.pageId);
+      // Direct loads / refresh on ?open_booking=1 must also auto-open booking.
+      if (route.view === "car_details") setAutoOpenBooking(route.openBooking === true);
       // Back/forward navigation parses the URL every time. Only carry filters
       // that are actually present in it — a bare /buy-cars (the usual Back
       // destination) must restore the full catalog instead of keeping stale
@@ -977,6 +982,8 @@ export default function App() {
             handleNavigate("role_dashboards");
           }}
           mobileMenuOpen={isMobileMenuOpen}
+          autoOpenBooking={autoOpenBooking}
+          onAutoOpenBookingConsumed={() => setAutoOpenBooking(false)}
         />
       ) : currentView === "sales_dashboard" ? (
         <SalesDashboardView
