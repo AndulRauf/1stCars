@@ -2,9 +2,30 @@ import { createClient } from "@supabase/supabase-js";
 
 // Retrieve Supabase environment variables
 // @ts-ignore
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 // @ts-ignore
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const rawSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+// Placeholder / example values (from .env.example) must NEVER count as "real"
+// credentials — they point at a non-existent project and every query fails
+// with "TypeError: Failed to fetch", which surfaced on BuyCarsView as
+// "Could Not Load Inventory". Treat them as missing so the app falls back
+// to the local mock database instead of a broken remote.
+function isPlaceholderSupabaseValue(value: string): boolean {
+  const v = String(value || "").trim();
+  if (!v) return true;
+  return (
+    v.includes("YOUR_PROJECT_REF") ||
+    v.includes("your-anon-publishable-key") ||
+    v.includes("YOUR_") ||
+    v.includes("example") ||
+    v === "your-anon-key" ||
+    v === "changeme"
+  );
+}
+
+const supabaseUrl = isPlaceholderSupabaseValue(rawSupabaseUrl) ? "" : rawSupabaseUrl.trim();
+const supabaseAnonKey = isPlaceholderSupabaseValue(rawSupabaseAnonKey) ? "" : rawSupabaseAnonKey.trim();
 
 // Production builds must NEVER fall back to the local mock database, even if
 // the runtime localStorage override is present — the override is a

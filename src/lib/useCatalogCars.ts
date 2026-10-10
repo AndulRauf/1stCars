@@ -1,5 +1,5 @@
 import * as React from "react";
-import { supabase } from "@/src/lib/supabaseClient";
+import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { flattenCarRow } from "@/src/lib/carPersistence";
 import { Car } from "@/src/types";
 
@@ -141,6 +141,45 @@ export function useCatalogCars(): CatalogState {
   const refresh = React.useCallback(async () => {
     const seq = ++seqRef.current;
     setLoading(true);
+    // Mock mode (localhost without real Supabase creds): the Supabase client
+    // is the in-memory mock — seed demo inventory through it so cards,
+    // Test-Drive and WhatsApp all work end-to-end (screenshot showed
+    // "Could Not Load Inventory / Failed to fetch" otherwise).
+    if (!isRealSupabase) {
+      try {
+        const { data, error: queryError } = await supabase
+          .from("cars")
+          .select()
+          .order("created_at", { ascending: false });
+        if (seq !== seqRef.current) return;
+        setLoading(false);
+        if (queryError || !Array.isArray(data) || data.length === 0) {
+          // Seed demo cars on first run so localhost is never empty.
+          try {
+            const { maybeAutoSeedDatabase } = await import("@/src/lib/seeder");
+            await maybeAutoSeedDatabase(true);
+          } catch {}
+          const retry = await supabase.from("cars").select().order("created_at", { ascending: false });
+          const rows = Array.isArray(retry.data) ? retry.data : [];
+          if (typeof window !== "undefined") {
+            localStorage.setItem(DB_CACHE_KEY, JSON.stringify(rows));
+          }
+          setError(null);
+          setCars(toListableCars(rows));
+          return;
+        }
+        if (typeof window !== "undefined") {
+          localStorage.setItem(DB_CACHE_KEY, JSON.stringify(data));
+        }
+        setError(null);
+        setCars(toListableCars(data));
+      } catch (e: any) {
+        if (seq !== seqRef.current) return;
+        setLoading(false);
+        setError(e?.message || "Failed to load the vehicle catalog.");
+      }
+      return;
+    }
     try {
       const { data, error: queryError } = await supabase
         .from("cars")
