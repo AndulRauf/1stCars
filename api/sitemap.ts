@@ -67,16 +67,24 @@ export default async function handler(req: any, res: any) {
   if (supabaseUrl && supabaseKey) {
     try {
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/cars?select=id,updated_at,status&status=in.(available,reserved)&limit=1000`,
+        `${supabaseUrl}/rest/v1/cars?select=id,brand,model,year,fuel,variant,location,city,updated_at,status&status=in.(available,reserved)&limit=1000`,
         { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
       );
       if (response.ok) {
         const cars: any[] = await response.json();
+        // FIX-3: emit SEO slug URLs (keywords + short id) instead of raw UUIDs.
+        const toSlug = (c: any): string => {
+          const raw = [c.year, c.brand, c.model, c.variant, c.fuel, c.location || c.city].filter(Boolean).join(" ");
+          const slug = String(raw || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 90).replace(/-+$/, "");
+          const shortId = String(c.id || "").replace(/-/g, "").slice(0, 8);
+          return slug ? `${slug}-${shortId}` : String(c.id);
+        };
         for (const car of cars) {
           if (!car || !car.id) continue;
           const lastmod = car.updated_at ? String(car.updated_at).slice(0, 10) : today;
+          const slugPath = toSlug(car);
           urls.push(
-            `  <url>\n    <loc>${origin}/cars/${escapeXml(String(car.id))}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`
+            `  <url>\n    <loc>${origin}/cars/${escapeXml(slugPath)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`
           );
           carCount += 1;
         }

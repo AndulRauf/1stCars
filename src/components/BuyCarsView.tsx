@@ -3,9 +3,11 @@ import { Search, SlidersHorizontal, Grid, List, RotateCcw, ChevronLeft, ChevronR
 import { Car, FilterState } from "@/src/types";
 import { FAMOUS_BRANDS, BUDGET_RANGES, CITIES_DATA } from "@/src/data/cars";
 import { CarCard } from "./CarCard";
+import { BookingModal } from "./BookingModal";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { cn, sanitizeSettings } from "@/src/lib/utils";
+import { trackWhatsAppClick } from "@/src/lib/analytics";
 import { normalizeLabel, resolveCanonicalName } from "@/src/lib/router";
 import { toast } from "@/src/lib/toast";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
@@ -84,6 +86,22 @@ export function BuyCarsView({
   });
 
   const [yearsOld, setYearsOld] = React.useState<string>("All");
+
+  // FIX-1: direct Test-Drive booking from the card — no detail-page detour.
+  const [bookingCar, setBookingCar] = React.useState<Car | null>(null);
+  const [bookingOpen, setBookingOpen] = React.useState(false);
+
+  const openTestDrive = React.useCallback((car: Car) => {
+    setBookingCar(car);
+    setBookingOpen(true);
+  }, []);
+
+  const openCarWhatsApp = React.useCallback((car: Car) => {
+    const price = Number(car.price || 0).toLocaleString("en-IN");
+    const msg = `Hi 1stCars! I'm interested in ${car.year} ${car.brand} ${car.model} (₹${price}, ${car.fuel || "Petrol"}, ${car.location || "Surat"}). ID: ${car.id}. Please share test drive slots.`;
+    trackWhatsAppClick("buy_cars_card", `${car.brand} ${car.model}`, Number(car.price || 0));
+    window.open(`https://wa.me/918866377722?text=${encodeURIComponent(msg)}`, "_blank");
+  }, []);
 
   // Sync initial parameters when route changes. Route brands arrive via the
   // URL slug (`unslugify`) — e.g. "Bmw", "Mercedes Benz" — so resolve them back
@@ -807,6 +825,8 @@ export function BuyCarsView({
                     isSaved={savedCars.includes(car.id)}
                     onSaveToggle={onSaveToggle}
                     onViewDetails={onViewDetails}
+                    onTestDrive={openTestDrive}
+                    onWhatsApp={openCarWhatsApp}
                     isListView={isListView}
                   />
                 ))}
@@ -915,6 +935,15 @@ export function BuyCarsView({
           </div>
         </div>
       </div>
+
+      {/* FIX-1: booking modal mounted at list level so Test Drive opens in 1 click */}
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => { setBookingOpen(false); setBookingCar(null); }}
+        car={bookingCar}
+        initialType="test_drive"
+        selectedCity={filters.city}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Share2, CalendarCheck, MessageCircle } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -15,6 +15,8 @@ interface CarCardProps {
   isSaved?: boolean;
   onSaveToggle?: (id: string, model: string) => void;
   onViewDetails?: (id: string) => void;
+  onTestDrive?: (car: Car) => void;
+  onWhatsApp?: (car: Car) => void;
   isListView?: boolean;
 }
 
@@ -80,6 +82,8 @@ export function CarCard({
   isSaved = false,
   onSaveToggle,
   onViewDetails,
+  onTestDrive,
+  onWhatsApp,
   isListView = false,
 }: CarCardProps) {
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
@@ -379,15 +383,36 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Action Panel */}
-        <div className="pt-2.5 sm:pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
-          <Button
-            size="sm"
-            onClick={() => onViewDetails?.(car.id)}
-            className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 shadow-md shadow-[#2E7D32]/10"
+        {/* Action Panel — direct lead CTAs: Test Drive + WhatsApp next to Details.
+            Previously only "See Details" existed, forcing 2 extra clicks. */}
+        <div className="pt-2.5 sm:pt-3.5 border-t border-slate-100 flex flex-col gap-2 mt-auto">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => onViewDetails?.(car.id)}
+              className="flex-1 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 shadow-md shadow-[#2E7D32]/10"
+            >
+              See Details
+            </Button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onTestDrive?.(car); }}
+              aria-label={`Book test drive for ${car.brand} ${car.model}`}
+              className="flex-1 h-10 sm:h-9 rounded-lg sm:rounded-xl px-3 bg-[#E8F3EA] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#2E7D32]/20"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              Test Drive
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onWhatsApp?.(car); }}
+            aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
+            className="w-full h-9 rounded-lg sm:rounded-xl px-3 bg-[#25D366]/10 text-[#128C4B] hover:bg-[#25D366] hover:text-white font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25"
           >
-            See Details
-          </Button>
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp: {car.brand} {car.model} • ₹{car.price.toLocaleString("en-IN")}
+          </button>
         </div>
       </div>
     </div>

@@ -14,12 +14,54 @@ export interface ShareableCar {
   location?: string;
   image_url?: string | null;
   images?: string[];
+  variant?: string;
 }
+
+// SEO slug for a car: "2021-hyundai-creta-sx-petrol-surat-a1b2c3d4".
+// Human-readable keywords (year/brand/model/fuel/city) + short id suffix so
+// every URL is unique, stable, and rankable. Old UUID-only links keep working
+// (the id is always the last segment).
+export const carSlug = (car: ShareableCar): string => {
+  const raw = [car.year, car.brand, car.model, car.variant, car.fuel, car.location]
+    .filter(Boolean)
+    .join(" ");
+  const slug = String(raw || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 90)
+    .replace(/-+$/, "");
+  const shortId = String(car.id || "").replace(/-/g, "").slice(0, 8) || "car";
+  return slug ? `${slug}-${shortId}` : shortId;
+};
+
+// Extract the raw car id from a slug or a plain UUID. Accepts both
+// "/cars/<uuid>" (legacy) and "/cars/<seo-slug>-<shortId>" (new).
+// For slugs we can only recover the 8-char prefix; callers match by prefix
+// and fall back to full-id lookup for legacy links.
+export const carIdFromSlug = (slugOrId: string): string => {
+  const s = String(slugOrId || "").trim();
+  if (!s) return "";
+  // Plain UUID (legacy link) — return as-is.
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return s;
+  const parts = s.split("-");
+  const tail = parts[parts.length - 1] || "";
+  // 8-hex-char short id suffix.
+  if (/^[0-9a-f]{8}$/i.test(tail)) return tail;
+  return s;
+};
 
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-export const carShareLink = (car: ShareableCar) => `${window.location.origin}/cars/${car.id}`;
+export const carShareLink = (car: ShareableCar) => `${typeof window !== "undefined" ? window.location.origin : "https://www.1stcars.in"}/cars/${carSlug(car)}`;
+
+// Legacy UUID link — kept for backwards compatibility (old shares/redirects).
+export const carLegacyLink = (car: ShareableCar) => `${typeof window !== "undefined" ? window.location.origin : "https://www.1stcars.in"}/cars/${car.id}`;
 
 // WhatsApp / Status link previews must be EXACTLY 1200x630 JPEGs to render
 // sharp: serving a multi-MB portrait phone photo with hardcoded 1200x630

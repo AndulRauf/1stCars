@@ -11,7 +11,7 @@ import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
 import { useCatalogCars } from "@/src/lib/useCatalogCars";
-import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink } from "@/src/lib/carShare";
+import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink, carIdFromSlug } from "@/src/lib/carShare";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackShareEvent } from "@/src/lib/analytics";
 import { Profile } from "@/src/lib/db";
@@ -83,8 +83,17 @@ export function CarDetailsView({
   // Locate selected car. Returns undefined when the car is missing (deleted or
   // unpublished) so the "Vehicle Not Available" state renders instead of
   // silently falling back to an unrelated vehicle.
+  // FIX-3: carId may be a legacy UUID or an SEO slug ending in -<8hex>.
+  // Match by full id first, then by UUID-prefix for slug links.
   const car = React.useMemo(() => {
-    return catalogCars.find((item) => item.id === carId);
+    if (!carId) return undefined;
+    const direct = catalogCars.find((item) => item.id === carId);
+    if (direct) return direct;
+    const key = carIdFromSlug(carId).toLowerCase().replace(/-/g, "");
+    if (key && key.length === 8) {
+      return catalogCars.find((item) => String(item.id || "").replace(/-/g, "").toLowerCase().startsWith(key));
+    }
+    return undefined;
   }, [carId, catalogCars]);
 
   // Per-vehicle 120-point report (inspection-flow cars carry a stored JSON

@@ -134,6 +134,9 @@ export function parseCurrentUrl(): RouteParams {
   // Match case-insensitively, but extract carId from the RAW path so IDs with
   // uppercase characters are never lowercased into a non-existent id (which
   // rendered shared links as "Vehicle Not Available").
+  // FIX-3: :carId may be a legacy UUID or a new SEO slug
+  // ("2021-hyundai-creta-petrol-surat-a1b2c3d4"). Resolution to the real
+  // Supabase id happens in CarDetailsView (prefix match), so pass through raw.
   const carMatch = pathname.match(/^\/(?:cars|car)\/([^\/]+)$/);
   if (carMatch) {
     const rawMatch = rawPathname.match(/^\/(?:cars|car)\/([^/]+)$/i);

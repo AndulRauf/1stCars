@@ -63,8 +63,12 @@ export function BookingModal({
   const [leadRefId, setLeadRefId] = React.useState("");
   const [buyerProfile, setBuyerProfile] = React.useState<Profile | null>(null);
 
+  // FIX-2: 2-step flow — Step 1 captures Name+Mobile+OTP only (max conversion),
+  // Step 2 collects slot/city/notes. Previously all 7 fields showed at once.
+
 
   // Reset state on open/close or initialType change
+  const [bookingStep, setBookingStep] = React.useState<1 | 2>(1);
   React.useEffect(() => {
     if (isOpen) {
       setBookingType(initialType);
@@ -73,6 +77,7 @@ export function BookingModal({
       setIsOtpSent(false);
       setEnteredOtp("");
       setBuyerProfile(null);
+      setBookingStep(1);
       setCity(selectedCity || car?.cities?.[0] || car?.location || "Surat");
     }
   }, [isOpen, initialType, car, selectedCity]);
@@ -676,6 +681,40 @@ export function BookingModal({
               )}
             </div>
 
+            {/* FIX-2 Step 1 CTA — name+mobile only, slot is step 2 */}
+            {bookingStep === 1 && (
+              <>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#2E7D32] text-white text-[10px]">1</span>
+                  <span className="text-[#2E7D32]">Your details</span>
+                  <span className="flex-1 h-px bg-slate-200" />
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 text-slate-500 text-[10px]">2</span>
+                  <span>Slot and confirm</span>
+                </div>
+                <Button
+                  type="button"
+                  disabled={!canSubmitForm}
+                  onClick={() => setBookingStep(2)}
+                  className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-xl cursor-pointer shadow-md shadow-[#2E7D32]/20 flex items-center justify-center gap-2 mt-2 disabled:opacity-40"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Continue — Choose Slot</span>
+                </Button>
+                <p className="text-center text-[10px] text-slate-400 font-bold">
+                  Takes 20 seconds. No spam, only slot confirmation call.
+                </p>
+              </>
+            )}
+
+            {bookingStep === 2 && (
+            <>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#2E7D32] text-white text-[10px]">✓</span>
+              <button type="button" onClick={() => setBookingStep(1)} className="hover:underline cursor-pointer">Your details</button>
+              <span className="flex-1 h-px bg-slate-200" />
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#2E7D32] text-white text-[10px]">2</span>
+              <span className="text-[#2E7D32]">Slot and confirm</span>
+            </div>
             {/* City & Preferred Date/Time Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div className="space-y-1">
@@ -732,28 +771,40 @@ export function BookingModal({
               </div>
             )}
 
-            {/* Submit CTA Button */}
-            <Button
-              type="submit"
-              disabled={isSubmitting}
+            {/* Submit CTA Button — step 2 only */}
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBookingStep(1)}
+                className="h-12 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider cursor-pointer"
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
 
-              className="w-full bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-xl cursor-pointer shadow-md shadow-[#2E7D32]/20 flex items-center justify-center gap-2 mt-2"
-            >
-              {isSubmitting ? (
-                <span>Submitting Inquiry...</span>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  <span>Submit Inquiry</span>
-                </>
-              )}
-            </Button>
+                className="flex-1 bg-[#2E7D32] hover:bg-[#25632a] text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-xl cursor-pointer shadow-md shadow-[#2E7D32]/20 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <span>Booking Test Drive...</span>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    <span>Confirm Test Drive</span>
+                  </>
+                )}
+              </Button>
+            </div>
 
             <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold">
               <ShieldCheck className="h-3.5 w-3.5 text-[#2E7D32]" />
               <span>1stCars Privacy Secured • No Spam Promise</span>
             </div>
 
+            </>
+            )}
           </form>
         )}
 

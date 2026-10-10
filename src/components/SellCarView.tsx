@@ -17,6 +17,8 @@ import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
 import { isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
+import { RegLookupStep } from "@/src/components/RegLookupStep";
+import type { VehicleDetails } from "@/src/lib/vehicleLookup";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -695,8 +697,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // Stepper state
-  const [wizardStep, setWizardStep] = React.useState<number>(1);
+  // Stepper state — starts at Step 0 (registration lookup, optional, never blocks)
+  const [wizardStep, setWizardStep] = React.useState<number>(0);
+  const [regLookup, setRegLookup] = React.useState<VehicleDetails | null>(null);
+  const [regSkipped, setRegSkipped] = React.useState<string | null>(null);
   const [formStep, setFormStep] = React.useState<"form" | "success">("form");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [createdRequest, setCreatedRequest] = React.useState<any>(null);
@@ -970,10 +974,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
-    // Registration number is auto-set as a clear "to be recorded on-site"
-    // placeholder — never a fabricated plate. The inspector records the real
-    // plate during the doorstep visit.
-    const computedReg = `${selectedRTO}-XX-0000`;
+    // Registration number is collected only via Step 0 lookup for prefill and is
+    // intentionally NOT submitted — the inspector records the real plate
+    // during the doorstep visit. No placeholder plate is ever fabricated.
 
     // Smart default fallbacks for removed fields
     const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
@@ -989,7 +992,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       seller_name: finalName,
       seller_mobile: mobile,
       seller_email: finalEmail,
-      reg_number: computedReg,
       brand: selectedBrand,
       model: selectedModel,
       variant: selectedVariant || "Standard",
@@ -1113,6 +1115,50 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
   };
 
+  // Step 0 helpers — RegLookup prefill (never blocks, always editable after)
+  const canonicalBrand = (raw?: string | null): string => {
+    const v = String(raw || "").trim().toLowerCase();
+    if (!v) return "";
+    const hit = allBrands.find((b) => String(b).toLowerCase() === v);
+    if (hit) return hit;
+    const loose = allBrands.find(
+      (b) => String(b).toLowerCase().includes(v) || v.includes(String(b).toLowerCase())
+    );
+    return loose || "";
+  };
+
+  const handleRegPrefill = (d: VehicleDetails) => {
+    setRegLookup(d);
+    setRegSkipped(null);
+    if (d.brand) {
+      const brand = canonicalBrand(d.brand);
+      if (brand) {
+        setSelectedBrand(brand);
+        setSelectedModel("");
+      }
+    }
+    if (d.model) setSelectedModel(String(d.model));
+    if (typeof d.year === "number" && Number.isFinite(d.year)) setSelectedYear(d.year);
+    if (d.fuel) setSelectedFuel(String(d.fuel));
+    if (d.variant) setSelectedVariant(String(d.variant));
+    if (d.rtoCode) {
+      const code = String(d.rtoCode).toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const withDash = code.length >= 4 ? `${code.slice(0, 2)}-${code.slice(2, 4)}` : code;
+      const match = gujaratRTOs.find(
+        (r) => r.code.toUpperCase() === withDash || r.code.replace("-", "").toUpperCase() === code
+      );
+      if (match) setSelectedRTO(match.code);
+    }
+    // Land on Step 1 (Brand) with prefilled values visible; user can edit freely.
+    setWizardStep(1);
+  };
+
+  const handleRegManual = (_reason: string) => {
+    setRegLookup(null);
+    setRegSkipped(_reason || "skipped");
+    setWizardStep(1);
+  };
+
   // Prominent hero CTA scrolls the visitor straight to the form card.
   const scrollToSellForm = () => {
     document.getElementById("sell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1177,6 +1223,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
+                    { step: 0, label: regLookup?.regNormalized ? `✔ ${regLookup.regNormalized}` : "Reg No." },
                     { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "Brand" },
                     { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "Model" },
                     { step: 3, label: mobile ? `✔ ${mobile}` : "Mobile" },
@@ -1212,13 +1259,39 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-7">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
-                    style={{ width: `${(wizardStep / 8) * 100}%` }}
+                    style={{ width: `${((wizardStep + 1) / 9) * 100}%` }}
                   />
                 </div>
+
+                {/* STEP 0: REGISTRATION LOOKUP (optional, never blocks) */}
+                {wizardStep === 0 && (
+                  <div className="space-y-4">
+                    <RegLookupStep onPrefill={handleRegPrefill} onManual={handleRegManual} />
+                    {regSkipped && (
+                      <p className="text-center text-[11px] text-slate-400 font-medium">
+                        Continuing manually — you can enter all details yourself.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* STEP 1: SELECT BRAND */}
                 {wizardStep === 1 && (
                   <div className="space-y-6">
+                    {regLookup && (
+                      <div className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                        <p className="text-[11px] font-bold text-[#2E7D32]">
+                          Prefilled from {regLookup.regNormalized} — tap any step to edit.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setWizardStep(0)}
+                          className="text-[11px] font-black uppercase tracking-wider text-[#2E7D32] underline shrink-0"
+                        >
+                          Edit reg
+                        </button>
+                      </div>
+                    )}
                     <div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which brand is your car?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick your car brand to get started</p>
@@ -1253,8 +1326,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             type="button"
                             onClick={() => {
                               trackSellerFormStart();
-                              setSelectedBrand(b);
-                              setSelectedModel("");
+                              if (b !== selectedBrand) {
+                                setSelectedBrand(b);
+                                setSelectedModel("");
+                              } else {
+                                setSelectedBrand(b);
+                              }
                               setWizardStep(2);
                             }}
                             className={`p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center min-h-[55px] h-14 ${
@@ -1285,6 +1362,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         View all brands
                       </button>
                     )}
+
+                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(0)}
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back
+                      </button>
+                    </div>
 
                   </div>
                 )}
@@ -1805,7 +1892,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   <span className="text-[#2E7D32] font-black text-[11px] uppercase tracking-widest">Appointment Confirmed</span>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">Your Inspection Request has been created!</h2>
                   <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-                    We have successfully registered your vehicle <strong>{createdRequest?.reg_number}</strong> ({createdRequest?.brand} {createdRequest?.model}) in the database.
+                    We have successfully registered your {createdRequest?.brand} {createdRequest?.model} ({createdRequest?.year}) inspection request in the database.
                   </p>
                 </div>
 
