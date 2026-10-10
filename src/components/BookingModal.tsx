@@ -442,6 +442,11 @@ export function BookingModal({
     maximumFractionDigits: 0
   }).format(car.price) : "";
 
+  // Crash-guard: modal opened without a car (race) — render nothing instead
+  // of crashing on car.brand / car.price reads.
+  if (!isOpen) return null;
+  if (!car) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl relative border border-slate-100 my-auto animate-in zoom-in-95 duration-200">

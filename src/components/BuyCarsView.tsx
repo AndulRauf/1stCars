@@ -92,6 +92,9 @@ export function BuyCarsView({
   const [bookingOpen, setBookingOpen] = React.useState(false);
 
   const openTestDrive = React.useCallback((car: Car) => {
+    if (!car) return;
+    // Debug breadcrumb — if the modal still doesn't open, check console for this line.
+    console.log("[BuyCars] Test Drive clicked:", car.id, car.brand, car.model);
     setBookingCar(car);
     setBookingOpen(true);
   }, []);
