@@ -37,6 +37,11 @@ export default defineConfig(() => {
     },
 
     server: {
+      // Pin the dev server to 3000 so there is a single, predictable URL. Without
+      // this, a stale dev server occupying 3000 silently forces Vite onto 3001,
+      // which has caused repeated "my fix isn't showing" confusion during testing.
+      port: 3000,
+      strictPort: true,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify — file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

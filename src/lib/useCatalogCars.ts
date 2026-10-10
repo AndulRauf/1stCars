@@ -147,25 +147,18 @@ export function useCatalogCars(): CatalogState {
     // "Could Not Load Inventory / Failed to fetch" otherwise).
     if (!isRealSupabase) {
       try {
+        // Mock mode (localhost without real Supabase creds): the SupabaseMockClient
+        // already ships demo inventory in its default "cars" table, so a plain
+        // read returns cars and cards / Test-Drive / WhatsApp all work end-to-end
+        // (this used to surface as "Could Not Load Inventory / Failed to fetch").
         const { data, error: queryError } = await supabase
           .from("cars")
           .select()
           .order("created_at", { ascending: false });
         if (seq !== seqRef.current) return;
         setLoading(false);
-        if (queryError || !Array.isArray(data) || data.length === 0) {
-          // Seed demo cars on first run so localhost is never empty.
-          try {
-            const { maybeAutoSeedDatabase } = await import("@/src/lib/seeder");
-            await maybeAutoSeedDatabase(true);
-          } catch {}
-          const retry = await supabase.from("cars").select().order("created_at", { ascending: false });
-          const rows = Array.isArray(retry.data) ? retry.data : [];
-          if (typeof window !== "undefined") {
-            localStorage.setItem(DB_CACHE_KEY, JSON.stringify(rows));
-          }
-          setError(null);
-          setCars(toListableCars(rows));
+        if (queryError) {
+          setError(queryError.message || "Failed to load the vehicle catalog.");
           return;
         }
         if (typeof window !== "undefined") {
