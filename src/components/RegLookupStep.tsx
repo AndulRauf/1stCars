@@ -79,7 +79,7 @@ export function RegLookupStep({ onPrefill, onManual }: Props) {
 
   return (
     <div className="max-w-xl mx-auto p-4 space-y-4">
-      <h2 className="text-xl font-bold">Sell your car — start with registration number</h2>
+      <h2 className="text-xl font-bold">Sell your car start with registration number</h2>
       <label className="block text-sm font-medium">Registration number</label>
       <input
         value={reg}
