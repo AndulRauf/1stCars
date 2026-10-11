@@ -66,6 +66,13 @@ export function BookingModal({
   // FIX-2: 2-step flow — Step 1 captures Name+Mobile+OTP only (max conversion),
   // Step 2 collects slot/city/notes. Previously all 7 fields showed at once.
 
+  // Step-1 gate: Continue is enabled only with a name + valid 10-digit mobile
+  // (+ verified OTP in mock/demo mode; real mode verifies on the call).
+  const canSubmitForm =
+    name.trim().length > 0 &&
+    mobile.replace(/\D/g, "").length >= 10 &&
+    (isRealSupabase || isOtpVerified);
+
 
   // Reset state on open/close or initialType change
   const [bookingStep, setBookingStep] = React.useState<1 | 2>(1);
