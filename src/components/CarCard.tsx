@@ -170,7 +170,7 @@ export function CarCard({
     <div
       id={`car-card-${car.id}`}
       className={cn(
-        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-col",
+        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-col min-w-0",
         isListView ? "md:flex-row md:min-h-[250px]" : "w-full"
       )}
     >
@@ -184,12 +184,12 @@ export function CarCard({
         onTouchEnd={handleTouchEnd}
       >
         {angles[activeImageIndex].url && !imageFailed ? (
-          /* Full photo at its natural aspect ratio — the whole car is always
-             visible with NO cropping and NO empty space around it. */
+          /* Fixed 4:3 aspect (matches placeholder + skeleton) — prevents CLS
+             and uneven grid rows on 320px–430px. object-cover keeps crop stable. */
           <img
             src={angles[activeImageIndex].url}
             alt={`${car.brand} ${car.model}`}
-            className="block w-full h-auto object-contain"
+            className="block w-full aspect-[4/3] object-cover"
             draggable={false}
             loading="lazy"
             decoding="async"
@@ -199,7 +199,7 @@ export function CarCard({
           /* No photo uploaded: stylized gradient placeholder panel */
           <div
             className={cn(
-              "relative w-full h-28 sm:h-auto sm:aspect-[4/3] text-white",
+              "relative w-full aspect-[4/3] text-white",
               isListView && "md:h-auto md:aspect-[4/3]",
               angles[activeImageIndex].bgClass
             )}
@@ -228,8 +228,8 @@ export function CarCard({
                 Reserved
               </Badge>
             ) : car.certified ? (
-              <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 animate-pulse">
-                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10" /> 1stMark Certified
+              <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 max-w-[60%] truncate">
+                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10 shrink-0" /> <span className="truncate">1stMark Certified</span>
               </Badge>
             ) : <div />}
 
@@ -252,11 +252,11 @@ export function CarCard({
                     }).catch(() => {});
                   }
                 }}
-                className="w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-black/30 hover:bg-[#2E7D32] border border-white/20 text-white backdrop-blur-md transition-all duration-300 cursor-pointer shadow-md"
+                className="w-11 h-11 rounded-full flex items-center justify-center bg-black/30 hover:bg-[#2E7D32] border border-white/20 text-white backdrop-blur-md transition-all duration-300 cursor-pointer shadow-md"
                 title="Share Car Page"
                 aria-label="Share Car"
               >
-                <Share2 className="h-4 w-4 sm:h-4 sm:w-4" />
+                <Share2 className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => {
@@ -264,14 +264,14 @@ export function CarCard({
                   onSaveToggle?.(car.id, `${car.brand} ${car.model}`);
                 }}
                 className={cn(
-                  "w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer shadow-md",
+                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 border cursor-pointer shadow-md",
                   isSaved 
                     ? "bg-rose-500 border-rose-400 text-white" 
                     : "bg-black/30 hover:bg-black/50 border-white/20 text-white"
                 )}
                 aria-label="Add to wishlist"
               >
-                <Heart className={cn("h-4 w-4 sm:h-4.5 sm:w-4.5", isSaved && "fill-current")} />
+                <Heart className={cn("h-4 w-4", isSaved && "fill-current")} />
               </button>
             </div>
           </div>
@@ -287,20 +287,20 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Gallery Navigation Controls */}
+        {/* Gallery Navigation Controls — 44px touch targets */}
         <button
           onClick={handlePrevImage}
-          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Previous angle"
         >
-          <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={handleNextImage}
-          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Next angle"
         >
-          <ChevronRight className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
 
         {/* Slide Indicator Dots */}
@@ -325,37 +325,44 @@ export function CarCard({
       {/* Content Panel — refined spacing + trust strip */}
       <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between gap-2">
         <div>
-          {/* Header & Title */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+          {/* Header & Title — flex-1 + min-w-0 keeps price from squeezing name at 320px */}
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-widest uppercase truncate">
                 {car.brand} • {car.year}
               </p>
-              <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-1">
+              <h3 title={`${car.brand} ${car.model}`} className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-1 break-words">
                 {car.model}
               </h3>
             </div>
-            <div className="text-right shrink-0">
-              <span className="block text-base sm:text-lg font-black text-[#2E7D32] tracking-tight">
+            <div className="text-right shrink-0 min-w-0">
+              <span className="block text-base sm:text-lg font-black text-[#2E7D32] tracking-tight whitespace-nowrap tabular-nums">
                 {formattedPrice}
               </span>
-              <span className="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest -mt-0.5">
+              <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap tabular-nums">
                 EMI {formattedEmi}/mo
               </span>
             </div>
           </div>
 
           {/* Trust strip — 1stMark + location, always visible */}
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap min-w-0">
             {car.certified && (
-              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 py-0.5">
-                <ShieldCheck className="h-3 w-3" /> 1stMark Certified
+              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 py-0.5 max-w-full">
+                <ShieldCheck className="h-3 w-3 shrink-0" /> <span className="truncate">1stMark Certified</span>
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">
-              <MapPin className="h-3 w-3" /> {car.location || "Surat"}
+            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5 max-w-full">
+              <MapPin className="h-3 w-3 shrink-0" /> <span className="truncate">{car.location || "Surat"}</span>
             </span>
           </div>
+
+          {/* Mobile-only variant line — single truncate row so long specs don't push card height */}
+          {car.variant ? (
+            <p title={car.variant} className="sm:hidden truncate text-[10px] font-bold text-slate-500 mt-1.5">
+              {car.variant}
+            </p>
+          ) : null}
 
           <div className="hidden sm:block h-px bg-slate-100 my-3" />
 
@@ -401,13 +408,13 @@ export function CarCard({
 
           {/* Compact key-facts chip row (mobile only) — keeps the card short
               enough that ~3 cards fit on one phone screen */}
-          <div className="sm:hidden flex flex-wrap items-center gap-x-3 gap-y-1 text-left my-1.5">
+          <div className="sm:hidden flex flex-wrap items-center gap-x-3 gap-y-1.5 text-left my-1.5 min-w-0">
             {mobileStats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <span key={stat.label} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                <span key={stat.label} className="flex items-center gap-1 text-[10px] font-bold text-slate-500 min-w-0 max-w-full">
                   <Icon className="h-3 w-3 text-[#2E7D32] shrink-0" />
-                  <span className="tracking-wide">{stat.value}</span>
+                  <span className="tracking-wide truncate">{stat.value}</span>
                 </span>
               );
             })}
@@ -416,12 +423,18 @@ export function CarCard({
 
         {/* Action Panel — refined: 2-col grid, Details + Test Drive on top,
             full-width WhatsApp below. Buttons always work (internal fallback)
-            even when parent passes no handlers. */}
+            even when parent passes no handlers. 44px targets for touch. */}
         <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
           <Button
+            type="button"
             size="sm"
-            onClick={() => onViewDetails?.(car.id)}
-            className="bg-slate-900 text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] h-10 rounded-xl px-3 shadow-sm transition-colors"
+            onClick={() => {
+              if (onViewDetails) { onViewDetails(car.id); return; }
+              if (typeof window !== "undefined") {
+                window.location.href = `/cars/${car.id}`;
+              }
+            }}
+            className="bg-slate-900 text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[11px] h-11 min-h-[44px] rounded-xl px-3 shadow-sm transition-colors whitespace-nowrap"
           >
             Details
           </Button>
@@ -429,19 +442,20 @@ export function CarCard({
             type="button"
             onClick={handleTestDrive}
             aria-label={`Book test drive for ${car.brand} ${car.model}`}
-            className="h-10 rounded-xl px-3 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-[#2E7D32]/20"
+            className="h-11 min-h-[44px] rounded-xl px-2 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-[#2E7D32]/20 whitespace-nowrap"
           >
-            <CalendarCheck className="h-4 w-4" />
+            <CalendarCheck className="h-4 w-4 shrink-0" />
             Test Drive
           </button>
           <button
             type="button"
             onClick={handleWhatsApp}
             aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
-            className="col-span-2 h-10 rounded-xl px-3 bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25"
+            title={`Chat on WhatsApp about ${car.brand} ${car.model} — ₹${car.price.toLocaleString("en-IN")}`}
+            className="col-span-2 h-11 min-h-[44px] rounded-xl px-3 bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25 min-w-0"
           >
             <MessageCircle className="h-4 w-4 shrink-0" />
-            <span className="truncate">WhatsApp • {car.brand} {car.model} • ₹{car.price.toLocaleString("en-IN")}</span>
+            <span className="min-w-0 flex-1 text-center truncate">WhatsApp • ₹{car.price.toLocaleString("en-IN")}</span>
           </button>
         </div>
       </div>
