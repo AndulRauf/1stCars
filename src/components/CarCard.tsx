@@ -335,24 +335,26 @@ export function CarCard({
         </div>
       </div>
 
-      {/* Content Panel — one font family, 16px padding, 12px section gaps */}
-      <div className="flex-1 p-4 flex flex-col gap-3 font-sans text-[#111827]">
-        <div className="flex flex-col gap-3">
+      {/* Content Panel — one font family. Mobile is compacted (smaller type,
+          tighter gaps/padding, 40px buttons) so two cards fit per screen while
+          keeping every detail + button; from sm up it's the roomy original. */}
+      <div className="flex-1 px-3 py-2.5 sm:p-4 flex flex-col gap-2 sm:gap-3 font-sans text-[#111827]">
+        <div className="flex flex-col gap-1.5 sm:gap-3">
           {/* Header row — left: brand•year + model(+variant); right: price + EMI.
               align-items:flex-start keeps the two blocks top-aligned. */}
-          <div className="flex justify-between items-start gap-3 min-w-0">
+          <div className="flex justify-between items-start gap-2 sm:gap-3 min-w-0">
             {/* Left cluster */}
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold uppercase text-[#6B7280] tracking-[0.05em] truncate">
+              <p className="text-[10px] sm:text-[12px] font-semibold uppercase text-[#6B7280] tracking-[0.05em] truncate">
                 {car.brand} • {car.year}
               </p>
               <h3
                 title={`${car.brand} ${car.model}`}
-                className="mt-0.5 text-[20px] font-bold leading-tight tracking-tight text-[#111827] line-clamp-2 group-hover:text-[#2E7D32] transition-colors"
+                className="mt-0.5 text-[15px] sm:text-[20px] font-bold leading-tight tracking-tight text-[#111827] line-clamp-1 sm:line-clamp-2 group-hover:text-[#2E7D32] transition-colors"
               >
                 {car.model}
                 {car.variant ? (
-                  <span className="ml-1.5 text-[14px] font-medium text-[#6B7280] align-baseline">
+                  <span className="ml-1 text-[11px] sm:text-[14px] font-medium text-[#6B7280] align-baseline">
                     {car.variant}
                   </span>
                 ) : null}
@@ -360,10 +362,10 @@ export function CarCard({
             </div>
             {/* Right cluster — price + EMI, right-aligned */}
             <div className="text-right shrink-0">
-              <span className="block text-[22px] font-bold text-[#2E7D32] leading-none tracking-tight whitespace-nowrap tabular-nums">
+              <span className="block text-[16px] sm:text-[22px] font-bold text-[#2E7D32] leading-none tracking-tight whitespace-nowrap tabular-nums">
                 {formattedPrice}
               </span>
-              <span className="block mt-1 text-[12px] font-medium text-[#6B7280] whitespace-nowrap tabular-nums">
+              <span className="block mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] font-medium text-[#6B7280] whitespace-nowrap tabular-nums">
                 EMI {formattedEmi}/mo
               </span>
             </div>
@@ -373,24 +375,24 @@ export function CarCard({
               into the specs grid below so it appears exactly once). */}
           {car.certified && (
             <div className="flex items-center min-w-0">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2.5 py-1">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> 1stMark Certified
+              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1">
+                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" /> 1stMark Certified
               </span>
             </div>
           )}
 
           {/* Specs — 2-column grid so the 5 facts never wrap unevenly.
-              Uniform icon (16px, green) + value (14px, gray), nowrap. */}
+              Uniform icon (green) + value (gray), nowrap. Tighter on mobile. */}
           <div
             className="grid grid-cols-2 text-left min-w-0"
-            style={{ gap: "10px 12px" }}
+            style={{ gap: "4px 12px" }}
           >
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="flex items-center gap-1.5 min-w-0">
-                  <Icon className="h-4 w-4 text-[#2E7D32] shrink-0" />
-                  <span className="text-[14px] font-medium text-[#6B7280] whitespace-nowrap truncate">
+                <div key={stat.label} className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#2E7D32] shrink-0" />
+                  <span className="text-[11px] sm:text-[14px] font-medium text-[#6B7280] whitespace-nowrap truncate">
                     {stat.value}
                   </span>
                 </div>
@@ -399,9 +401,9 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Action Panel — Details + Test Drive share an equal-width 48px row,
-            full-width WhatsApp below (no repeated price). Consistent height. */}
-        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
+        {/* Action Panel — Details + Test Drive share an equal-width row, full-width
+            WhatsApp below (no repeated price). 40px on mobile, 48px from sm up. */}
+        <div className="pt-2 sm:pt-3 border-t border-slate-100 grid grid-cols-2 gap-1.5 sm:gap-2 mt-auto">
           <Button
             type="button"
             onClick={() => {
@@ -410,7 +412,7 @@ export function CarCard({
                 window.location.href = `/cars/${car.id}`;
               }
             }}
-            className="h-12 rounded-xl bg-[#111827] text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[12px] shadow-sm transition-colors"
+            className="h-10 sm:h-12 rounded-lg sm:rounded-xl bg-[#111827] text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[10px] sm:text-[12px] shadow-sm transition-colors"
           >
             Details
           </Button>
@@ -418,9 +420,9 @@ export function CarCard({
             type="button"
             onClick={handleTestDrive}
             aria-label={`Book test drive for ${car.brand} ${car.model}`}
-            className="h-12 rounded-xl bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-[#2E7D32]/20"
+            className="h-10 sm:h-12 rounded-lg sm:rounded-xl bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[10px] sm:text-[12px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer shadow-md shadow-[#2E7D32]/20"
           >
-            <CalendarCheck className="h-4 w-4 shrink-0" />
+            <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             Test Drive
           </button>
           <button
@@ -428,9 +430,9 @@ export function CarCard({
             onClick={handleWhatsApp}
             aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
             title={`Chat on WhatsApp about ${car.brand} ${car.model}`}
-            className="col-span-2 h-12 rounded-xl bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#25D366]/25"
+            className="col-span-2 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[10px] sm:text-[12px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer border border-[#25D366]/25"
           >
-            <MessageCircle className="h-4 w-4 shrink-0" />
+            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             WhatsApp Us
           </button>
         </div>
