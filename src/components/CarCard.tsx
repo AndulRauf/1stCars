@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Share2, CalendarCheck, MessageCircle } from "lucide-react";
+import { Heart, ShieldCheck, Fuel, Gauge, Award, MapPin, Calendar, ChevronLeft, ChevronRight, Share2, CalendarCheck, MessageCircle } from "lucide-react";
 import { Car } from "@/src/types";
 import { Button } from "@/src/components/ui/Button";
 import { Badge } from "@/src/components/ui/Badge";
@@ -157,8 +157,8 @@ export function CarCard({
     maximumFractionDigits: 0,
   }).format(calculateListingEmi(car.price));
 
-  // Stats Grid items — Variant is a long free-text spec so it is given its own
-  // full-width row below instead of a 1/3-width column where it truncates.
+  // Stats — rendered as an even 2-column grid (Year, Fuel, KM, Transmission,
+  // City). City doubles as the single location display (no separate pill).
   const stats = [
     { label: "Year", value: car.year, icon: Calendar },
     { label: "Fuel", value: car.fuel, icon: Fuel },
@@ -166,11 +166,6 @@ export function CarCard({
     { label: "Transmission", value: car.transmission, icon: Award },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
-  // Key facts rendered as one compact chip row on mobile (the full stats grid
-  // is desktop-only) so cards stay short. Includes City — a deciding factor for
-  // buyers — by showing all available stats (Year, Fuel, KM, Transmission, City)
-  // as wrapping chips rather than truncating to four.
-  const mobileStats = stats;
 
   return (
     <div
@@ -243,12 +238,11 @@ export function CarCard({
               <Badge className="bg-amber-500 hover:bg-amber-500 text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md flex items-center gap-1">
                 Reserved
               </Badge>
-            ) : car.certified ? (
-              <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-1.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 max-w-[60%] shrink-0 sm:animate-pulse">
-                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10 shrink-0" />
-                <span className="truncate"><span className="hidden xs:inline">1stMark</span> Certified</span>
-              </Badge>
-            ) : <div />}
+            ) : (
+              /* No CERTIFIED badge on the image — the trust pill below the
+                 image is the single source of truth (avoids duplication). */
+              <div />
+            )}
 
             <div className="flex items-center gap-1 ml-auto pointer-events-auto">
               <button
@@ -341,119 +335,82 @@ export function CarCard({
         </div>
       </div>
 
-      {/* Content Panel — refined spacing + trust strip */}
-      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between gap-2">
-        <div>
-          {/* Header & Title — flex-1 + min-w-0 keeps price from squeezing name at 320px */}
-          <div className="flex items-start justify-between gap-2 min-w-0">
+      {/* Content Panel — one font family, 16px padding, 12px section gaps */}
+      <div className="flex-1 p-4 flex flex-col gap-3 font-sans text-[#111827]">
+        <div className="flex flex-col gap-3">
+          {/* Header row — left: brand•year + model(+variant); right: price + EMI.
+              align-items:flex-start keeps the two blocks top-aligned. */}
+          <div className="flex justify-between items-start gap-3 min-w-0">
+            {/* Left cluster */}
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-widest uppercase truncate">
+              <p className="text-[12px] font-semibold uppercase text-[#6B7280] tracking-[0.05em] truncate">
                 {car.brand} • {car.year}
               </p>
-              <h3 title={`${car.brand} ${car.model}`} className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-2 sm:line-clamp-1 break-words">
+              <h3
+                title={`${car.brand} ${car.model}`}
+                className="mt-0.5 text-[20px] font-bold leading-tight tracking-tight text-[#111827] line-clamp-2 group-hover:text-[#2E7D32] transition-colors"
+              >
                 {car.model}
+                {car.variant ? (
+                  <span className="ml-1.5 text-[14px] font-medium text-[#6B7280] align-baseline">
+                    {car.variant}
+                  </span>
+                ) : null}
               </h3>
             </div>
-            <div className="text-right shrink-0 min-w-0">
-              <span className="block text-base sm:text-lg font-black text-[#2E7D32] tracking-tight whitespace-nowrap tabular-nums">
+            {/* Right cluster — price + EMI, right-aligned */}
+            <div className="text-right shrink-0">
+              <span className="block text-[22px] font-bold text-[#2E7D32] leading-none tracking-tight whitespace-nowrap tabular-nums">
                 {formattedPrice}
               </span>
-              <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap tabular-nums">
+              <span className="block mt-1 text-[12px] font-medium text-[#6B7280] whitespace-nowrap tabular-nums">
                 EMI {formattedEmi}/mo
               </span>
             </div>
           </div>
 
-          {/* Trust strip — 1stMark + location, always visible */}
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap min-w-0">
-            {car.certified && (
-              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 py-0.5 max-w-full">
-                <ShieldCheck className="h-3 w-3 shrink-0" /> <span className="truncate">1stMark Certified</span>
+          {/* Trust row — only the 1stMark certification pill (location moved
+              into the specs grid below so it appears exactly once). */}
+          {car.certified && (
+            <div className="flex items-center min-w-0">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2.5 py-1">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> 1stMark Certified
               </span>
-            )}
-            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5 max-w-full">
-              <MapPin className="h-3 w-3 shrink-0" /> <span className="truncate">{car.location || "Surat"}</span>
-            </span>
-          </div>
-
-          {/* Mobile-only variant line — single truncate row so long specs don't push card height */}
-          {car.variant ? (
-            <p title={car.variant} className="sm:hidden truncate text-[10px] font-bold text-slate-500 mt-1.5">
-              {car.variant}
-            </p>
-          ) : null}
-
-          <div className="hidden sm:block h-px bg-slate-100 my-3" />
-
-          {/* Full-width Variant row — kept outside the narrow stat columns so
-              long spec names like "40i M Sport 4MATIC" are never clipped. */}
-          {car.variant ? (
-            <div className="hidden sm:flex items-start gap-2 my-3 text-left">
-              <div className="p-1 rounded-md bg-[#2E7D32]/5 text-[#2E7D32] shrink-0">
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-              </div>
-              <div className="min-w-0">
-                <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
-                  Variant
-                </span>
-                <span className="block text-[11px] sm:text-xs font-extrabold text-slate-800 tracking-tight break-words leading-snug mt-0.5">
-                  {car.variant}
-                </span>
-              </div>
             </div>
-          ) : null}
+          )}
 
-          {/* Stats Grid (desktop only — mobile uses the compact chip row below) */}
-          <div className="hidden sm:grid grid-cols-3 gap-y-2 gap-x-1 text-left my-3">
+          {/* Specs — 2-column grid so the 5 facts never wrap unevenly.
+              Uniform icon (16px, green) + value (14px, gray), nowrap. */}
+          <div
+            className="grid grid-cols-2 text-left min-w-0"
+            style={{ gap: "10px 12px" }}
+          >
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="flex items-center space-x-1.5 overflow-hidden">
-                  <div className="p-1 rounded-md bg-[#2E7D32]/5 text-[#2E7D32] shrink-0">
-                    <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  </div>
-                  <div className="overflow-hidden">
-                    <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
-                      {stat.label}
-                    </span>
-                    <span className="block text-[11px] sm:text-xs font-extrabold text-slate-800 tracking-tight break-words leading-snug">
-                      {stat.value}
-                    </span>
-                  </div>
+                <div key={stat.label} className="flex items-center gap-1.5 min-w-0">
+                  <Icon className="h-4 w-4 text-[#2E7D32] shrink-0" />
+                  <span className="text-[14px] font-medium text-[#6B7280] whitespace-nowrap truncate">
+                    {stat.value}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Compact key-facts chip row (mobile only) — keeps the card short
-              enough that ~3 cards fit on one phone screen */}
-          <div className="sm:hidden flex flex-wrap items-center gap-x-3 gap-y-1.5 text-left my-1.5 min-w-0">
-            {mobileStats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <span key={stat.label} className="flex items-center gap-1 text-[10px] font-bold text-slate-500 min-w-0 max-w-full">
-                  <Icon className="h-3 w-3 text-[#2E7D32] shrink-0" />
-                  <span className="tracking-wide truncate">{stat.value}</span>
-                </span>
               );
             })}
           </div>
         </div>
 
-        {/* Action Panel — refined: 2-col grid, Details + Test Drive on top,
-            full-width WhatsApp below. Buttons always work (internal fallback)
-            even when parent passes no handlers. 44px targets for touch. */}
+        {/* Action Panel — Details + Test Drive share an equal-width 48px row,
+            full-width WhatsApp below (no repeated price). Consistent height. */}
         <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
           <Button
             type="button"
-            size="sm"
             onClick={() => {
               if (onViewDetails) { onViewDetails(car.id); return; }
               if (typeof window !== "undefined") {
                 window.location.href = `/cars/${car.id}`;
               }
             }}
-            className="bg-slate-900 text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[11px] h-11 min-h-[44px] rounded-xl px-3 shadow-sm transition-colors whitespace-nowrap"
+            className="h-12 rounded-xl bg-[#111827] text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[12px] shadow-sm transition-colors"
           >
             Details
           </Button>
@@ -461,7 +418,7 @@ export function CarCard({
             type="button"
             onClick={handleTestDrive}
             aria-label={`Book test drive for ${car.brand} ${car.model}`}
-            className="h-11 min-h-[44px] rounded-xl px-2 bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-[#2E7D32]/20 whitespace-nowrap"
+            className="h-12 rounded-xl bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-[#2E7D32]/20"
           >
             <CalendarCheck className="h-4 w-4 shrink-0" />
             Test Drive
@@ -470,11 +427,11 @@ export function CarCard({
             type="button"
             onClick={handleWhatsApp}
             aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
-            title={`Chat on WhatsApp about ${car.brand} ${car.model} — ₹${car.price.toLocaleString("en-IN")}`}
-            className="col-span-2 h-11 min-h-[44px] rounded-xl px-3 bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#25D366]/25 min-w-0"
+            title={`Chat on WhatsApp about ${car.brand} ${car.model}`}
+            className="col-span-2 h-12 rounded-xl bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#25D366]/25"
           >
             <MessageCircle className="h-4 w-4 shrink-0" />
-            <span className="min-w-0 flex-1 text-center truncate">WhatsApp • ₹{car.price.toLocaleString("en-IN")}</span>
+            WhatsApp Us
           </button>
         </div>
       </div>
