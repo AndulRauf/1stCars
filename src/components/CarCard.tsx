@@ -171,24 +171,26 @@ export function CarCard({
     <div
       id={`car-card-${car.id}`}
       className={cn(
-        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm sm:shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-col min-w-0",
+        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm sm:shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-row sm:flex-col min-w-0",
         isListView ? "md:flex-row md:min-h-[250px]" : "w-full"
       )}
     >
-      {/* Premium Image Gallery Panel */}
+      {/* Premium Image Gallery Panel — on mobile it's a compact left thumbnail
+          (fixed ~38% width, full card height) so two cards fit per screen;
+          from sm up it returns to the full-width 4:3 hero. */}
       <div
         className={cn(
-          "relative overflow-hidden flex-shrink-0 select-none w-full bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200",
+          "relative overflow-hidden flex-shrink-0 select-none bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200 w-[38%] sm:w-full self-stretch sm:self-auto",
           isListView && "md:w-2/5 md:min-h-[160px]"
         )}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {angles[activeImageIndex].url && !imageFailed ? (
-          /* Fixed 4:3 aspect (matches placeholder) so cards never shift or make
-             uneven grid rows on small phones. object-contain keeps the WHOLE car
-             visible (no crop). A shimmer shows until the image decodes. */
-          <div className="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
+          /* On mobile the image fills the left thumbnail (object-contain, whole
+             car visible, no crop); from sm up it's the 4:3 hero. Shimmer while
+             loading. */
+          <div className="relative w-full h-full sm:h-auto sm:aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200" aria-hidden="true" />
             )}
@@ -196,7 +198,7 @@ export function CarCard({
               src={angles[activeImageIndex].url}
               alt={`${car.brand} ${car.model}`}
               className={cn(
-                "block w-full h-full object-contain transition-opacity duration-300",
+                "block w-full h-full sm:h-full object-contain transition-opacity duration-300",
                 imageLoaded ? "opacity-100" : "opacity-0"
               )}
               draggable={false}
@@ -210,13 +212,13 @@ export function CarCard({
           /* No photo uploaded: stylized gradient placeholder panel */
           <div
             className={cn(
-              "relative w-full aspect-[4/3] text-white",
+              "relative w-full h-full sm:h-auto sm:aspect-[4/3] text-white",
               isListView && "md:h-auto md:aspect-[4/3]",
               angles[activeImageIndex].bgClass
             )}
           >
             {/* Aesthetic Mock Vector Vehicle Silhouette Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none p-8 select-none">
+            <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none p-4 sm:p-8 select-none">
               <svg viewBox="0 0 100 50" className="w-10/12 text-white fill-current">
                 <path d="M15 35 L12 35 C10 35 8 33 8 31 L8 25 C8 22 10 20 12 18 L25 10 C28 8 32 7 35 7 L65 7 C69 7 73 9 75 12 L85 22 C88 24 90 27 90 31 L90 35 C88 35 86 35 85 35 C82 32 78 32 75 35 C72 38 75 42 78 42 C81 42 84 39 85 37 L90 37 L92 37 C94 37 95 36 95 34 L95 28 C95 24 93 21 90 19 L82 10 C79 6 74 4 69 4 L31 4 C26 4 21 6 18 10 L8 21 C6 23 5 26 5 29 L5 34 C5 36 6 37 8 37 L15 37 C16 39 19 42 22 42 C25 42 28 38 25 35 Z" />
                 <circle cx="22" cy="35" r="5" />
@@ -335,24 +337,26 @@ export function CarCard({
         </div>
       </div>
 
-      {/* Content Panel — one font family, 16px padding, 12px section gaps */}
-      <div className="flex-1 p-4 flex flex-col gap-3 font-sans text-[#111827]">
-        <div className="flex flex-col gap-3">
+      {/* Content Panel — one font family. On mobile it sits beside the thumbnail
+          (compact), so padding/gaps/type scale down; from sm up it's the roomy
+          stacked layout (16px padding, 12px gaps, larger type). */}
+      <div className="flex-1 p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 font-sans text-[#111827]">
+        <div className="flex flex-col gap-2 sm:gap-3">
           {/* Header row — left: brand•year + model(+variant); right: price + EMI.
               align-items:flex-start keeps the two blocks top-aligned. */}
-          <div className="flex justify-between items-start gap-3 min-w-0">
+          <div className="flex justify-between items-start gap-2 sm:gap-3 min-w-0">
             {/* Left cluster */}
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold uppercase text-[#6B7280] tracking-[0.05em] truncate">
+              <p className="text-[11px] sm:text-[12px] font-semibold uppercase text-[#6B7280] tracking-[0.05em] truncate">
                 {car.brand} • {car.year}
               </p>
               <h3
                 title={`${car.brand} ${car.model}`}
-                className="mt-0.5 text-[20px] font-bold leading-tight tracking-tight text-[#111827] line-clamp-2 group-hover:text-[#2E7D32] transition-colors"
+                className="mt-0.5 text-[16px] sm:text-[20px] font-bold leading-tight tracking-tight text-[#111827] line-clamp-2 group-hover:text-[#2E7D32] transition-colors"
               >
                 {car.model}
                 {car.variant ? (
-                  <span className="ml-1.5 text-[14px] font-medium text-[#6B7280] align-baseline">
+                  <span className="ml-1 text-[12px] sm:text-[14px] font-medium text-[#6B7280] align-baseline">
                     {car.variant}
                   </span>
                 ) : null}
@@ -360,10 +364,10 @@ export function CarCard({
             </div>
             {/* Right cluster — price + EMI, right-aligned */}
             <div className="text-right shrink-0">
-              <span className="block text-[22px] font-bold text-[#2E7D32] leading-none tracking-tight whitespace-nowrap tabular-nums">
+              <span className="block text-[17px] sm:text-[22px] font-bold text-[#2E7D32] leading-none tracking-tight whitespace-nowrap tabular-nums">
                 {formattedPrice}
               </span>
-              <span className="block mt-1 text-[12px] font-medium text-[#6B7280] whitespace-nowrap tabular-nums">
+              <span className="block mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] font-medium text-[#6B7280] whitespace-nowrap tabular-nums">
                 EMI {formattedEmi}/mo
               </span>
             </div>
@@ -373,24 +377,24 @@ export function CarCard({
               into the specs grid below so it appears exactly once). */}
           {car.certified && (
             <div className="flex items-center min-w-0">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2.5 py-1">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> 1stMark Certified
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#2E7D32] bg-[#2E7D32]/10 border border-[#2E7D32]/20 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1">
+                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" /> 1stMark Certified
               </span>
             </div>
           )}
 
           {/* Specs — 2-column grid so the 5 facts never wrap unevenly.
-              Uniform icon (16px, green) + value (14px, gray), nowrap. */}
+              Uniform icon (green) + value (gray), nowrap. Scales down on mobile. */}
           <div
             className="grid grid-cols-2 text-left min-w-0"
-            style={{ gap: "10px 12px" }}
+            style={{ gap: "6px 12px" }}
           >
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="flex items-center gap-1.5 min-w-0">
-                  <Icon className="h-4 w-4 text-[#2E7D32] shrink-0" />
-                  <span className="text-[14px] font-medium text-[#6B7280] whitespace-nowrap truncate">
+                <div key={stat.label} className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#2E7D32] shrink-0" />
+                  <span className="text-[12px] sm:text-[14px] font-medium text-[#6B7280] whitespace-nowrap truncate">
                     {stat.value}
                   </span>
                 </div>
@@ -399,9 +403,9 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Action Panel — Details + Test Drive share an equal-width 48px row,
-            full-width WhatsApp below (no repeated price). Consistent height. */}
-        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
+        {/* Action Panel — Details + Test Drive share an equal-width row, full-width
+            WhatsApp below (no repeated price). 44px on mobile, 48px from sm up. */}
+        <div className="pt-2 sm:pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 mt-auto">
           <Button
             type="button"
             onClick={() => {
@@ -410,7 +414,7 @@ export function CarCard({
                 window.location.href = `/cars/${car.id}`;
               }
             }}
-            className="h-12 rounded-xl bg-[#111827] text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[12px] shadow-sm transition-colors"
+            className="h-11 sm:h-12 rounded-xl bg-[#111827] text-white hover:bg-[#2E7D32] font-bold uppercase tracking-wider text-[11px] sm:text-[12px] shadow-sm transition-colors"
           >
             Details
           </Button>
@@ -418,9 +422,9 @@ export function CarCard({
             type="button"
             onClick={handleTestDrive}
             aria-label={`Book test drive for ${car.brand} ${car.model}`}
-            className="h-12 rounded-xl bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-[#2E7D32]/20"
+            className="h-11 sm:h-12 rounded-xl bg-[#2E7D32] text-white hover:bg-[#25632a] font-bold uppercase tracking-wider text-[11px] sm:text-[12px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer shadow-md shadow-[#2E7D32]/20"
           >
-            <CalendarCheck className="h-4 w-4 shrink-0" />
+            <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             Test Drive
           </button>
           <button
@@ -428,9 +432,9 @@ export function CarCard({
             onClick={handleWhatsApp}
             aria-label={`Chat on WhatsApp about ${car.brand} ${car.model}`}
             title={`Chat on WhatsApp about ${car.brand} ${car.model}`}
-            className="col-span-2 h-12 rounded-xl bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[12px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-[#25D366]/25"
+            className="col-span-2 h-11 sm:h-12 rounded-xl bg-[#25D366]/10 text-[#0d7a3f] hover:bg-[#25D366] hover:text-white font-bold text-[11px] sm:text-[12px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors cursor-pointer border border-[#25D366]/25"
           >
-            <MessageCircle className="h-4 w-4 shrink-0" />
+            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
             WhatsApp Us
           </button>
         </div>
