@@ -109,8 +109,12 @@ export function CarCard({
   // A photo URL that fails to load (broken storage link) falls back to the
   // stylized gradient placeholder instead of showing a broken image.
   const [imageFailed, setImageFailed] = React.useState(false);
+  // Tracks whether the current photo has finished decoding so a subtle skeleton
+  // shimmer can show until then (avoids a blank flash while the image loads).
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   React.useEffect(() => {
     setImageFailed(false);
+    setImageLoaded(false);
   }, [activeImageIndex, car.id]);
   const touchStartX = React.useRef<number | null>(null);
   const angles = (getCarPhotos(car) || getCarAngleImages(car)) as Array<{ title: string; text: string; url?: string; bgClass?: string }>;
@@ -162,15 +166,17 @@ export function CarCard({
     { label: "Transmission", value: car.transmission, icon: Award },
     { label: "City", value: car.cities?.[0] || car.location || "Surat", icon: MapPin },
   ];
-  // Top-4 key facts rendered as one compact chip row on mobile (the full
-  // 6-stat grid is desktop-only) so ~3 cards fit on a single phone screen.
-  const mobileStats = stats.slice(0, 4);
+  // Key facts rendered as one compact chip row on mobile (the full stats grid
+  // is desktop-only) so cards stay short. Includes City — a deciding factor for
+  // buyers — by showing all available stats (Year, Fuel, KM, Transmission, City)
+  // as wrapping chips rather than truncating to four.
+  const mobileStats = stats;
 
   return (
     <div
       id={`car-card-${car.id}`}
       className={cn(
-        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-col min-w-0",
+        "group relative bg-white border border-[#2E7D32]/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm sm:shadow-xs transition-all duration-300 hover:shadow-xl hover:shadow-[#2E7D32]/5 hover:-translate-y-0.5 flex flex-col min-w-0",
         isListView ? "md:flex-row md:min-h-[250px]" : "w-full"
       )}
     >
@@ -184,17 +190,27 @@ export function CarCard({
         onTouchEnd={handleTouchEnd}
       >
         {angles[activeImageIndex].url && !imageFailed ? (
-          /* Fixed 4:3 aspect (matches placeholder + skeleton) — prevents CLS
-             and uneven grid rows on 320px–430px. object-cover keeps crop stable. */
-          <img
-            src={angles[activeImageIndex].url}
-            alt={`${car.brand} ${car.model}`}
-            className="block w-full aspect-[4/3] object-cover"
-            draggable={false}
-            loading="lazy"
-            decoding="async"
-            onError={() => setImageFailed(true)}
-          />
+          /* Fixed 4:3 aspect (matches placeholder) so cards never shift or make
+             uneven grid rows on small phones. object-contain keeps the WHOLE car
+             visible (no crop). A shimmer shows until the image decodes. */
+          <div className="relative w-full aspect-[4/3] bg-slate-100 overflow-hidden flex items-center justify-center">
+            {!imageLoaded && (
+              <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200" aria-hidden="true" />
+            )}
+            <img
+              src={angles[activeImageIndex].url}
+              alt={`${car.brand} ${car.model}`}
+              className={cn(
+                "block w-full h-full object-contain transition-opacity duration-300",
+                imageLoaded ? "opacity-100" : "opacity-0"
+              )}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageFailed(true)}
+            />
+          </div>
         ) : (
           /* No photo uploaded: stylized gradient placeholder panel */
           <div
@@ -228,8 +244,9 @@ export function CarCard({
                 Reserved
               </Badge>
             ) : car.certified ? (
-              <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 max-w-[60%] truncate">
-                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10 shrink-0" /> <span className="truncate">1stMark Certified</span>
+              <Badge className="bg-[#2E7D32] hover:bg-[#2E7D32] text-white border-none px-1.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-wider sm:tracking-widest uppercase shadow-md shadow-[#2E7D32]/30 flex items-center gap-1 max-w-[60%] shrink-0 sm:animate-pulse">
+                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-white/10 shrink-0" />
+                <span className="truncate"><span className="hidden xs:inline">1stMark</span> Certified</span>
               </Badge>
             ) : <div />}
 
@@ -287,17 +304,19 @@ export function CarCard({
           </div>
         </div>
 
-        {/* Gallery Navigation Controls — 44px touch targets */}
+        {/* Gallery Navigation Controls — hidden on mobile where swipe + dots
+            already navigate the gallery (reduces clutter); desktop keeps
+            44px touch targets. */}
         <button
           onClick={handlePrevImage}
-          className="absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="hidden sm:flex absolute z-20 left-2 sm:left-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Previous angle"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={handleNextImage}
-          className="absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 flex items-center justify-center text-white transition-colors cursor-pointer"
+          className="hidden sm:flex absolute z-20 right-2 sm:right-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 items-center justify-center text-white transition-colors cursor-pointer"
           aria-label="Next angle"
         >
           <ChevronRight className="h-4 w-4" />
@@ -331,7 +350,7 @@ export function CarCard({
               <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-widest uppercase truncate">
                 {car.brand} • {car.year}
               </p>
-              <h3 title={`${car.brand} ${car.model}`} className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-1 break-words">
+              <h3 title={`${car.brand} ${car.model}`} className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug group-hover:text-[#2E7D32] transition-colors line-clamp-2 sm:line-clamp-1 break-words">
                 {car.model}
               </h3>
             </div>

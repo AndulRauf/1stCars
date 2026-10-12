@@ -586,6 +586,11 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   // UI States
   const [isLoading, setIsLoading] = React.useState(false);
+  // Count of Supabase table reads that errored on the last loadCMSData() run.
+  // When > 0 the "Live Supabase" badge must NOT claim a healthy connection —
+  // it flips to a blocked/error state so an empty dashboard is never mistaken
+  // for a working one. (RLS denial, expired anon key, paused project, etc.)
+  const [cmsLoadErrorCount, setCmsLoadErrorCount] = React.useState(0);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   // Module queued to auto-open its Add modal after a dashboard quick-action
@@ -780,36 +785,7 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
     try {
       // 1. Fetch tables from Supabase/Mock tables in parallel so "Reload
       //    Engine" doesn't take ~15s of sequential round-trips in live mode.
-      const [
-        { data: cData },
-        { data: uData },
-        { data: iData },
-        { data: aData },
-        { data: nData },
-        { data: bData },
-        { data: pData },
-        { data: lData },
-        { data: mData },
-        { data: qData },
-        { data: tData },
-        { data: sData },
-        { data: dlrData },
-        { data: ctData },
-        { data: fData },
-        { data: exData },
-        { data: ofData },
-        { data: srData },
-        { data: irData },
-        { data: dbData },
-        { data: psData },
-        { data: ciData },
-        { data: tdData },
-        { data: puData },
-        { data: caData },
-        { data: abData },
-        { data: jobData },
-        { data: dealerAppData }
-      ] = await Promise.all([
+      const __cmsResults = await Promise.all([
         supabase.from("cars").select(),
         supabase.from("profiles").select().order("created_at", { ascending: false }),
         supabase.from("inspections").select(),
@@ -839,6 +815,58 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
         supabase.from("career_applications").select(),
         supabase.from("dealer_applications").select().order("created_at", { ascending: false })
       ]);
+
+      // Surface Supabase errors that were previously swallowed. Each query
+      // resolves to { data, error }; a denied RLS read, an expired anon key,
+      // a paused project, or a missing table returns data:null + error and
+      // would silently leave every metric at 0. Log + toast the first error so
+      // the empty dashboard always has a visible, actionable reason.
+      const __cmsErrors = __cmsResults
+        .map((r: any) => r?.error)
+        .filter((e: any) => e);
+      setCmsLoadErrorCount(__cmsErrors.length);
+      if (__cmsErrors.length > 0) {
+        console.error("[1stCars] loadCMSData Supabase errors:", __cmsErrors);
+        const first = __cmsErrors[0];
+        const msg = first?.message || "Unknown Supabase error";
+        const isRls = /row-level security|violates row-level|permission denied|42501/i.test(String(msg));
+        toast.error(
+          isRls
+            ? `Supabase blocked ${__cmsErrors.length} table read(s): ${msg}. Your account's role is likely not set to Admin (or the RLS policy is missing).`
+            : `Supabase error loading ${__cmsErrors.length} table(s): ${msg}`
+        );
+      }
+
+      const [
+        { data: cData },
+        { data: uData },
+        { data: iData },
+        { data: aData },
+        { data: nData },
+        { data: bData },
+        { data: pData },
+        { data: lData },
+        { data: mData },
+        { data: qData },
+        { data: tData },
+        { data: sData },
+        { data: dlrData },
+        { data: ctData },
+        { data: fData },
+        { data: exData },
+        { data: ofData },
+        { data: srData },
+        { data: irData },
+        { data: dbData },
+        { data: psData },
+        { data: ciData },
+        { data: tdData },
+        { data: puData },
+        { data: caData },
+        { data: abData },
+        { data: jobData },
+        { data: dealerAppData }
+      ] = __cmsResults;
 
       if (cData) setCars(cData);
       if (uData) setUsers(uData);
@@ -2948,9 +2976,16 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           </div>
 
           <div className="flex items-center gap-2">
-            {isRealSupabase ? (
+            {isRealSupabase && cmsLoadErrorCount === 0 ? (
               <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <Activity className="h-3 w-3" /> Live Supabase · {cars.length} car{cars.length === 1 ? "" : "s"} in DB
+              </span>
+            ) : isRealSupabase && cmsLoadErrorCount > 0 ? (
+              <span
+                className="inline-flex items-center gap-1.5 bg-rose-500/10 text-rose-600 border border-rose-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"
+                title={`Supabase is configured but ${cmsLoadErrorCount} table read(s) failed (RLS denial, invalid/expired anon key, or paused project). The numbers below may be incomplete — see the error toast and browser console.`}
+              >
+                <ShieldAlert className="h-3 w-3" /> Supabase reads blocked · {cmsLoadErrorCount} error{cmsLoadErrorCount === 1 ? "" : "s"}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-600 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" title="Supabase env vars are not set. Data is stored in THIS browser only and will NOT appear in the Supabase dashboard or on other devices.">

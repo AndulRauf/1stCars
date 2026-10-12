@@ -4,7 +4,12 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
-  
+
+  /* Extra-small breakpoint (~400px) so very narrow phones (e.g. 320px iPhone SE)
+     can hide non-essential card text without affecting the standard `sm` (640px)
+     layout. Enables utilities like `xs:inline`. */
+  --breakpoint-xs: 25rem;
+
   /* Primary Theme Palette (Military Green & Premium Accents) */
   --color-primary: #2E7D32;
   --color-primary-hover: #25632a;

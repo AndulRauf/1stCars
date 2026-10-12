@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { CMSModule, READY_CAR_STATUSES } from "./adminNavData";
 import { getAnalyticsDiagnostics } from "@/src/lib/analytics";
+import { setConsentStatus } from "@/src/lib/consent";
 import { isHiddenPage } from "@/src/lib/utils";
 import { AUCTION_OPEN_STATES } from "@/src/lib/auctions";
 
@@ -249,8 +250,15 @@ export function AdminDashboard({
   ];
 
   // Live analytics health — surfaces the #1 silent cause of "no leads": GA4
-  // not actually collecting data because the Measurement ID is missing/placeholder.
-  const ga4 = React.useMemo(() => getAnalyticsDiagnostics(), []);
+  // not actually collecting data because the Measurement ID is missing/placeholder,
+  // tracking consent was never granted (opt-in), or gtag.js hasn't booted.
+  // ga4Tick lets us re-read diagnostics right after the admin grants consent.
+  const [ga4Tick, setGa4Tick] = React.useState(0);
+  const ga4 = React.useMemo(() => getAnalyticsDiagnostics(), [ga4Tick]);
+  const grantGa4Consent = () => {
+    setConsentStatus("granted");
+    setGa4Tick((t) => t + 1);
+  };
   const ga4Tone = ga4.ga4Enabled
     ? "bg-emerald-50 border-emerald-200 text-emerald-800"
     : "bg-amber-50 border-amber-300 text-amber-900";
@@ -351,9 +359,25 @@ export function AdminDashboard({
             <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline text-[10px] font-black uppercase tracking-wide">Open GA4</a>
           </div>
           <p className={`mt-1 font-medium ${ga4.ga4Enabled ? "opacity-80" : ""}`}>{ga4.ga4Reason}</p>
-          {!ga4.ga4Enabled && (
+          {!ga4.ga4Enabled && ga4.idConfigured && !ga4.consentGranted && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 opacity-90">
+              <span className="font-bold">GA4 is configured correctly — it is only off for this browser because tracking consent has not been accepted (opt-in). Real visitors are prompted automatically.</span>
+              <button
+                onClick={grantGa4Consent}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E7D32] text-white text-[10px] font-black uppercase tracking-wider cursor-pointer hover:bg-[#25632a]"
+              >
+                Accept &amp; test tracking
+              </button>
+            </div>
+          )}
+          {!ga4.ga4Enabled && !ga4.idConfigured && (
             <p className="mt-1 opacity-90 font-bold">
-              Action: add a real <code>VITE_GA4_MEASUREMENT_ID</code> (Vercel → Environment Variables → redeploy) or set the AdminCMS website setting "Google Analytics ID". Until then, no visitor data reaches Google Analytics.
+              Action: set <code>VITE_GA4_MEASUREMENT_ID</code> to a real ID in Vercel → Settings → Environment Variables, then redeploy (VITE_* values are baked in at build time). Placeholders like G-1STCARS2026 are ignored.
+            </p>
+          )}
+          {!ga4.ga4Enabled && ga4.idConfigured && ga4.consentGranted && !ga4.gtagLoaded && (
+            <p className="mt-1 opacity-90 font-bold">
+              Action: the tag is configured and consent granted but gtag.js has not booted. Reload the dashboard; if it stays off, check that googletagmanager.com is not blocked.
             </p>
           )}
         </div>

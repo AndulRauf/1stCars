@@ -379,20 +379,53 @@ export function trackShareEvent(kind: "whatsapp" | "copy" | "link", context: str
 // analytics is misconfigured and the data is simply not being collected.
 export interface AnalyticsDiagnostics {
   ga4Id: string;
+  // True only when GA4 is genuinely collecting data right now: a valid ID is
+  // configured AND the visitor has granted tracking consent AND gtag.js has
+  // booted. A valid ID alone is NOT enough — without consent every hit is
+  // dropped, so the old "ID is valid → ON" check reported a false green light.
   ga4Enabled: boolean;
   ga4Reason: string;
+  // Granular flags so the dashboard can give a precise, actionable message
+  // instead of a single ambiguous ON/OFF.
+  idConfigured: boolean;
+  consentGranted: boolean;
+  gtagLoaded: boolean;
+}
+
+// True once initGA4() has actually booted the tag for this session.
+export function isGa4Initialized(): boolean {
+  return ga4Initialized;
+}
+
+export function hasGa4Consent(): boolean {
+  return hasTrackingConsent();
 }
 
 export function getAnalyticsDiagnostics(): AnalyticsDiagnostics {
   const ga4Id = getGa4MeasurementId();
-  const valid = isValidGa4Id(ga4Id);
+  const idConfigured = isValidGa4Id(ga4Id);
+  const consentGranted = hasTrackingConsent();
+  const gtagLoaded =
+    ga4Initialized && typeof window !== "undefined" && typeof window.gtag === "function";
+
   let reason: string;
-  if (valid) {
-    reason = "GA4 is active with a valid Measurement ID.";
-  } else {
+  if (!idConfigured) {
     reason =
-      "GA4 is NOT collecting data. Set VITE_GA4_MEASUREMENT_ID (build env) to a real ID — " +
-      "placeholders such as G-1STCARS2026 are ignored.";
+      "No valid GA4 Measurement ID is configured. Set VITE_GA4_MEASUREMENT_ID (Vercel → Environment Variables → redeploy) to a real ID — placeholders such as G-1STCARS2026 are ignored.";
+  } else if (!consentGranted) {
+    reason = `GA4 ID ${ga4Id} is valid, but tracking is OFF in THIS browser until the cookie/consent banner is accepted (opt-in model). Accept consent here to verify, or check GA4 Realtime from a fresh visitor session.`;
+  } else if (!gtagLoaded) {
+    reason = `GA4 ID ${ga4Id} is valid and consent is granted, but the gtag.js tag has not initialized yet. Reload the page.`;
+  } else {
+    reason = `GA4 is live and collecting data with Measurement ID ${ga4Id}.`;
   }
-  return { ga4Id, ga4Enabled: valid, ga4Reason: reason };
+
+  return {
+    ga4Id,
+    ga4Enabled: idConfigured && consentGranted && gtagLoaded,
+    ga4Reason: reason,
+    idConfigured,
+    consentGranted,
+    gtagLoaded
+  };
 }
