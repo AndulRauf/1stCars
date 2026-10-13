@@ -1,10 +1,10 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { 
   Car, ShieldCheck, Clock, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
   Search, ArrowLeft, Tag, UserCheck,
-  Gauge, Home, Navigation, Mail, CalendarDays
+  Gauge, CalendarDays
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -19,7 +19,7 @@ import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSel
 import { findConfirmedDuplicateLead, isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
 import {
   buildSellCarYearOptions, guardLookupYear, inspectionDateBounds, isInspectionDateInWindow,
-  isValidKmDriven, isValidPincode,
+  isValidKmDriven,
   kmValidationError, maskMobile, maskReg, parseKmDriven,
   validateOptionalEmail, validateSellCarReg
 } from "@/src/lib/sellCarValidation";
@@ -115,317 +115,317 @@ export const brandData: {
 } = {
   "Maruti Suzuki": {
     models: [
-      { name: "Swift", category: "Hatchback", years: "2005 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Baleno", category: "Hatchback", years: "2015 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
-      { name: "Wagon R", category: "Hatchback", years: "1999 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Brezza", category: "SUV", years: "2016 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Ertiga", category: "MUV", years: "2012 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Dzire", category: "Sedan", years: "2008 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Alto K10", category: "Hatchback", years: "2010 - Now", image: "🚗", variants: ["Std", "LXI", "VXI", "VXI+"] },
-      { name: "Grand Vitara", category: "SUV", years: "2022 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha", "Zeta+ Hybrid", "Alpha+ Hybrid"] },
-      { name: "Fronx", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
-      { name: "Celerio", category: "Hatchback", years: "2014 - Now", image: "🚗", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
-      { name: "Ignis", category: "Hatchback", years: "2017 - Now", image: "🚗", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
-      { name: "S-Presso", category: "Hatchback", years: "2019 - Now", image: "🚗", variants: ["Std", "LXI", "VXI", "VXI+"] }
+      { name: "Swift", category: "Hatchback", years: "2005 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Baleno", category: "Hatchback", years: "2015 - Now", image: "??", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
+      { name: "Wagon R", category: "Hatchback", years: "1999 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Brezza", category: "SUV", years: "2016 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Ertiga", category: "MUV", years: "2012 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Dzire", category: "Sedan", years: "2008 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Alto K10", category: "Hatchback", years: "2010 - Now", image: "??", variants: ["Std", "LXI", "VXI", "VXI+"] },
+      { name: "Grand Vitara", category: "SUV", years: "2022 - Now", image: "??", variants: ["Sigma", "Delta", "Zeta", "Alpha", "Zeta+ Hybrid", "Alpha+ Hybrid"] },
+      { name: "Fronx", category: "SUV", years: "2023 - Now", image: "??", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
+      { name: "Celerio", category: "Hatchback", years: "2014 - Now", image: "??", variants: ["LXI", "VXI", "ZXI", "ZXI+"] },
+      { name: "Ignis", category: "Hatchback", years: "2017 - Now", image: "??", variants: ["Sigma", "Delta", "Zeta", "Alpha"] },
+      { name: "S-Presso", category: "Hatchback", years: "2019 - Now", image: "??", variants: ["Std", "LXI", "VXI", "VXI+"] }
     ]
   },
   "Hyundai": {
     models: [
-      { name: "Creta", category: "SUV", years: "2015 - Now", image: "🚗", variants: ["E", "EX", "S", "SX", "SX(O)"] },
-      { name: "i20", category: "Hatchback", years: "2008 - Now", image: "🚗", variants: ["Magna", "Sportz", "Asta", "Asta (O)"] },
-      { name: "i10", category: "Hatchback", years: "2007 - 2016", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-      { name: "Grand i10", category: "Hatchback", years: "2013 - 2020", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-      { name: "Santro", category: "Hatchback", years: "1998 - 2022", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-      { name: "Verna", category: "Sedan", years: "2006 - Now", image: "🚗", variants: ["EX", "S", "SX", "SX(O)"] },
-      { name: "Accent", category: "Sedan", years: "1999 - 2013", image: "🚗", variants: ["Executive", "GLE", "GVS"] },
-      { name: "Venue", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["E", "S", "SX", "SX(O)"] },
-      { name: "Exter", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["EX", "S", "SX", "SX(O)"] },
-      { name: "Alcazar", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Prestige", "Platinum", "Signature"] },
-      { name: "Getz", category: "Hatchback", years: "2004 - 2010", image: "🚗", variants: ["GL", "GLE", "GLS", "Sportz"] },
-      { name: "Sonata", category: "Sedan", years: "2001 - 2015", image: "🚗", variants: ["2.4 GDI", "2.0 CRDi", "Gold"] }
+      { name: "Creta", category: "SUV", years: "2015 - Now", image: "??", variants: ["E", "EX", "S", "SX", "SX(O)"] },
+      { name: "i20", category: "Hatchback", years: "2008 - Now", image: "??", variants: ["Magna", "Sportz", "Asta", "Asta (O)"] },
+      { name: "i10", category: "Hatchback", years: "2007 - 2016", image: "??", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Grand i10", category: "Hatchback", years: "2013 - 2020", image: "??", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Santro", category: "Hatchback", years: "1998 - 2022", image: "??", variants: ["Era", "Magna", "Sportz", "Asta"] },
+      { name: "Verna", category: "Sedan", years: "2006 - Now", image: "??", variants: ["EX", "S", "SX", "SX(O)"] },
+      { name: "Accent", category: "Sedan", years: "1999 - 2013", image: "??", variants: ["Executive", "GLE", "GVS"] },
+      { name: "Venue", category: "SUV", years: "2019 - Now", image: "??", variants: ["E", "S", "SX", "SX(O)"] },
+      { name: "Exter", category: "SUV", years: "2023 - Now", image: "??", variants: ["EX", "S", "SX", "SX(O)"] },
+      { name: "Alcazar", category: "SUV", years: "2021 - Now", image: "??", variants: ["Prestige", "Platinum", "Signature"] },
+      { name: "Getz", category: "Hatchback", years: "2004 - 2010", image: "??", variants: ["GL", "GLE", "GLS", "Sportz"] },
+      { name: "Sonata", category: "Sedan", years: "2001 - 2015", image: "??", variants: ["2.4 GDI", "2.0 CRDi", "Gold"] }
     ]
   },
   "Tata": {
     models: [
-      { name: "Nexon", category: "SUV", years: "2017 - Now", image: "🚗", variants: ["XE", "XM", "XZ", "XZ+", "Creative", "Fearless"] },
-      { name: "Punch", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Pure", "Adventure", "Accomplished", "Creative"] },
-      { name: "Altroz", category: "Hatchback", years: "2020 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Harrier", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Fearless"] },
-      { name: "Safari", category: "SUV", years: "1998 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Accomplished"] },
-      { name: "Tiago", category: "Hatchback", years: "2016 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Tigor", category: "Sedan", years: "2017 - Now", image: "🚗", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
-      { name: "Indica", category: "Hatchback", years: "1998 - 2018", image: "🚗", variants: ["DLS", "DLX", "LS", "LX"] },
-      { name: "Nano", category: "Hatchback", years: "2008 - 2018", image: "🚗", variants: ["CX", "LX", "Twist", "GenX"] },
-      { name: "Bolt", category: "Hatchback", years: "2015 - 2019", image: "🚗", variants: ["XE", "XM", "XT"] },
-      { name: "Zest", category: "Sedan", years: "2014 - 2019", image: "🚗", variants: ["XE", "XM", "XT"] },
-      { name: "Hexa", category: "SUV", years: "2017 - 2020", image: "🚗", variants: ["XE", "XM", "XT"] }
+      { name: "Nexon", category: "SUV", years: "2017 - Now", image: "??", variants: ["XE", "XM", "XZ", "XZ+", "Creative", "Fearless"] },
+      { name: "Punch", category: "SUV", years: "2021 - Now", image: "??", variants: ["Pure", "Adventure", "Accomplished", "Creative"] },
+      { name: "Altroz", category: "Hatchback", years: "2020 - Now", image: "??", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
+      { name: "Harrier", category: "SUV", years: "2019 - Now", image: "??", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Fearless"] },
+      { name: "Safari", category: "SUV", years: "1998 - Now", image: "??", variants: ["XE", "XM", "XT", "XZ", "XZ+", "Accomplished"] },
+      { name: "Tiago", category: "Hatchback", years: "2016 - Now", image: "??", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
+      { name: "Tigor", category: "Sedan", years: "2017 - Now", image: "??", variants: ["XE", "XM", "XT", "XZ", "XZ+"] },
+      { name: "Indica", category: "Hatchback", years: "1998 - 2018", image: "??", variants: ["DLS", "DLX", "LS", "LX"] },
+      { name: "Nano", category: "Hatchback", years: "2008 - 2018", image: "??", variants: ["CX", "LX", "Twist", "GenX"] },
+      { name: "Bolt", category: "Hatchback", years: "2015 - 2019", image: "??", variants: ["XE", "XM", "XT"] },
+      { name: "Zest", category: "Sedan", years: "2014 - 2019", image: "??", variants: ["XE", "XM", "XT"] },
+      { name: "Hexa", category: "SUV", years: "2017 - 2020", image: "??", variants: ["XE", "XM", "XT"] }
     ]
   },
   "Mahindra": {
     models: [
-      { name: "Thar", category: "SUV", years: "2010 - Now", image: "🚗", variants: ["AX", "AX Opt", "LX", "Earth Edition"] },
-      { name: "XUV700", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["MX", "AX3", "AX5", "AX7", "AX7 L"] },
-      { name: "Scorpio Classic", category: "SUV", years: "2002 - Now", image: "🚗", variants: ["S", "S11"] },
-      { name: "Scorpio-N", category: "SUV", years: "2022 - Now", image: "🚗", variants: ["Z2", "Z4", "Z6", "Z8", "Z8 L"] },
-      { name: "Bolero", category: "SUV", years: "2000 - Now", image: "🚗", variants: ["B4", "B6", "B6 Opt"] },
-      { name: "Bolero Neo", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["N4", "N8", "N10"] },
-      { name: "XUV300", category: "SUV", years: "2019 - 2024", image: "🚗", variants: ["W4", "W6", "W8", "W8(O)"] },
-      { name: "XUV500", category: "SUV", years: "2011 - 2021", image: "🚗", variants: ["W4", "W6", "W8", "W10", "W11"] },
-      { name: "TUV300", category: "SUV", years: "2015 - 2020", image: "🚗", variants: ["T4", "T6", "T8", "T10"] },
-      { name: "Marazzo", category: "MUV", years: "2018 - Now", image: "🚗", variants: ["M2", "M4+", "M6+"] },
-      { name: "KUV100", category: "Hatchback", years: "2016 - 2023", image: "🚗", variants: ["K2", "K4+", "K6+", "K8"] }
+      { name: "Thar", category: "SUV", years: "2010 - Now", image: "??", variants: ["AX", "AX Opt", "LX", "Earth Edition"] },
+      { name: "XUV700", category: "SUV", years: "2021 - Now", image: "??", variants: ["MX", "AX3", "AX5", "AX7", "AX7 L"] },
+      { name: "Scorpio Classic", category: "SUV", years: "2002 - Now", image: "??", variants: ["S", "S11"] },
+      { name: "Scorpio-N", category: "SUV", years: "2022 - Now", image: "??", variants: ["Z2", "Z4", "Z6", "Z8", "Z8 L"] },
+      { name: "Bolero", category: "SUV", years: "2000 - Now", image: "??", variants: ["B4", "B6", "B6 Opt"] },
+      { name: "Bolero Neo", category: "SUV", years: "2021 - Now", image: "??", variants: ["N4", "N8", "N10"] },
+      { name: "XUV300", category: "SUV", years: "2019 - 2024", image: "??", variants: ["W4", "W6", "W8", "W8(O)"] },
+      { name: "XUV500", category: "SUV", years: "2011 - 2021", image: "??", variants: ["W4", "W6", "W8", "W10", "W11"] },
+      { name: "TUV300", category: "SUV", years: "2015 - 2020", image: "??", variants: ["T4", "T6", "T8", "T10"] },
+      { name: "Marazzo", category: "MUV", years: "2018 - Now", image: "??", variants: ["M2", "M4+", "M6+"] },
+      { name: "KUV100", category: "Hatchback", years: "2016 - 2023", image: "??", variants: ["K2", "K4+", "K6+", "K8"] }
     ]
   },
   "Force": {
     models: [
-      { name: "Gurkha", category: "SUV", years: "2013 - Now", image: "🚗", variants: ["3-Door", "5-Door", "Extreme"] },
-      { name: "Trax Cruiser", category: "MUV", years: "2000 - Now", image: "🚗", variants: ["Classic", "Deluxe", "Cruiser"] }
+      { name: "Gurkha", category: "SUV", years: "2013 - Now", image: "??", variants: ["3-Door", "5-Door", "Extreme"] },
+      { name: "Trax Cruiser", category: "MUV", years: "2000 - Now", image: "??", variants: ["Classic", "Deluxe", "Cruiser"] }
     ]
   },
   "ICML": {
     models: [
-      { name: "Rhino Rx", category: "SUV", years: "2006 - 2015", image: "🚗", variants: ["S2", "DLX", "Winner", "Grand"] }
+      { name: "Rhino Rx", category: "SUV", years: "2006 - 2015", image: "??", variants: ["S2", "DLX", "Winner", "Grand"] }
     ]
   },
   "San Motors": {
     models: [
-      { name: "San Storm", category: "Convertible", years: "2001 - 2013", image: "🚗", variants: ["Standard 1.2"] }
+      { name: "San Storm", category: "Convertible", years: "2001 - 2013", image: "??", variants: ["Standard 1.2"] }
     ]
   },
   "DC Design": {
     models: [
-      { name: "DC Avanti", category: "Sports Car", years: "2015 - 2019", image: "🚗", variants: ["Standard 2.0"] }
+      { name: "DC Avanti", category: "Sports Car", years: "2015 - 2019", image: "??", variants: ["Standard 2.0"] }
     ]
   },
   "Reva": {
     models: [
-      { name: "Reva i", category: "Electric Microcar", years: "2001 - 2012", image: "⚡", variants: ["Standard", "Classique", "Li-ion"] }
+      { name: "Reva i", category: "Electric Microcar", years: "2001 - 2012", image: "?", variants: ["Standard", "Classique", "Li-ion"] }
     ]
   },
   "Honda": {
     models: [
-      { name: "City", category: "Sedan", years: "1998 - Now", image: "🚗", variants: ["V", "VX", "ZX", "V MT", "VX CVT"] },
-      { name: "Amaze", category: "Sedan", years: "2013 - Now", image: "🚗", variants: ["E", "S", "VX"] },
-      { name: "Civic", category: "Sedan", years: "2006 - 2021", image: "🚗", variants: ["V", "VX", "ZX"] },
-      { name: "Jazz", category: "Hatchback", years: "2009 - 2022", image: "🚗", variants: ["V", "VX", "ZX", "S"] },
-      { name: "Brio", category: "Hatchback", years: "2011 - 2019", image: "🚗", variants: ["E", "S", "V", "VX"] },
-      { name: "WR-V", category: "SUV", years: "2017 - 2023", image: "🚗", variants: ["S", "V", "VX"] },
-      { name: "Elevate", category: "SUV", years: "2023 - Now", image: "🚗", variants: ["SV", "V", "VX", "ZX"] }
+      { name: "City", category: "Sedan", years: "1998 - Now", image: "??", variants: ["V", "VX", "ZX", "V MT", "VX CVT"] },
+      { name: "Amaze", category: "Sedan", years: "2013 - Now", image: "??", variants: ["E", "S", "VX"] },
+      { name: "Civic", category: "Sedan", years: "2006 - 2021", image: "??", variants: ["V", "VX", "ZX"] },
+      { name: "Jazz", category: "Hatchback", years: "2009 - 2022", image: "??", variants: ["V", "VX", "ZX", "S"] },
+      { name: "Brio", category: "Hatchback", years: "2011 - 2019", image: "??", variants: ["E", "S", "V", "VX"] },
+      { name: "WR-V", category: "SUV", years: "2017 - 2023", image: "??", variants: ["S", "V", "VX"] },
+      { name: "Elevate", category: "SUV", years: "2023 - Now", image: "??", variants: ["SV", "V", "VX", "ZX"] }
     ]
   },
   "Toyota": {
     models: [
-      { name: "Fortuner", category: "SUV", years: "2009 - Now", image: "🚗", variants: ["Standard", "Legender", "GR Sport"] },
-      { name: "Innova Crysta", category: "MUV", years: "2005 - Now", image: "🚗", variants: ["G", "GX", "VX", "ZX"] },
-      { name: "Innova Hycross", category: "MUV", years: "2022 - Now", image: "🚗", variants: ["GX", "VX Hybrid", "ZX Hybrid"] },
-      { name: "Glanza", category: "Hatchback", years: "2019 - Now", image: "🚗", variants: ["E", "S", "G", "V"] },
-      { name: "Urban Cruiser", category: "SUV", years: "2020 - 2022", image: "🚗", variants: ["Mid", "High", "Premium"] },
-      { name: "Etios", category: "Sedan", years: "2010 - 2020", image: "🚗", variants: ["G", "GD", "V", "VD", "VX"] },
-      { name: "Liva", category: "Hatchback", years: "2011 - 2020", image: "🚗", variants: ["G", "GD", "V", "VD"] }
+      { name: "Fortuner", category: "SUV", years: "2009 - Now", image: "??", variants: ["Standard", "Legender", "GR Sport"] },
+      { name: "Innova Crysta", category: "MUV", years: "2005 - Now", image: "??", variants: ["G", "GX", "VX", "ZX"] },
+      { name: "Innova Hycross", category: "MUV", years: "2022 - Now", image: "??", variants: ["GX", "VX Hybrid", "ZX Hybrid"] },
+      { name: "Glanza", category: "Hatchback", years: "2019 - Now", image: "??", variants: ["E", "S", "G", "V"] },
+      { name: "Urban Cruiser", category: "SUV", years: "2020 - 2022", image: "??", variants: ["Mid", "High", "Premium"] },
+      { name: "Etios", category: "Sedan", years: "2010 - 2020", image: "??", variants: ["G", "GD", "V", "VD", "VX"] },
+      { name: "Liva", category: "Hatchback", years: "2011 - 2020", image: "??", variants: ["G", "GD", "V", "VD"] }
     ]
   },
   "Kia": {
     models: [
-      { name: "Seltos", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
-      { name: "Sonet", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
-      { name: "Carens", category: "MUV", years: "2022 - Now", image: "🚗", variants: ["Premium", "Prestige", "Luxury", "Luxury+"] },
-      { name: "Carnival", category: "Luxury MUV", years: "1998 - Now", image: "🚙", variants: ["Prestige", "Limousine", "Limousine Plus"] }
+      { name: "Seltos", category: "SUV", years: "2019 - Now", image: "??", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
+      { name: "Sonet", category: "SUV", years: "2020 - Now", image: "??", variants: ["HTE", "HTK", "HTK+", "HTX", "GTX+", "X-Line"] },
+      { name: "Carens", category: "MUV", years: "2022 - Now", image: "??", variants: ["Premium", "Prestige", "Luxury", "Luxury+"] },
+      { name: "Carnival", category: "Luxury MUV", years: "1998 - Now", image: "??", variants: ["Prestige", "Limousine", "Limousine Plus"] }
     ]
   },
   "MG": {
     models: [
-      { name: "Hector", category: "SUV", years: "2019 - Now", image: "🚗", variants: ["Style", "Shine", "Smart", "Sharp", "Savvy"] },
-      { name: "Astor", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Style", "Super", "Smart", "Sharp", "Savvy"] },
-      { name: "ZS EV", category: "Electric", years: "2020 - Now", image: "⚡", variants: ["Executive", "Excite", "Exclusive", "Exclusive Pro"] },
-      { name: "Comet EV", category: "Electric", years: "2023 - Now", image: "⚡", variants: ["Pace", "Play", "Plush"] }
+      { name: "Hector", category: "SUV", years: "2019 - Now", image: "??", variants: ["Style", "Shine", "Smart", "Sharp", "Savvy"] },
+      { name: "Astor", category: "SUV", years: "2021 - Now", image: "??", variants: ["Style", "Super", "Smart", "Sharp", "Savvy"] },
+      { name: "ZS EV", category: "Electric", years: "2020 - Now", image: "?", variants: ["Executive", "Excite", "Exclusive", "Exclusive Pro"] },
+      { name: "Comet EV", category: "Electric", years: "2023 - Now", image: "?", variants: ["Pace", "Play", "Plush"] }
     ]
   },
   "Renault": {
     models: [
-      { name: "Kwid", category: "Hatchback", years: "2015 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "Climber"] },
-      { name: "Triber", category: "MUV", years: "2019 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "RXZ"] },
-      { name: "Kiger", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["RXE", "RXL", "RXT", "RXZ"] },
-      { name: "Duster", category: "SUV", years: "2012 - 2022", image: "🚗", variants: ["RxE", "RxL", "RxS", "RxZ"] }
+      { name: "Kwid", category: "Hatchback", years: "2015 - Now", image: "??", variants: ["RXE", "RXL", "RXT", "Climber"] },
+      { name: "Triber", category: "MUV", years: "2019 - Now", image: "??", variants: ["RXE", "RXL", "RXT", "RXZ"] },
+      { name: "Kiger", category: "SUV", years: "2021 - Now", image: "??", variants: ["RXE", "RXL", "RXT", "RXZ"] },
+      { name: "Duster", category: "SUV", years: "2012 - 2022", image: "??", variants: ["RxE", "RxL", "RxS", "RxZ"] }
     ]
   },
   "Volkswagen": {
     models: [
-      { name: "Taigun", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
-      { name: "Virtus", category: "Sedan", years: "2022 - Now", image: "🚗", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
-      { name: "Polo", category: "Hatchback", years: "2010 - 2022", image: "🚗", variants: ["Trendline", "Comfortline", "Highline", "GT TSI"] },
-      { name: "Vento", category: "Sedan", years: "2010 - 2022", image: "🚗", variants: ["Trendline", "Comfortline", "Highline"] }
+      { name: "Taigun", category: "SUV", years: "2021 - Now", image: "??", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
+      { name: "Virtus", category: "Sedan", years: "2022 - Now", image: "??", variants: ["Comfortline", "Highline", "Topline", "GT Plus"] },
+      { name: "Polo", category: "Hatchback", years: "2010 - 2022", image: "??", variants: ["Trendline", "Comfortline", "Highline", "GT TSI"] },
+      { name: "Vento", category: "Sedan", years: "2010 - 2022", image: "??", variants: ["Trendline", "Comfortline", "Highline"] }
     ]
   },
   "Skoda": {
     models: [
-      { name: "Kushaq", category: "SUV", years: "2021 - Now", image: "🚗", variants: ["Active", "Ambition", "Style", "Monte Carlo"] },
-      { name: "Slavia", category: "Sedan", years: "2022 - Now", image: "🚗", variants: ["Active", "Ambition", "Style"] },
-      { name: "Rapid", category: "Sedan", years: "2011 - 2021", image: "🚗", variants: ["Active", "Ambition", "Style", "Rider Plus"] },
-      { name: "Octavia", category: "Sedan", years: "2001 - 2023", image: "🚗", variants: ["Ambition", "Style", "L&K"] }
+      { name: "Kushaq", category: "SUV", years: "2021 - Now", image: "??", variants: ["Active", "Ambition", "Style", "Monte Carlo"] },
+      { name: "Slavia", category: "Sedan", years: "2022 - Now", image: "??", variants: ["Active", "Ambition", "Style"] },
+      { name: "Rapid", category: "Sedan", years: "2011 - 2021", image: "??", variants: ["Active", "Ambition", "Style", "Rider Plus"] },
+      { name: "Octavia", category: "Sedan", years: "2001 - 2023", image: "??", variants: ["Ambition", "Style", "L&K"] }
     ]
   },
   "Ford": {
     models: [
-      { name: "Figo", category: "Hatchback", years: "2010 - 2021", image: "🚗", variants: ["LXI", "VXI", "ZXI", "Titanium"] },
-      { name: "EcoSport", category: "SUV", years: "2013 - 2021", image: "🚗", variants: ["Ambiente", "Trend", "Titanium", "Sports"] },
-      { name: "Endeavour", category: "SUV", years: "2003 - 2021", image: "🚙", variants: ["Trend", "Titanium", "Titanium Plus"] },
-      { name: "Aspire", category: "Sedan", years: "2015 - 2021", image: "🚗", variants: ["Ambiente", "Trend", "Titanium", "Titanium Plus"] }
+      { name: "Figo", category: "Hatchback", years: "2010 - 2021", image: "??", variants: ["LXI", "VXI", "ZXI", "Titanium"] },
+      { name: "EcoSport", category: "SUV", years: "2013 - 2021", image: "??", variants: ["Ambiente", "Trend", "Titanium", "Sports"] },
+      { name: "Endeavour", category: "SUV", years: "2003 - 2021", image: "??", variants: ["Trend", "Titanium", "Titanium Plus"] },
+      { name: "Aspire", category: "Sedan", years: "2015 - 2021", image: "??", variants: ["Ambiente", "Trend", "Titanium", "Titanium Plus"] }
     ]
   },
   "Nissan": {
     models: [
-      { name: "Magnite", category: "SUV", years: "2020 - Now", image: "🚗", variants: ["XE", "XL", "XV", "XV Premium"] },
-      { name: "Sunny", category: "Sedan", years: "2011 - 2020", image: "🚗", variants: ["XE", "XL", "XV"] },
-      { name: "Micra", category: "Hatchback", years: "2010 - 2020", image: "🚗", variants: ["XE", "XL", "XV"] }
+      { name: "Magnite", category: "SUV", years: "2020 - Now", image: "??", variants: ["XE", "XL", "XV", "XV Premium"] },
+      { name: "Sunny", category: "Sedan", years: "2011 - 2020", image: "??", variants: ["XE", "XL", "XV"] },
+      { name: "Micra", category: "Hatchback", years: "2010 - 2020", image: "??", variants: ["XE", "XL", "XV"] }
     ]
   },
   "Fiat": {
     models: [
-      { name: "Punto", category: "Hatchback", years: "2009 - 2020", image: "🚗", variants: ["Active", "Dynamic", "Emotion", "Abarth"] },
-      { name: "Linea", category: "Sedan", years: "2009 - 2020", image: "🚗", variants: ["Active", "Dynamic", "Emotion"] }
+      { name: "Punto", category: "Hatchback", years: "2009 - 2020", image: "??", variants: ["Active", "Dynamic", "Emotion", "Abarth"] },
+      { name: "Linea", category: "Sedan", years: "2009 - 2020", image: "??", variants: ["Active", "Dynamic", "Emotion"] }
     ]
   },
   "Chevrolet": {
     models: [
-      { name: "Beat", category: "Hatchback", years: "2010 - 2017", image: "🚗", variants: ["PS", "LS", "LT", "LTZ"] },
-      { name: "Cruze", category: "Sedan", years: "2009 - 2017", image: "🚗", variants: ["LT", "LTZ"] },
-      { name: "Tavera", category: "MUV", years: "2004 - 2017", image: "🚗", variants: ["LS", "LT", "Neo 3"] }
+      { name: "Beat", category: "Hatchback", years: "2010 - 2017", image: "??", variants: ["PS", "LS", "LT", "LTZ"] },
+      { name: "Cruze", category: "Sedan", years: "2009 - 2017", image: "??", variants: ["LT", "LTZ"] },
+      { name: "Tavera", category: "MUV", years: "2004 - 2017", image: "??", variants: ["LS", "LT", "Neo 3"] }
     ]
   },
   "Porsche": {
     models: [
-      { name: "911 Carrera", category: "Coupe", years: "1964 - Now", image: "🏎️", variants: ["Carrera", "Carrera S", "Turbo S", "GT3 RS"] },
-      { name: "Cayenne", category: "Luxury SUV", years: "2002 - Now", image: "🚙", variants: ["Base", "E-Hybrid", "S", "Turbo GT"] },
-      { name: "Macan", category: "Luxury SUV", years: "2014 - Now", image: "🚙", variants: ["Base", "T", "S", "GTS"] },
-      { name: "Taycan", category: "Electric", years: "2019 - Now", image: "⚡", variants: ["Base", "4S", "Turbo", "Turbo S"] },
-      { name: "Panamera", category: "Luxury Sedan", years: "2009 - Now", image: "🚗", variants: ["Base", "4", "4 E-Hybrid", "GTS"] }
+      { name: "911 Carrera", category: "Coupe", years: "1964 - Now", image: "???", variants: ["Carrera", "Carrera S", "Turbo S", "GT3 RS"] },
+      { name: "Cayenne", category: "Luxury SUV", years: "2002 - Now", image: "??", variants: ["Base", "E-Hybrid", "S", "Turbo GT"] },
+      { name: "Macan", category: "Luxury SUV", years: "2014 - Now", image: "??", variants: ["Base", "T", "S", "GTS"] },
+      { name: "Taycan", category: "Electric", years: "2019 - Now", image: "?", variants: ["Base", "4S", "Turbo", "Turbo S"] },
+      { name: "Panamera", category: "Luxury Sedan", years: "2009 - Now", image: "??", variants: ["Base", "4", "4 E-Hybrid", "GTS"] }
     ]
   },
   "BMW": {
     models: [
-      { name: "3 Series", category: "Luxury Sedan", years: "1975 - Now", image: "🚗", variants: ["330i", "330li", "M340i", "320d"] },
-      { name: "5 Series", category: "Luxury Sedan", years: "1972 - Now", image: "🚗", variants: ["530i", "520d", "M550i", "M5"] },
-      { name: "X1", category: "Luxury SUV", years: "2009 - Now", image: "🚙", variants: ["sDrive20i", "sDrive20d", "M Sport"] },
-      { name: "X3", category: "Luxury SUV", years: "2003 - Now", image: "🚙", variants: ["xDrive30i", "xDrive20d", "M40i"] },
-      { name: "X5", category: "Luxury SUV", years: "1999 - Now", image: "🚙", variants: ["xDrive40i", "xDrive30d", "M Sport"] }
+      { name: "3 Series", category: "Luxury Sedan", years: "1975 - Now", image: "??", variants: ["330i", "330li", "M340i", "320d"] },
+      { name: "5 Series", category: "Luxury Sedan", years: "1972 - Now", image: "??", variants: ["530i", "520d", "M550i", "M5"] },
+      { name: "X1", category: "Luxury SUV", years: "2009 - Now", image: "??", variants: ["sDrive20i", "sDrive20d", "M Sport"] },
+      { name: "X3", category: "Luxury SUV", years: "2003 - Now", image: "??", variants: ["xDrive30i", "xDrive20d", "M40i"] },
+      { name: "X5", category: "Luxury SUV", years: "1999 - Now", image: "??", variants: ["xDrive40i", "xDrive30d", "M Sport"] }
     ]
   },
   "Mercedes-Benz": {
     models: [
-      { name: "C-Class", category: "Luxury Sedan", years: "1993 - Now", image: "🚗", variants: ["C 200", "C 220d", "C 300d", "C 43 AMG"] },
-      { name: "E-Class", category: "Luxury Sedan", years: "1953 - Now", image: "🚗", variants: ["E 200", "E 220d", "E 350d", "E 63 AMG"] },
-      { name: "GLA", category: "Luxury SUV", years: "2013 - Now", image: "🚙", variants: ["GLA 200", "GLA 220d", "4MATIC"] },
-      { name: "GLC", category: "Luxury SUV", years: "2015 - Now", image: "🚙", variants: ["GLC 200", "GLC 220d", "4MATIC"] },
-      { name: "GLE", category: "Luxury SUV", years: "1997 - Now", image: "🚙", variants: ["GLE 300d", "GLE 450", "GLE 400d"] }
+      { name: "C-Class", category: "Luxury Sedan", years: "1993 - Now", image: "??", variants: ["C 200", "C 220d", "C 300d", "C 43 AMG"] },
+      { name: "E-Class", category: "Luxury Sedan", years: "1953 - Now", image: "??", variants: ["E 200", "E 220d", "E 350d", "E 63 AMG"] },
+      { name: "GLA", category: "Luxury SUV", years: "2013 - Now", image: "??", variants: ["GLA 200", "GLA 220d", "4MATIC"] },
+      { name: "GLC", category: "Luxury SUV", years: "2015 - Now", image: "??", variants: ["GLC 200", "GLC 220d", "4MATIC"] },
+      { name: "GLE", category: "Luxury SUV", years: "1997 - Now", image: "??", variants: ["GLE 300d", "GLE 450", "GLE 400d"] }
     ]
   },
   "Audi": {
     models: [
-      { name: "A4", category: "Luxury Sedan", years: "1994 - Now", image: "🚗", variants: ["Premium", "Premium Plus", "Technology"] },
-      { name: "A6", category: "Luxury Sedan", years: "1994 - Now", image: "🚗", variants: ["Premium Plus", "Technology"] },
-      { name: "Q3", category: "Luxury SUV", years: "2011 - Now", image: "🚙", variants: ["Premium", "Premium Plus", "Technology", "Sportback"] },
-      { name: "Q5", category: "Luxury SUV", years: "2008 - Now", image: "🚙", variants: ["Premium Plus", "Technology"] },
-      { name: "Q7", category: "Luxury SUV", years: "2005 - Now", image: "🚙", variants: ["Premium Plus", "Technology"] }
+      { name: "A4", category: "Luxury Sedan", years: "1994 - Now", image: "??", variants: ["Premium", "Premium Plus", "Technology"] },
+      { name: "A6", category: "Luxury Sedan", years: "1994 - Now", image: "??", variants: ["Premium Plus", "Technology"] },
+      { name: "Q3", category: "Luxury SUV", years: "2011 - Now", image: "??", variants: ["Premium", "Premium Plus", "Technology", "Sportback"] },
+      { name: "Q5", category: "Luxury SUV", years: "2008 - Now", image: "??", variants: ["Premium Plus", "Technology"] },
+      { name: "Q7", category: "Luxury SUV", years: "2005 - Now", image: "??", variants: ["Premium Plus", "Technology"] }
     ]
   },
   "Bentley": {
     models: [
-      { name: "Continental GT", category: "Luxury Coupe", years: "2003 - Now", image: "🏎️", variants: ["V8", "W12", "Mulliner", "Speed"] },
-      { name: "Flying Spur", category: "Luxury Sedan", years: "2005 - Now", image: "🚗", variants: ["V8", "W12", "Hybrid"] },
-      { name: "Bentayga", category: "Luxury SUV", years: "2015 - Now", image: "🚙", variants: ["V8", "W12 Speed", "E-Hybrid"] }
+      { name: "Continental GT", category: "Luxury Coupe", years: "2003 - Now", image: "???", variants: ["V8", "W12", "Mulliner", "Speed"] },
+      { name: "Flying Spur", category: "Luxury Sedan", years: "2005 - Now", image: "??", variants: ["V8", "W12", "Hybrid"] },
+      { name: "Bentayga", category: "Luxury SUV", years: "2015 - Now", image: "??", variants: ["V8", "W12 Speed", "E-Hybrid"] }
     ]
   },
   "Jaguar": {
     models: [
-      { name: "XF", category: "Luxury Sedan", years: "2008 - Now", image: "🚗", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
-      { name: "XE", category: "Luxury Sedan", years: "2015 - 2024", image: "🚗", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
-      { name: "F-Pace", category: "Luxury SUV", years: "2016 - Now", image: "🚙", variants: ["Prestige", "Portfolio", "R-Dynamic S"] },
-      { name: "F-Type", category: "Sports Car", years: "2013 - Now", image: "🏎️", variants: ["Coupe", "Convertible", "R"] }
+      { name: "XF", category: "Luxury Sedan", years: "2008 - Now", image: "??", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
+      { name: "XE", category: "Luxury Sedan", years: "2015 - 2024", image: "??", variants: ["Prestige", "Portfolio", "R-Dynamic"] },
+      { name: "F-Pace", category: "Luxury SUV", years: "2016 - Now", image: "??", variants: ["Prestige", "Portfolio", "R-Dynamic S"] },
+      { name: "F-Type", category: "Sports Car", years: "2013 - Now", image: "???", variants: ["Coupe", "Convertible", "R"] }
     ]
   },
   "Land Rover": {
     models: [
-      { name: "Range Rover", category: "Luxury SUV", years: "1970 - Now", image: "🚙", variants: ["SE", "HSE", "Autobiography", "SV"] },
-      { name: "Range Rover Sport", category: "Luxury SUV", years: "2005 - Now", image: "🚙", variants: ["SE", "HSE", "Autobiography"] },
-      { name: "Range Rover Evoque", category: "Luxury SUV", years: "2011 - Now", image: "🚙", variants: ["S", "SE", "HSE", "Dynamic"] },
-      { name: "Discovery", category: "Luxury SUV", years: "1989 - Now", image: "🚙", variants: ["S", "SE", "HSE"] },
-      { name: "Discovery Sport", category: "Luxury SUV", years: "2014 - Now", image: "🚙", variants: ["S", "SE", "R-Dynamic"] },
-      { name: "Defender", category: "Luxury SUV", years: "1983 - Now", image: "🚙", variants: ["90", "110", "130", "X"] }
+      { name: "Range Rover", category: "Luxury SUV", years: "1970 - Now", image: "??", variants: ["SE", "HSE", "Autobiography", "SV"] },
+      { name: "Range Rover Sport", category: "Luxury SUV", years: "2005 - Now", image: "??", variants: ["SE", "HSE", "Autobiography"] },
+      { name: "Range Rover Evoque", category: "Luxury SUV", years: "2011 - Now", image: "??", variants: ["S", "SE", "HSE", "Dynamic"] },
+      { name: "Discovery", category: "Luxury SUV", years: "1989 - Now", image: "??", variants: ["S", "SE", "HSE"] },
+      { name: "Discovery Sport", category: "Luxury SUV", years: "2014 - Now", image: "??", variants: ["S", "SE", "R-Dynamic"] },
+      { name: "Defender", category: "Luxury SUV", years: "1983 - Now", image: "??", variants: ["90", "110", "130", "X"] }
     ]
   },
   "Volvo": {
     models: [
-      { name: "XC40", category: "Luxury SUV", years: "2017 - Now", image: "🚙", variants: ["Momentum", "Inscription", "R-Design", "Recharge"] },
-      { name: "XC60", category: "Luxury SUV", years: "2008 - Now", image: "🚙", variants: ["Momentum", "Inscription", "R-Design"] },
-      { name: "XC90", category: "Luxury SUV", years: "2002 - Now", image: "🚙", variants: ["Momentum", "Inscription", "Excellence"] },
-      { name: "S90", category: "Luxury Sedan", years: "2016 - Now", image: "🚗", variants: ["Momentum", "Inscription"] },
-      { name: "S60", category: "Luxury Sedan", years: "2000 - Now", image: "🚗", variants: ["Momentum", "Inscription", "R-Design"] }
+      { name: "XC40", category: "Luxury SUV", years: "2017 - Now", image: "??", variants: ["Momentum", "Inscription", "R-Design", "Recharge"] },
+      { name: "XC60", category: "Luxury SUV", years: "2008 - Now", image: "??", variants: ["Momentum", "Inscription", "R-Design"] },
+      { name: "XC90", category: "Luxury SUV", years: "2002 - Now", image: "??", variants: ["Momentum", "Inscription", "Excellence"] },
+      { name: "S90", category: "Luxury Sedan", years: "2016 - Now", image: "??", variants: ["Momentum", "Inscription"] },
+      { name: "S60", category: "Luxury Sedan", years: "2000 - Now", image: "??", variants: ["Momentum", "Inscription", "R-Design"] }
     ]
   },
   "Mini Cooper": {
     models: [
-      { name: "Cooper 3-Door", category: "Hatchback", years: "2001 - Now", image: "🚗", variants: ["Cooper", "Cooper S", "JCW"] },
-      { name: "Cooper 5-Door", category: "Hatchback", years: "2014 - Now", image: "🚗", variants: ["Cooper", "Cooper S"] },
-      { name: "Countryman", category: "SUV", years: "2010 - Now", image: "🚙", variants: ["Cooper", "Cooper S", "JCW"] },
-      { name: "Convertible", category: "Convertible", years: "2004 - Now", image: "🚗", variants: ["Cooper", "Cooper S"] }
+      { name: "Cooper 3-Door", category: "Hatchback", years: "2001 - Now", image: "??", variants: ["Cooper", "Cooper S", "JCW"] },
+      { name: "Cooper 5-Door", category: "Hatchback", years: "2014 - Now", image: "??", variants: ["Cooper", "Cooper S"] },
+      { name: "Countryman", category: "SUV", years: "2010 - Now", image: "??", variants: ["Cooper", "Cooper S", "JCW"] },
+      { name: "Convertible", category: "Convertible", years: "2004 - Now", image: "??", variants: ["Cooper", "Cooper S"] }
     ]
   },
   "Jeep": {
     models: [
-      { name: "Compass", category: "SUV", years: "2017 - Now", image: "🚙", variants: ["Sport", "Longitude", "Limited", "Trailhawk"] },
-      { name: "Meridian", category: "SUV", years: "2022 - Now", image: "🚙", variants: ["Limited", "Limited (O)", "Overland"] },
-      { name: "Wrangler", category: "SUV", years: "1986 - Now", image: "🚙", variants: ["Unlimited", "Rubicon"] },
-      { name: "Grand Cherokee", category: "SUV", years: "1992 - Now", image: "🚙", variants: ["Limited", "Overland", "Summit"] }
+      { name: "Compass", category: "SUV", years: "2017 - Now", image: "??", variants: ["Sport", "Longitude", "Limited", "Trailhawk"] },
+      { name: "Meridian", category: "SUV", years: "2022 - Now", image: "??", variants: ["Limited", "Limited (O)", "Overland"] },
+      { name: "Wrangler", category: "SUV", years: "1986 - Now", image: "??", variants: ["Unlimited", "Rubicon"] },
+      { name: "Grand Cherokee", category: "SUV", years: "1992 - Now", image: "??", variants: ["Limited", "Overland", "Summit"] }
     ]
   },
   "Tesla": {
     models: [
-      { name: "Model 3", category: "Electric Sedan", years: "2017 - Now", image: "⚡", variants: ["Standard Range", "Long Range", "Performance"] },
-      { name: "Model Y", category: "Electric SUV", years: "2020 - Now", image: "⚡", variants: ["Standard Range", "Long Range", "Performance"] },
-      { name: "Model S", category: "Electric Sedan", years: "2012 - Now", image: "⚡", variants: ["Long Range", "Plaid"] },
-      { name: "Model X", category: "Electric SUV", years: "2015 - Now", image: "⚡", variants: ["Long Range", "Plaid"] }
+      { name: "Model 3", category: "Electric Sedan", years: "2017 - Now", image: "?", variants: ["Standard Range", "Long Range", "Performance"] },
+      { name: "Model Y", category: "Electric SUV", years: "2020 - Now", image: "?", variants: ["Standard Range", "Long Range", "Performance"] },
+      { name: "Model S", category: "Electric Sedan", years: "2012 - Now", image: "?", variants: ["Long Range", "Plaid"] },
+      { name: "Model X", category: "Electric SUV", years: "2015 - Now", image: "?", variants: ["Long Range", "Plaid"] }
     ]
   },
   "Aston Martin": {
     models: [
-      { name: "DB11", category: "Grand Tourer", years: "2016 - Now", image: "🏎️", variants: ["V8", "V12", "AMR"] },
-      { name: "Vantage", category: "Sports Car", years: "2005 - Now", image: "🏎️", variants: ["Coupe", "Roadster", "F1 Edition"] },
-      { name: "DBX", category: "Luxury SUV", years: "2020 - Now", image: "🚙", variants: ["Base", "707"] }
+      { name: "DB11", category: "Grand Tourer", years: "2016 - Now", image: "???", variants: ["V8", "V12", "AMR"] },
+      { name: "Vantage", category: "Sports Car", years: "2005 - Now", image: "???", variants: ["Coupe", "Roadster", "F1 Edition"] },
+      { name: "DBX", category: "Luxury SUV", years: "2020 - Now", image: "??", variants: ["Base", "707"] }
     ]
   },
   "Ferrari": {
     models: [
-      { name: "Roma", category: "Grand Tourer", years: "2020 - Now", image: "🏎️", variants: ["Coupe", "Spider"] },
-      { name: "Portofino", category: "Grand Tourer", years: "2018 - Now", image: "🏎️", variants: ["Base", "M"] },
-      { name: "F8 Tributo", category: "Sports Car", years: "2019 - Now", image: "🏎️", variants: ["Coupe", "Spider"] },
-      { name: "296 GTB", category: "Sports Car", years: "2021 - Now", image: "🏎️", variants: ["GTB", "GTS"] }
+      { name: "Roma", category: "Grand Tourer", years: "2020 - Now", image: "???", variants: ["Coupe", "Spider"] },
+      { name: "Portofino", category: "Grand Tourer", years: "2018 - Now", image: "???", variants: ["Base", "M"] },
+      { name: "F8 Tributo", category: "Sports Car", years: "2019 - Now", image: "???", variants: ["Coupe", "Spider"] },
+      { name: "296 GTB", category: "Sports Car", years: "2021 - Now", image: "???", variants: ["GTB", "GTS"] }
     ]
   },
   "Datsun": {
     models: [
-      { name: "GO", category: "Hatchback", years: "2014 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] },
-      { name: "GO+", category: "MUV", years: "2015 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] },
-      { name: "redi-GO", category: "Hatchback", years: "2016 - 2022", image: "🚗", variants: ["D", "A", "T", "T(O)"] }
+      { name: "GO", category: "Hatchback", years: "2014 - 2022", image: "??", variants: ["D", "A", "T", "T(O)"] },
+      { name: "GO+", category: "MUV", years: "2015 - 2022", image: "??", variants: ["D", "A", "T", "T(O)"] },
+      { name: "redi-GO", category: "Hatchback", years: "2016 - 2022", image: "??", variants: ["D", "A", "T", "T(O)"] }
     ]
   },
   "Mitsubishi": {
     models: [
-      { name: "Pajero Sport", category: "SUV", years: "2011 - 2021", image: "🚙", variants: ["Standard", "Select", "Sport"] },
-      { name: "Outlander", category: "SUV", years: "2007 - 2021", image: "🚙", variants: ["Standard", "Chrome"] },
-      { name: "Lancer", category: "Sedan", years: "1998 - 2012", image: "🚗", variants: ["GLX", "SFX", "Cedia"] }
+      { name: "Pajero Sport", category: "SUV", years: "2011 - 2021", image: "??", variants: ["Standard", "Select", "Sport"] },
+      { name: "Outlander", category: "SUV", years: "2007 - 2021", image: "??", variants: ["Standard", "Chrome"] },
+      { name: "Lancer", category: "Sedan", years: "1998 - 2012", image: "??", variants: ["GLX", "SFX", "Cedia"] }
     ]
   },
   "Citroen": {
     models: [
-      { name: "C3", category: "Hatchback", years: "2022 - Now", image: "🚗", variants: ["Live", "Feel", "Shine"] },
-      { name: "C3 Aircross", category: "SUV", years: "2023 - Now", image: "🚙", variants: ["You", "Plus", "Max"] },
-      { name: "C5 Aircross", category: "SUV", years: "2021 - Now", image: "🚙", variants: ["Feel", "Shine"] }
+      { name: "C3", category: "Hatchback", years: "2022 - Now", image: "??", variants: ["Live", "Feel", "Shine"] },
+      { name: "C3 Aircross", category: "SUV", years: "2023 - Now", image: "??", variants: ["You", "Plus", "Max"] },
+      { name: "C5 Aircross", category: "SUV", years: "2021 - Now", image: "??", variants: ["Feel", "Shine"] }
     ]
   },
   "Isuzu": {
     models: [
-      { name: "D-Max V-Cross", category: "Pickup", years: "2016 - Now", image: "🛻", variants: ["Standard", "Z", "Z Prestige"] },
-      { name: "MU-X", category: "SUV", years: "2017 - Now", image: "🚙", variants: ["4x2", "4x4"] }
+      { name: "D-Max V-Cross", category: "Pickup", years: "2016 - Now", image: "??", variants: ["Standard", "Z", "Z Prestige"] },
+      { name: "MU-X", category: "SUV", years: "2017 - Now", image: "??", variants: ["4x2", "4x4"] }
     ]
   }
 };
@@ -435,7 +435,7 @@ export const brandData: {
 const DEFAULT_SELL_CATALOG = catalogFromLegacy(brandData, BRAND_LOGOS);
 
 // Gujarat RTO mapping GJ-1 to GJ-38 as requested by the user
-// A valid Indian 10-digit mobile: digits only and a leading 6–9. Used by
+// A valid Indian 10-digit mobile: digits only and a leading 6-9. Used by
 // both the partial-lead capture and the final submit so a plausible-but-junk
 // number (e.g. "0123456789" or "5555555555") never reaches dispatch.
 const isValidMobile = (value: string): boolean =>
@@ -512,7 +512,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // GA4 funnel — Event 1: user reached the Sell Car page. Event 2 (form
+  // GA4 funnel - Event 1: user reached the Sell Car page. Event 2 (form
   // started) fires only on the first genuine interaction (P6), never on mount,
   // so bounce traffic cannot inflate the funnel.
   const fireFormStartOnce = React.useCallback(() => {
@@ -595,7 +595,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     let { email, password, name, mobile, city } = sellerAutoAuthRef.current;
 
     // The submit-time auto account may be gone if the page was reloaded, but
-    // the generated password persists in localStorage — re-read it by email.
+    // the generated password persists in localStorage - re-read it by email.
     if (!password && email) {
       password = localStorage.getItem(getAutoPasswordKey(email)) || "";
     }
@@ -632,11 +632,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         if (!authError && signedInUser) user = signedInUser;
         else {
           lastAuthError = authError;
-          console.warn("Auto seller sign-in still failed — falling back to local profile.", authError);
+          console.warn("Auto seller sign-in still failed - falling back to local profile.", authError);
         }
       } catch (e) {
         lastAuthError = e;
-        console.warn("Auto seller sign-in threw — falling back to local profile.", e);
+        console.warn("Auto seller sign-in threw - falling back to local profile.", e);
       }
     }
 
@@ -651,13 +651,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
 
     // 3. NO REAL SESSION (P5): never build a fake profile or open the
-    //    dashboard with an empty id. Tell the seller honestly — the inspection
+    //    dashboard with an empty id. Tell the seller honestly - the inspection
     //    is already saved and they can sign in any time to track it there.
     //    (Still no login popup: the success screen stays visible.)
     const errText = `${lastAuthError?.message || lastAuthError?.code || ""}`.toLowerCase();
     const emailPending = /email.*(not confirmed|not verified)|email_not_confirmed|confirm/i.test(errText);
     if (emailPending) {
-      toast.info("Your inspection is saved. Please confirm the email sent to " + (email || "your inbox") + " to activate your seller account — then sign in to track it in your dashboard.");
+      toast.info("Your inspection is saved. Please confirm the email sent to " + (email || "your inbox") + " to activate your seller account - then sign in to track it in your dashboard.");
     } else {
       toast.info("Your inspection is saved! Sign in any time to track it in your Seller dashboard.");
     }
@@ -667,7 +667,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     sellCarBannerTitle: "Sell Your Car. Get the Best Offer.",
     sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with transparent payment and RC transfer support.",
     sellCarFormHeading: "Tell Us About Your Car",
-    sellCarFormSubheading: "Enter your car details and mobile number — it only takes a few seconds."
+    sellCarFormSubheading: "Enter your car details and mobile number - it only takes a few seconds."
   });
 
   React.useEffect(() => {
@@ -699,7 +699,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // Stepper state — starts at Step 0 (registration lookup, optional, never blocks)
+  // Stepper state - starts at Step 0 (registration lookup, optional, never blocks)
   const [wizardStep, setWizardStep] = React.useState<number>(0);
   const [regLookup, setRegLookup] = React.useState<VehicleDetails | null>(null);
   const [regSkipped, setRegSkipped] = React.useState<string | null>(null);
@@ -716,7 +716,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   // Complete list of brands for viewing all
   const [showAllBrands, setShowAllBrands] = React.useState(false);
 
-  // Selected values — no preselected year/variant/fuel/transmission (P2):
+  // Selected values - no preselected year/variant/fuel/transmission (P2):
   // the seller must make an explicit choice before continuing.
   const [selectedBrand, setSelectedBrand] = React.useState("");
   const [selectedModel, setSelectedModel] = React.useState("");
@@ -732,10 +732,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
   // Contact details & Booking address
   const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
+const [email, setEmail] = React.useState("");
   const [mobile, setMobile] = React.useState("");
-  const [address, setAddress] = React.useState("");
-  const [pincode, setPincode] = React.useState("");
   const [preferredDate, setPreferredDate] = React.useState("");
   const [preferredTime, setPreferredTime] = React.useState("");
 
@@ -760,7 +758,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
 
-    // Shared honest heuristic — same numbers as the car valuation used on the
+    // Shared honest heuristic - same numbers as the car valuation used on the
     // Buy-side detail page, so a quote never contradicts the rest of the site.
     const finalValue = estimateCarValue(calcBrand.trim(), Number(calcYear), mileageNum);
     setCalcEstimatedValue(finalValue);
@@ -849,9 +847,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const brandModels = (selectedBrand && sellCatalog[selectedBrand]?.models)
     ? sellCatalog[selectedBrand].models
     : [
-        { name: "Grand i10", category: "Hatchback", years: "2013-2020", image: "🚗", variants: ["Era", "Magna", "Sportz", "Asta"] },
-        { name: "Swift Dzire", category: "Sedan", years: "2008-Now", image: "🚗", variants: ["LXI", "VXI", "ZXI"] },
-        { name: "Polo", category: "Hatchback", years: "2010-2022", image: "🚗", variants: ["Trendline", "Comfortline", "Highline"] }
+        { name: "Grand i10", category: "Hatchback", years: "2013-2020", image: "??", variants: ["Era", "Magna", "Sportz", "Asta"] },
+        { name: "Swift Dzire", category: "Sedan", years: "2008-Now", image: "??", variants: ["LXI", "VXI", "ZXI"] },
+        { name: "Polo", category: "Hatchback", years: "2010-2022", image: "??", variants: ["Trendline", "Comfortline", "Highline"] }
       ];
 
   const filteredModels = brandModels.filter(m => 
@@ -863,13 +861,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     r.city.toLowerCase().includes(rtoSearch.toLowerCase())
   );
 
-  // Available Years — dynamic current-year..2000 (P2), shared helper.
+  // Available Years - dynamic current-year..2000 (P2), shared helper.
   const yearsList: number[] = buildSellCarYearOptions();
 
   // Inspection date window (P4): tomorrow .. +14 days, shared helper.
   const dateBounds = inspectionDateBounds();
 
-  // Partial lead capture — save the mobile + brand + model as soon as these are
+  // Partial lead capture - save the mobile + brand + model as soon as these are
   // known (right after Brand & Model), so a visitor who drops off mid-form still
   // leaves a recoverable lead. The returned row id is reused later to UPDATE the
   // same record with the full inspection details on final submit.
@@ -885,14 +883,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     try {
       // Partial-lead capture runs only for signed-in users. Anonymous visitors have
       // no UPDATE grant on inspections, so a partial row they create now could never
-      // be promoted to the full inspection at final submit — it would just leave a
+      // be promoted to the full inspection at final submit - it would just leave a
       // duplicate "pending" lead behind. Their auto-created Seller account is made at
       // final submit,and the completed row is linked back to it then (seller_id backfill).
       let partialUser: any = null;
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) partialUser = user;
-      } catch { /* best-effort — falls through to the plain continue flow */ }
+      } catch { /* best-effort - falls through to the plain continue flow */ }
 
       if (partialUser) {
         // Partial lead now carries the real plate + city when known (P1/P4).
@@ -907,7 +905,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               brand: selectedBrand,
               model: selectedModel,
               // NOT NULL column, but the city is only chosen on the Verify
-              // step — store empty rather than a fabricated default (P4);
+              // step - store empty rather than a fabricated default (P4);
               // the final submit overwrites it with the explicit pick.
               city: selectedCity || "",
               ...(partialReg.ok ? { reg_number: partialReg.normalized } : {}),
@@ -947,7 +945,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
 
     if (email.trim() && !validateOptionalEmail(email)) {
-      toast.error("That email doesn't look right — fix it or leave it blank.");
+      toast.error("That email doesn't look right - fix it or leave it blank.");
       return;
     }
     // Registration plate is REQUIRED (P1): lookup result or manual entry,
@@ -990,12 +988,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       toast.error("Please pick an inspection time slot.");
       return;
     }
-    if (pincode.trim() && !isValidPincode(pincode)) {
-      toast.error("Pincode must be 6 digits starting 1-9 (or leave it blank).");
       return;
     }
 
-    // Email is OPTIONAL (P5): store a real address or NULL — never a fake
+    // Email is OPTIONAL (P5): store a real address or NULL - never a fake
     // deliverable-looking address. Auto-account creation runs only when the
     // seller typed a real email.
     const typedEmail = email.trim();
@@ -1004,7 +1000,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     setIsSubmitting(true);
 
-    // GA4 funnel — Event 3: the form was submitted with valid data. Fired before
+    // GA4 funnel - Event 3: the form was submitted with valid data. Fired before
     // the DB write so a gap vs. Event 4 exposes write/reporting failures.
     trackSellerFormSubmit();
 
@@ -1046,11 +1042,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
     // No fabricated plates/dates/times: every persisted field below passed
     // explicit validation above (P1/P2/P4).
-    const street = address.trim();
     const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.slice(-4)})`;
     const finalEmail: string | null = resolvedEmail || (typeof user?.email === "string" && validateOptionalEmail(user.email) ? user.email : null);
-    const finalAddress = `Home Doorstep Inspection: ${street}${pincode.trim() ? `, ${pincode.trim()}` : ""}, ${resolvedCity}${selectedRTO && selectedRTO !== "OTHER" ? ` (RTO ${selectedRTO})` : ""}`;
-    const finalDate = preferredDate;
+    const finalAddress = `Home Doorstep Inspection, ${resolvedCity}${selectedRTO && selectedRTO !== "OTHER" ? ` (RTO ${selectedRTO})` : ""}`;
     const finalTime = preferredTime;
 
     const inspectionRecord = {
@@ -1081,16 +1075,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // on `error === null` even when PostgREST returns no row (anon has no SELECT
       // visibility); partial-lead promotion is read-back confirmed and falls back
       // to a fresh INSERT when the UPDATE matches nothing. Throws on failure.
-      // Duplicate-lead guard (P5, race-aware best effort) — see
+      // Duplicate-lead guard (P5, race-aware best effort) - see
       // findConfirmedDuplicateLead (src/lib/sellCarSubmit.ts). Two hard rules:
       //   1. THIS submission's own partial lead (created at the Mobile step in
       //      handleMobileSubmit; its real DB id lives in partialLeadId) is
-      //      excluded by id — it is the submission in progress, never a
+      //      excluded by id - it is the submission in progress, never a
       //      duplicate. Matching it used to skip the full write below and
       //      lose the record, conversions and fan-out.
       //   2. Success may only be short-circuited when the matched row is a
       //      CONFIRMED COMPLETE pending inspection (slot + odometer + address
-      //      persisted — thin "Partial lead" rows never qualify), so a real,
+      //      persisted - thin "Partial lead" rows never qualify), so a real,
       //      complete record is guaranteed to exist first.
       // Read-only and fail-open: any problem with the check itself proceeds
       // with the full submit, which persists the record BEFORE success,
@@ -1104,7 +1098,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           excludeLeadId: partialLeadId
         }));
       } catch (dupErr) {
-        console.warn("Duplicate-lead pre-check failed — proceeding with submit:", dupErr);
+        console.warn("Duplicate-lead pre-check failed - proceeding with submit:", dupErr);
       }
       if (duplicateRow) {
         setIsSubmitting(false);
@@ -1137,13 +1131,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       if (submitResult.fellBackToInsert) setPartialLeadId(null);
 
       // Real database id when readable (signed-in/mock path). For anonymous
-      // visitors under RLS there is no readable id — downstream systems get
+      // visitors under RLS there is no readable id - downstream systems get
       // the notification WITHOUT a fabricated id (P5), never "insp-temp-id".
       const inspectionId: string | null = submitResult.id;
       const inserted: any = { ...inspectionRecord, ...(inspectionId ? { id: inspectionId } : {}) };
       setCreatedRequest(inserted);
 
-      // Show success immediately — never block the UI on the follow-up calls.
+      // Show success immediately - never block the UI on the follow-up calls.
       setFormStep("success");
       toast.success("Your inspection will contact you shortly!");
 
@@ -1155,7 +1149,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // GA4 conversion (no PII) fires only after the write was confirmed.
       trackSellerLeadCreated();
 
-      // Auto sign-in so the seller lands on the Seller Dashboard — runs in the
+      // Auto sign-in so the seller lands on the Seller Dashboard - runs in the
       // background and never blocks the submission itself. Only when the seller
       // typed a real email (P5): no fake @buyer.local accounts are created.
       void (async () => {
@@ -1212,9 +1206,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         }).catch((err) => console.warn("Automation event emission failed:", err));
         } else {
           // Anonymous RLS path: row is confirmed saved, but there is no
-          // readable id to fan out — notifications dispatch from the DB
+          // readable id to fan out - notifications dispatch from the DB
           // trigger (automation_schema.sql) instead. Never invent an id.
-          console.info("Inspection saved (anon, no readable id) — skipping client-side fan-out.");
+          console.info("Inspection saved (anon, no readable id) - skipping client-side fan-out.");
         }
       })();
 
@@ -1248,7 +1242,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     }
   };
 
-  // Step 0 helpers — RegLookup prefill (never blocks, always editable after)
+  // Step 0 helpers - RegLookup prefill (never blocks, always editable after)
   const canonicalBrand = (raw?: string | null): string => {
     const v = String(raw || "").trim().toLowerCase();
     if (!v) return "";
@@ -1330,7 +1324,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               Submit your car details.
             </Button>
             <p className="text-[11px] sm:text-xs text-slate-600 font-bold">
-              Free Doorstep Inspection • Competitive Offers • Guided Payment • RC Transfer Support
+              Free Doorstep Inspection  Competitive Offers  Guided Payment  RC Transfer Support
             </p>
           </div>
         </div>
@@ -1362,14 +1356,14 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
-                    { step: 0, label: regLookup?.regNormalized ? `✔ ${maskReg(regLookup.regNormalized)}` : "Reg No." },
-                    { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "Brand" },
-                    { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "Model" },
-                    { step: 3, label: mobile ? `✔ ${maskMobile(mobile)}` : "Mobile" },
-                    { step: 4, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "Variant" },
-                    { step: 5, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
-                    { step: 6, label: selectedBrand && selectedModel && selectedFuel && selectedTransmission ? `✔ ${selectedFuel}` : "Fuel" },
-                    { step: 7, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
+                    { step: 0, label: regLookup?.regNormalized ? `? ${maskReg(regLookup.regNormalized)}` : "Reg No." },
+                    { step: 1, label: selectedBrand ? `? ${selectedBrand}` : "Brand" },
+                    { step: 2, label: selectedModel ? `? ${selectedModel}` : "Model" },
+                    { step: 3, label: mobile ? `? ${maskMobile(mobile)}` : "Mobile" },
+                    { step: 4, label: selectedBrand && selectedModel && selectedVariant ? `? ${selectedVariant}` : "Variant" },
+                    { step: 5, label: selectedBrand && selectedModel && selectedYear ? `? ${selectedYear}` : "Year" },
+                    { step: 6, label: selectedBrand && selectedModel && selectedFuel && selectedTransmission ? `? ${selectedFuel}` : "Fuel" },
+                    { step: 7, label: selectedRTO ? `? ${selectedRTO}` : "RTO" },
                     { step: 8, label: "Verify" }
                   ].map((item) => {
                     const isCompleted = wizardStep > item.step;
@@ -1408,7 +1402,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <RegLookupStep onPrefill={handleRegPrefill} onManual={handleRegManual} />
                     {regSkipped && (
                       <p className="text-center text-[11px] text-slate-400 font-medium">
-                        Continuing manually — you can enter all details yourself.
+                        Continuing manually - you can enter all details yourself.
                       </p>
                     )}
                   </div>
@@ -1420,7 +1414,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     {regLookup && (
                       <div className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
                         <p className="text-[11px] font-bold text-[#2E7D32]">
-                          Prefilled from {regLookup.regNormalized} — tap any step to edit.
+                          Prefilled from {regLookup.regNormalized} - tap any step to edit.
                         </p>
                         <button
                           type="button"
@@ -1453,7 +1447,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         const isSelected = selectedBrand === b;
                         const matchingDbBrand = dbBrands.find(brand => brand.name === b);
                         const logoUrl = sellCatalog[b]?.logo || BRAND_LOGOS[b] || matchingDbBrand?.logo_url || matchingDbBrand?.logo;
-                        const isImgValid = logoUrl && logoUrl !== "⭐" && (
+                        const isImgValid = logoUrl && logoUrl !== "?" && (
                           logoUrl.startsWith("http") || 
                           logoUrl.startsWith("/") || 
                           logoUrl.startsWith("data:")
@@ -1570,7 +1564,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                               <div>
                                 <h4 className="font-bold text-xs text-slate-900 leading-tight">{m.name}</h4>
                                 <p className="text-[10px] text-slate-400 mt-0.5 leading-none font-bold">
-                                  {m.category} · {m.years}
+                                  {m.category} � {m.years}
                                 </p>
                               </div>
                             </div>
@@ -1741,7 +1735,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant}</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} � {selectedVariant}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which year is your car?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Select manufacturing year on RC plate</p>
@@ -1789,7 +1783,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} � {selectedYear})</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Fuel &amp; transmission</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the transmission, then tap your fuel type</p>
@@ -1868,7 +1862,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel}</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} � {selectedVariant} � {selectedYear} � {selectedFuel}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Where is the car registered?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the Gujarat RTO office on your license plate</p>
@@ -1975,10 +1969,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                           {selectedRTO === "OTHER" ? "REGISTRATION: OUTSIDE GUJARAT" : `GJ REGISTRATION: ${selectedRTO}`}
                         </span>
                         <h4 className="font-black text-sm text-slate-900 mt-1.5">
-                          {selectedBrand} {selectedModel} · {selectedVariant}
+                          {selectedBrand} {selectedModel} � {selectedVariant}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                          {selectedYear} Manufacturing · {selectedFuel}
+                          {selectedYear} Manufacturing � {selectedFuel}
                         </p>
                       </div>
                     </div>
@@ -2007,7 +2001,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
-                      {/* Odometer / kilometres (P1) — real value, required */}
+                      {/* Odometer / kilometres (P1) - real value, required */}
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">KILOMETRES DRIVEN (ODOMETER) *</label>
                         <div className="relative">
@@ -2048,65 +2042,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
-                      {/* Doorstep address (P4) — free text */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">DOORSTEP ADDRESS *</label>
-                        <div className="relative">
-                          <Home className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder="Flat / society / street"
-                            type="text"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            required
-                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Pincode (P4) — optional, validated when present */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PINCODE (OPTIONAL)</label>
-                        <div className="relative">
-                          <Navigation className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder="e.g. 394540"
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={6}
-                            value={pincode}
-                            onChange={(e) => setPincode(e.target.value.replace(/[^\d]/g, ""))}
-                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                        {pincode.length > 0 && !isValidPincode(pincode) && (
-                          <p className="text-[10px] font-bold text-rose-600">Enter a valid 6-digit pincode or leave it blank.</p>
-                        )}
-                      </div>
-
-                      {/* Email (P5) — optional, validated; never fabricated */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">EMAIL (OPTIONAL)</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                          <Input
-                            placeholder="you@example.com"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                          />
-                        </div>
-                        {email.trim().length > 0 && !validateOptionalEmail(email) && (
-                          <p className="text-[10px] font-bold text-rose-600">Enter a valid email or leave it blank.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Inspection slot (P4) — date within tomorrow..+14 days + time slot */}
-                    <div className="space-y-3 border-t border-slate-100 pt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
                           <div className="relative">
                             <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -2343,7 +2278,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Tell Us About Your Car</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Enter your car details and mobile number — it only takes a few seconds.
+                  Enter your car details and mobile number - it only takes a few seconds.
                 </p>
               </div>
             </div>
@@ -2407,3 +2342,4 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     </div>
   );
 }
+
