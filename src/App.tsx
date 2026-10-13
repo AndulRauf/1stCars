@@ -902,6 +902,13 @@ export default function App() {
       <MobileLoginModal
         isOpen={mobileLoginOpen}
         onClose={() => setMobileLoginOpen(false)}
+        onRequestEmailLogin={() => {
+          // No verified session yet: fall back to the EXISTING email/password
+          // login (no new auth mechanism). Mobile number alone never signs
+          // anyone in (see MobileLoginModal + src/lib/mobileLogin.ts).
+          setMobileLoginOpen(false);
+          setAuthModal({ isOpen: true, mode: "login" });
+        }}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           triggerToast(`Welcome back, ${user.name}!`);
