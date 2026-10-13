@@ -18,13 +18,11 @@ import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
 import { findConfirmedDuplicateLead, isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
 import {
-  buildSellCarYearOptions, guardLookupYear, inspectionDateBounds, isInspectionDateInWindow,
+  buildSellCarYearOptions, inspectionDateBounds, isInspectionDateInWindow,
   isValidKmDriven,
-  kmValidationError, maskMobile, maskReg, parseKmDriven,
-  validateOptionalEmail, validateSellCarReg
+  kmValidationError, maskMobile, parseKmDriven,
+  validateOptionalEmail
 } from "@/src/lib/sellCarValidation";
-import { RegLookupStep } from "@/src/components/RegLookupStep";
-import type { VehicleDetails } from "@/src/lib/vehicleLookup";
 import { Profile } from "@/src/lib/db";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
@@ -699,10 +697,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // Stepper state - starts at Step 0 (registration lookup, optional, never blocks)
-  const [wizardStep, setWizardStep] = React.useState<number>(0);
-  const [regLookup, setRegLookup] = React.useState<VehicleDetails | null>(null);
-  const [regSkipped, setRegSkipped] = React.useState<string | null>(null);
+  // Stepper state - Brand-first (registration step removed; will be added back later)
+  const [wizardStep, setWizardStep] = React.useState<number>(1);
   const [formStep, setFormStep] = React.useState<"form" | "success">("form");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [createdRequest, setCreatedRequest] = React.useState<any>(null);
@@ -727,7 +723,6 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   const [selectedRTO, setSelectedRTO] = React.useState("");
   const [selectedCity, setSelectedCity] = React.useState("");
   const [kmInput, setKmInput] = React.useState("");
-  const [manualRegInput, setManualRegInput] = React.useState("");
 
 
   // Contact details & Booking address
@@ -893,9 +888,9 @@ const [email, setEmail] = React.useState("");
       } catch { /* best-effort - falls through to the plain continue flow */ }
 
       if (partialUser) {
-        // Partial lead now carries the real plate + city when known (P1/P4).
-        // Backward-compatible: still a plain pending insert, never blocks.
-        const partialReg = validateSellCarReg(regLookup?.regNormalized || manualRegInput);
+        // Partial lead carries brand/model + city when known.
+        // Registration number step is removed for now (added back later),
+        // so no plate is stored here.
         const { data, error } = await supabase
           .from("inspections")
           .insert([
@@ -908,7 +903,6 @@ const [email, setEmail] = React.useState("");
               // step - store empty rather than a fabricated default (P4);
               // the final submit overwrites it with the explicit pick.
               city: selectedCity || "",
-              ...(partialReg.ok ? { reg_number: partialReg.normalized } : {}),
               status: "pending",
               notes: "Partial lead. Form in progress"
             }
@@ -948,15 +942,8 @@ const [email, setEmail] = React.useState("");
       toast.error("That email doesn't look right - fix it or leave it blank.");
       return;
     }
-    // Registration plate is REQUIRED (P1): lookup result or manual entry,
-    // validated with the existing RC validator. Never fabricated.
-    const regCheck = validateSellCarReg(regLookup?.regNormalized || manualRegInput);
-    if (!regCheck.ok) {
-      toast.error("Please enter your car's registration number (e.g. GJ 01 AB 1234).");
-      setWizardStep(0);
-      return;
-    }
-    const finalRegNumber = regCheck.normalized;
+    // Registration number step removed for now (will be added back later).
+    // No plate validation here.
     // Kilometres are REQUIRED and real (P1): no hardcoded fallback.
     const kmError = kmValidationError(kmInput);
     if (kmError || !isValidKmDriven(kmInput)) {
@@ -986,8 +973,6 @@ const [email, setEmail] = React.useState("");
     }
     if (!preferredTime) {
       toast.error("Please pick an inspection time slot.");
-      return;
-    }
       return;
     }
 
@@ -1040,19 +1025,22 @@ const [email, setEmail] = React.useState("");
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
-    // No fabricated plates/dates/times: every persisted field below passed
+    // No fabricated dates/times: every persisted field below passed
     // explicit validation above (P1/P2/P4).
+    // Registration number column is NOT NULL in the DB but the form step is
+    // removed for now â€” store an empty placeholder (added back later).
     const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.slice(-4)})`;
     const finalEmail: string | null = resolvedEmail || (typeof user?.email === "string" && validateOptionalEmail(user.email) ? user.email : null);
     const finalAddress = `Home Doorstep Inspection, ${resolvedCity}${selectedRTO && selectedRTO !== "OTHER" ? ` (RTO ${selectedRTO})` : ""}`;
     const finalTime = preferredTime;
+    const finalDate = preferredDate;
 
     const inspectionRecord = {
       seller_id: user?.id || null,
       seller_name: finalName,
       seller_mobile: mobile,
       ...(finalEmail ? { seller_email: finalEmail } : {}),
-      reg_number: finalRegNumber,
+      reg_number: "",
       brand: selectedBrand,
       model: selectedModel,
       variant: selectedVariant.trim(),
@@ -1094,7 +1082,6 @@ const [email, setEmail] = React.useState("");
         ({ duplicateRow } = await findConfirmedDuplicateLead({
           supabase,
           mobile,
-          regNumber: finalRegNumber,
           excludeLeadId: partialLeadId
         }));
       } catch (dupErr) {
@@ -1242,56 +1229,6 @@ const [email, setEmail] = React.useState("");
     }
   };
 
-  // Step 0 helpers - RegLookup prefill (never blocks, always editable after)
-  const canonicalBrand = (raw?: string | null): string => {
-    const v = String(raw || "").trim().toLowerCase();
-    if (!v) return "";
-    const hit = allBrands.find((b) => String(b).toLowerCase() === v);
-    if (hit) return hit;
-    const loose = allBrands.find(
-      (b) => String(b).toLowerCase().includes(v) || v.includes(String(b).toLowerCase())
-    );
-    return loose || "";
-  };
-
-  const handleRegPrefill = (d: VehicleDetails) => {
-    setRegLookup(d);
-    setRegSkipped(null);
-    if (d.brand) {
-      const brand = canonicalBrand(d.brand);
-      if (brand) {
-        setSelectedBrand(brand);
-        setSelectedModel("");
-      }
-    }
-    if (d.model) setSelectedModel(String(d.model));
-    // Guard the lookup-provided year into the form's valid range (P6) so a
-    // bad mapping (e.g. 9999) can never be preselected or persisted.
-    const lookupYear = guardLookupYear(d.year);
-    if (lookupYear) setSelectedYear(lookupYear);
-    if (d.fuel) setSelectedFuel(String(d.fuel));
-    if (d.variant) setSelectedVariant(String(d.variant));
-    if (d.rtoCode) {
-      const code = String(d.rtoCode).toUpperCase().replace(/[^A-Z0-9]/g, "");
-      const withDash = code.length >= 4 ? `${code.slice(0, 2)}-${code.slice(2, 4)}` : code;
-      const match = gujaratRTOs.find(
-        (r) => r.code.toUpperCase() === withDash || r.code.replace("-", "").toUpperCase() === code
-      );
-      if (match) setSelectedRTO(match.code);
-    }
-    // Land on Step 1 (Brand) with prefilled values visible; user can edit freely.
-    setWizardStep(1);
-  };
-
-  const handleRegManual = (_reason: string, manualReg: string) => {
-    setRegLookup(null);
-    setRegSkipped(_reason || "skipped");
-    // Keep the plate the seller typed so it can be validated and persisted even
-    // when the RC lookup never ran (P1).
-    setManualRegInput(manualReg || "");
-    setWizardStep(1);
-  };
-
   // Prominent hero CTA scrolls the visitor straight to the form card.
   const scrollToSellForm = () => {
     document.getElementById("sell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1356,7 +1293,6 @@ const [email, setEmail] = React.useState("");
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
-                    { step: 0, label: regLookup?.regNormalized ? `? ${maskReg(regLookup.regNormalized)}` : "Reg No." },
                     { step: 1, label: selectedBrand ? `? ${selectedBrand}` : "Brand" },
                     { step: 2, label: selectedModel ? `? ${selectedModel}` : "Model" },
                     { step: 3, label: mobile ? `? ${maskMobile(mobile)}` : "Mobile" },
@@ -1392,39 +1328,13 @@ const [email, setEmail] = React.useState("");
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-7">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
-                    style={{ width: `${((wizardStep + 1) / 9) * 100}%` }}
+                    style={{ width: `${(wizardStep / 8) * 100}%` }}
                   />
                 </div>
-
-                {/* STEP 0: REGISTRATION LOOKUP (optional, never blocks) */}
-                {wizardStep === 0 && (
-                  <div className="space-y-4">
-                    <RegLookupStep onPrefill={handleRegPrefill} onManual={handleRegManual} />
-                    {regSkipped && (
-                      <p className="text-center text-[11px] text-slate-400 font-medium">
-                        Continuing manually - you can enter all details yourself.
-                      </p>
-                    )}
-                  </div>
-                )}
 
                 {/* STEP 1: SELECT BRAND */}
                 {wizardStep === 1 && (
                   <div className="space-y-6">
-                    {regLookup && (
-                      <div className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-                        <p className="text-[11px] font-bold text-[#2E7D32]">
-                          Prefilled from {regLookup.regNormalized} - tap any step to edit.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setWizardStep(0)}
-                          className="text-[11px] font-black uppercase tracking-wider text-[#2E7D32] underline shrink-0"
-                        >
-                          Edit reg
-                        </button>
-                      </div>
-                    )}
                     <div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which brand is your car?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick your car brand to get started</p>
@@ -1502,16 +1412,6 @@ const [email, setEmail] = React.useState("");
                       </button>
                     )}
 
-                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
-                      <button
-                        type="button"
-                        onClick={() => setWizardStep(0)}
-                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" /> Back
-                      </button>
-                    </div>
-
                   </div>
                 )}
 
@@ -1564,7 +1464,7 @@ const [email, setEmail] = React.useState("");
                               <div>
                                 <h4 className="font-bold text-xs text-slate-900 leading-tight">{m.name}</h4>
                                 <p className="text-[10px] text-slate-400 mt-0.5 leading-none font-bold">
-                                  {m.category} · {m.years}
+                                  {m.category} ï¿½ {m.years}
                                 </p>
                               </div>
                             </div>
@@ -1735,7 +1635,7 @@ const [email, setEmail] = React.useState("");
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant}</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ï¿½ {selectedVariant}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which year is your car?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Select manufacturing year on RC plate</p>
@@ -1783,7 +1683,7 @@ const [email, setEmail] = React.useState("");
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} · {selectedYear})</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ({selectedVariant} ï¿½ {selectedYear})</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Fuel &amp; transmission</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the transmission, then tap your fuel type</p>
@@ -1862,7 +1762,7 @@ const [email, setEmail] = React.useState("");
                     <div>
                       <div className="flex items-center gap-1.5 text-xs text-[#2E7D32] font-black uppercase tracking-wider mb-1">
                         <span>Selected Car:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} · {selectedVariant} · {selectedYear} · {selectedFuel}</span>
+                        <span className="bg-emerald-100 px-2 py-0.5 rounded-md">{selectedBrand} {selectedModel} ï¿½ {selectedVariant} ï¿½ {selectedYear} ï¿½ {selectedFuel}</span>
                       </div>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Where is the car registered?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick the Gujarat RTO office on your license plate</p>
@@ -1969,10 +1869,10 @@ const [email, setEmail] = React.useState("");
                           {selectedRTO === "OTHER" ? "REGISTRATION: OUTSIDE GUJARAT" : `GJ REGISTRATION: ${selectedRTO}`}
                         </span>
                         <h4 className="font-black text-sm text-slate-900 mt-1.5">
-                          {selectedBrand} {selectedModel} · {selectedVariant}
+                          {selectedBrand} {selectedModel} ï¿½ {selectedVariant}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                          {selectedYear} Manufacturing · {selectedFuel}
+                          {selectedYear} Manufacturing ï¿½ {selectedFuel}
                         </p>
                       </div>
                     </div>
@@ -2042,21 +1942,22 @@ const [email, setEmail] = React.useState("");
                         </div>
                       </div>
 
-                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
-                          <div className="relative">
-                            <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                            <Input
-                              type="date"
-                              min={dateBounds.min}
-                              max={dateBounds.max}
-                              value={preferredDate}
-                              onChange={(e) => setPreferredDate(e.target.value)}
-                              required
-                              className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
-                            />
-                          </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
+                        <div className="relative">
+                          <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            type="date"
+                            min={dateBounds.min}
+                            max={dateBounds.max}
+                            value={preferredDate}
+                            onChange={(e) => setPreferredDate(e.target.value)}
+                            required
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
                         </div>
-                        <div className="space-y-1.5">
+                      </div>
+                      <div className="space-y-1.5">
                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED TIME *</label>
                           <div className="relative">
                             <Clock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -2079,7 +1980,6 @@ const [email, setEmail] = React.useState("");
                           Choose a date between {dateBounds.min} and {dateBounds.max}.
                         </p>
                       )}
-                    </div>
 
                     <div className="pt-4">
                       <Button

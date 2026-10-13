@@ -166,7 +166,7 @@ export interface DuplicateLeadCheckOptions {
   // Used structurally so both the real Supabase client and the dev mock satisfy it.
   supabase: { from: (table: string) => any };
   mobile: string;
-  regNumber: string;
+  regNumber?: string;
   /**
    * Real row id of THIS submission's Mobile-step partial lead (set by
    * handleMobileSubmit) — always excluded so the in-progress lead can never
@@ -178,9 +178,10 @@ export interface DuplicateLeadCheckOptions {
 
 export interface DuplicateLeadCheckResult {
   /**
-   * A confirmed COMPLETE pending inspection (same mobile + plate within the
-   * last 24h), or null when none exists — in which case the caller MUST
-   * proceed with the full submission.
+   * A confirmed COMPLETE pending inspection (same mobile within the
+   * last 24h; plate match only when a reg number is provided), or null
+   * when none exists — in which case the caller MUST proceed with the
+   * full submission.
    */
   duplicateRow: Record<string, any> | null;
   /** Candidate rows considered after exclusions (0 also on read failure). */
@@ -210,9 +211,13 @@ export async function findConfirmedDuplicateLead({
         "id,seller_name,seller_mobile,seller_email,reg_number,brand,model,year,km_driven,address,city,preferred_date,preferred_time,status,created_at,notes"
       )
       .eq("seller_mobile", mobile)
-      .eq("reg_number", regNumber)
       .eq("status", "pending")
       .gte("created_at", since);
+    // Plate filter only when a reg number is known (registration step is
+    // currently removed from the form — match on mobile alone then).
+    if (regNumber) {
+      query = query.eq("reg_number", regNumber);
+    }
     // Server-side exclusion of the current submission's own partial lead
     // (belt); the JS-side filter below repeats it (braces) in case a client
     // silently lacks `.neq`.
