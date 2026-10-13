@@ -16,7 +16,7 @@ import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
-import { findConfirmedDuplicateLead, isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
+import { findConfirmedDuplicateLead, isRlsBlockedWrite, isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
 import {
   buildSellCarYearOptions, inspectionDateBounds, isInspectionDateInWindow,
   isValidKmDriven,
@@ -1208,11 +1208,14 @@ const [email, setEmail] = React.useState("");
       const raw = error instanceof Error ? error.message : String(error);
       // RLS insert failures happen when the live database predates the current
       // schema (missing "Visitors submit inspection requests" policy / anon
-      // INSERT grant). Surface an actionable message instead of the raw SQL.
-      const isRlsBlocked = /row.?level security policy/i.test(raw) || /permission denied/i.test(raw);
+      // INSERT grant). Surface an actionable message — plus the raw database
+      // detail (truncated) so a repeat failure after running the SQL tells us
+      // the true remaining cause instead of the same generic text.
+      const isRlsBlocked = isRlsBlockedWrite(raw);
       const isSchemaMismatch = isUnknownColumnError(raw);
+      const rawDetail = raw.trim().slice(0, 220);
       const message = (isRlsBlocked || isSchemaMismatch)
-        ? "your request was blocked because the live database is out of date. Please run supabase/migrations/20261012000000_sell_car_lead_hardening.sql (or public/fix_inspections_insert.sql) in the Supabase SQL Editor, then try again."
+        ? `your request was blocked because the live database is out of date. Please run supabase/migrations/20261012000000_sell_car_lead_hardening.sql (or public/fix_inspections_insert.sql) in the Supabase SQL Editor, then try again.${rawDetail ? ` (Database said: ${rawDetail})` : ""}`
         : raw || "Please check your details and try again.";
       toast.error(`Failed to register your inspection: ${message}`);
 

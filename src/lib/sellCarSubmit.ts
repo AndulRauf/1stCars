@@ -42,8 +42,30 @@ export function isRlsBlockedWrite(message?: string): boolean {
   if (!message) return false;
   return (
     /row.?level security policy/i.test(message) ||
-    /permission denied/i.test(message)
+    /violates row.?level security/i.test(message) ||
+    /permission denied/i.test(message) ||
+    /42501/.test(message)
   );
+}
+
+// PostgREST errors carry the useful bits across message/details/hint/code
+// (supabase-js surfaces all four). Join them so detection above — and the
+// error finally thrown to the caller — never loses the real cause (e.g. a
+// NOT NULL or CHECK failure whose message alone is generic).
+export function postgrestErrorText(error: unknown): string {
+  if (!error) return "";
+  if (typeof error === "string") return error;
+  if (error instanceof Error && !(error as any).code && !(error as any).details && !(error as any).hint) {
+    return error.message || String(error);
+  }
+  const parts = [
+    (error as any).message,
+    (error as any).details,
+    (error as any).hint,
+    (error as any).code
+  ].filter((p) => typeof p === "string" && p.trim().length > 0);
+  if (parts.length === 0) return error instanceof Error ? error.message : String(error);
+  return parts.join(" | ");
 }
 
 // Denormalized columns added after the original inspections table was
@@ -114,10 +136,10 @@ export async function submitInspection({
       .eq("id", partialLeadId)
       .select("id")
       .maybeSingle();
-    if (res.error && isUnknownColumnError(res.error.message)) {
+    if (res.error && isUnknownColumnError(postgrestErrorText(res.error))) {
       console.warn(
         "Inspection UPDATE rejected an optional column — retrying with base columns only.",
-        res.error.message
+        postgrestErrorText(res.error)
       );
       retriedWithoutOptionalColumns = true;
       const baseRecord = stripOptionalInspectionColumns(record);
@@ -128,8 +150,8 @@ export async function submitInspection({
         .select("id")
         .maybeSingle();
     }
-    if (res.error && (isRlsBlockedWrite(res.error.message) || isUnknownColumnError(res.error.message))) {
-      console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", res.error.message);
+    if (res.error && (isRlsBlockedWrite(postgrestErrorText(res.error)) || isUnknownColumnError(postgrestErrorText(res.error)))) {
+      console.warn("Partial-lead UPDATE was blocked — inserting a fresh inspection row instead.", postgrestErrorText(res.error));
       fellBackToInsert = true;
     }
     if (!res.error && res.data?.id) {
@@ -152,17 +174,17 @@ export async function submitInspection({
     // anonymous callers under RLS get no row back (id stays null by design)
     // and that is still a confirmed success.
     let result = await supabase.from("inspections").insert([record]).select("id").maybeSingle();
-    if (result.error && isUnknownColumnError(result.error.message)) {
+    if (result.error && isUnknownColumnError(postgrestErrorText(result.error))) {
       console.warn(
         "Inspection insert rejected an optional column — retrying with base columns only.",
-        result.error.message
+        postgrestErrorText(result.error)
       );
       retriedWithoutOptionalColumns = true;
       const baseRecord = stripOptionalInspectionColumns(record);
       result = await supabase.from("inspections").insert([baseRecord]).select("id").maybeSingle();
     }
     if (result.error) {
-      throw new Error(result.error.message || "Could not save your inspection request.");
+      throw new Error(postgrestErrorText(result.error) || "Could not save your inspection request.");
     }
     submitted = true;
     if (result.data?.id) createdId = String(result.data.id);

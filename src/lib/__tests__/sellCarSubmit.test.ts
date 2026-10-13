@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect } from "vitest";
-import { submitInspection, isUnknownColumnError, isRlsBlockedWrite } from "@/src/lib/sellCarSubmit";
+import { postgrestErrorText, submitInspection, isUnknownColumnError, isRlsBlockedWrite } from "@/src/lib/sellCarSubmit";
 
 // ============================================================
 // SELL CAR INSPECTION SUBMIT — RLS regression tests
@@ -170,6 +170,16 @@ describe("submitInspection — stale schema-cache recovery", () => {
     expect(isUnknownColumnError("random error")).toBe(false);
     expect(isRlsBlockedWrite("permission denied for table inspections")).toBe(true);
     expect(isRlsBlockedWrite('new row violates row-level security policy')).toBe(true);
+    expect(isRlsBlockedWrite('violates row-level security policy for table "inspections" | code 42501')).toBe(true);
     expect(isRlsBlockedWrite("random error")).toBe(false);
+  });
+
+  it("postgrestErrorText keeps message + details + hint + code (nothing lost)", () => {
+    expect(
+      postgrestErrorText({ message: "permission denied", details: null, hint: null, code: "42501" })
+    ).toBe("permission denied | 42501");
+    expect(postgrestErrorText({ message: "only message" })).toBe("only message");
+    expect(postgrestErrorText("plain string")).toBe("plain string");
+    expect(postgrestErrorText(new Error("boom"))).toBe("boom");
   });
 });
