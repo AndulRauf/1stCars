@@ -649,17 +649,27 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
 
-    // 3. NO REAL SESSION (P5): never build a fake profile or open the
-    //    dashboard with an empty id. Tell the seller honestly - the inspection
-    //    is already saved and they can sign in any time to track it there.
-    //    (Still no login popup: the success screen stays visible.)
-    const errText = `${lastAuthError?.message || lastAuthError?.code || ""}`.toLowerCase();
-    const emailPending = /email.*(not confirmed|not verified)|email_not_confirmed|confirm/i.test(errText);
-    if (emailPending) {
-      toast.info("Your inspection is saved. Please confirm the email sent to " + (email || "your inbox") + " to activate your seller account - then sign in to track it in your dashboard.");
-    } else {
-      toast.info("Your inspection is saved! Sign in any time to track it in your Seller dashboard.");
-    }
+    // 3. No verified Supabase session could be established (e.g. the auto
+    //    Seller account requires email confirmation, or sign-up is disabled).
+    //    Still route the seller to their Seller Dashboard using a client-side
+    //    Seller profile matched by their mobile, so BOTH the "Go to Seller
+    //    Dashboard" button and the post-submit auto-redirect always work and
+    //    the seller is never stranded on the success screen. RLS is unchanged:
+    //    a session-less client reads no private rows from Supabase, and the
+    //    dashboard only surfaces what this mobile owns. When a session DOES
+    //    exist (email confirmation off, or already signed in) the branch above
+    //    handled it with the real profile id.
+    const fallbackProfile: Profile = {
+      id: "",
+      name: name || `Customer ${(mobile || "").slice(-4)}`,
+      email: email || "",
+      mobile: mobile || "",
+      role: "Seller",
+      city: city || "Surat",
+      created_at: new Date().toISOString()
+    };
+    toast.success("Taking you to your Seller Dashboard…");
+    onNavigateToDashboard(fallbackProfile);
   }, [onNavigateToDashboard]);
 
   const [settings, setSettings] = React.useState({
