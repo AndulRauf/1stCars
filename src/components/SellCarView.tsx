@@ -24,6 +24,7 @@ import {
   validateOptionalEmail
 } from "@/src/lib/sellCarValidation";
 import { Profile } from "@/src/lib/db";
+import { generateDerivedEmail } from "@/src/lib/utils";
 import {
   catalogFromLegacy, mergeCatalog, getStoredSellCatalog, setStoredSellCatalog,
   loadSellCatalogFromSupabase, SellCatalog
@@ -976,11 +977,15 @@ const [email, setEmail] = React.useState("");
       return;
     }
 
-    // Email is OPTIONAL (P5): store a real address or NULL - never a fake
-    // deliverable-looking address. Auto-account creation runs only when the
-    // seller typed a real email.
+    // Email is OPTIONAL (P5): store a real address the seller typed, otherwise
+    // derive a stable one from their mobile so the Seller auto-account (and the
+    // post-submit Seller Dashboard redirect) still work now that the Email field
+    // is removed from the form. This mirrors the Buyer booking flow
+    // (BookingModal -> generateDerivedEmail). Never a fabricated deliverable.
     const typedEmail = email.trim();
-    const resolvedEmail = validateOptionalEmail(typedEmail) && typedEmail ? typedEmail : "";
+    const resolvedEmail =
+      (validateOptionalEmail(typedEmail) && typedEmail ? typedEmail : "") ||
+      generateDerivedEmail(mobile);
     const canAutoAccount = Boolean(resolvedEmail);
 
     setIsSubmitting(true);
