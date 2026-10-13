@@ -23,7 +23,7 @@ import { isCompleteInspectionRow } from "@/src/lib/sellCarValidation";
 // Detect PostgREST "unknown column" / stale schema-cache errors so the write can
 // retry with only the guaranteed base columns. These surface when the live
 // database was created from an older public/schema.sql that is missing the
-// denormalized seller_name/seller_mobile/seller_email/notes columns.
+// denormalized seller_name/seller_mobile/seller_email/overall_score/notes columns.
 export function isUnknownColumnError(message?: string): boolean {
   if (!message) return false;
   return (
@@ -44,6 +44,27 @@ export function isRlsBlockedWrite(message?: string): boolean {
     /row.?level security policy/i.test(message) ||
     /permission denied/i.test(message)
   );
+}
+
+// Denormalized columns added after the original inspections table was
+// created (see public/fix_inspections_insert.sql). A live database that
+// predates them rejects writes with PGRST204 / "schema cache" errors, so
+// the write paths below retry without ALL of them — keeping only the
+// guaranteed base columns.
+const OPTIONAL_INSPECTION_COLUMNS = [
+  "seller_name",
+  "seller_mobile",
+  "seller_email",
+  "overall_score",
+  "notes"
+] as const;
+
+function stripOptionalInspectionColumns(
+  record: Record<string, unknown>
+): Record<string, unknown> {
+  const stripped: Record<string, unknown> = { ...record };
+  for (const col of OPTIONAL_INSPECTION_COLUMNS) delete stripped[col];
+  return stripped;
 }
 
 export interface SubmitInspectionOptions {
@@ -99,7 +120,7 @@ export async function submitInspection({
         res.error.message
       );
       retriedWithoutOptionalColumns = true;
-      const { seller_email, notes, ...baseRecord } = record;
+      const baseRecord = stripOptionalInspectionColumns(record);
       res = await supabase
         .from("inspections")
         .update(baseRecord)
@@ -137,7 +158,7 @@ export async function submitInspection({
         result.error.message
       );
       retriedWithoutOptionalColumns = true;
-      const { seller_email, notes, ...baseRecord } = record;
+      const baseRecord = stripOptionalInspectionColumns(record);
       result = await supabase.from("inspections").insert([baseRecord]).select("id").maybeSingle();
     }
     if (result.error) {

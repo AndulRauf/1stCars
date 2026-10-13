@@ -157,7 +157,10 @@ describe("submitInspection — stale schema-cache recovery", () => {
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: null, user: null })
     ).resolves.toMatchObject({ id: null, retriedWithoutOptionalColumns: true });
     expect(calls.inserts).toHaveLength(2);
+    expect(seen[1][0]).not.toHaveProperty("seller_name");
+    expect(seen[1][0]).not.toHaveProperty("seller_mobile");
     expect(seen[1][0]).not.toHaveProperty("seller_email");
+    expect(seen[1][0]).not.toHaveProperty("overall_score");
     expect(seen[1][0]).not.toHaveProperty("notes");
   });
 
