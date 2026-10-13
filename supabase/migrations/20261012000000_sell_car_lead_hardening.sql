@@ -36,6 +36,18 @@
 -- This is the same fix as public/fix_inspections_insert.sql (plus the
 -- duplicate-lead index). Either file resolves the Sell Car form's
 -- "live database is out of date" error.
+--
+-- NOTE on the client's bare-INSERT fallback (src/lib/sellCarSubmit.ts): the
+-- final submit sends `INSERT ... RETURNING id` first. A signed-out visitor has
+-- auth.uid() = NULL, so the anon role has NO SELECT visibility (every SELECT
+-- policy needs auth.uid()), and Postgres rejects the whole RETURNING statement
+-- with `new row violates row-level security policy ... (42501)` EVEN WHEN this
+-- INSERT policy + anon INSERT grant below are present. That specific error is
+-- NOT a missing-policy signal — it is the RETURNING read-back. The client now
+-- recovers by re-sending a BARE INSERT (no RETURNING), which needs no SELECT
+-- policy. So if the form STILL fails after running this file, the error text
+-- will be a bare-INSERT failure (e.g. a NOT NULL / CHECK violation) rather than
+-- the 42501 RETURNING trap — use that to pinpoint the true remaining cause.
 -- ============================================================
 
 -- 0) Helper the RLS policies below rely on. Defined here so this

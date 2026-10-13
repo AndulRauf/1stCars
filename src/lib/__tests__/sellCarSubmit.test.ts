@@ -113,6 +113,71 @@ describe("submitInspection — anonymous INSERT under RLS", () => {
     expect(calls.updates).toHaveLength(0);
     expect(calls.inserts).toHaveLength(1);
   });
+
+  it("recovers from the RLS RETURNING trap by re-sending a BARE INSERT (production 42501)", async () => {
+    // Production shape (verified in leadAssignment.ts for sales_notifications):
+    // anon has the INSERT grant + "Visitors submit inspection requests" policy
+    // but NO SELECT visibility, so `insert().select("id")` (= INSERT ... RETURNING)
+    // is rejected with 42501 even though the INSERT itself is allowed. The submit
+    // must retry as a bare INSERT (no RETURNING, no SELECT policy needed) so the
+    // lead still lands — with no SQL change and no weakening of RLS.
+    const rlsError = {
+      message: 'new row violates row-level security policy for table "inspections"',
+      code: "42501"
+    };
+    const inserted: any[][] = [];
+    const stub: any = {
+      from: () => ({
+        // First INSERT carries `.select("id")` -> INSERT ... RETURNING -> 42501.
+        insert: (records: any[]) => {
+          inserted.push(records);
+          const withSelect: any = {
+            select: () => ({
+              maybeSingle: () => Promise.resolve({ data: null, error: rlsError })
+            })
+          };
+          // Bare INSERT (no `.select()`): `await insert(...)` resolves it.
+          withSelect.then = (res: any) => Promise.resolve({ data: null, error: null }).then(res);
+          return withSelect;
+        }
+      })
+    };
+
+    await expect(
+      submitInspection({ supabase: stub, record: baseRecord, partialLeadId: null, user: null })
+    ).resolves.toMatchObject({
+      id: null,
+      promotedPartialLead: false,
+      fellBackToInsert: false,
+      fellBackToBareInsert: true
+    });
+    // Exactly two INSERTs: the RETURNING attempt + the bare retry. The row landed.
+    expect(inserted).toHaveLength(2);
+  });
+
+  it("still throws when even the bare INSERT is blocked (surfaces the real error)", async () => {
+    // If the INSERT itself is genuinely blocked, the bare INSERT fails too.
+    // The submit must throw the BARE error (the true remaining cause), not the
+    // RETURNING one, so a repeat failure is diagnosable.
+    const rlsError = {
+      message: 'new row violates row-level security policy for table "inspections"',
+      code: "42501"
+    };
+    const stub: any = {
+      from: () => ({
+        insert: () => {
+          const withSelect = {
+            select: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: rlsError }) }),
+            then: (res: any) => Promise.resolve({ data: null, error: rlsError }).then(res)
+          };
+          return withSelect;
+        }
+      })
+    };
+    await expect(
+      submitInspection({ supabase: stub, record: baseRecord, partialLeadId: null, user: null })
+    ).rejects.toThrow(/violates row-level security policy for table "inspections"/);
+  });
 });
 
 describe("submitInspection — partial-lead promotion", () => {

@@ -48,6 +48,23 @@ export function isRlsBlockedWrite(message?: string): boolean {
   );
 }
 
+// The RLS RETURNING trap specifically: an INSERT that Postgres rejects ONLY
+// because `INSERT ... RETURNING` needs a SELECT policy the caller lacks (the
+// row itself is allowed by the INSERT policy). Supabase surfaces this as
+// "new row violates row-level security policy for table ..." with code 42501.
+// This is recoverable by re-sending a BARE INSERT (no RETURNING).
+//
+// A grant-level "permission denied for table ..." is intentionally NOT matched:
+// that means the anon/authenticated role has no INSERT privilege at all, so a
+// bare INSERT fails identically and must surface the error instead of retrying.
+function isRlsReturningBlocked(message?: string): boolean {
+  if (!message) return false;
+  return (
+    /new row violates row.?level security policy/i.test(message) ||
+    /violates row.?level security policy/i.test(message)
+  );
+}
+
 // PostgREST errors carry the useful bits across message/details/hint/code
 // (supabase-js surfaces all four). Join them so detection above — and the
 // error finally thrown to the caller — never loses the real cause (e.g. a
@@ -108,6 +125,13 @@ export interface SubmitInspectionResult {
   fellBackToInsert: boolean;
   /** True when the write retried without optional columns (older schema). */
   retriedWithoutOptionalColumns: boolean;
+  /**
+   * True when the INSERT+RETURNING was RLS-blocked for an anonymous visitor
+   * (no SELECT visibility) and was re-sent as a bare INSERT (no RETURNING),
+   * which needs no SELECT policy. The row still lands; only the readable id
+   * is unavailable. See the RLS RETURNING note in submitInspection().
+   */
+  fellBackToBareInsert: boolean;
 }
 
 /**
@@ -128,6 +152,7 @@ export async function submitInspection({
   let promotedPartialLead = false;
   let fellBackToInsert = false;
   let retriedWithoutOptionalColumns = false;
+  let fellBackToBareInsert = false;
 
   if (partialLeadId && user) {
     let res = await supabase
@@ -183,6 +208,31 @@ export async function submitInspection({
       const baseRecord = stripOptionalInspectionColumns(record);
       result = await supabase.from("inspections").insert([baseRecord]).select("id").maybeSingle();
     }
+    // RLS RETURNING trap (the production Sell Car 42501, same shape as the
+    // sales_notifications fix in leadAssignment.ts): `.insert().select("id")`
+    // compiles to INSERT ... RETURNING, which the anon role cannot satisfy
+    // because it has an INSERT grant + "Visitors submit inspection requests"
+    // policy but NO SELECT visibility — every SELECT policy needs auth.uid()
+    // (NULL for a signed-out visitor). Postgres then rejects the whole
+    // statement with 42501 even though the INSERT itself is allowed. A BARE
+    // INSERT (no `.select()`, so no RETURNING) needs no SELECT policy, so it
+    // lands the row and lets the submission succeed with zero SQL changes and
+    // no weakening of RLS. The readable id stays null by design for anon.
+    if (result.error && isRlsReturningBlocked(postgrestErrorText(result.error))) {
+      console.warn(
+        "Inspection INSERT+RETURNING was RLS-blocked — retrying as a bare INSERT (no RETURNING).",
+        postgrestErrorText(result.error)
+      );
+      const bare = await supabase.from("inspections").insert([record]);
+      if (!bare.error) {
+        fellBackToBareInsert = true;
+        result = { data: null, error: null };
+      } else {
+        // Surface the bare-insert error (the real remaining cause) instead of
+        // the RETURNING one, so a repeat failure is diagnosable.
+        throw new Error(postgrestErrorText(bare.error) || "Could not save your inspection request.");
+      }
+    }
     if (result.error) {
       throw new Error(postgrestErrorText(result.error) || "Could not save your inspection request.");
     }
@@ -193,7 +243,7 @@ export async function submitInspection({
   if (!submitted) {
     throw new Error("Inspection save was not confirmed. Please try again.");
   }
-  return { id: createdId, promotedPartialLead, fellBackToInsert, retriedWithoutOptionalColumns };
+  return { id: createdId, promotedPartialLead, fellBackToInsert, retriedWithoutOptionalColumns, fellBackToBareInsert };
 }
 
 // ============================================================
