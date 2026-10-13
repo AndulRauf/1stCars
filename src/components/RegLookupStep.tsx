@@ -10,10 +10,13 @@ import {
   trackRegistrationLookupStarted, trackVehicleApiSuccess,
   trackVehicleApiFailed, trackManualFallbackUsed, trackVehicleDetailsVerified
 } from "@/src/lib/vehicleLookupAnalytics";
+import { guardLookupYear } from "@/src/lib/sellCarValidation";
 
 interface Props {
   onPrefill: (d: VehicleDetails) => void;
-  onManual: (reason: string) => void;
+  // The manual path still carries the plate the seller typed (normalized), so the
+  // registration number is persisted even when the RC lookup is unavailable (P1).
+  onManual: (reason: string, manualReg: string) => void;
 }
 
 export function RegLookupStep({ onPrefill, onManual }: Props) {
@@ -64,17 +67,22 @@ export function RegLookupStep({ onPrefill, onManual }: Props) {
       edits.variant !== (found.variant || "") || edits.fuel !== (found.fuel || "") ||
       edits.year !== (found.year ? String(found.year) : "");
     trackVehicleDetailsVerified("api", corrected);
+    // Guard the (possibly edited) year into the form's valid range so a typo
+    // like 9999 can never be prefilled or persisted (P6). Null = pick manually.
+    const safeYear = guardLookupYear(edits.year || found.year || null);
     onPrefill({
       ...found,
       brand: edits.brand || found.brand, model: edits.model || found.model,
       variant: edits.variant || found.variant, fuel: edits.fuel || found.fuel,
-      year: edits.year ? Number(edits.year) || found.year || null : found.year || null
+      year: safeYear
     });
   }
 
   function manual(reason: string) {
     trackManualFallbackUsed(reason);
-    onManual(reason);
+    // Pass the plate the seller typed so the manual journey still persists a
+    // registration number (P1). Empty string when they left it blank.
+    onManual(reason, normalized);
   }
 
   return (
@@ -114,7 +122,9 @@ export function RegLookupStep({ onPrefill, onManual }: Props) {
               <span className="capitalize font-medium">{k}</span>
               <input
                 value={edits[k]}
-                onChange={(e) => setEdits({ ...edits, [k]: e.target.value })}
+                inputMode={k === "year" ? "numeric" : undefined}
+                maxLength={k === "year" ? 4 : undefined}
+                onChange={(e) => setEdits({ ...edits, [k]: k === "year" ? e.target.value.replace(/\D/g, "").slice(0, 4) : e.target.value })}
                 className="mt-1 w-full border rounded-lg px-3 py-2"
               />
             </label>

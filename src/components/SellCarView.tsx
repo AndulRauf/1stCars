@@ -3,7 +3,8 @@ import {
   Car, ShieldCheck, Clock, CheckCircle2, 
   Sparkles, ShieldAlert, ChevronRight, User, Phone, 
   MapPin, FileText, ArrowRight, ClipboardCheck,
-  Search, ArrowLeft, Tag, UserCheck
+  Search, ArrowLeft, Tag, UserCheck,
+  Gauge, Home, Navigation, Mail, CalendarDays
 } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
@@ -14,9 +15,14 @@ import { toast } from "@/src/lib/toast";
 import { getOrCreateAutoPassword, getAutoPasswordKey, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { estimateCarValue } from "@/src/lib/valuation";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
-import { generateDerivedEmail } from "@/src/lib/utils";
 import { trackViewSellCar, trackSellerFormStart, trackSellerFormSubmit, trackSellerLeadCreated } from "@/src/lib/analytics";
-import { isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
+import { findConfirmedDuplicateLead, isUnknownColumnError, submitInspection } from "@/src/lib/sellCarSubmit";
+import {
+  buildSellCarYearOptions, guardLookupYear, inspectionDateBounds, isInspectionDateInWindow,
+  isValidKmDriven, isValidPincode,
+  kmValidationError, maskMobile, maskReg, parseKmDriven,
+  validateOptionalEmail, validateSellCarReg
+} from "@/src/lib/sellCarValidation";
 import { RegLookupStep } from "@/src/components/RegLookupStep";
 import type { VehicleDetails } from "@/src/lib/vehicleLookup";
 import { Profile } from "@/src/lib/db";
@@ -496,6 +502,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   });
 
   const redirectTimerRef = React.useRef<number | null>(null);
+  const formStartFiredRef = React.useRef(false);
 
   React.useEffect(() => {
     return () => {
@@ -505,11 +512,16 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // GA4 funnel — Event 1: user reached the Sell Car page, and Event 2: form
-  // started. Both fire once per page load / session.
+  // GA4 funnel — Event 1: user reached the Sell Car page. Event 2 (form
+  // started) fires only on the first genuine interaction (P6), never on mount,
+  // so bounce traffic cannot inflate the funnel.
+  const fireFormStartOnce = React.useCallback(() => {
+    if (formStartFiredRef.current) return;
+    formStartFiredRef.current = true;
+    trackSellerFormStart();
+  }, []);
   React.useEffect(() => {
     trackViewSellCar();
-    trackSellerFormStart();
   }, []);
 
   // Link inspection rows submitted anonymously (seller_id NULL, before the auto
@@ -638,34 +650,24 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
 
-    // 3. LAST RESORT: never drop the seller onto a login popup. They already
-    //    submitted a valid inspection, so open the Seller dashboard with a
-    //    locally-built profile. RLS-gated data may be empty until a real
-    //    session exists, but the dashboard opens every time.
+    // 3. NO REAL SESSION (P5): never build a fake profile or open the
+    //    dashboard with an empty id. Tell the seller honestly — the inspection
+    //    is already saved and they can sign in any time to track it there.
+    //    (Still no login popup: the success screen stays visible.)
     const errText = `${lastAuthError?.message || lastAuthError?.code || ""}`.toLowerCase();
     const emailPending = /email.*(not confirmed|not verified)|email_not_confirmed|confirm/i.test(errText);
     if (emailPending) {
-      // One-time gentle notice instead of a login popup: the seller IS in, but
-      // their account is waiting for email confirmation so inspection data
-      // syncs only after they click the confirmation link in their inbox.
-      toast.info("Your seller dashboard is ready. Please confirm the email sent to " + (email || "your inbox") + " so your inspection syncs to this account.");
+      toast.info("Your inspection is saved. Please confirm the email sent to " + (email || "your inbox") + " to activate your seller account — then sign in to track it in your dashboard.");
+    } else {
+      toast.info("Your inspection is saved! Sign in any time to track it in your Seller dashboard.");
     }
-    onNavigateToDashboard({
-      id: user?.id || "",
-      name: name || email.split("@")[0] || "Seller",
-      email,
-      mobile,
-      role: "Seller",
-      city: city || "Surat",
-      created_at: new Date().toISOString()
-    });
   }, [onNavigateToDashboard]);
 
   const [settings, setSettings] = React.useState({
     sellCarBannerTitle: "Sell Your Car. Get the Best Offer.",
-    sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with secure payment and RC transfer support.",
+    sellCarBannerDesc: "Sell your car the simple, transparent way. Book a free doorstep inspection, get competitive offers from our verified dealer network, and complete your sale with transparent payment and RC transfer support.",
     sellCarFormHeading: "Tell Us About Your Car",
-    sellCarFormSubheading: "Enter your car details and verify your mobile number. It only takes a few seconds."
+    sellCarFormSubheading: "Enter your car details and mobile number — it only takes a few seconds."
   });
 
   React.useEffect(() => {
@@ -714,23 +716,28 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
   // Complete list of brands for viewing all
   const [showAllBrands, setShowAllBrands] = React.useState(false);
 
-  // Selected values
+  // Selected values — no preselected year/variant/fuel/transmission (P2):
+  // the seller must make an explicit choice before continuing.
   const [selectedBrand, setSelectedBrand] = React.useState("");
   const [selectedModel, setSelectedModel] = React.useState("");
-  const [selectedYear, setSelectedYear] = React.useState<number>(2018);
-  const [selectedFuel, setSelectedFuel] = React.useState("Petrol");
-  const [selectedTransmission, setSelectedTransmission] = React.useState("Manual");
-  const [selectedVariant, setSelectedVariant] = React.useState("Sportz");
+  const [selectedYear, setSelectedYear] = React.useState<number | null>(null);
+  const [selectedFuel, setSelectedFuel] = React.useState("");
+  const [selectedTransmission, setSelectedTransmission] = React.useState("");
+  const [selectedVariant, setSelectedVariant] = React.useState("");
   const [selectedRTO, setSelectedRTO] = React.useState("");
-  
+  const [selectedCity, setSelectedCity] = React.useState("");
+  const [kmInput, setKmInput] = React.useState("");
+  const [manualRegInput, setManualRegInput] = React.useState("");
+
 
   // Contact details & Booking address
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [mobile, setMobile] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [preferredDate] = React.useState("");
-  const [preferredTime] = React.useState("10:00 AM - 12:00 PM");
+  const [pincode, setPincode] = React.useState("");
+  const [preferredDate, setPreferredDate] = React.useState("");
+  const [preferredTime, setPreferredTime] = React.useState("");
 
   // States for the bottom "Sell or Trade-In in 3 steps" inline valuation calculator
   const [calcBrand, setCalcBrand] = React.useState("");
@@ -856,11 +863,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     r.city.toLowerCase().includes(rtoSearch.toLowerCase())
   );
 
-  // Available Years
-  const yearsList: number[] = [];
-  for (let y = 2025; y >= 2000; y--) {
-    yearsList.push(y);
-  }
+  // Available Years — dynamic current-year..2000 (P2), shared helper.
+  const yearsList: number[] = buildSellCarYearOptions();
+
+  // Inspection date window (P4): tomorrow .. +14 days, shared helper.
+  const dateBounds = inspectionDateBounds();
 
   // Partial lead capture — save the mobile + brand + model as soon as these are
   // known (right after Brand & Model), so a visitor who drops off mid-form still
@@ -888,6 +895,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       } catch { /* best-effort — falls through to the plain continue flow */ }
 
       if (partialUser) {
+        // Partial lead now carries the real plate + city when known (P1/P4).
+        // Backward-compatible: still a plain pending insert, never blocks.
+        const partialReg = validateSellCarReg(regLookup?.regNormalized || manualRegInput);
         const { data, error } = await supabase
           .from("inspections")
           .insert([
@@ -896,6 +906,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               seller_mobile: mobile,
               brand: selectedBrand,
               model: selectedModel,
+              // NOT NULL column, but the city is only chosen on the Verify
+              // step — store empty rather than a fabricated default (P4);
+              // the final submit overwrites it with the explicit pick.
+              city: selectedCity || "",
+              ...(partialReg.ok ? { reg_number: partialReg.normalized } : {}),
               status: "pending",
               notes: "Partial lead. Form in progress"
             }
@@ -931,9 +946,61 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       return;
     }
 
-    // Email is collected in a later version — derive one from the mobile number
-    // so inspection records and auto-account creation keep working.
-    const resolvedEmail = email.trim() || generateDerivedEmail(mobile);
+    if (email.trim() && !validateOptionalEmail(email)) {
+      toast.error("That email doesn't look right — fix it or leave it blank.");
+      return;
+    }
+    // Registration plate is REQUIRED (P1): lookup result or manual entry,
+    // validated with the existing RC validator. Never fabricated.
+    const regCheck = validateSellCarReg(regLookup?.regNormalized || manualRegInput);
+    if (!regCheck.ok) {
+      toast.error("Please enter your car's registration number (e.g. GJ 01 AB 1234).");
+      setWizardStep(0);
+      return;
+    }
+    const finalRegNumber = regCheck.normalized;
+    // Kilometres are REQUIRED and real (P1): no hardcoded fallback.
+    const kmError = kmValidationError(kmInput);
+    if (kmError || !isValidKmDriven(kmInput)) {
+      toast.error(kmError || "Please enter your car's actual kilometres.");
+      return;
+    }
+    const finalKm = parseKmDriven(kmInput) as number;
+    // Explicit selections required (P2): no silent defaults.
+    if (!selectedYear) {
+      toast.error("Please choose your car's manufacturing year.");
+      setWizardStep(5);
+      return;
+    }
+    if (!selectedVariant.trim() || !selectedFuel || !selectedTransmission) {
+      toast.error("Please complete variant, fuel and transmission.");
+      return;
+    }
+    // City is REQUIRED (P4): explicit pick, never the "Gujarat" fallback.
+    if (!selectedCity) {
+      toast.error("Please choose your city for the doorstep inspection.");
+      return;
+    }
+    // Slot is REQUIRED within tomorrow..+14 days (P4).
+    if (!isInspectionDateInWindow(preferredDate)) {
+      toast.error("Please pick an inspection date between tomorrow and the next 14 days.");
+      return;
+    }
+    if (!preferredTime) {
+      toast.error("Please pick an inspection time slot.");
+      return;
+    }
+    if (pincode.trim() && !isValidPincode(pincode)) {
+      toast.error("Pincode must be 6 digits starting 1-9 (or leave it blank).");
+      return;
+    }
+
+    // Email is OPTIONAL (P5): store a real address or NULL — never a fake
+    // deliverable-looking address. Auto-account creation runs only when the
+    // seller typed a real email.
+    const typedEmail = email.trim();
+    const resolvedEmail = validateOptionalEmail(typedEmail) && typedEmail ? typedEmail : "";
+    const canAutoAccount = Boolean(resolvedEmail);
 
     setIsSubmitting(true);
 
@@ -941,21 +1008,22 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     // the DB write so a gap vs. Event 4 exposes write/reporting failures.
     trackSellerFormSubmit();
 
-    // Find RTO city name
-    const rtoDetails = gujaratRTOs.find(r => r.code === selectedRTO);
-    const resolvedCity = rtoDetails ? rtoDetails.city : "Gujarat";
+    // City comes from the explicit Verify-step picker (P4). "OTHER" RTO keeps
+    // the chosen city; Gujarat RTOs defaulted it at selection time.
+    const resolvedCity = selectedCity;
     const preliminaryName = name.trim();
 
     // Quick check if already signed in (no network trip for auto sign-in here).
+    // Auto-accounts are created ONLY when the seller typed a real email (P5).
     let user: any = null;
     let autoEmail = "";
     let autoPassword = "";
     try {
       user = (await supabase.auth.getUser()).data?.user;
       if (user) {
-        autoEmail = resolvedEmail;
-        autoPassword = localStorage.getItem(getAutoPasswordKey(autoEmail)) || "";
-      } else {
+        autoEmail = resolvedEmail || String(user.email || "");
+        autoPassword = autoEmail ? (localStorage.getItem(getAutoPasswordKey(autoEmail)) || "") : "";
+      } else if (canAutoAccount) {
         autoEmail = resolvedEmail;
         autoPassword = getOrCreateAutoPassword(autoEmail);
       }
@@ -969,42 +1037,43 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       };
     } catch (authErr) {
       console.warn("Auth check failed during inspection submit:", authErr);
-      autoEmail = resolvedEmail;
-      autoPassword = getOrCreateAutoPassword(autoEmail);
+      if (canAutoAccount) {
+        autoEmail = resolvedEmail;
+        autoPassword = getOrCreateAutoPassword(autoEmail);
+      }
       sellerAutoAuthRef.current = { email: autoEmail, password: autoPassword, signedIn: false, name: preliminaryName, mobile: mobile, city: resolvedCity };
     }
 
-    // Registration number is collected only via Step 0 lookup for prefill and is
-    // intentionally NOT submitted — the inspector records the real plate
-    // during the doorstep visit. No placeholder plate is ever fabricated.
-
-    // Smart default fallbacks for removed fields
-    const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.substring(6)})`;
-    const finalEmail = resolvedEmail || user?.email || "";
-    const finalAddress = address ? `Home Doorstep Inspection in ${address}` : `Home Doorstep Inspection near RTO ${selectedRTO} (${resolvedCity})`;
-    const finalDate = preferredDate || new Date(Date.now() + 86400000).toISOString().split("T")[0]; // Tomorrow
-    const finalTime = preferredTime || "11:00 AM - 01:00 PM";
-
-    const computedKms = 35000;
+    // No fabricated plates/dates/times: every persisted field below passed
+    // explicit validation above (P1/P2/P4).
+    const street = address.trim();
+    const finalName = name.trim() || user?.user_metadata?.name || user?.name || `Customer (${mobile.slice(-4)})`;
+    const finalEmail: string | null = resolvedEmail || (typeof user?.email === "string" && validateOptionalEmail(user.email) ? user.email : null);
+    const finalAddress = `Home Doorstep Inspection: ${street}${pincode.trim() ? `, ${pincode.trim()}` : ""}, ${resolvedCity}${selectedRTO && selectedRTO !== "OTHER" ? ` (RTO ${selectedRTO})` : ""}`;
+    const finalDate = preferredDate;
+    const finalTime = preferredTime;
 
     const inspectionRecord = {
       seller_id: user?.id || null,
       seller_name: finalName,
       seller_mobile: mobile,
-      seller_email: finalEmail,
+      ...(finalEmail ? { seller_email: finalEmail } : {}),
+      reg_number: finalRegNumber,
       brand: selectedBrand,
       model: selectedModel,
-      variant: selectedVariant || "Standard",
+      variant: selectedVariant.trim(),
       fuel: selectedFuel,
       transmission: selectedTransmission,
       year: Number(selectedYear),
-      km_driven: computedKms,
+      km_driven: finalKm,
       city: resolvedCity,
       address: finalAddress,
       preferred_date: finalDate,
       preferred_time: finalTime,
       status: "pending" as const,
-      notes: "New inspection request from the Gujarat Sell Car form."
+      notes: selectedRTO === "OTHER"
+        ? "New inspection request from the Sell Car form (non-Gujarat registration)."
+        : "New inspection request from the Sell Car form."
     };
 
     try {
@@ -1012,10 +1081,66 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       // on `error === null` even when PostgREST returns no row (anon has no SELECT
       // visibility); partial-lead promotion is read-back confirmed and falls back
       // to a fresh INSERT when the UPDATE matches nothing. Throws on failure.
-      await submitInspection({ supabase, record: inspectionRecord, partialLeadId, user });
+      // Duplicate-lead guard (P5, race-aware best effort) — see
+      // findConfirmedDuplicateLead (src/lib/sellCarSubmit.ts). Two hard rules:
+      //   1. THIS submission's own partial lead (created at the Mobile step in
+      //      handleMobileSubmit; its real DB id lives in partialLeadId) is
+      //      excluded by id — it is the submission in progress, never a
+      //      duplicate. Matching it used to skip the full write below and
+      //      lose the record, conversions and fan-out.
+      //   2. Success may only be short-circuited when the matched row is a
+      //      CONFIRMED COMPLETE pending inspection (slot + odometer + address
+      //      persisted — thin "Partial lead" rows never qualify), so a real,
+      //      complete record is guaranteed to exist first.
+      // Read-only and fail-open: any problem with the check itself proceeds
+      // with the full submit, which persists the record BEFORE success,
+      // conversion analytics, notifications and automation fire.
+      let duplicateRow: Record<string, any> | null = null;
+      try {
+        ({ duplicateRow } = await findConfirmedDuplicateLead({
+          supabase,
+          mobile,
+          regNumber: finalRegNumber,
+          excludeLeadId: partialLeadId
+        }));
+      } catch (dupErr) {
+        console.warn("Duplicate-lead pre-check failed — proceeding with submit:", dupErr);
+      }
+      if (duplicateRow) {
+        setIsSubmitting(false);
+        setFormStep("success");
+        // Best-effort display values: the existing confirmed-complete row wins
+        // where it holds data; the just-validated form fills any gaps.
+        const dup: any = duplicateRow;
+        setCreatedRequest({
+          ...dup,
+          seller_name: dup.seller_name || finalName,
+          seller_email: dup.seller_email || finalEmail,
+          preferred_date: dup.preferred_date || finalDate,
+          preferred_time: dup.preferred_time || finalTime,
+          address: dup.address || finalAddress,
+          city: dup.city || resolvedCity,
+          brand: selectedBrand,
+          model: selectedModel,
+          year: dup.year || Number(selectedYear)
+        });
+        toast.success("We already have your inspection request from the last 24 hours.");
+        // Same 3s hand-off as the normal success path. No conversion events or
+        // notifications re-fire here: they already fired when this record was
+        // originally persisted.
+        redirectTimerRef.current = window.setTimeout(() => {
+          void navigateToSellerDashboard();
+        }, 3000);
+        return;
+      }
+      const submitResult = await submitInspection({ supabase, record: inspectionRecord, partialLeadId, user });
+      if (submitResult.fellBackToInsert) setPartialLeadId(null);
 
-      const inspectionId = `insp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const inserted: any = { ...inspectionRecord, id: inspectionId };
+      // Real database id when readable (signed-in/mock path). For anonymous
+      // visitors under RLS there is no readable id — downstream systems get
+      // the notification WITHOUT a fabricated id (P5), never "insp-temp-id".
+      const inspectionId: string | null = submitResult.id;
+      const inserted: any = { ...inspectionRecord, ...(inspectionId ? { id: inspectionId } : {}) };
       setCreatedRequest(inserted);
 
       // Show success immediately — never block the UI on the follow-up calls.
@@ -1031,10 +1156,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       trackSellerLeadCreated();
 
       // Auto sign-in so the seller lands on the Seller Dashboard — runs in the
-      // background and never blocks the submission itself.
+      // background and never blocks the submission itself. Only when the seller
+      // typed a real email (P5): no fake @buyer.local accounts are created.
       void (async () => {
         try {
-          if (!user) {
+          if (!user && canAutoAccount) {
             const autoResult = await resolveAutoSignIn(supabase, autoEmail, autoPassword, {
               data: {
                 name: preliminaryName,
@@ -1055,8 +1181,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
           console.warn("Auto Seller sign-in error during inspection submit:", authErr);
         }
 
-        void notificationService.triggerInspectionSubmitted({
-          id: inserted?.id || "insp-temp-id",
+        if (inspectionId) {
+          void notificationService.triggerInspectionSubmitted({
+            id: inspectionId,
           sellerName: finalName,
           brand: selectedBrand,
           model: selectedModel,
@@ -1067,22 +1194,28 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
         void automationService.emitEvent({
           type: "inspection.created",
           sourceTable: "inspections",
-          sourceId: inserted?.id,
+          sourceId: inspectionId,
           payload: {
-            inspection_id: inserted?.id,
+            inspection_id: inspectionId,
             city: resolvedCity,
             brand: selectedBrand,
             model: selectedModel,
-            variant: selectedVariant,
-            year: selectedYear,
-            km_driven: computedKms,
+            variant: selectedVariant.trim(),
+            year: Number(selectedYear),
+            km_driven: finalKm,
             seller_name: finalName,
             seller_mobile: mobile,
-            seller_email: finalEmail,
+            ...(finalEmail ? { seller_email: finalEmail } : {}),
             preferred_date: finalDate,
             preferred_time: finalTime
           }
         }).catch((err) => console.warn("Automation event emission failed:", err));
+        } else {
+          // Anonymous RLS path: row is confirmed saved, but there is no
+          // readable id to fan out — notifications dispatch from the DB
+          // trigger (automation_schema.sql) instead. Never invent an id.
+          console.info("Inspection saved (anon, no readable id) — skipping client-side fan-out.");
+        }
       })();
 
       // Redirect to seller dashboard after 3 seconds.
@@ -1098,7 +1231,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       const isRlsBlocked = /row.?level security policy/i.test(raw) || /permission denied/i.test(raw);
       const isSchemaMismatch = isUnknownColumnError(raw);
       const message = (isRlsBlocked || isSchemaMismatch)
-        ? "your request was blocked because the live database is out of date. Please re-run public/schema.sql in the Supabase SQL Editor, then try again."
+        ? "your request was blocked because the live database is out of date. Please run supabase/migrations/20261012000000_sell_car_lead_hardening.sql (or public/fix_inspections_insert.sql) in the Supabase SQL Editor, then try again."
         : raw || "Please check your details and try again.";
       toast.error(`Failed to register your inspection: ${message}`);
 
@@ -1138,7 +1271,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
       }
     }
     if (d.model) setSelectedModel(String(d.model));
-    if (typeof d.year === "number" && Number.isFinite(d.year)) setSelectedYear(d.year);
+    // Guard the lookup-provided year into the form's valid range (P6) so a
+    // bad mapping (e.g. 9999) can never be preselected or persisted.
+    const lookupYear = guardLookupYear(d.year);
+    if (lookupYear) setSelectedYear(lookupYear);
     if (d.fuel) setSelectedFuel(String(d.fuel));
     if (d.variant) setSelectedVariant(String(d.variant));
     if (d.rtoCode) {
@@ -1153,9 +1289,12 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     setWizardStep(1);
   };
 
-  const handleRegManual = (_reason: string) => {
+  const handleRegManual = (_reason: string, manualReg: string) => {
     setRegLookup(null);
     setRegSkipped(_reason || "skipped");
+    // Keep the plate the seller typed so it can be validated and persisted even
+    // when the RC lookup never ran (P1).
+    setManualRegInput(manualReg || "");
     setWizardStep(1);
   };
 
@@ -1191,7 +1330,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               Submit your car details.
             </Button>
             <p className="text-[11px] sm:text-xs text-slate-600 font-bold">
-              Free Doorstep Inspection • Competitive Offers • Secure Payment • RC Transfer Support
+              Free Doorstep Inspection • Competitive Offers • Guided Payment • RC Transfer Support
             </p>
           </div>
         </div>
@@ -1223,13 +1362,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
-                    { step: 0, label: regLookup?.regNormalized ? `✔ ${regLookup.regNormalized}` : "Reg No." },
+                    { step: 0, label: regLookup?.regNormalized ? `✔ ${maskReg(regLookup.regNormalized)}` : "Reg No." },
                     { step: 1, label: selectedBrand ? `✔ ${selectedBrand}` : "Brand" },
                     { step: 2, label: selectedModel ? `✔ ${selectedModel}` : "Model" },
-                    { step: 3, label: mobile ? `✔ ${mobile}` : "Mobile" },
+                    { step: 3, label: mobile ? `✔ ${maskMobile(mobile)}` : "Mobile" },
                     { step: 4, label: selectedBrand && selectedModel && selectedVariant ? `✔ ${selectedVariant}` : "Variant" },
                     { step: 5, label: selectedBrand && selectedModel && selectedYear ? `✔ ${selectedYear}` : "Year" },
-                    { step: 6, label: selectedBrand && selectedModel && selectedFuel ? `✔ ${selectedFuel}` : "Fuel" },
+                    { step: 6, label: selectedBrand && selectedModel && selectedFuel && selectedTransmission ? `✔ ${selectedFuel}` : "Fuel" },
                     { step: 7, label: selectedRTO ? `✔ ${selectedRTO}` : "RTO" },
                     { step: 8, label: "Verify" }
                   ].map((item) => {
@@ -1303,7 +1442,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                       <Input
                         placeholder="Search brand"
                         value={brandSearch}
-                        onChange={(e) => { trackSellerFormStart(); setBrandSearch(e.target.value); }}
+                        onChange={(e) => { fireFormStartOnce(); setBrandSearch(e.target.value); }}
                         className="h-12 rounded-xl pl-10 border-slate-200 focus:border-[#2E7D32] text-sm"
                       />
                     </div>
@@ -1325,7 +1464,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             key={b}
                             type="button"
                             onClick={() => {
-                              trackSellerFormStart();
+                              fireFormStartOnce();
                               if (b !== selectedBrand) {
                                 setSelectedBrand(b);
                                 setSelectedModel("");
@@ -1342,7 +1481,13 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                           >
                             {isImgValid ? (
                               <div className="h-6 w-full flex items-center justify-center overflow-hidden mb-0.5">
-                                <img src={logoUrl} alt={b} className="h-full max-w-full object-contain" referrerPolicy="no-referrer" />
+                                <img
+                                  src={logoUrl}
+                                  alt={b}
+                                  className="h-full max-w-full object-contain"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                />
                               </div>
                             ) : (
                               <div className="text-sm font-bold uppercase tracking-tight mb-0.5">{b.substring(0, 2)}</div>
@@ -1685,6 +1830,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             key={f}
                             type="button"
                             onClick={() => {
+                              if (!selectedTransmission) {
+                                toast.error("Please pick Manual or Automatic transmission first.");
+                                return;
+                              }
                               setSelectedFuel(f);
                               setWizardStep(7);
                             }}
@@ -1747,9 +1896,11 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                             onClick={() => {
                               setSelectedRTO(r.code);
                               // Default the doorstep inspection city to the car's
-                              // registration city so the dispatch city and address
-                              // never silently disagree. The user can still change it.
-                              setAddress(r.city);
+                              // registration city when it is one of the supported
+                              // service cities, so dispatch city matches the plate.
+                              // The user can still change it on the Verify step.
+                              const svcCity = CITIES_DATA.find((c) => c === r.city);
+                              if (svcCity) setSelectedCity(svcCity);
                               setWizardStep(8);
                             }}
                             className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
@@ -1775,6 +1926,26 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                           No matching Gujarat RTO found. Please try searching GJ-1, GJ-2, etc.
                         </div>
                       )}
+
+                      {/* Other / non-Gujarat registration path (P4): lets a valid
+                          non-GJ seller continue; city is chosen explicitly on the
+                          Verify step and the note is flagged. Never silently defaults
+                          the city to "Gujarat". */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedRTO("OTHER");
+                          setWizardStep(8);
+                        }}
+                        className={`col-span-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                          selectedRTO === "OTHER"
+                            ? "border-[#2E7D32] bg-emerald-50 text-[#2E7D32] shadow-sm"
+                            : "border-slate-100 hover:border-slate-300 bg-[#FAF9F6] text-slate-800"
+                        }`}
+                      >
+                        <span className="text-xs font-black">My car is registered outside Gujarat</span>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                      </button>
                     </div>
 
                     <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-[11px] font-bold">
@@ -1801,7 +1972,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="p-4 bg-gradient-to-r from-emerald-50 to-[#FAF9F6] border border-slate-200/60 rounded-2xl text-slate-800">
                       <div className="min-w-0">
                         <span className="text-[10px] bg-[#2E7D32]/10 text-[#2E7D32] font-black uppercase px-2 py-0.5 rounded">
-                          GJ REGISTRATION: {selectedRTO}
+                          {selectedRTO === "OTHER" ? "REGISTRATION: OUTSIDE GUJARAT" : `GJ REGISTRATION: ${selectedRTO}`}
                         </span>
                         <h4 className="font-black text-sm text-slate-900 mt-1.5">
                           {selectedBrand} {selectedModel} · {selectedVariant}
@@ -1836,6 +2007,26 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
+                      {/* Odometer / kilometres (P1) — real value, required */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">KILOMETRES DRIVEN (ODOMETER) *</label>
+                        <div className="relative">
+                          <Gauge className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="e.g. 45000"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={7}
+                            value={kmInput}
+                            onChange={(e) => setKmInput(e.target.value.replace(/[^\d]/g, ""))}
+                            required
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                        {kmInput.length > 0 && kmValidationError(kmInput) && (
+                          <p className="text-[10px] font-bold text-rose-600">{kmValidationError(kmInput)}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-4 border-t border-slate-100 pt-4">
                       {/* Doorstep City Dropdown */}
@@ -1844,8 +2035,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         <div className="relative">
                           <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                           <select
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
                             required
                             className="h-12 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
                           >
@@ -1857,6 +2048,102 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                         </div>
                       </div>
 
+                      {/* Doorstep address (P4) — free text */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">DOORSTEP ADDRESS *</label>
+                        <div className="relative">
+                          <Home className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Flat / society / street"
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            required
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Pincode (P4) — optional, validated when present */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PINCODE (OPTIONAL)</label>
+                        <div className="relative">
+                          <Navigation className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="e.g. 394540"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={pincode}
+                            onChange={(e) => setPincode(e.target.value.replace(/[^\d]/g, ""))}
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                        {pincode.length > 0 && !isValidPincode(pincode) && (
+                          <p className="text-[10px] font-bold text-rose-600">Enter a valid 6-digit pincode or leave it blank.</p>
+                        )}
+                      </div>
+
+                      {/* Email (P5) — optional, validated; never fabricated */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">EMAIL (OPTIONAL)</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="you@example.com"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                          />
+                        </div>
+                        {email.trim().length > 0 && !validateOptionalEmail(email) && (
+                          <p className="text-[10px] font-bold text-rose-600">Enter a valid email or leave it blank.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Inspection slot (P4) — date within tomorrow..+14 days + time slot */}
+                    <div className="space-y-3 border-t border-slate-100 pt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED DATE *</label>
+                          <div className="relative">
+                            <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                            <Input
+                              type="date"
+                              min={dateBounds.min}
+                              max={dateBounds.max}
+                              value={preferredDate}
+                              onChange={(e) => setPreferredDate(e.target.value)}
+                              required
+                              className="h-12 rounded-xl pl-10 text-sm font-medium tracking-wide"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider">PREFERRED TIME *</label>
+                          <div className="relative">
+                            <Clock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                            <select
+                              value={preferredTime}
+                              onChange={(e) => setPreferredTime(e.target.value)}
+                              required
+                              className="h-12 w-full rounded-xl pl-10 pr-3 text-sm font-medium tracking-wide border border-slate-200 bg-white text-slate-800 outline-none focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 appearance-none"
+                            >
+                              <option value="" disabled>Select a slot</option>
+                              {["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM", "06:00 PM - 08:00 PM"].map((t) => (
+                                <option key={t} value={t}>{t}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      {preferredDate.length > 0 && !isInspectionDateInWindow(preferredDate) && (
+                        <p className="text-[10px] font-bold text-rose-600">
+                          Choose a date between {dateBounds.min} and {dateBounds.max}.
+                        </p>
+                      )}
                     </div>
 
                     <div className="pt-4">
@@ -1905,10 +2192,10 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                     <div className="text-slate-800 text-right">{createdRequest?.seller_name}</div>
                     
                     <div>Mobile:</div>
-                    <div className="text-slate-800 text-right">{createdRequest?.seller_mobile}</div>
+                    <div className="text-slate-800 text-right">{maskMobile(createdRequest?.seller_mobile || mobile)}</div>
 
                     <div>Email:</div>
-                    <div className="text-slate-800 text-right">{createdRequest?.seller_email}</div>
+                    <div className="text-slate-800 text-right">{createdRequest?.seller_email || "Not provided"}</div>
 
                     <div>Inspection Slot:</div>
                     <div className="text-[#2E7D32] text-right">{createdRequest?.preferred_date} ({createdRequest?.preferred_time})</div>
@@ -1993,8 +2280,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
                   },
                   { 
                     icon: ShieldCheck, 
-                    title: "Secure Payment", 
-                    desc: "Once the deal is confirmed, payment is processed securely before handover." 
+                    title: "Guided Payment & RC Transfer",
+                    desc: "Our team coordinates payment and the ownership-transfer paperwork with you and the buyer/dealer."
                   },
                   { 
                     icon: FileText, 
@@ -2056,7 +2343,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Tell Us About Your Car</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Enter your car details and verify your mobile number. It only takes a few seconds.
+                  Enter your car details and mobile number — it only takes a few seconds.
                 </p>
               </div>
             </div>
@@ -2109,7 +2396,7 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
               <div className="space-y-1.5 flex-grow min-w-0">
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Get Paid &amp; Complete the Transfer</h3>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                  Accept the offer, receive secure payment, and get assistance with the required paperwork and RC transfer.
+                  Accept the offer, get guided payment and RC-transfer assistance, and complete the required paperwork.
                 </p>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+﻿import { describe, it, expect } from "vitest";
 import { submitInspection, isUnknownColumnError, isRlsBlockedWrite } from "@/src/lib/sellCarSubmit";
 
 // ============================================================
@@ -59,9 +59,18 @@ function makeStubSupabase(overrides: {
       },
       insert: (records: any[]) => {
         calls.inserts.push(records);
-        return Promise.resolve(
-          overrides.insertResult ? overrides.insertResult(records) : { data: null, error: null }
-        );
+        // Real supabase-js: `.insert([...])` is thenable AND chainable. The
+        // confirmed-write submit calls `.select("id").maybeSingle()` to read
+        // back the real id (signed-in/mock) or get an empty RLS body (anon).
+        const insertResult = overrides.insertResult
+          ? overrides.insertResult(records)
+          : { data: null, error: null };
+        return {
+          then: (res: any, rej?: any) => Promise.resolve(insertResult).then(res, rej),
+          select: () => ({
+            maybeSingle: () => Promise.resolve(insertResult)
+          })
+        };
       }
     })
   };
@@ -77,7 +86,7 @@ describe("submitInspection — anonymous INSERT under RLS", () => {
     });
     await expect(
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: null, user: null })
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: null, promotedPartialLead: false, fellBackToInsert: false });
     expect(calls.updates).toHaveLength(0);
     expect(calls.inserts).toHaveLength(1);
   });
@@ -100,7 +109,7 @@ describe("submitInspection — anonymous INSERT under RLS", () => {
     });
     await expect(
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: "partial-1", user: null })
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: null, promotedPartialLead: false });
     expect(calls.updates).toHaveLength(0);
     expect(calls.inserts).toHaveLength(1);
   });
@@ -113,7 +122,7 @@ describe("submitInspection — partial-lead promotion", () => {
     });
     await expect(
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: "partial-1", user: { id: "u-1" } })
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: "partial-1", promotedPartialLead: true, fellBackToInsert: false });
     expect(calls.updates).toHaveLength(1);
     expect(calls.inserts).toHaveLength(0);
   });
@@ -125,7 +134,7 @@ describe("submitInspection — partial-lead promotion", () => {
     });
     await expect(
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: "orphaned", user: { id: "u-1" } })
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: null, promotedPartialLead: false, fellBackToInsert: true });
     expect(calls.updates).toHaveLength(1);
     expect(calls.inserts).toHaveLength(1);
   });
@@ -146,7 +155,7 @@ describe("submitInspection — stale schema-cache recovery", () => {
     });
     await expect(
       submitInspection({ supabase: stub, record: baseRecord, partialLeadId: null, user: null })
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: null, retriedWithoutOptionalColumns: true });
     expect(calls.inserts).toHaveLength(2);
     expect(seen[1][0]).not.toHaveProperty("seller_email");
     expect(seen[1][0]).not.toHaveProperty("notes");
