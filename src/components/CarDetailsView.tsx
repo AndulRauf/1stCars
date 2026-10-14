@@ -10,7 +10,7 @@ import { cn } from "@/src/lib/utils";
 import { toast } from "@/src/lib/toast";
 import { BookingModal } from "@/src/components/BookingModal";
 import { BuyNowCheckout } from "@/src/components/BuyNowCheckout";
-import { useCatalogCars } from "@/src/lib/useCatalogCars";
+import { useCatalogCars, fetchSingleCarRow, normalizeDbCar } from "@/src/lib/useCatalogCars";
 import { applyCarOgMeta, resetCarOgMeta, buildCarShareMessage, buildCarShareFullMessage, carShareLink, carIdFromSlug } from "@/src/lib/carShare";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
 import { trackShareEvent } from "@/src/lib/analytics";
@@ -84,6 +84,28 @@ export function CarDetailsView({
 }: CarDetailsViewProps) {
   const { cars: catalogCars, loading: catalogLoading } = useCatalogCars();
 
+  // ⚡ Single-car fast path: a WhatsApp deep link must NOT wait for the whole
+  // catalog (select * over every row incl. multi-KB JSONB payloads). Fetch
+  // just this car by UUID / short-id prefix and paint it the moment it
+  // arrives — the catalog match below takes over once it loads (same car).
+  const [fastRow, setFastRow] = React.useState<any | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    setFastRow(null);
+    if (!carId) return;
+    void (async () => {
+      try {
+        const row = await fetchSingleCarRow(carId);
+        if (!cancelled && row) setFastRow(row);
+      } catch {
+        // network/RLS hiccup — the catalog path below still resolves the car
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [carId]);
+
   // Locate selected car. Returns undefined when the car is missing (deleted or
   // unpublished) so the "Vehicle Not Available" state renders instead of
   // silently falling back to an unrelated vehicle.
@@ -95,10 +117,19 @@ export function CarDetailsView({
     if (direct) return direct;
     const key = carIdFromSlug(carId).toLowerCase().replace(/-/g, "");
     if (key && key.length === 8) {
-      return catalogCars.find((item) => String(item.id || "").replace(/-/g, "").toLowerCase().startsWith(key));
+      const hit = catalogCars.find((item) => String(item.id || "").replace(/-/g, "").toLowerCase().startsWith(key));
+      if (hit) return hit;
+    }
+    // Fast-path row (single fetch above) while the full catalog is loading.
+    if (fastRow) {
+      try {
+        return normalizeDbCar(fastRow);
+      } catch {
+        return undefined;
+      }
     }
     return undefined;
-  }, [carId, catalogCars]);
+  }, [carId, catalogCars, fastRow]);
 
   // Per-vehicle 120-point report (inspection-flow cars carry a stored JSON
   // payload). When present it drives the real tallies/statuses below; cars
@@ -279,7 +310,23 @@ export function CarDetailsView({
   React.useEffect(() => {
     if (!car) return;
     applyCarOgMeta(car);
-    return () => resetCarOgMeta();
+    // ⚡ Preload the hero photo the moment the car resolves so the gallery's
+    // largest paint settles without waiting for the render pass below.
+    const hero =
+      (Array.isArray(car.images) && car.images[0]) || (car as any).image_url || null;
+    let link: HTMLLinkElement | null = null;
+    if (typeof hero === "string" && hero.startsWith("http")) {
+      link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = hero;
+      link.setAttribute("fetchpriority", "high");
+      document.head.appendChild(link);
+    }
+    return () => {
+      resetCarOgMeta();
+      if (link) link.remove();
+    };
   }, [car]);
 
   // Format currency

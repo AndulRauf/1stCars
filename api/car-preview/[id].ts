@@ -36,19 +36,55 @@ export default async function handler(req: any, res: any) {
   const openBooking = req.query.open_booking === "1";
   const hasOAuthParams = !!(oauthCode || oauthState || oauthError || openBooking);
 
+  // ⚡ FAST PATH: human browsers never need the DB lookup. vercel.json already
+  // routes humans straight to the SPA (bot-only rewrite), but if a human ever
+  // lands here directly (old cache, header mismatch), 302 instantly WITHOUT
+  // waiting for Supabase — no HTML shell, no meta-refresh hop.
+  const ua: string = String(req.headers?.["user-agent"] || req.headers?.["User-Agent"] || "");
+  const isBotUa = /whatsapp|facebookexternalhit|facebookcatalog|twitterbot|x-twitter|linkedinbot|slackbot|telegrambot|discordbot|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver|pinterest|embedly|quora|outbrain|vkshare|weibo|line|skype|viber/i.test(ua);
+  if (carId && !isBotUa) {
+    const passthroughEarly = new URLSearchParams();
+    if (oauthError) passthroughEarly.set("error", oauthError);
+    if (oauthCode) passthroughEarly.set("code", oauthCode);
+    if (oauthState) passthroughEarly.set("state", oauthState);
+    if (openBooking) passthroughEarly.set("open_booking", "1");
+    const qs = passthroughEarly.toString();
+    const target = `/cars/${encodeURIComponent(carId)}${qs ? `?${qs}` : ""}`;
+    res.setHeader("Location", target);
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Vary", "User-Agent");
+    res.status(302).end();
+    return;
+  }
+
+  // Resolve SEO slugs ("2021-hyundai-creta-petrol-surat-a1b2c3d4") to the real
+  // row: the share link only carries the 8-char UUID prefix as its tail.
+  const tailMatch = /(?:^|-)([0-9a-fA-F]{8})$/.exec(carId);
+  const shortTail = tailMatch ? tailMatch[1].toLowerCase() : "";
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(carId);
+  const isShortSlug = !isUuid && /^[0-9a-fA-F]{8}$/.test(shortTail);
+
   if (carId) {
     try {
-      // select=* keeps this resilient to schema drift: photos live in the
-      // JSONB `payload` column (see buildCarRecord), while some live databases
-      // ALSO carry physical image_url/images columns that stay NULL. Reading
-      // the whole row lets us resolve the best photo from either location.
+      // Narrow columns only (NOT select=*): the full row carries multi-KB
+      // JSONB payloads + 120-point reports that only slow the preview fetch.
+      const cols = "id,brand,model,year,price,title,fuel,transmission,city,image_url,images,status,payload";
+      const query = isUuid
+        ? `select=${cols}&id=eq.${encodeURIComponent(carId)}&limit=1`
+        : isShortSlug
+          ? `select=${cols}&id=ilike.${encodeURIComponent(shortTail)}%&limit=5`
+          : `select=${cols}&id=eq.${encodeURIComponent(carId)}&limit=1`;
       const response = await fetch(
-        `${supabaseUrl}/rest/v1/cars?select=*&id=eq.${carId}&limit=1`,
+        `${supabaseUrl}/rest/v1/cars?${query}`,
         { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
       );
       if (response.ok) {
         const cars: any[] = await response.json();
-        const car = cars && cars[0];
+        const car = Array.isArray(cars)
+          ? (isShortSlug
+              ? cars.find((c: any) => String(c?.id || "").replace(/-/g, "").toLowerCase().startsWith(shortTail)) || cars[0]
+              : cars[0])
+          : null;
         carMissing = !car;
         if (car) {
           carFound = true;
@@ -56,7 +92,9 @@ export default async function handler(req: any, res: any) {
           title = `${carName} | 1stCars Certified Pre-Owned`;
           const priceText = car.price ? ` ₹${Number(car.price).toLocaleString("en-IN")}` : "";
           description = `${carName}${priceText}. 1stCars Certified. 120-point inspected, transparent history, doorstep delivery across Gujarat.`;
-          redirect = `/buy-cars?carId=${encodeURIComponent(carId)}`;
+          // Deep link straight to the SPA detail route (NOT /buy-cars?carId=):
+          // one less client-side navigation = instant open from WhatsApp.
+          redirect = `/cars/${encodeURIComponent(carId)}`;
 
           // Resolve the photo exactly like flattenCarRow does on the client:
           // the row's copies win only when they actually hold usable values,
@@ -212,6 +250,9 @@ export default async function handler(req: any, res: any) {
 </html>`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  // Vary on UA: the same /cars/:id URL serves OG HTML to bots and a 302 to
+  // humans (see fast path above) — the CDN must never mix the two.
+  res.setHeader("Vary", "User-Agent, Origin");
   // OAuth callbacks must never be cached — a stale CDN copy would drop the
   // auth code. Crawler previews keep the short public cache as before.
   // Missing cars are never cached so a newly published id becomes live fast.

@@ -826,6 +826,39 @@ For questions, concerns, or feedback regarding these Terms, please contact:
         return chain;
       },
 
+      // Case-insensitive prefix match for the single-car fast path
+      // (production: PostgREST ilike "prefix%"). Supports "%" wildcards at
+      // either end so local preview/tests exercise the same code path.
+      ilike: (column: string, pattern: any) => {
+        const raw = String(pattern ?? "");
+        const startsWithPct = raw.startsWith("%");
+        const endsWithPct = raw.endsWith("%");
+        const needle = raw.replace(/^%+|%+$/g, "").toLowerCase();
+        queryState.filters.push((item) => {
+          const hay = String(item?.[column] ?? "").toLowerCase();
+          if (startsWithPct && endsWithPct) return hay.includes(needle);
+          if (startsWithPct) return hay.endsWith(needle);
+          if (endsWithPct) return hay.startsWith(needle);
+          return hay === needle;
+        });
+        return chain;
+      },
+
+      like: (column: string, pattern: any) => {
+        const raw = String(pattern ?? "");
+        const startsWithPct = raw.startsWith("%");
+        const endsWithPct = raw.endsWith("%");
+        const needle = raw.replace(/^%+|%+$/g, "");
+        queryState.filters.push((item) => {
+          const hay = String(item?.[column] ?? "");
+          if (startsWithPct && endsWithPct) return hay.includes(needle);
+          if (startsWithPct) return hay.endsWith(needle);
+          if (endsWithPct) return hay.startsWith(needle);
+          return hay === needle;
+        });
+        return chain;
+      },
+
       order: (column: string, { ascending = true } = {}) => {
         queryState.orderField = column;
         queryState.orderAsc = ascending;

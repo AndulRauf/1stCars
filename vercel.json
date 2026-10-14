@@ -9,6 +9,13 @@
     {
       "source": "/cars/:id",
       "destination": "/api/car-preview/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|facebookcatalog|twitterbot|x-twitter|linkedinbot|slackbot|telegrambot|discordbot|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver|pinterest|embedly|quora|outbrain|vkshare|weibo|line|skype|viber).*"
+        }
+      ],
       "missing": [
         { "type": "query", "key": "code" },
         { "type": "query", "key": "state" },

@@ -7,6 +7,125 @@ import { Car } from "@/src/types";
 // visit (and stays in sync across browser tabs via the window "storage" event).
 const DB_CACHE_KEY = "1stcars_db_cars_cache";
 
+// ⚡ Single-car fast path: keyed by lowercase id / 8-char short id. Lets a
+// WhatsApp deep link paint ONE car instantly without downloading + parsing
+// the whole inventory (multi-MB JSONB payloads) first.
+const SINGLE_CAR_CACHE_PREFIX = "1stcars_car_cache_";
+const SINGLE_CAR_TTL_MS = 10 * 60 * 1000; // 10 min — fresh enough, instant enough.
+
+const readSingleCarCache = (key: string): any | null => {
+  if (typeof window === "undefined" || !key) return null;
+  try {
+    const raw = sessionStorage.getItem(`${SINGLE_CAR_CACHE_PREFIX}${key}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (Date.now() - Number(parsed.savedAt || 0) > SINGLE_CAR_TTL_MS) return null;
+    return parsed.row || null;
+  } catch {
+    return null;
+  }
+};
+
+const writeSingleCarCache = (key: string, row: any) => {
+  if (typeof window === "undefined" || !key || !row) return;
+  try {
+    sessionStorage.setItem(
+      `${SINGLE_CAR_CACHE_PREFIX}${key}`,
+      JSON.stringify({ savedAt: Date.now(), row })
+    );
+  } catch {
+    // storage full / private mode — ignore, the network fetch still works.
+  }
+};
+
+// Narrow columns for the fast path — everything the detail hero needs, none
+// of the heavyweight report/finance/admin columns. Keeps the cold-open fetch
+// to a few KB instead of the whole catalog.
+export const SINGLE_CAR_COLUMNS =
+  "id,brand,model,variant,year,price,km_driven,fuel,transmission,owner_count,city,color,overall_score,status,created_at,image_url,images,payload";
+
+// Fetch exactly ONE car row by full UUID or 8-char short-id prefix (SEO slugs
+// like "2021-hyundai-creta-sx-petrol-surat-a1b2c3d4" only carry the prefix).
+// Falls back to a prefix match inside the warm localStorage catalog so even a
+// same-device revisit resolves with zero network.
+export async function fetchSingleCarRow(slugOrId: string): Promise<any | null> {
+  const raw = String(slugOrId || "").trim();
+  if (!raw) return null;
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw);
+  const tail = (raw.split("-").pop() || "").toLowerCase();
+  const cacheKeys = [raw.toLowerCase()];
+  if (!isUuid && /^[0-9a-f]{8}$/.test(tail)) cacheKeys.push(tail);
+
+  for (const key of cacheKeys) {
+    const hit = readSingleCarCache(key);
+    if (hit) return hit;
+  }
+
+  // Warm catalog fallback (same-device revisit, zero network).
+  try {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem(DB_CACHE_KEY);
+      if (cached) {
+        const rows = JSON.parse(cached);
+        if (Array.isArray(rows)) {
+          const found = isUuid
+            ? rows.find((r: any) => String(r?.id || "").toLowerCase() === raw.toLowerCase())
+            : rows.find((r: any) =>
+                String(r?.id || "").replace(/-/g, "").toLowerCase().startsWith(tail)
+              );
+          if (found) {
+            for (const key of cacheKeys) writeSingleCarCache(key, found);
+            return found;
+          }
+        }
+      }
+    }
+  } catch {
+    // corrupted cache — fall through to network
+  }
+
+  if (!isRealSupabase) {
+    // Mock DB has no ilike operator — read via the client and match locally.
+    try {
+      const { data } = await supabase.from("cars").select().limit(200);
+      const rows = Array.isArray(data) ? data : [];
+      const found = isUuid
+        ? rows.find((r: any) => String(r?.id || "").toLowerCase() === raw.toLowerCase())
+        : rows.find((r: any) =>
+            String(r?.id || "").replace(/-/g, "").toLowerCase().startsWith(tail)
+          );
+      if (found) {
+        for (const key of cacheKeys) writeSingleCarCache(key, found);
+        return found;
+      }
+    } catch {
+      // ignore — caller shows the catalog loader / not-available state
+    }
+    return null;
+  }
+
+  try {
+    const query = isUuid
+      ? supabase.from("cars").select(SINGLE_CAR_COLUMNS).eq("id", raw).maybeSingle()
+      : supabase.from("cars").select(SINGLE_CAR_COLUMNS).ilike("id", `${tail}%`).limit(5);
+    const { data } = await query;
+    const row = Array.isArray(data)
+      ? data.find((r: any) =>
+          String(r?.id || "").replace(/-/g, "").toLowerCase().startsWith(tail)
+        ) || data[0] || null
+      : data || null;
+    if (row) {
+      for (const key of cacheKeys) writeSingleCarCache(key, row);
+      return row;
+    }
+  } catch {
+    // network/RLS failure — caller falls back to the full catalog path
+  }
+  return null;
+}
+
 const isRealUrl = (value?: string | null) =>
   !!value &&
   value !== "🚙" &&
@@ -15,7 +134,7 @@ const isRealUrl = (value?: string | null) =>
 
 // Normalize a raw Supabase "cars" row into the frontend Car shape, filling in
 // defaults for every field the UI relies on (emi, mileage, owners, images, ...).
-function normalizeDbCar(row: any): Car {
+export function normalizeDbCar(row: any): Car {
   // Real-mode rows store the rich record (images, price_breakup, inspection,
   // ...) in a JSONB "payload" column; flatten it under the row so every field
   // the UI expects is available no matter which mode produced the row.
