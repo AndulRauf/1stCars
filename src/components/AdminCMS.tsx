@@ -787,8 +787,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
       //    Engine" doesn't take ~15s of sequential round-trips in live mode.
       const __cmsResults = await Promise.all([
         supabase.from("cars").select(),
-        supabase.from("profiles").select().order("created_at", { ascending: false }),
-        supabase.from("inspections").select(),
+        supabase.from("profiles").select().order("created_at", { ascending: false, nullsFirst: false }),
+        supabase.from("inspections").select().order("created_at", { ascending: false, nullsFirst: false }),
         supabase.from("auctions").select(),
         supabase.from("notifications").select(),
         supabase.from("brands").select(),
@@ -2769,10 +2769,21 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
 
   // Generic data mapping per active CMS view. The unified "leads" module
   // delegates to the active tab so the same table logic serves all three.
+  // Newest-first helper: guarantees page 1 always holds the latest records
+  // even if Supabase returns NULL created_at rows or the mock/local merge
+  // changes order. NULL / invalid dates sink to the end, id breaks ties.
+  const sortNewestFirst = (rows: any[]): any[] =>
+    [...(rows || [])].sort((a: any, b: any) => {
+      const ta = a?.created_at ? new Date(a.created_at).getTime() || 0 : 0;
+      const tb = b?.created_at ? new Date(b.created_at).getTime() || 0 : 0;
+      if (tb !== ta) return tb - ta;
+      return String(b?.id || "").localeCompare(String(a?.id || ""));
+    });
+
   const getModuleData = (module: CMSModule): any[] => {
     switch (module) {
       case "cars": return cars;
-      case "users": return users;
+      case "users": return sortNewestFirst(users);
       case "test_drive_requests":
       case "booking_requests": {
         // Prefer Supabase sales_notifications (source of truth). Fall back to
@@ -2797,8 +2808,8 @@ export function AdminCMS({ currentUser, onReloadAllData, onNavigateToInventory }
           : leads.filter((lead: any) => !isTestDrive(lead));
       }
       case "seller_enquiries":
-        return inspections;
-      case "inspections": return inspections;
+        return sortNewestFirst(inspections);
+      case "inspections": return sortNewestFirst(inspections);
       case "auctions": return auctions;
       case "brands": return getCombinedBrandsModels();
       case "notifications": return notifications;
