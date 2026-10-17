@@ -20,6 +20,10 @@ export default async function handler(req: any, res: any) {
   let description = "1stCars, the premier marketplace for certified pre-owned vehicles. 120-point inspected, single owned, zero tampered odometers.";
   let image = `${origin}/og-image.jpg?v=5`;
   let originalImage = "";
+  // Declared og:image:type for the emitted image. It must describe the REAL
+  // bytes WhatsApp will download — a mismatched claim (e.g. image/jpeg on
+  // WebP bytes) makes the crawler discard the preview entirely.
+  let imageType = "";
   let redirect = "/";
   let carFound = false;
   let carJsonLd = "";
@@ -112,23 +116,66 @@ export default async function handler(req: any, res: any) {
           if (candidate) {
             image = candidate;
             originalImage = candidate;
+            imageType = /\.png(\?|#|$)/i.test(candidate)
+              ? "image/png"
+              : /\.webp(\?|#|$)/i.test(candidate)
+                ? "image/webp"
+                : /\.jpe?g(\?|#|$)/i.test(candidate)
+                  ? "image/jpeg"
+                  : /\/object\/public\//i.test(candidate)
+                    ? ""
+                    : "";
           } else if (rawImageUrl.startsWith("/")) {
             image = `${origin}${rawImageUrl}`;
+            imageType = /\.png(\?|#|$)/i.test(rawImageUrl)
+              ? "image/png"
+              : "image/jpeg";
+          } else {
+            // Generic site fallback (og-image.jpg is a real JPEG).
+            imageType = "image/jpeg";
           }
           // Sharp Status/chat previews need an EXACT 1200x630 JPEG: serving a
           // multi-MB portrait phone photo with 1200x630 dimension tags makes
-          // WhatsApp crop + downscale it into a blurry thumbnail. Render the
-          // exact cover-cropped variant via the Supabase image endpoint; the
-          // original is kept as a second og:image so crawlers still have a
-          // fallback if the render endpoint ever 404s.
+          // WhatsApp crop + downscale it into a blurry thumbnail.
+          //
+          // WhatsApp only renders JPEG/PNG og:images reliably. Supabase's
+          // imgproxy stack auto-negotiates WebP off headers/UA and can return
+          // WebP BYTES for the render endpoint even when the tag claims
+          // image/jpeg — a mismatch that makes the crawler drop the photo
+          // entirely. And ?format=jpg 404s for extensionless WebP originals.
+          // So: use the render variant ONLY when the stored original is
+          // really a .jpg (guaranteed JPEG bytes back); otherwise keep the
+          // original bytes with an HONEST type tag.
           if (originalImage) {
             const im = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(originalImage);
             if (im) {
-              // format=origin keeps WebP originals (render/image would 404 on
-              // ?format=jpg without the extension); width/height tags stay
-              // 1200x630 because resize=cover crops exactly. quality=80 keeps
-              // the variant well under WhatsApp's ~300KB fetch cap.
-              image = `https://${im[1]}/storage/v1/render/image/public/${im[2]}?width=1200&height=630&resize=cover&quality=80&format=origin`;
+              if (/\.(jpe?g)(\?|#|$)/i.test(originalImage) || /\.(jpe?g)$/i.test(im[2])) {
+                image = `https://${im[1]}/storage/v1/render/image/public/${im[2]}?width=1200&height=630&resize=cover&quality=80`;
+                imageType = "image/jpeg";
+              } else if (/\.png(\?|#|$)/i.test(originalImage) || /\.png$/i.test(im[2])) {
+                image = originalImage;
+                imageType = "image/png";
+              } else {
+                // WebP / extensionless original: serve bytes as-is with an
+                // honest tag (or none) — never claim image/jpeg falsely.
+                image = originalImage;
+                imageType = /\.webp(\?|#|$)/i.test(originalImage) ? "image/webp" : "";
+              }
+            } else if (/^https?:\/\//i.test(originalImage)) {
+              // Non-Supabase absolute URL (e.g. Unsplash): force the CDN to
+              // return real JPEG bytes so WhatsApp always gets image/jpeg.
+              try {
+                const u = new URL(originalImage);
+                if (/images\.unsplash\.com$/i.test(u.hostname)) {
+                  u.searchParams.set("fm", "jpg");
+                  u.searchParams.set("fit", "crop");
+                  u.searchParams.set("w", "1200");
+                  u.searchParams.set("h", "630");
+                  u.searchParams.set("q", "80");
+                  image = u.toString();
+                  imageType = "image/jpeg";
+                }
+              } catch { /* keep candidate + inferred type */ }
             }
           }
 
@@ -209,19 +256,18 @@ export default async function handler(req: any, res: any) {
     : `${origin}${redirect.startsWith("/") ? redirect : `/${redirect}`}`;
   const redirectAttr = escapeHtml(redirectAbs);
   const imageAttr = escapeHtml(image);
-  const originalAttr = originalImage && originalImage !== image ? escapeHtml(originalImage) : "";
+  // Single og:image only: listing BOTH the 1200x630 render variant AND the
+  // multi-MB original made WhatsApp fetch the wrong one (or give up and show
+  // no photo). The render variant is the primary; if it ever 404s the
+  // crawler falls back to the page with no image rather than a broken card.
   const imageAlt = escapeHtml(carFound ? title : "1stCars certified pre-owned cars");
-  const imageTypeTag =
-    /render\/image|format=origin/i.test(image)
-      ? `\n    <meta property="og:image:type" content="image/jpeg" />`
-      : /\/object\/public\//i.test(originalImage || "") ||
-          /\.png(\?|#|$)/i.test(image)
-        ? `\n    <meta property="og:image:type" content="image/png" />`
-        : /\/object\/public\//i.test(image) || /\.webp(\?|#|$)/i.test(image)
-          ? `\n    <meta property="og:image:type" content="image/webp" />`
-          : /\.jpe?g($|\?)/i.test(image)
-            ? `\n    <meta property="og:image:type" content="image/jpeg" />`
-            : "";
+  // imageType always describes the REAL bytes of `image` (tracked alongside
+  // every assignment above). Unknown/extensionless originals emit NO type tag
+  // at all — the crawler sniffs the bytes — instead of a false image/jpeg
+  // claim that gets the preview discarded.
+  const imageTypeTag = imageType
+    ? `\n    <meta property="og:image:type" content="${imageType}" />`
+    : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -241,7 +287,6 @@ export default async function handler(req: any, res: any) {
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="${imageAlt}" />
-    ${originalAttr ? `<meta property="og:image" content="${originalAttr}" />` : ""}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="${canonicalHref}" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />

@@ -63,18 +63,38 @@ export const carShareLink = (car: ShareableCar) => `https://1stcars.in/cars/${ca
 // Legacy UUID link — kept for backwards compatibility (old shares/redirects).
 export const carLegacyLink = (car: ShareableCar) => `https://1stcars.in/cars/${car.id}`;
 
-// WhatsApp / Status link previews must be EXACTLY 1200x630 JPEGs to render
-// sharp: serving a multi-MB portrait phone photo with hardcoded 1200x630
-// dimension tags makes the crawler crop + downscale it into a blurry Status
-// thumbnail. Supabase storage can render that exact variant on the fly, so
-// map public object URLs to the render endpoint (cover-cropped 1200x630,
-// quality 80). Non-Supabase URLs pass through untouched.
+// WhatsApp / Status link previews only render JPEG or PNG og:images
+// reliably. The Supabase render endpoint can return WebP BYTES for
+// extensionless/WebP originals while callers still claim image/jpeg, and
+// ?format=jpg 404s on extensionless originals — either way WhatsApp drops
+// the photo. So this mirrors the server preview logic exactly:
+//   - .jpg original  -> exact 1200x630 cover-cropped render variant
+//                      (guaranteed real JPEG bytes back)
+//   - .png original  -> original bytes (honest image/png)
+//   - anything else  -> original bytes untouched (server omits the type tag
+//                      and lets the crawler sniff, instead of lying)
+// Unsplash demo URLs are forced to fm=jpg so they always come back JPEG.
 export const toShareImageUrl = (url: string): string => {
-  const m = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(url || "");
+  const raw = url || "";
+  const m = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(raw);
   if (m) {
-    return `https://${m[1]}/storage/v1/render/image/public/${m[2]}?width=1200&height=630&resize=cover&quality=80&format=origin`;
+    if (/\.(jpe?g)(\?|#|$)/i.test(raw) || /\.(jpe?g)$/i.test(m[2])) {
+      return `https://${m[1]}/storage/v1/render/image/public/${m[2]}?width=1200&height=630&resize=cover&quality=80`;
+    }
+    return raw;
   }
-  return url;
+  try {
+    const u = new URL(raw);
+    if (/images\.unsplash\.com$/i.test(u.hostname)) {
+      u.searchParams.set("fm", "jpg");
+      u.searchParams.set("fit", "crop");
+      u.searchParams.set("w", "1200");
+      u.searchParams.set("h", "630");
+      u.searchParams.set("q", "80");
+      return u.toString();
+    }
+  } catch { /* not absolute — return as-is */ }
+  return raw;
 };
 
 export const carPrimaryImage = (car: ShareableCar): string => {
