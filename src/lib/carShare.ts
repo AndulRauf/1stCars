@@ -58,10 +58,10 @@ export const carIdFromSlug = (slugOrId: string): string => {
 const formatINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-export const carShareLink = (car: ShareableCar) => `${typeof window !== "undefined" ? window.location.origin : "https://www.1stcars.in"}/cars/${carSlug(car)}`;
+export const carShareLink = (car: ShareableCar) => `https://1stcars.in/cars/${carSlug(car)}`;
 
 // Legacy UUID link — kept for backwards compatibility (old shares/redirects).
-export const carLegacyLink = (car: ShareableCar) => `${typeof window !== "undefined" ? window.location.origin : "https://www.1stcars.in"}/cars/${car.id}`;
+export const carLegacyLink = (car: ShareableCar) => `https://1stcars.in/cars/${car.id}`;
 
 // WhatsApp / Status link previews must be EXACTLY 1200x630 JPEGs to render
 // sharp: serving a multi-MB portrait phone photo with hardcoded 1200x630
@@ -72,7 +72,7 @@ export const carLegacyLink = (car: ShareableCar) => `${typeof window !== "undefi
 export const toShareImageUrl = (url: string): string => {
   const m = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(url || "");
   if (m) {
-    return `https://${m[1]}/storage/v1/render/image/public/${m[2]}?width=1200&height=630&resize=cover&quality=80`;
+    return `https://${m[1]}/storage/v1/render/image/public/${m[2]}?width=1200&height=630&resize=cover&quality=80&format=origin`;
   }
   return url;
 };

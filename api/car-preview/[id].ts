@@ -2,11 +2,11 @@
 // Serves crawlable HTML (WhatsApp / Facebook / Twitter) with the car's
 // photo + title, then redirects human browsers to the SPA car detail page.
 export default async function handler(req: any, res: any) {
-  const carId: string = String(req.query.id || "").replace(/[^a-zA-Z0-9-]/g, "");
+  const carId: string = String(req.query.id || req.query.carId || "").replace(/[^a-zA-Z0-9-]/g, "");
   const origin = `https://1stcars.in`;
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
   const escapeHtml = (text: any): string =>
     String(text ?? "")
@@ -122,9 +122,13 @@ export default async function handler(req: any, res: any) {
           // original is kept as a second og:image so crawlers still have a
           // fallback if the render endpoint ever 404s.
           if (originalImage) {
-            const sm = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(originalImage);
-            if (sm) {
-              image = `https://${sm[1]}/storage/v1/render/image/public/${sm[2]}?width=1200&height=630&resize=cover&quality=80`;
+            const im = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(originalImage);
+            if (im) {
+              // format=origin keeps WebP originals (render/image would 404 on
+              // ?format=jpg without the extension); width/height tags stay
+              // 1200x630 because resize=cover crops exactly. quality=80 keeps
+              // the variant well under WhatsApp's ~300KB fetch cap.
+              image = `https://${im[1]}/storage/v1/render/image/public/${im[2]}?width=1200&height=630&resize=cover&quality=80&format=origin`;
             }
           }
 
@@ -208,9 +212,16 @@ export default async function handler(req: any, res: any) {
   const originalAttr = originalImage && originalImage !== image ? escapeHtml(originalImage) : "";
   const imageAlt = escapeHtml(carFound ? title : "1stCars certified pre-owned cars");
   const imageTypeTag =
-    /render\/image|\.jpe?g($|\?)/i.test(image)
+    /render\/image|format=origin/i.test(image)
       ? `\n    <meta property="og:image:type" content="image/jpeg" />`
-      : "";
+      : /\/object\/public\//i.test(originalImage || "") ||
+          /\.png(\?|#|$)/i.test(image)
+        ? `\n    <meta property="og:image:type" content="image/png" />`
+        : /\/object\/public\//i.test(image) || /\.webp(\?|#|$)/i.test(image)
+          ? `\n    <meta property="og:image:type" content="image/webp" />`
+          : /\.jpe?g($|\?)/i.test(image)
+            ? `\n    <meta property="og:image:type" content="image/jpeg" />`
+            : "";
 
   const html = `<!doctype html>
 <html lang="en">
