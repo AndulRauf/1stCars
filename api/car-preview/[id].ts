@@ -138,29 +138,16 @@ export default async function handler(req: any, res: any) {
           // multi-MB portrait phone photo with 1200x630 dimension tags makes
           // WhatsApp crop + downscale it into a blurry thumbnail.
           //
-          // WhatsApp only renders JPEG/PNG og:images reliably. Supabase's
-          // imgproxy stack auto-negotiates WebP off headers/UA and can return
-          // WebP BYTES for the render endpoint even when the tag claims
-          // image/jpeg — a mismatch that makes the crawler drop the photo
-          // entirely. And ?format=jpg 404s for extensionless WebP originals.
-          // So: use the render variant ONLY when the stored original is
-          // really a .jpg (guaranteed JPEG bytes back); otherwise keep the
-          // original bytes with an HONEST type tag.
+          // Permanent fix: route EVERY car photo through /api/og-image?src=
+          // which serves real 1200x630 JPEG bytes (~<300KB). Past fixes only
+          // swapped which Supabase URL we claim (original vs render variant)
+          // while WhatsApp downloaded WebP/multi-MB bytes — that's why the
+          // photo kept breaking every time a new photo format was uploaded.
           if (originalImage) {
             const im = /^https:\/\/([^/]+\.supabase\.co)\/storage\/v1\/object\/public\/([^?#]+)/.exec(originalImage);
             if (im) {
-              if (/\.(jpe?g)(\?|#|$)/i.test(originalImage) || /\.(jpe?g)$/i.test(im[2])) {
-                image = `https://${im[1]}/storage/v1/render/image/public/${im[2]}?width=1200&height=630&resize=cover&quality=80`;
-                imageType = "image/jpeg";
-              } else if (/\.png(\?|#|$)/i.test(originalImage) || /\.png$/i.test(im[2])) {
-                image = originalImage;
-                imageType = "image/png";
-              } else {
-                // WebP / extensionless original: serve bytes as-is with an
-                // honest tag (or none) — never claim image/jpeg falsely.
-                image = originalImage;
-                imageType = /\.webp(\?|#|$)/i.test(originalImage) ? "image/webp" : "";
-              }
+              image = `${origin}/api/og-image?src=${encodeURIComponent(originalImage)}`;
+              imageType = "image/jpeg";
             } else if (/^https?:\/\//i.test(originalImage)) {
               // Non-Supabase absolute URL (e.g. Unsplash): force the CDN to
               // return real JPEG bytes so WhatsApp always gets image/jpeg.

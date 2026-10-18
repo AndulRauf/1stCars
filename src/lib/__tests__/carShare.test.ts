@@ -2,22 +2,21 @@ import { describe, expect, it } from "vitest";
 import { buildCarShareFullMessage, carShareLink, carSlug, toShareImageUrl } from "@/src/lib/carShare";
 
 describe("carShare — WhatsApp preview image URLs", () => {
-  it("maps .jpg Supabase originals to the 1200x630 render variant without format=origin", () => {
+  it("routes .jpg Supabase originals through the JPEG proxy", () => {
     const out = toShareImageUrl(
       "https://xyz.supabase.co/storage/v1/object/public/car-images/cars/abc.jpg"
     );
-    expect(out).toContain("/storage/v1/render/image/public/car-images/cars/abc.jpg");
-    expect(out).toContain("width=1200&height=630&resize=cover&quality=80");
-    expect(out).not.toContain("format=origin");
+    expect(out).toContain("/api/og-image?src=");
+    expect(out).toContain(encodeURIComponent("https://xyz.supabase.co"));
   });
 
-  it("leaves WebP/extensionless Supabase originals untouched (no false JPEG claim)", () => {
+  it("routes WebP/extensionless Supabase originals through the JPEG proxy too", () => {
     const webp =
       "https://xyz.supabase.co/storage/v1/object/public/car-images/cars/photo.webp";
-    expect(toShareImageUrl(webp)).toBe(webp);
+    expect(toShareImageUrl(webp)).toContain("/api/og-image?src=");
     const extless =
       "https://xyz.supabase.co/storage/v1/object/public/car-images/cars/abc123";
-    expect(toShareImageUrl(extless)).toBe(extless);
+    expect(toShareImageUrl(extless)).toContain("/api/og-image?src=");
   });
 
   it("forces Unsplash demo photos to real JPEG bytes (fm=jpg 1200x630)", () => {
