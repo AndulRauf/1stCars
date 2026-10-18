@@ -355,6 +355,34 @@ export function trackWhatsAppClick(context: string, carName?: string, carPrice?:
   });
 }
 
+// Buyer conversion events (POST-DB-WRITE ONLY).
+// Call these only after insertLeadWithAssignment/processCheckout succeeds,
+// mirroring trackSellerLeadCreated. No PII included.
+export function trackTestDriveLeadCreated(carName?: string): void {
+  trackGA4("test_drive_lead_created", {
+    car_name: carName || undefined,
+    ...utmSpread()
+  });
+  trackGA4("buyer_lead_submit", {
+    kind: "test_drive",
+    car_name: carName || undefined,
+    ...utmSpread()
+  });
+}
+
+export function trackBuyNowLeadCreated(carName?: string, paid?: boolean): void {
+  trackGA4("buy_now_lead_created", {
+    car_name: carName || undefined,
+    paid: paid || undefined,
+    ...utmSpread()
+  });
+  trackGA4("buyer_lead_submit", {
+    kind: paid ? "buy_now_paid" : "buy_now_reserved",
+    car_name: carName || undefined,
+    ...utmSpread()
+  });
+}
+
 // A visitor tapped the phone / call-back CTA intent.
 export function trackCallClick(context: string, carName?: string): void {
   trackGA4("call_click", {

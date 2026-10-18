@@ -229,7 +229,7 @@ export function CareersView({ onBackToHome, onNavigateToInventory }: CareersView
 
       trackMetaEvent("Lead", {
         content_name: `Job Application - ${record.position}`,
-        content_category: "Careers",
+        content_category: "Careers / Job Application",
         value: 1,
         currency: "INR"
       });

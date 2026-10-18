@@ -1151,7 +1151,7 @@ const [email, setEmail] = React.useState("");
       // Meta + GA4 conversions (no PII) fire right after a successful insert.
       trackMetaEvent("Lead", {
         content_name: `${selectedBrand} ${selectedModel}`,
-        content_category: "Sell Car / Inspection"
+        content_category: "Seller / Inspection"
       });
       // GA4 conversion (no PII) fires only after the write was confirmed.
       trackSellerLeadCreated();

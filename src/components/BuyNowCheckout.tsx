@@ -7,7 +7,7 @@ import { supabase, isRealSupabase } from "@/src/lib/supabaseClient";
 import { notificationService } from "@/src/lib/notifications";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
-import { trackWhatsAppClick } from "@/src/lib/analytics";
+import { trackBuyNowLeadCreated, trackWhatsAppClick } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment } from "@/src/lib/leadAssignment";
 import { Profile } from "@/src/lib/db";
 import { getSavedCarsLocal, setSavedCarsLocal, setSavedCarForSession } from "@/src/lib/savedCars";
@@ -125,16 +125,18 @@ const processCheckout = async (
 
   trackMetaEvent("Lead", {
     content_name: vehicleTitle,
-    content_category: "Buy Now",
+    content_category: "Buyer / Buy Now",
     value: car.price,
     currency: "INR",
     num_items: 1
   });
+  // GA4 buyer conversion (no PII) — post-write only, mirrors seller flow.
+  trackBuyNowLeadCreated(vehicleTitle, paymentStatus === "Payment Submitted");
 
   if (paymentStatus === "Payment Submitted") {
     trackMetaEvent("Purchase", {
       content_name: vehicleTitle,
-      content_category: "Buy Now",
+      content_category: "Buyer / Buy Now",
       value: totalPrice,
       currency: "INR",
       num_items: 1

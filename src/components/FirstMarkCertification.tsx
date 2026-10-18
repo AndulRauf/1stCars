@@ -60,7 +60,7 @@ export function FirstMarkCertification({ onBackToHome, onNavigateToInventory }: 
     toast.success("120-Point Inspection booking received! Our inspector will contact you.");
     trackMetaEvent("Lead", {
       content_name: bookingForm.vehicleModel,
-      content_category: "120-Point Certification Inspection"
+      content_category: "Certification / 120-Point Inspection"
     });
   };
 

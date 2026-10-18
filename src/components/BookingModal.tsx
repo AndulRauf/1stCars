@@ -9,6 +9,7 @@ import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
+import { trackTestDriveLeadCreated } from "@/src/lib/analytics";
 import { resolveLeadOwner, insertLeadWithAssignment, ensureProfileExists } from "@/src/lib/leadAssignment";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { CITIES_DATA } from "@/src/data/cars";
@@ -161,7 +162,11 @@ export function BookingModal({
     setGeneratedOtp(code);
     setIsOtpSent(true);
     setOtpCountdown(30);
-    toast.success(`Verification OTP sent to +91 ${mobile}! Simulated OTP: ${code}`);
+    if (isRealSupabase) {
+      toast.success(`Verification code sent to +91 ${mobile}. Our team will verify it on the confirmation call.`);
+    } else {
+      toast.success(`Verification OTP sent to +91 ${mobile}! Simulated OTP: ${code}`);
+    }
   };
 
   // Handle Verify OTP
@@ -325,11 +330,13 @@ export function BookingModal({
 
       trackMetaEvent(bookingType === "test_drive" ? "Lead" : "InitiateCheckout", {
         content_name: vehicleTitle,
-        content_category: "Test Drive",
+        content_category: bookingType === "test_drive" ? "Buyer / Test Drive" : "Buyer / Buy Now",
         value: car?.price || 0,
         currency: "INR",
         num_items: 1
       });
+      // GA4 buyer conversion (no PII) — post-write only, mirrors seller flow.
+      if (bookingType === "test_drive") trackTestDriveLeadCreated(vehicleTitle);
 
       void (async () => {
         // Auto-assign the lead in the background — never blocks the UI.
