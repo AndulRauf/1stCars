@@ -1,8 +1,18 @@
 // 1stCars — server-side vehicle registration lookup (Vercel Serverless).
 // POST /api/vehicle-lookup { regNumber }
-// Provider-independent: swap fetchFromProvider without touching SellCarView.
-// Env (server-only, NEVER VITE_-prefixed): VEHICLE_API_BASE_URL, VEHICLE_API_KEY
+// APIExpress RC Verify: POST {base}/v1/rc/verify { rc_number } Bearer APIEXPRESS_API_KEY.
+// Same-origin contract preserved: frontend only ever calls POST /api/vehicle-lookup.
+// Env (server-only, NEVER VITE_-prefixed): APIEXPRESS_API_KEY (preferred) or
+// legacy VEHICLE_API_KEY, optional VEHICLE_API_BASE_URL / APIEXPRESS_BASE_URL
+// (defaults to https://api.apiexpress.in).
 // Missing creds -> { status: "provider_not_configured" } so UI uses manual flow.
+//
+// Schema note (2026-10-18): the only verified APIExpress sample is
+// { status, owner_name (masked), vehicle ("Honda City VX"), fuel, insurance_valid, state }.
+// Full field names for manufacturing year / registration date / RTO are NOT
+// publicly documented, so mapping below is defensive: only explicit fields are
+// mapped, unknown stays null (manual entry), year is NEVER derived from dates,
+// and owner/chassis/engine/insurance identifiers are always dropped.
 
 export type LookupStatus = "success" | "not_found" | "incomplete" | "provider_not_configured" | "provider_error" | "rate_limited";
 
@@ -16,32 +26,109 @@ export function isValidRegistrationNumber(n: string): boolean {
   return REG_PATTERN.test(n);
 }
 
-// Provider adapter (isolated). Generic REST: GET {base}/vehicle/{reg} Bearer key.
-// Only allow-listed mechanical fields pass through — owner PII is dropped here.
+// Provider adapter (isolated). APIExpress RC Verify:
+//   POST {base}/v1/rc/verify  { rc_number: "GJ01AB1234" }
+//   Authorization: Bearer <APIEXPRESS_API_KEY>
+// Only allow-listed mechanical fields pass through — owner PII
+// (owner_name), chassis/engine numbers and insurance data are dropped here.
+// Year is only mapped from an explicit year-like field; it is NEVER guessed
+// from registration dates. Unknown fields stay null for manual entry.
+export const APIEXPRESS_DEFAULT_BASE_URL = "https://api.apiexpress.in";
+export const APIEXPRESS_RC_VERIFY_PATH = "/v1/rc/verify";
+
+function firstString(...vals: unknown[]): string | undefined {
+  for (const v of vals) {
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
+function explicitYearOf(d: Record<string, any>): number | null {
+  const raw = d.year ?? d.manufacturing_year ?? d.manufacture_year ?? d.mfg_year
+    ?? d.model_year ?? d.yom ?? d.vehicle_year;
+  if (typeof raw === "number" && Number.isInteger(raw)) return raw;
+  if (typeof raw === "string" && /^\d{4}$/.test(raw.trim())) return Number(raw.trim());
+  return null;
+}
+
+/** Split "Honda City VX" -> { brand: "Honda", model: "City VX" } (best effort). */
+export function splitVehicleLabel(label: string | undefined): { brand?: string; model?: string } {
+  if (!label) return {};
+  const parts = label.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return {};
+  if (parts.length === 1) return { brand: parts[0] };
+  return { brand: parts[0], model: parts.slice(1).join(" ") };
+}
+
+export interface ProviderVehicle {
+  found: boolean;
+  unsuccessful?: boolean;
+  brand?: string;
+  model?: string;
+  variant?: string;
+  fuel?: string;
+  year?: number | null;
+  registrationDate?: string | null;
+  vehicleClass?: string | null;
+  rtoName?: string | null;
+}
+
+export function mapApiExpressPayload(payload: any): ProviderVehicle {
+  const d = (payload?.data ?? payload?.result ?? payload?.vehicle_details ?? payload ?? {}) as Record<string, any>;
+  const status = String(payload?.status ?? d.status ?? "").toLowerCase();
+  if (status && !["success", "ok", "valid", "found", "verified"].includes(status)) {
+    return { found: false, unsuccessful: true };
+  }
+  const vehicleLabel = firstString(d.vehicle, d.vehicle_name, d.make_model, d.model_display);
+  const explicitBrand = firstString(d.make, d.brand, d.manufacturer, d.oem);
+  const explicitModel = firstString(d.model, d.variant_model);
+  const split = splitVehicleLabel(vehicleLabel);
+  const brand = explicitBrand || split.brand;
+  const model = explicitModel || split.model;
+  const fuel = firstString(d.fuel, d.fuel_type, d.fuelType);
+  const registrationDate = firstString(
+    d.registration_date, d.registrationDate, d.reg_date, d.regDate, d.rc_registration_date
+  );
+  const vehicleClass = firstString(d.vehicle_class, d.vehicleClass, d.class, d.veh_class);
+  const rtoName = firstString(d.rto, d.rto_name, d.rtoName, d.rto_location, d.state, d.registration_state);
+  if (!brand && !model && !fuel && !registrationDate && !vehicleClass && !rtoName && explicitYearOf(d) === null) {
+    return { found: false };
+  }
+  return {
+    found: true,
+    brand,
+    model,
+    variant: firstString(d.variant, d.version, d.trim),
+    fuel,
+    year: explicitYearOf(d),
+    registrationDate: registrationDate ?? null,
+    vehicleClass: vehicleClass ?? null,
+    rtoName: rtoName ?? null,
+  };
+}
+
+export function resolveProviderConfig(env: NodeJS.ProcessEnv = process.env): { base: string; key: string } {
+  const key = env.APIEXPRESS_API_KEY || env.VEHICLE_API_KEY || "";
+  const base = env.APIEXPRESS_BASE_URL || env.VEHICLE_API_BASE_URL || APIEXPRESS_DEFAULT_BASE_URL;
+  return { base, key };
+}
+
+// Provider adapter (isolated): see APIExpress fetchFromProvider above.
 async function fetchFromProvider(reg: string, base: string, key: string, ms: number): Promise<any | null> {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), ms);
   try {
-    const r = await fetch(`${base.replace(/\/$/, "")}/vehicle/${encodeURIComponent(reg)}`, {
+    const r = await fetch(`${base.replace(/\/$/, "")}${APIEXPRESS_RC_VERIFY_PATH}`, {
+      method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ rc_number: reg }),
       signal: c.signal
     });
     if (r.status === 404) return { found: false };
     if (r.status === 429) throw Object.assign(new Error("rate_limited"), { code: 429 });
     if (!r.ok) throw new Error(`provider_${r.status}`);
     const j: any = await r.json().catch(() => ({}));
-    const d = j?.data ?? j?.vehicle ?? j ?? {};
-    return {
-      found: true,
-      brand: typeof d.make === "string" ? d.make : typeof d.brand === "string" ? d.brand : undefined,
-      model: typeof d.model === "string" ? d.model : undefined,
-      variant: typeof d.variant === "string" ? d.variant : undefined,
-      fuel: typeof d.fuel === "string" ? d.fuel : typeof d.fuelType === "string" ? d.fuelType : undefined,
-      year: Number.isFinite(Number(d.year)) ? Number(d.year) : null,
-      registrationDate: typeof d.registrationDate === "string" ? d.registrationDate : null,
-      vehicleClass: typeof d.vehicleClass === "string" ? d.vehicleClass : null,
-      rtoName: typeof d.rto === "string" ? d.rto : null
-    };
+    return mapApiExpressPayload(j);
   } finally { clearTimeout(t); }
 }
 
@@ -58,9 +145,8 @@ export default async function handler(req: any, res: any) {
       res.status(400).json({ ok: false, status: "invalid_format", error: "Enter a valid registration number, e.g. GJ 01 AB 1234." });
       return;
     }
-    const base = process.env.VEHICLE_API_BASE_URL || "";
-    const key = process.env.VEHICLE_API_KEY || "";
-    if (!base || !key) {
+    const { base, key } = resolveProviderConfig(process.env);
+    if (!key) {
       res.setHeader("Cache-Control", "no-store");
       res.status(200).json({ ok: true, status: "provider_not_configured", regNormalized: reg, source: "none", completeness: "partial" });
       return;

@@ -30,6 +30,8 @@ import {
   loadSellCatalogFromSupabase, SellCatalog
 } from "@/src/lib/sellFormData";
 import { CITIES_DATA } from "@/src/data/cars";
+import { RegLookupStep } from "@/src/components/RegLookupStep";
+import type { VehicleDetails } from "@/src/lib/vehicleLookup";
 
 interface SellCarViewProps {
   onNavigateToDashboard: (profile?: Profile) => void;
@@ -708,8 +710,8 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
     };
   }, []);
 
-  // Stepper state - Brand-first (registration step removed; will be added back later)
-  const [wizardStep, setWizardStep] = React.useState<number>(1);
+  // Stepper state - Step 0 = registration lookup (optional), Steps 1..8 = existing Brand-first flow.
+  const [wizardStep, setWizardStep] = React.useState<number>(0);
   const [formStep, setFormStep] = React.useState<"form" | "success">("form");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [createdRequest, setCreatedRequest] = React.useState<any>(null);
@@ -725,6 +727,9 @@ export function SellCarView({ onNavigateToDashboard, onBackToHome, onNavigateToS
 
   // Selected values - no preselected year/variant/fuel/transmission (P2):
   // the seller must make an explicit choice before continuing.
+  // selectedRegNumber carries the Step-0 plate through the wizard (prefill or manual).
+  const [selectedRegNumber, setSelectedRegNumber] = React.useState("");
+  const [lookupSource, setLookupSource] = React.useState<"api" | "manual" | null>(null);
   const [selectedBrand, setSelectedBrand] = React.useState("");
   const [selectedModel, setSelectedModel] = React.useState("");
   const [selectedYear, setSelectedYear] = React.useState<number | null>(null);
@@ -1055,7 +1060,7 @@ const [email, setEmail] = React.useState("");
       seller_name: finalName,
       seller_mobile: mobile,
       ...(finalEmail ? { seller_email: finalEmail } : {}),
-      reg_number: "",
+      reg_number: selectedRegNumber || "",
       brand: selectedBrand,
       model: selectedModel,
       variant: selectedVariant.trim(),
@@ -1069,8 +1074,8 @@ const [email, setEmail] = React.useState("");
       preferred_time: finalTime,
       status: "pending" as const,
       notes: selectedRTO === "OTHER"
-        ? "New inspection request from the Sell Car form (non-Gujarat registration)."
-        : "New inspection request from the Sell Car form."
+        ? `New inspection request from the Sell Car form (non-Gujarat registration).${selectedRegNumber ? ` Reg: ${selectedRegNumber}.` : ""}${lookupSource ? ` Lookup: ${lookupSource}.` : ""}`
+        : `New inspection request from the Sell Car form.${selectedRegNumber ? ` Reg: ${selectedRegNumber}.` : ""}${lookupSource ? ` Lookup: ${lookupSource}.` : ""}`
     };
 
     try {
@@ -1247,6 +1252,37 @@ const [email, setEmail] = React.useState("");
     }
   };
 
+  // Step 0: registration lookup -> prefill only verified fields, keep manual entry intact.
+  // Existing RTO codes are hyphenated ("GJ-1"); the lookup returns "GJ01", so
+  // normalize both sides ("GJ-1" -> "GJ1", "GJ01" -> "GJ1") before matching.
+  // Non-Gujarat / unknown RTOs are intentionally NOT preselected (manual pick).
+  const handleLookupPrefill = React.useCallback((d: VehicleDetails) => {
+    setSelectedRegNumber(d.regNormalized || "");
+    setLookupSource("api");
+    if (d.brand) setSelectedBrand(d.brand);
+    if (d.model) setSelectedModel(d.model);
+    if (d.variant) setSelectedVariant(d.variant);
+    if (typeof d.year === "number") setSelectedYear(d.year);
+    if (d.fuel) setSelectedFuel(d.fuel);
+    const normCode = (c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^GJ0+/, "GJ");
+    if (d.rtoCode && d.rtoCode.toUpperCase().startsWith("GJ")) {
+      const match = gujaratRTOs.find((r) => normCode(r.code) === normCode(d.rtoCode || ""));
+      if (match) {
+        setSelectedRTO(match.code);
+        if (match.city && CITIES_DATA.includes(match.city as never)) setSelectedCity(match.city);
+      }
+    }
+    setWizardStep(1);
+  }, []);
+
+  // Step 0: manual fallback — carry the typed plate forward, never block the form.
+  const handleLookupManual = React.useCallback((reason: string, manualReg: string) => {
+    void reason;
+    setSelectedRegNumber(manualReg || "");
+    setLookupSource("manual");
+    setWizardStep(1);
+  }, []);
+
   // Prominent hero CTA scrolls the visitor straight to the form card.
   const scrollToSellForm = () => {
     document.getElementById("sell-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1311,7 +1347,8 @@ const [email, setEmail] = React.useState("");
                 {/* Stepper Navigation Pills with horizontal scrolling */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none mb-4">
                   {[
-                    { step: 1, label: selectedBrand ? `? ${selectedBrand}` : "Brand" },
+                    { step: 0, label: selectedRegNumber ? `✓ ${selectedRegNumber}` : "Registration" },
+                    { step: 1, label: selectedBrand ? `✓ ${selectedBrand}` : "Brand" },
                     { step: 2, label: selectedModel ? `? ${selectedModel}` : "Model" },
                     { step: 3, label: mobile ? `? ${maskMobile(mobile)}` : "Mobile" },
                     { step: 4, label: selectedBrand && selectedModel && selectedVariant ? `? ${selectedVariant}` : "Variant" },
@@ -1342,7 +1379,7 @@ const [email, setEmail] = React.useState("");
                   })}
                 </div>
 
-                {/* Progress Bar */}
+                {/* Progress Bar (Step 0..8) */}
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-7">
                   <div 
                     className="h-full bg-[#2E7D32] transition-all duration-300 ease-out"
@@ -1350,10 +1387,22 @@ const [email, setEmail] = React.useState("");
                   />
                 </div>
 
+                {/* STEP 0: REGISTRATION LOOKUP (optional, never blocks manual entry) */}
+                {wizardStep === 0 && (
+                  <RegLookupStep onPrefill={handleLookupPrefill} onManual={handleLookupManual} />
+                )}
+
                 {/* STEP 1: SELECT BRAND */}
                 {wizardStep === 1 && (
                   <div className="space-y-6">
                     <div>
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(0)}
+                        className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors text-sm mb-2"
+                      >
+                        <ArrowLeft className="h-4 w-4" /> Back to registration
+                      </button>
                       <h3 className="text-lg font-black text-slate-900 tracking-tight leading-snug">Which brand is your car?</h3>
                       <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5">Pick your car brand to get started</p>
                     </div>
