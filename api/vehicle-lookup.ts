@@ -126,7 +126,15 @@ async function fetchFromProvider(reg: string, base: string, key: string, ms: num
     });
     if (r.status === 404) return { found: false };
     if (r.status === 429) throw Object.assign(new Error("rate_limited"), { code: 429 });
-    if (!r.ok) throw new Error(`provider_${r.status}`);
+    if (!r.ok) {
+      // Capture provider body snippet for Vercel logs (never leaks the key).
+      // Defensive: unit-test mocks may not implement .text().
+      let snippet = "";
+      try { snippet = String(await (r as any).text?.() ?? "").slice(0, 300); } catch { snippet = ""; }
+      const err: any = new Error(`provider_${r.status}${snippet ? `: ${snippet}` : ""}`);
+      err.code = r.status;
+      throw err;
+    }
     const j: any = await r.json().catch(() => ({}));
     return mapApiExpressPayload(j);
   } finally { clearTimeout(t); }
@@ -164,7 +172,11 @@ export default async function handler(req: any, res: any) {
         return;
       }
       console.error("[vehicle-lookup] provider error:", e?.message || e);
-      res.status(200).json({ ok: true, status: "provider_error", regNormalized: reg, source: "none", completeness: "partial" });
+      // Surface numeric provider HTTP status (401 = bad key, 402 = no credits,
+      // 403 = forbidden, 5xx = provider down) without leaking key/body.
+      const m = /provider_(\d{3})/.exec(String(e?.message || ""));
+      const providerStatus = typeof e?.code === "number" ? e.code : m ? Number(m[1]) : undefined;
+      res.status(200).json({ ok: true, status: "provider_error", regNormalized: reg, source: "none", completeness: "partial", ...(providerStatus ? { providerStatus } : {}) });
       return;
     }
     if (!p || p.found === false) {
