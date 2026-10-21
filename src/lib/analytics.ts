@@ -383,6 +383,19 @@ export function trackBuyNowLeadCreated(carName?: string, paid?: boolean): void {
   });
 }
 
+// Buyer lead write FAILED. Non-PII, carries only a coarse error kind so a gap
+// between buyer_lead_start and buyer_lead_submit becomes diagnosable in GA4
+// (e.g. the RLS RETURNING trap showed zero conversions while the form worked).
+export type LeadSubmitErrorKind = "rls" | "schema" | "duplicate" | "database" | "unknown";
+
+export function trackLeadSubmitError(kind: LeadSubmitErrorKind, leadType: string): void {
+  trackGA4("lead_submit_error", {
+    lead_type: leadType,
+    error_kind: kind,
+    ...utmSpread()
+  });
+}
+
 // A visitor tapped the phone / call-back CTA intent.
 export function trackCallClick(context: string, carName?: string): void {
   trackGA4("call_click", {

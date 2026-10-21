@@ -9,8 +9,8 @@ import { notificationService } from "@/src/lib/notifications";
 import { automationService } from "@/src/lib/automation";
 import { getOrCreateAutoPassword, resolveAutoSignIn } from "@/src/lib/autoAuth";
 import { trackMetaEvent } from "@/src/lib/metaPixel";
-import { trackTestDriveLeadCreated } from "@/src/lib/analytics";
-import { resolveLeadOwner, insertLeadWithAssignment, ensureProfileExists } from "@/src/lib/leadAssignment";
+import { trackTestDriveLeadCreated, trackLeadSubmitError } from "@/src/lib/analytics";
+import { resolveLeadOwner, insertLeadWithAssignment, ensureProfileExists, classifyLeadInsertError } from "@/src/lib/leadAssignment";
 import { generateDerivedEmail } from "@/src/lib/utils";
 import { CITIES_DATA } from "@/src/data/cars";
 import { Profile } from "@/src/lib/db";
@@ -313,6 +313,11 @@ export function BookingModal({
       const dbLeadId = inserted?.row?.id;
 
       if (insertError) {
+        // Non-PII diagnostics: record WHY the lead write failed so a failed
+        // funnel is visible in GA4 instead of silently losing the lead.
+        try {
+          trackLeadSubmitError(classifyLeadInsertError(insertError), bookingType);
+        } catch { /* analytics must never block error handling */ }
         throw new Error(insertError.message || "Could not save your request to the database.");
       }
 

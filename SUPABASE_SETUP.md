@@ -42,15 +42,17 @@ wins its type — running them out of order silently changes the schema:
 9. fix_launch_security_storage_profiles.sql  <- REQUIRED: storage lockdown, private
    "resumes" bucket with upload/review policies, and profiles SELECT for
    authenticated users only (drop-in safe on any DB state, idempotent)
-10. fix_booking_audit_fk.sql        <- REQUIRED if Test Drive / Buy-Now ever
-    failed with "audit_trail_actor_user_id_fkey": FK-safe audit + ensure_profile()
+10. supabase/migrations/20260905000000_fix_booking_audit_fk.sql
+    <- FK-safe audit + ensure_profile() (moved from public/)
 11. supabase/migrations/20260929000000_fix_sales_testdrive_assign_sync.sql
     <- syncs test_drives.sales_associate_id when a lead is assigned later
-12. fix_testdrive_rls_returning.sql <- REQUIRED if Test Drive / Buy-Now fails
-    with "new row violates row-level security policy for table
-    sales_notifications": re-asserts the visitor INSERT policy + adds the
-    RLS-proof submit_sales_lead(jsonb) RPC (idempotent, keeps leads
-    staff-only — no anon SELECT granted)
+12. supabase/migrations/20261010000000_fix_testdrive_rls_returning.sql
+    <- re-asserts the visitor INSERT policy + adds the RLS-proof
+    submit_sales_lead(jsonb) RPC (moved from public/)
+13. supabase/migrations/20261020000000_lead_intake_hardening.sql
+    <- CANONICAL lead-intake hardening: visitor INSERT policy, submit +
+    verify RPCs, nullable test_drives.buyer_id, fully exception-guarded
+    appointment trigger, FK-safe audit. Run this last; it is idempotent.
 
 ```
 

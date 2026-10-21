@@ -262,5 +262,65 @@ describe("phase 1 — sales CRM + sales automation", () => {
       if (realRpc) (supabase as any).rpc = realRpc;
     }
   });
+
+  it("classifies write failures so only genuine RLS-RETURNING errors retry", async () => {
+    const { classifyLeadInsertError } = await import("@/src/lib/leadAssignment");
+    expect(
+      classifyLeadInsertError({ message: 'new row violates row-level security policy for table "sales_notifications"', code: "42501" })
+    ).toBe("rls");
+    expect(
+      classifyLeadInsertError({ message: 'null value in column "buyer_id" of relation "test_drives" violates not-null constraint' })
+    ).toBe("database");
+    expect(
+      classifyLeadInsertError({ message: "duplicate key value violates unique constraint", code: "23505" })
+    ).toBe("duplicate");
+    expect(
+      classifyLeadInsertError({ message: "Could not find the 'assigned_to' column", code: "PGRST204" })
+    ).toBe("schema");
+    // A plain grant denial is NOT the RETURNING trap — must not be retried.
+    expect(classifyLeadInsertError({ message: "permission denied for table sales_notifications" })).toBe("unknown");
+  });
+
+  it("never reports success on a duplicate without server confirmation (verify_sales_lead)", async () => {
+    const mod = await import("@/src/lib/leadAssignment");
+    const { supabase } = await import("@/src/lib/supabaseClient");
+    const realFrom = (supabase as any).from.bind(supabase);
+    const realRpc = (supabase as any).rpc?.bind?.(supabase);
+
+    await (mod as any);
+
+    // Force RPC off so Tier-2 runs, then make BOTH the RETURNING attempt and the
+    // bare retry fail as duplicates, while the confirmation RPC says the row is
+    // NOT there. The helper must surface an error, not a false success.
+    if (realRpc) {
+      (supabase as any).rpc = async (fn: string) => {
+        if (fn === "submit_sales_lead") {
+          return { data: null, error: { message: "function submit_sales_lead does not exist" } };
+        }
+        if (fn === "verify_sales_lead") return { data: false, error: null };
+        return { data: null, error: null };
+      };
+    }
+    (supabase as any).from = (table: string) => {
+      const chain: any = realFrom(table);
+      if (table !== "sales_notifications") return chain;
+      chain.insert = () => {
+        const dup = { data: null, error: { message: "duplicate key value violates unique constraint", code: "23505" } };
+        return { select: () => Promise.resolve(dup), then: (r: any) => Promise.resolve(dup).then(r) };
+      };
+      return chain;
+    };
+    try {
+      const res = await mod.insertLeadWithAssignment({
+        name: "Dup Unconfirmed", mobile: "9000000044", city: "Surat",
+        car_id: "car-a", car_brand: "Honda", car_model: "City",
+        type: "test_drive", status: "pending", notes: "dup confirmation check"
+      });
+      expect(res.error).toBeTruthy();
+    } finally {
+      (supabase as any).from = realFrom;
+      if (realRpc) (supabase as any).rpc = realRpc;
+    }
+  });
 });
 
